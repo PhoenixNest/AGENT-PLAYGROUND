@@ -1,0 +1,79 @@
+---
+description: Mount AGENT-GLOBAL-BASE Claude Code tooling — rules, skills, subagents, hooks, MCP — for this playground
+alwaysApply: true
+---
+
+# AGENT-GLOBAL-BASE Claude Tooling Mount
+
+Complement the AGENT-GLOBAL-BASE knowledge-base mount by treating AGENT-GLOBAL-BASE’s Claude Code configuration as the **tooling layer** for this playground. Cursor does not auto-load Claude Code’s `.claude/` hooks/settings; **read and apply them manually** via tools.
+
+**Root:** `C:\Users\ASUS\Documents\Code\Local\AGENT-GLOBAL-BASE`  
+**Tooling root:** `<AGENT-GLOBAL-BASE>/.claude/`  
+**Operating layer:** `<AGENT-GLOBAL-BASE>/CLAUDE.md` (global Claude guardrails — shell, gates, Prettier)
+
+## Bootstrap (with knowledge mount)
+
+1. After `AGENT-GLOBAL-BASE/AGENTS.md`, skim `AGENT-GLOBAL-BASE/CLAUDE.md` §1 (guardrails) and §3 (config map).
+2. Load always-relevant rules from `AGENT-GLOBAL-BASE/.claude/rules/`:
+   - `workspace-conventions.md`
+   - `asgf-framework.md`
+   - `git-workflow.md`
+3. For domain work, also load matching path-scoped rules and skills (tables below).
+
+## Inventory (use, don’t reinvent)
+
+| Asset                    | Path                                                 | How to use here                                                                     |
+| ------------------------ | ---------------------------------------------------- | ----------------------------------------------------------------------------------- |
+| Rules (27)               | `.claude/rules/*.md`                                 | Read before domain work; treat as project law                                       |
+| Skills (21)              | `.claude/skills/<domain>/SKILL.md` (+ `references/`) | Open the matching skill when the task fits; follow its protocol                     |
+| Subagents (4)            | `.claude/agents/*.md`                                | Use as Task/subagent briefs — copy role + constraints into the prompt               |
+| Hooks (15 pairs)         | `.claude/hooks/*.{ps1,sh}`                           | Prefer `.ps1` on Windows; run or honor intent when the equivalent lifecycle applies |
+| Settings / MCP allowlist | `.claude/settings.json`                              | Source of truth for hook chain + MCP permission names                               |
+| MCP manifest             | `AGENT-GLOBAL-BASE/.mcp.json`                        | `workspace-knowledge`, `agent-memory` under `core-component-00/mcp-servers/`        |
+| Slash command            | `.claude/commands/rag-sync.md`                       | Follow when user asks to sync/rebuild RAG index                                     |
+| Scripts                  | `.claude/scripts/`                                   | `init.py`, `audit_config.py`, OS detection notes                                    |
+
+### Subagents → when to invoke
+
+| Agent file                          | Use when                                          |
+| ----------------------------------- | ------------------------------------------------- |
+| `organizational-agent-activator.md` | User asks to speak/act as a named Type A persona  |
+| `pipeline-stage-executor.md`        | Executing a defined pipeline stage deliverable    |
+| `cc00-implementation-assistant.md`  | CC-00 engineering / reference implementation work |
+| `multi-agent-orchestrator.md`       | Coordinating multiple agents or cross-system work |
+
+### Skills → pick by domain
+
+`activate-org-agent` · `llm-engineering` · `product-management` · `product-design` · `engineering` · `frontend-engineering` · `backend-engineering` · `android-engineering` · `ios-engineering` · `cross-platform-engineering` · `game-development` · `visual-arts-and-animation` · `audio-engineering` · `live-operations` · `localization` · `cyberspace-security` · `quality-assurance` · `recruitment` · `legal` · `technology-strategy` · `data-analytics`
+
+## Hook intent (manual parity)
+
+AGENT-GLOBAL-BASE hooks resolve via git root → `$root/.claude/hooks/…` and **will not fire** from AGENT-PLAYGROUND alone. Emulate their intent:
+
+| Lifecycle      | Hooks (concept)                                                                              | Agent behavior                                                            |
+| -------------- | -------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------- |
+| Prompt intake  | quality-gate, optimizer, pipeline-context, context-budget, RAG freshness, rate-limiter reset | Refuse gate/severity bypass; inject pipeline context; watch context size  |
+| Pre write/edit | prompt-write-guard, prompt-gate-enforcer                                                     | Don’t write when a quality gate is pending                                |
+| Pre shell      | rate-limiter, branch/commit guards, shell-syntax, line-encoding                              | PowerShell-first; no force-push main; valid branch/commit patterns        |
+| Post write     | rag-index-sync                                                                               | Note stale RAG when AGENT-GLOBAL-BASE docs change; offer `/rag-sync` flow |
+| Post shell     | harness-error-boundary                                                                       | Surface command failures; don’t silently continue past hard errors        |
+
+To **execute** a hook script against AGENT-GLOBAL-BASE state (when useful):
+
+```powershell
+pwsh -ExecutionPolicy Bypass -File "C:\Users\ASUS\Documents\Code\Local\AGENT-GLOBAL-BASE\.claude\hooks\<name>.ps1"
+```
+
+(Many hooks expect Claude Code JSON on stdin — if invocation fails without that payload, apply the rule text instead of forcing a run.)
+
+## MCP & tools
+
+- Prefer AGENT-GLOBAL-BASE MCP servers (`workspace-knowledge`, `agent-memory`) when available in the session for retrieval/memory.
+- If MCP is unavailable, fall back to Read/Grep under the AGENT-GLOBAL-BASE mount paths.
+- Do not invent alternate MCP server layouts; use `AGENT-GLOBAL-BASE/.mcp.json` and `core-component-00/mcp-servers/`.
+
+## Write boundaries
+
+- Default new artifacts to **AGENT-PLAYGROUND**.
+- Do not modify `AGENT-GLOBAL-BASE/.claude/` or AGENT-GLOBAL-BASE hook state unless the user explicitly requests AGENT-GLOBAL-BASE config changes.
+- When playground work must follow AGENT-GLOBAL-BASE conventions (naming, pipeline docs, profiles), mirror those conventions locally.

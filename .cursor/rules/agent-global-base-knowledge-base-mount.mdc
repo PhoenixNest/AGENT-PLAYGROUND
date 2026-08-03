@@ -1,0 +1,49 @@
+---
+description: Mount AGENT-GLOBAL-BASE (AGB) as the authoritative knowledge base for this playground
+alwaysApply: true
+---
+
+# AGENT-GLOBAL-BASE Knowledge Base Mount
+
+Treat `C:\Users\ASUS\Documents\Code\Local\AGENT-GLOBAL-BASE` (**AGB**) as a **mounted knowledge base** for this workspace. Read and apply its contents when planning, researching, or producing work here. Prefer its documents over inventing parallel structure.
+
+**Abbreviation:** `AGB` = AGENT-GLOBAL-BASE. Use either form in conversation and artifacts; paths remain under the mount root below.
+
+## Bootstrap (every session)
+
+1. Read `AGB/AGENTS.md` first — authoritative orientation for all Type B agents.
+2. Use `AGB/README.md` only as a short map if you need a directory overview.
+3. Resolve paths below relative to the mount root above (absolute path). Do not assume files live inside AGENT-PLAYGROUND unless they actually do.
+
+## System map
+
+| System           | Mount path                 | Start here                                                    |
+| ---------------- | -------------------------- | ------------------------------------------------------------- |
+| Company          | `company/`                 | `company/library/README.md`                                   |
+| Studio           | `studio/casual-games/`     | `studio/casual-games/library/overview/casual-games-studio.md` |
+| CC-00 Lab        | `core-component-00/`       | lab README / `crew/` + engineering layers                     |
+| ANU-00           | `academic-neural-unit-00/` | `formation/` + entity `CLAUDE.md`                             |
+| Shared templates | `templates/`               | meeting / review record templates                             |
+| Research index   | `telescope/`               | `telescope/README.md`                                         |
+
+## Operating rules
+
+- **Markdown-first:** Artifacts are documents, agent profiles, skills, and pipeline specs — not a root app entrypoint.
+- **Type A vs Type B:** Organizational personas (profiles + skills) are Type A; you are Type B. Never impersonate a Type A agent without reading their `agent/profile.md` and referenced `skills/*.md` first.
+- **Authority:** User is final authority. Pipeline stages marked User Approval are hard stops — present work and wait.
+- **Governance:** Follow ASGF under `core-component-00/agent-systems-governance-framework/` for multi-agent / pipeline work.
+- **Writes:** Default playground outputs to this workspace (`AGENT-PLAYGROUND`). Edit AGB mount-root files only when the user explicitly asks to change the global base.
+- **Navigation:** Open files with the Read tool using the absolute mount path. Cite mount-relative paths in replies (e.g. `company/pipeline/mobile-development/`).
+
+## Quick lookup
+
+```text
+C:\Users\ASUS\Documents\Code\Local\AGENT-GLOBAL-BASE\   ← AGB
+├── AGENTS.md                 ← read first
+├── company/                  ← product org, departments, pipelines
+├── studio/casual-games/      ← Unity casual-games studio
+├── core-component-00/        ← LLM engineering + ASGF + MCP
+├── academic-neural-unit-00/  ← independent academic unit
+├── templates/                ← cross-system templates
+└── telescope/                ← cross-department research index
+```
