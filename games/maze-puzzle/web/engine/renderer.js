@@ -20,16 +20,25 @@ export class GameRenderer {
     this.planets = this.generateCartoonPlanets(3);
     this.cosmicTime = 0;
 
-    // Nibbles Facial State
+    // Nibbles Facial & Dynamic Growth State
     this.nibblesBlinkTimer = 0;
     this.isBlinking = false;
     this.mouthOpenAmount = 0; // 0 = smiling, 1 = wide open NOM
     this.chewTimer = 0;
+    this.currentBhScale = 1.0;
+    this.targetBhScale = 1.0;
+    this.bhWobble = 0;
 
     // Cartoon VFX (Confetti, Stars, Comic Pop Text)
     this.particles = [];
     this.floatingTexts = [];
     this.popRings = [];
+  }
+
+  resetNibblesScale() {
+    this.currentBhScale = 1.0;
+    this.targetBhScale = 1.0;
+    this.bhWobble = 0;
   }
 
   resize(w, h) {
@@ -144,11 +153,12 @@ export class GameRenderer {
   triggerNibblesChew() {
     this.chewTimer = 0.35;
     this.mouthOpenAmount = 1.0;
+    this.bhWobble = 0.09; // Bouncy elastic scale pulse when snacking!
   }
 
-  render(physics, economy, dt) {
+  render(physics, economy, dt, progressInfo = null) {
     this.cosmicTime += dt;
-    this.updateNibblesFace(physics, dt);
+    this.updateNibblesFace(physics, dt, progressInfo);
 
     const ctx = this.ctx;
     ctx.clearRect(0, 0, this.width, this.height);
@@ -174,7 +184,10 @@ export class GameRenderer {
     // 3. Render Chunky Cartoon Centrifuge Ring & Candy Chutes
     this.renderCartoonRing(ctx, physics, ringSkin);
 
-    // 4. Render Bouncy Comic Multiplier Gates
+    // 4. Render Bouncy Cartoon Pinball Bumpers
+    this.renderCartoonBumpers(ctx, physics);
+
+    // 5. Render Differentiated Comic Multiplier Gates
     this.renderCartoonGates(ctx, physics);
 
     // 5. Render Adorable Space Debris
@@ -184,7 +197,28 @@ export class GameRenderer {
     this.renderVfx(ctx, dt);
   }
 
-  updateNibblesFace(physics, dt) {
+  updateNibblesFace(physics, dt, progressInfo) {
+    // Dynamic Black Hole Growth: smoothly scale from 1.0x to 1.65x as quota is reached
+    if (progressInfo && progressInfo.quota > 0) {
+      const ratio = Math.min(
+        1.0,
+        Math.max(0, (progressInfo.collectedMass || 0) / progressInfo.quota),
+      );
+      this.targetBhScale = 1.0 + ratio * 0.65;
+    } else {
+      this.targetBhScale = 1.0;
+    }
+
+    if (this.bhWobble > 0.001) {
+      this.bhWobble *= Math.pow(0.84, dt * 60);
+    } else {
+      this.bhWobble = 0;
+    }
+
+    const targetWithWobble = this.targetBhScale + this.bhWobble;
+    this.currentBhScale +=
+      (targetWithWobble - this.currentBhScale) * Math.min(1.0, dt * 6.0);
+
     // Blinking animation
     this.nibblesBlinkTimer += dt;
     if (this.nibblesBlinkTimer > 3.2) {
@@ -302,6 +336,10 @@ export class GameRenderer {
     const time = this.cosmicTime * 2.5;
 
     ctx.save();
+    // Dynamic Growth Scaling: visually scales from 1.0x to 1.65x without altering level completion conditions
+    ctx.translate(bh.x, bh.y);
+    ctx.scale(this.currentBhScale, this.currentBhScale);
+    ctx.translate(-bh.x, -bh.y);
 
     // 1. Swirling Candy Accretion Donut Ring
     const haloRadius = bh.eventHorizonRadius * 2.5;
@@ -529,10 +567,48 @@ export class GameRenderer {
     ctx.font = "bold 13px Fredoka, sans-serif";
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
-    ctx.fillText("✨ CLEAN ✨", 0, -7);
+    ctx.fillText("✨ ORBITAL ✨", 0, -7);
     ctx.font = "11px Nunito, sans-serif";
     ctx.fillStyle = "#64748b";
-    ctx.fillText("SPACE RIG", 0, 9);
+    ctx.fillText("SORT RIG", 0, 9);
+
+    // 4b. Concentric Track Partitions (if present)
+    if (physics.trackWalls && physics.trackWalls.length > 0) {
+      for (const tw of physics.trackWalls) {
+        const gapHalf = (tw.gapSize || 0.45) * 0.5;
+        const gapAng = tw.gapAngle;
+        const startA = gapAng + gapHalf;
+        const endA = gapAng - gapHalf + Math.PI * 2;
+
+        // Dark track outline
+        ctx.lineWidth = 8;
+        ctx.strokeStyle = "#1e1b4b";
+        ctx.beginPath();
+        ctx.arc(0, 0, tw.r, startA, endA);
+        ctx.stroke();
+
+        // Bright candy rail
+        ctx.lineWidth = 4;
+        ctx.strokeStyle = ringSkin.accent;
+        ctx.beginPath();
+        ctx.arc(0, 0, tw.r, startA, endA);
+        ctx.stroke();
+
+        // Cartoon gateway indicators at transfer gap
+        [-gapHalf, gapHalf].forEach((off) => {
+          const capAng = gapAng + off;
+          const capX = Math.cos(capAng) * tw.r;
+          const capY = Math.sin(capAng) * tw.r;
+          ctx.fillStyle = "#facc15";
+          ctx.strokeStyle = "#1e1b4b";
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.arc(capX, capY, 4, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.stroke();
+        });
+      }
+    }
 
     // 5. Chunky Radial Dividers (Candy Chutes)
     ctx.lineWidth = 7;
@@ -598,6 +674,448 @@ export class GameRenderer {
     ctx.restore();
   }
 
+  renderCartoonBumpers(ctx, physics) {
+    if (!physics.deflectorPins || physics.deflectorPins.length === 0) return;
+
+    const cx = physics.center.x;
+    const cy = physics.center.y;
+    const angle = physics.ringAngle;
+
+    ctx.save();
+    ctx.translate(cx, cy);
+    ctx.rotate(angle);
+
+    for (const pin of physics.deflectorPins) {
+      const px = Math.cos(pin.angle) * pin.r;
+      const py = Math.sin(pin.angle) * pin.r;
+      const r = pin.radius || 9.5;
+      const isHit = pin.hitTimer > 0;
+      const hitProgress = isHit ? pin.hitTimer / 0.25 : 0; // 1 down to 0
+      const scale = isHit ? 1.0 + Math.sin(hitProgress * Math.PI) * 0.35 : 1.0;
+
+      ctx.save();
+      ctx.translate(px, py);
+      ctx.scale(scale, scale);
+
+      // 1. Bumper Drop Shadow
+      ctx.fillStyle = "rgba(15, 23, 42, 0.4)";
+      ctx.beginPath();
+      ctx.arc(0, 3, r + 2, 0, Math.PI * 2);
+      ctx.fill();
+
+      // 2. Heavy Chrome Outer Trim Ring (Pinball arcade aesthetic)
+      ctx.lineWidth = 3;
+      ctx.strokeStyle = "#1e1b4b";
+      ctx.fillStyle = isHit ? "#fef08a" : pin.color || "#ec4899";
+      ctx.beginPath();
+      ctx.arc(0, 0, r + 1, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+
+      // 3. Inner Illuminated Dome Gradient
+      const domeGrad = ctx.createRadialGradient(-r * 0.3, -r * 0.3, 1, 0, 0, r);
+      domeGrad.addColorStop(0, "#ffffff");
+      domeGrad.addColorStop(0.45, isHit ? "#fbbf24" : pin.accent || "#f43f5e");
+      domeGrad.addColorStop(1, isHit ? "#f59e0b" : pin.baseColor || "#be123c");
+
+      ctx.fillStyle = domeGrad;
+      ctx.beginPath();
+      ctx.arc(0, 0, r * 0.8, 0, Math.PI * 2);
+      ctx.fill();
+
+      // 4. Shiny Dome Highlight
+      ctx.fillStyle = "rgba(255, 255, 255, 0.85)";
+      ctx.beginPath();
+      ctx.arc(-r * 0.28, -r * 0.28, r * 0.26, 0, Math.PI * 2);
+      ctx.fill();
+
+      // 5. Animated Shockwave Pulse on Hit
+      if (isHit) {
+        const shockRadius = r + (1 - hitProgress) * 16;
+        ctx.lineWidth = 2.5 * hitProgress;
+        ctx.strokeStyle = `rgba(254, 240, 138, ${hitProgress})`;
+        ctx.beginPath();
+        ctx.arc(0, 0, shockRadius, 0, Math.PI * 2);
+        ctx.stroke();
+      }
+
+      ctx.restore();
+    }
+
+    ctx.restore();
+  }
+
+  renderSpinningGear(ctx, x, y, radius, rot, color) {
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.rotate(rot);
+
+    const numTeeth = 6;
+    ctx.fillStyle = color;
+    ctx.strokeStyle = "#1e1b4b";
+    ctx.lineWidth = 1.5;
+
+    // Gear teeth
+    for (let i = 0; i < numTeeth; i++) {
+      const a = (i * Math.PI * 2) / numTeeth;
+      ctx.save();
+      ctx.rotate(a);
+      ctx.beginPath();
+      ctx.rect(-radius * 0.35, -radius * 1.3, radius * 0.7, radius * 0.55);
+      ctx.fill();
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    // Gear hub
+    ctx.beginPath();
+    ctx.arc(0, 0, radius, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+
+    // Rivet center
+    ctx.fillStyle = "#ffffff";
+    ctx.beginPath();
+    ctx.arc(0, 0, radius * 0.38, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = "#1e1b4b";
+    ctx.lineWidth = 1.2;
+    ctx.stroke();
+
+    ctx.restore();
+  }
+
+  renderSawbladeGate(ctx, x1, y1, x2, y2, gx, gy, gAngle, gate) {
+    const mainColor = "#f97316";
+
+    // Track outline
+    ctx.lineWidth = 7;
+    ctx.strokeStyle = "#1e1b4b";
+    ctx.beginPath();
+    ctx.moveTo(x1, y1);
+    ctx.lineTo(x2, y2);
+    ctx.stroke();
+
+    // Hazard orange beam
+    ctx.lineWidth = 4;
+    ctx.strokeStyle = mainColor;
+    ctx.beginPath();
+    ctx.moveTo(x1, y1);
+    ctx.lineTo(x2, y2);
+    ctx.stroke();
+
+    // Warm inner core
+    ctx.lineWidth = 1.6;
+    ctx.strokeStyle = "#fef08a";
+    ctx.beginPath();
+    ctx.moveTo(x1, y1);
+    ctx.lineTo(x2, y2);
+    ctx.stroke();
+
+    // Dual spinning cartoon sawblade gears
+    const spin = this.cosmicTime * 7;
+    this.renderSpinningGear(ctx, x1, y1, 6.5, spin, mainColor);
+    this.renderSpinningGear(ctx, x2, y2, 6.5, -spin, mainColor);
+
+    // Hexagonal Badge
+    ctx.save();
+    ctx.translate(gx, gy);
+    ctx.rotate(gAngle + Math.PI * 0.5);
+
+    const bw = 24;
+    const bh = 11;
+
+    // Badge shadow
+    ctx.fillStyle = "#1e1b4b";
+    ctx.beginPath();
+    ctx.moveTo(-bw - 5, 2.5);
+    ctx.lineTo(-bw, -bh + 2.5);
+    ctx.lineTo(bw, -bh + 2.5);
+    ctx.lineTo(bw + 5, 2.5);
+    ctx.lineTo(bw, bh + 2.5);
+    ctx.lineTo(-bw, bh + 2.5);
+    ctx.closePath();
+    ctx.fill();
+
+    // Hex body
+    ctx.fillStyle = "#ffffff";
+    ctx.strokeStyle = mainColor;
+    ctx.lineWidth = 2.5;
+    ctx.beginPath();
+    ctx.moveTo(-bw - 5, 0);
+    ctx.lineTo(-bw, -bh);
+    ctx.lineTo(bw, -bh);
+    ctx.lineTo(bw + 5, 0);
+    ctx.lineTo(bw, bh);
+    ctx.lineTo(-bw, bh);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+
+    // Text: ⚡ ×N
+    ctx.fillStyle = "#c2410c";
+    ctx.font = "bold 11px Fredoka, sans-serif";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText(`⚡ ×${gate.value}`, 0, 0.5);
+
+    ctx.restore();
+  }
+
+  renderSuperShredderGate(ctx, x1, y1, x2, y2, gx, gy, gAngle, gate) {
+    const mainColor = "#ec4899";
+
+    // Wide electric glow
+    ctx.lineWidth = 10;
+    ctx.strokeStyle = "rgba(236, 72, 153, 0.4)";
+    ctx.beginPath();
+    ctx.moveTo(x1, y1);
+    ctx.lineTo(x2, y2);
+    ctx.stroke();
+
+    // Jagged lightning crackle path
+    const dx = x2 - x1;
+    const dy = y2 - y1;
+    const segCount = 6;
+    ctx.lineWidth = 3;
+    ctx.strokeStyle = "#ffffff";
+    ctx.beginPath();
+    ctx.moveTo(x1, y1);
+    for (let i = 1; i < segCount; i++) {
+      const frac = i / segCount;
+      const px = x1 + dx * frac;
+      const py = y1 + dy * frac;
+      const perpX = -dy / (Math.hypot(dx, dy) + 0.001);
+      const perpY = dx / (Math.hypot(dx, dy) + 0.001);
+      const jitter = Math.sin(this.cosmicTime * 32 + i * 2) * 3.5;
+      ctx.lineTo(px + perpX * jitter, py + perpY * jitter);
+    }
+    ctx.lineTo(x2, y2);
+    ctx.stroke();
+
+    // Spiked Diamond Emitters at x1, y1 and x2, y2
+    [
+      { x: x1, y: y1 },
+      { x: x2, y: y2 },
+    ].forEach((p) => {
+      ctx.save();
+      ctx.translate(p.x, p.y);
+      ctx.rotate(this.cosmicTime * 5);
+
+      ctx.fillStyle = mainColor;
+      ctx.strokeStyle = "#1e1b4b";
+      ctx.lineWidth = 1.8;
+      ctx.beginPath();
+      ctx.moveTo(0, -9);
+      ctx.lineTo(3, -3);
+      ctx.lineTo(9, 0);
+      ctx.lineTo(3, 3);
+      ctx.lineTo(0, 9);
+      ctx.lineTo(-3, 3);
+      ctx.lineTo(-9, 0);
+      ctx.lineTo(-3, -3);
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+
+      ctx.fillStyle = "#ffffff";
+      ctx.beginPath();
+      ctx.arc(0, 0, 2.5, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.restore();
+    });
+
+    // Spiked Diamond Super Badge
+    ctx.save();
+    ctx.translate(gx, gy);
+    ctx.rotate(gAngle + Math.PI * 0.5);
+
+    // Glowing aura
+    ctx.fillStyle = "rgba(236, 72, 153, 0.45)";
+    ctx.beginPath();
+    ctx.arc(0, 0, 20, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Drop shadow
+    ctx.fillStyle = "#1e1b4b";
+    ctx.beginPath();
+    ctx.roundRect(-26, -11 + 2.5, 52, 22, 6);
+    ctx.fill();
+
+    // Magenta badge body
+    ctx.fillStyle = "#ec4899";
+    ctx.strokeStyle = "#ffffff";
+    ctx.lineWidth = 2.2;
+    ctx.beginPath();
+    ctx.roundRect(-26, -11, 52, 22, 6);
+    ctx.fill();
+    ctx.stroke();
+
+    // Text: 💥 ×N!
+    ctx.fillStyle = "#ffffff";
+    ctx.font = "900 12px Fredoka, sans-serif";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText(`💥 ×${gate.value}!`, 0, 1);
+
+    ctx.restore();
+  }
+
+  renderCompactorGate(ctx, x1, y1, x2, y2, gx, gy, gAngle, gate) {
+    const perpAngle = gAngle + Math.PI * 0.5;
+    const offX = Math.cos(perpAngle) * 3;
+    const offY = Math.sin(perpAngle) * 3;
+
+    // Dual cyan magnetic guide rails
+    ctx.lineWidth = 3.5;
+    ctx.strokeStyle = "#0891b2";
+    ctx.beginPath();
+    ctx.moveTo(x1 - offX, y1 - offY);
+    ctx.lineTo(x2 - offX, y2 - offY);
+    ctx.moveTo(x1 + offX, y1 + offY);
+    ctx.lineTo(x2 + offX, y2 + offY);
+    ctx.stroke();
+
+    // Pulsing inward magnetic field wave rings
+    const dx = x2 - x1;
+    const dy = y2 - y1;
+    const waveCount = 3;
+    for (let i = 0; i < waveCount; i++) {
+      const wavePhase = (this.cosmicTime * 1.8 + i / waveCount) % 1.0;
+      const frac = wavePhase < 0.5 ? wavePhase : 1.0 - (wavePhase - 0.5);
+      const wx = x1 + dx * frac;
+      const wy = y1 + dy * frac;
+
+      ctx.strokeStyle = `rgba(6, 182, 212, ${0.8 - frac * 0.6})`;
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.arc(wx, wy, 4 + wavePhase * 6, 0, Math.PI * 2);
+      ctx.stroke();
+    }
+
+    // Heavy Magnetic Bracket Coils at ends
+    [
+      { x: x1, y: y1 },
+      { x: x2, y: y2 },
+    ].forEach((p) => {
+      ctx.save();
+      ctx.translate(p.x, p.y);
+      ctx.fillStyle = "#0284c7";
+      ctx.strokeStyle = "#1e1b4b";
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.roundRect(-5.5, -5.5, 11, 11, 3);
+      ctx.fill();
+      ctx.stroke();
+
+      ctx.fillStyle = "#67e8f9";
+      ctx.beginPath();
+      ctx.arc(0, 0, 2.8, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    });
+
+    // Smooth Rounded Pill Badge (🧲 +N)
+    ctx.save();
+    ctx.translate(gx, gy);
+    ctx.rotate(gAngle + Math.PI * 0.5);
+
+    // Drop shadow
+    ctx.fillStyle = "#1e1b4b";
+    ctx.beginPath();
+    ctx.roundRect(-24, -10 + 2.5, 48, 20, 10);
+    ctx.fill();
+
+    // Capsule body
+    ctx.fillStyle = "#ffffff";
+    ctx.strokeStyle = "#0891b2";
+    ctx.lineWidth = 2.5;
+    ctx.beginPath();
+    ctx.roundRect(-24, -10, 48, 20, 10);
+    ctx.fill();
+    ctx.stroke();
+
+    // Text: 🧲 +N
+    ctx.fillStyle = "#0369a1";
+    ctx.font = "bold 11px Fredoka, sans-serif";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText(`🧲 +${gate.value}`, 0, 0.5);
+
+    ctx.restore();
+  }
+
+  renderBoosterGate(ctx, x1, y1, x2, y2, gx, gy, gAngle, gate) {
+    // Glowing lime green accelerator track
+    ctx.lineWidth = 7;
+    ctx.strokeStyle = "rgba(132, 204, 22, 0.35)";
+    ctx.beginPath();
+    ctx.moveTo(x1, y1);
+    ctx.lineTo(x2, y2);
+    ctx.stroke();
+
+    ctx.lineWidth = 3.5;
+    ctx.strokeStyle = "#65a30d";
+    ctx.beginPath();
+    ctx.moveTo(x1, y1);
+    ctx.lineTo(x2, y2);
+    ctx.stroke();
+
+    // Swept-wing aerodynamic pylons at ends
+    [
+      { x: x1, y: y1 },
+      { x: x2, y: y2 },
+    ].forEach((p) => {
+      ctx.save();
+      ctx.translate(p.x, p.y);
+      ctx.fillStyle = "#84cc16";
+      ctx.strokeStyle = "#1e1b4b";
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.arc(0, 0, 5, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+
+      ctx.fillStyle = "#facc15";
+      ctx.beginPath();
+      ctx.arc(0, 0, 2.5, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    });
+
+    // Skewed Aerodynamic Badge (⏩ BOOST)
+    ctx.save();
+    ctx.translate(gx, gy);
+    ctx.rotate(gAngle + Math.PI * 0.5);
+
+    ctx.transform(1, 0, -0.25, 1, 0, 0);
+
+    // Shadow
+    ctx.fillStyle = "#1e1b4b";
+    ctx.beginPath();
+    ctx.roundRect(-26, -10 + 2.5, 52, 20, 5);
+    ctx.fill();
+
+    // Body
+    ctx.fillStyle = "#84cc16";
+    ctx.strokeStyle = "#1e1b4b";
+    ctx.lineWidth = 2.2;
+    ctx.beginPath();
+    ctx.roundRect(-26, -10, 52, 20, 5);
+    ctx.fill();
+    ctx.stroke();
+
+    // Text: ⏩ BOOST
+    ctx.fillStyle = "#ffffff";
+    ctx.font = "bold 10.5px Fredoka, sans-serif";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText("⏩ BOOST", 0, 0.5);
+
+    ctx.restore();
+  }
+
   renderCartoonGates(ctx, physics) {
     const cx = physics.center.x;
     const cy = physics.center.y;
@@ -609,57 +1127,29 @@ export class GameRenderer {
 
     for (const gate of physics.gates) {
       const gAngle = gate.angle;
-      const r = gate.r;
-      const halfLen = gate.length * 0.5;
+      const rMin = gate.rMin !== undefined ? gate.rMin : (gate.r || 120) - 17;
+      const rMax = gate.rMax !== undefined ? gate.rMax : (gate.r || 120) + 17;
+      const rMid = (rMin + rMax) * 0.5;
 
-      const gx = Math.cos(gAngle) * r;
-      const gy = Math.sin(gAngle) * r;
+      const cosA = Math.cos(gAngle);
+      const sinA = Math.sin(gAngle);
 
-      const perpAngle = gAngle + Math.PI * 0.5;
-      const x1 = gx - Math.cos(perpAngle) * halfLen;
-      const y1 = gy - Math.sin(perpAngle) * halfLen;
-      const x2 = gx + Math.cos(perpAngle) * halfLen;
-      const y2 = gy + Math.sin(perpAngle) * halfLen;
+      const x1 = cosA * rMin;
+      const y1 = sinA * rMin;
+      const x2 = cosA * rMax;
+      const y2 = sinA * rMax;
+      const gx = cosA * rMid;
+      const gy = sinA * rMid;
 
-      // Colorful Bouncy Arch
-      ctx.lineWidth = 5.5;
-      ctx.strokeStyle = gate.color;
-      ctx.beginPath();
-      ctx.moveTo(x1, y1);
-      ctx.lineTo(x2, y2);
-      ctx.stroke();
-
-      // Comic-Book Badge with 3D drop shadow
-      ctx.save();
-      ctx.translate(gx, gy);
-      ctx.rotate(gAngle + Math.PI * 0.5);
-
-      const label =
-        gate.type === "MULTIPLY" ? `×${gate.value}!` : `+${gate.value}!`;
-
-      // Shadow
-      ctx.fillStyle = "#1e1b4b";
-      ctx.beginPath();
-      ctx.roundRect(-20, -10 + 2.5, 40, 22, 8);
-      ctx.fill();
-
-      // Main Badge
-      ctx.fillStyle = "#ffffff";
-      ctx.strokeStyle = gate.color;
-      ctx.lineWidth = 2.5;
-      ctx.beginPath();
-      ctx.roundRect(-20, -10, 40, 22, 8);
-      ctx.fill();
-      ctx.stroke();
-
-      // Text
-      ctx.fillStyle = gate.color;
-      ctx.font = "bold 12px Fredoka, sans-serif";
-      ctx.textAlign = "center";
-      ctx.textBaseline = "middle";
-      ctx.fillText(label, 0, 1);
-
-      ctx.restore();
+      if (gate.type === "BOOST") {
+        this.renderBoosterGate(ctx, x1, y1, x2, y2, gx, gy, gAngle, gate);
+      } else if (gate.type === "ADD") {
+        this.renderCompactorGate(ctx, x1, y1, x2, y2, gx, gy, gAngle, gate);
+      } else if (gate.value >= 4) {
+        this.renderSuperShredderGate(ctx, x1, y1, x2, y2, gx, gy, gAngle, gate);
+      } else {
+        this.renderSawbladeGate(ctx, x1, y1, x2, y2, gx, gy, gAngle, gate);
+      }
     }
 
     ctx.restore();

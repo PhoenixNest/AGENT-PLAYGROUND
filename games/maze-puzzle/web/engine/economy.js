@@ -170,6 +170,7 @@ export class EconomyManager {
         skyboxes: ["skybox_cotton_candy"],
       },
       achievements: [],
+      completedSectors: [],
       dailyShiftCompletedToday: false,
       lastDailyShiftDate: "",
     };
@@ -180,12 +181,23 @@ export class EconomyManager {
       const raw = localStorage.getItem(STORAGE_KEY);
       if (raw) {
         const parsed = JSON.parse(raw);
+        if (!parsed.completedSectors) parsed.completedSectors = [];
         return { ...this.getDefaultProfile(), ...parsed };
       }
     } catch (e) {
       console.warn("Could not load save profile from localStorage", e);
     }
     return this.getDefaultProfile();
+  }
+
+  recordSectorCompleted(sectorId) {
+    if (!this.profile.completedSectors) {
+      this.profile.completedSectors = [];
+    }
+    if (!this.profile.completedSectors.includes(sectorId)) {
+      this.profile.completedSectors.push(sectorId);
+      this.saveProfile();
+    }
   }
 
   saveProfile() {

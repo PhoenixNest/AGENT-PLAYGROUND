@@ -24,8 +24,10 @@ class OrbitalApp {
     this.physics = new PhysicsEngine(this.audio);
     this.renderer = new GameRenderer(this.canvas);
 
-    // Levels & Progression
+    // 50-Level Campaign Progression
     this.sectors = MazeLevelBuilder.getSectors();
+    this.worlds = MazeLevelBuilder.getSectorWorlds();
+    this.selectedWorldIndex = 1;
     this.currentSectorIndex = 0;
     this.activeSector = null;
     this.collectedMass = 0;
@@ -229,14 +231,20 @@ class OrbitalApp {
     };
 
     this.physics.onGatePassed = (gate) => {
+      const rMid =
+        gate.rMin !== undefined && gate.rMax !== undefined
+          ? (gate.rMin + gate.rMax) * 0.5
+          : gate.r || 120;
       const gx =
         this.physics.center.x +
-        Math.cos(gate.angle + this.physics.ringAngle) * gate.r;
+        Math.cos(gate.angle + this.physics.ringAngle) * rMid;
       const gy =
         this.physics.center.y +
-        Math.sin(gate.angle + this.physics.ringAngle) * gate.r;
+        Math.sin(gate.angle + this.physics.ringAngle) * rMid;
       const label =
-        gate.type === "MULTIPLY" ? `×${gate.value}! 🎉` : `+${gate.value}! ✨`;
+        gate.type === "MULTIPLY"
+          ? `×${gate.value}! SHRED ⚡`
+          : `+${gate.value}! COMPACT ✨`;
 
       this.renderer.addFloatingText(gx, gy - 16, label, "#fde047");
       this.renderer.addConfetti(gx, gy, 8);
@@ -267,6 +275,11 @@ class OrbitalApp {
     this.activeSector = sectorConfig;
     this.collectedMass = 0;
     this.isLevelCleared = false;
+    this.renderer.resetNibblesScale();
+
+    if (sectorConfig.worldIndex) {
+      this.selectedWorldIndex = sectorConfig.worldIndex;
+    }
 
     this.physics.initSector(
       sectorConfig,
@@ -307,6 +320,14 @@ class OrbitalApp {
 
     this.economy.addCredits(totalPayout);
     this.updateCreditsDisplay();
+
+    if (
+      this.activeSector &&
+      !this.activeSector.isDaily &&
+      this.activeSector.id
+    ) {
+      this.economy.recordSectorCompleted(this.activeSector.id);
+    }
 
     const newlyUnlocked = this.economy.recordContractComplete(
       !!this.activeSector.isDaily,
@@ -363,71 +384,122 @@ class OrbitalApp {
     const container = document.getElementById("sectors-container");
     container.innerHTML = "";
 
-    // 1. Handcrafted Maps
-    this.sectors.forEach((sec, idx) => {
-      const card = document.createElement("div");
-      card.className = "sector-card";
-      const isCurrent = this.activeSector && this.activeSector.id === sec.id;
+    // 1. World Tabs Row (Worlds 1-5 + Daily)
+    const tabsRow = document.createElement("div");
+    tabsRow.className = "world-tabs-row";
 
-      card.innerHTML = `
+    this.worlds.forEach((w) => {
+      const tabBtn = document.createElement("button");
+      tabBtn.className = `world-tab-btn ${
+        this.selectedWorldIndex === w.worldIndex ? "active" : ""
+      }`;
+      tabBtn.textContent = `${w.icon} W${w.worldIndex}`;
+      tabBtn.addEventListener("click", () => {
+        this.selectedWorldIndex = w.worldIndex;
+        this.renderSectorsModal();
+      });
+      tabsRow.appendChild(tabBtn);
+    });
+
+    // Daily Tab
+    const dailyTab = document.createElement("button");
+    dailyTab.className = `world-tab-btn ${
+      this.selectedWorldIndex === "daily" ? "active" : ""
+    }`;
+    dailyTab.textContent = "📅 Daily Shift";
+    dailyTab.addEventListener("click", () => {
+      this.selectedWorldIndex = "daily";
+      this.renderSectorsModal();
+    });
+    tabsRow.appendChild(dailyTab);
+    container.appendChild(tabsRow);
+
+    if (this.selectedWorldIndex === "daily") {
+      // Render Daily Shift Card
+      const daily = this.economy.getDailyShiftInfo();
+      const dailyCard = document.createElement("div");
+      dailyCard.className = "sector-card";
+      dailyCard.style.borderColor = "var(--yellow-main)";
+
+      const isDailyActive = this.activeSector && this.activeSector.isDaily;
+      dailyCard.innerHTML = `
         <div class="card-title-row">
-          <span class="card-title">${sec.name}</span>
-          <span style="font-size:12px; color:var(--yellow-main); font-weight:800;">${sec.code}</span>
+          <span class="card-title" style="color:var(--yellow-main);">★ ${daily.title}</span>
+          <span style="font-size:11px; color:var(--yellow-main); font-weight:800;">${daily.isCompleted ? "COMPLETED" : "TODAY"}</span>
         </div>
-        <div class="card-desc">${sec.description}</div>
+        <div class="card-desc">${daily.hazardModifier}</div>
         <div class="card-footer">
-          <span class="badge-cost">Goal: ${sec.quota} kg</span>
+          <span class="badge-cost">+${daily.rewardCredits} 🪙 Bounty</span>
           ${
-            isCurrent
+            isDailyActive
               ? `<span class="badge-equipped">PLAYING</span>`
-              : `<button class="btn-cartoon-primary btn-select-sector" data-idx="${idx}">Play ▶</button>`
+              : `<button class="btn-cartoon-primary btn-select-daily" style="background:var(--pink-main); color:#fff;">Start Party ▶</button>`
           }
         </div>
       `;
-      container.appendChild(card);
-    });
+      container.appendChild(dailyCard);
 
-    // 2. Procedural Daily Shift
-    const daily = this.economy.getDailyShiftInfo();
-    const dailyCard = document.createElement("div");
-    dailyCard.className = "sector-card";
-    dailyCard.style.borderColor = "var(--yellow-main)";
+      const dailyBtn = container.querySelector(".btn-select-daily");
+      if (dailyBtn) {
+        dailyBtn.addEventListener("click", () => {
+          const dailyLevel = MazeLevelBuilder.buildDailyShift(daily);
+          this.loadSector(dailyLevel);
+          document.getElementById("modal-sectors").classList.remove("active");
+        });
+      }
+      return;
+    }
 
-    const isDailyActive = this.activeSector && this.activeSector.isDaily;
-    dailyCard.innerHTML = `
-      <div class="card-title-row">
-        <span class="card-title" style="color:var(--yellow-main);">★ ${daily.title}</span>
-        <span style="font-size:11px; color:var(--yellow-main); font-weight:800;">${daily.isCompleted ? "COMPLETED" : "TODAY"}</span>
-      </div>
-      <div class="card-desc">${daily.hazardModifier}</div>
-      <div class="card-footer">
-        <span class="badge-cost">+${daily.rewardCredits} 🪙 Bounty</span>
-        ${
-          isDailyActive
-            ? `<span class="badge-equipped">PLAYING</span>`
-            : `<button class="btn-cartoon-primary btn-select-daily" style="background:var(--pink-main); color:#fff;">Start Party ▶</button>`
-        }
+    // 2. Active World Banner
+    const currentWorld =
+      this.worlds.find((w) => w.worldIndex === this.selectedWorldIndex) ||
+      this.worlds[0];
+    const banner = document.createElement("div");
+    banner.className = "world-banner";
+    banner.innerHTML = `
+      <div class="world-banner-info">
+        <h4>${currentWorld.icon} World ${currentWorld.worldIndex}: ${currentWorld.title}</h4>
+        <p>${currentWorld.tagline} • Levels ${currentWorld.levelRange[0]}-${currentWorld.levelRange[1]}</p>
       </div>
     `;
-    container.appendChild(dailyCard);
+    container.appendChild(banner);
 
-    container.querySelectorAll(".btn-select-sector").forEach((btn) => {
-      btn.addEventListener("click", () => {
-        const idx = parseInt(btn.dataset.idx, 10);
-        this.currentSectorIndex = idx;
-        this.loadSector(this.sectors[idx]);
+    // 3. 10-Level Responsive Grid for Selected World
+    const grid = document.createElement("div");
+    grid.className = "level-grid-50";
+
+    const [startLvl, endLvl] = currentWorld.levelRange;
+    for (let l = startLvl; l <= endLvl; l++) {
+      const secIdx = l - 1;
+      const sec = this.sectors[secIdx];
+      if (!sec) continue;
+
+      const isCurrent = this.activeSector && this.activeSector.id === sec.id;
+      const isCompleted = (
+        this.economy.profile.completedSectors || []
+      ).includes(sec.id);
+
+      const tile = document.createElement("div");
+      tile.className = `level-tile ${isCurrent ? "active-level" : ""}`;
+      tile.innerHTML = `
+        <div class="level-tile-header">
+          <span class="level-badge">${sec.code}</span>
+          <span>${isCurrent ? "⭐ PLAY" : isCompleted ? "✅" : "▶"}</span>
+        </div>
+        <div class="level-name">${sec.name}</div>
+        <div class="level-quota">Goal: ${sec.quota} kg</div>
+      `;
+
+      tile.addEventListener("click", () => {
+        this.currentSectorIndex = secIdx;
+        this.loadSector(sec);
         document.getElementById("modal-sectors").classList.remove("active");
       });
-    });
 
-    const dailyBtn = container.querySelector(".btn-select-daily");
-    if (dailyBtn) {
-      dailyBtn.addEventListener("click", () => {
-        const dailyLevel = MazeLevelBuilder.buildDailyShift(daily);
-        this.loadSector(dailyLevel);
-        document.getElementById("modal-sectors").classList.remove("active");
-      });
+      grid.appendChild(tile);
     }
+
+    container.appendChild(grid);
   }
 
   renderStoreModal() {
@@ -526,8 +598,11 @@ class OrbitalApp {
     // 1. Update Physics
     this.physics.update(dt);
 
-    // 2. Render Canvas
-    this.renderer.render(this.physics, this.economy, dt);
+    // 2. Render Canvas with Dynamic Black Hole Growth Info
+    this.renderer.render(this.physics, this.economy, dt, {
+      collectedMass: this.collectedMass,
+      quota: this.activeSector ? this.activeSector.quota : 30,
+    });
 
     requestAnimationFrame((t) => this.loop(t));
   }
