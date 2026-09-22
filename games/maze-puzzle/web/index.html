@@ -1,0 +1,213 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+    />
+    <title>Space Trash Clean - Pure Gesture Mobile Puzzle</title>
+    <meta
+      name="description"
+      content="Swipe to spin the donut and feed Nibbles the hungry cartoon black hole in this pure gesture mobile puzzle!"
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <!-- Mobile Portrait Container Frame -->
+    <div id="mobile-frame">
+      <!-- 1. Interactive Simulation Canvas -->
+      <canvas id="game-canvas"></canvas>
+
+      <!-- 2. HUD: Top Mobile Header -->
+      <header class="hud-top-mobile">
+        <div class="level-badge" id="hud-sector-code">⭐ MAP 1</div>
+
+        <div class="quota-meter-pill">
+          <div class="quota-meter-label">
+            <span>SNACK GOAL</span>
+            <span id="hud-quota-text">0 / 35 kg</span>
+          </div>
+          <div class="quota-bar-track">
+            <div class="quota-bar-fill" id="hud-quota-bar"></div>
+          </div>
+        </div>
+
+        <div class="coins-pill" title="Recycling Gold Coins">
+          <span>🪙</span>
+          <span id="hud-credits-val">250</span>
+        </div>
+
+        <button
+          class="btn-sound-mini"
+          id="btn-toggle-audio"
+          title="Mute/Unmute Sound"
+        >
+          <span id="audio-icon">🔊</span>
+        </button>
+      </header>
+
+      <!-- 3. Animated Gesture Tutorial Prompt -->
+      <div id="gesture-hint" class="gesture-hint">
+        <div class="hand-swipe-anim">👆</div>
+        <span class="hint-text">Swipe anywhere to spin!</span>
+      </div>
+
+      <!-- 4. HUD: Floating Bottom Tab Bar Navigation -->
+      <footer class="hud-bottom-mobile">
+        <nav class="mobile-tab-bar">
+          <button class="tab-nav-btn" id="btn-open-sectors">
+            <span>🚀</span>
+            <span>Maps</span>
+          </button>
+          <button class="tab-nav-btn" id="btn-open-store">
+            <span>🎁</span>
+            <span>Toy Shop</span>
+          </button>
+          <button class="tab-nav-btn" id="btn-open-achievements">
+            <span>🏆</span>
+            <span>Trophies</span>
+          </button>
+          <button class="tab-nav-btn" id="btn-restart-sector">
+            <span>🔄</span>
+            <span>Restart</span>
+          </button>
+        </nav>
+      </footer>
+
+      <!-- 5. Modals: Maps / Sector Select Bottom Sheet -->
+      <div class="modal-overlay" id="modal-sectors">
+        <div class="modal-card">
+          <div class="modal-header">
+            <h2 class="modal-title">🚀 CHOOSE YOUR CLEANUP MAP</h2>
+            <button class="btn-close" id="btn-close-sectors">&times;</button>
+          </div>
+          <div class="modal-body">
+            <div class="card-grid" id="sectors-container">
+              <!-- Dynamically populated via main.js -->
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 6. Modals: Toy Shop / Costume Depot -->
+      <div class="modal-overlay" id="modal-store">
+        <div class="modal-card">
+          <div class="modal-header">
+            <h2 class="modal-title">🎁 TOY & COSTUME SHOP</h2>
+            <button class="btn-close" id="btn-close-store">&times;</button>
+          </div>
+          <div class="modal-body">
+            <p
+              style="
+                font-size: 12px;
+                color: rgba(255, 255, 255, 0.8);
+                text-align: center;
+              "
+            >
+              100% Free! Unlock cute costumes with your earned recycling coins
+              🪙
+            </p>
+            <div class="tab-row">
+              <button class="tab-btn active" data-tab="rings">
+                Donut Rings
+              </button>
+              <button class="tab-btn" data-tab="singularities">
+                Nibbles Hats
+              </button>
+              <button class="tab-btn" data-tab="skyboxes">Skies</button>
+            </div>
+            <div class="card-grid" id="store-container">
+              <!-- Dynamically populated via main.js -->
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 7. Modals: Trophies / Holographic Dossier -->
+      <div class="modal-overlay" id="modal-achievements">
+        <div class="modal-card">
+          <div class="modal-header">
+            <h2 class="modal-title">🏆 YOUR SHINY TROPHIES</h2>
+            <button class="btn-close" id="btn-close-achievements">
+              &times;
+            </button>
+          </div>
+          <div class="modal-body">
+            <div class="card-grid" id="achievements-container">
+              <!-- Dynamically populated via main.js -->
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 8. Modals: Mission Debrief (Victory Pop-up) -->
+      <div class="modal-overlay" id="modal-debrief">
+        <div
+          class="modal-card"
+          style="border-radius: 32px; margin-bottom: 24px; text-align: center"
+        >
+          <div
+            class="modal-header"
+            style="justify-content: center; background: #facc15"
+          >
+            <h2 class="modal-title" style="color: #1e1b4b; font-size: 20px">
+              🎉 NIBBLES IS FULL! YAY!
+            </h2>
+          </div>
+          <div class="modal-body" style="align-items: center">
+            <div style="font-size: 52px; margin: 4px 0">🍩😋✨</div>
+            <p
+              style="
+                color: rgba(255, 255, 255, 0.85);
+                font-size: 14px;
+                font-weight: 700;
+              "
+            >
+              Awesome job! The space orbit is sparkling clean and trash-free!
+            </p>
+
+            <div class="debrief-stats">
+              <div class="debrief-stat-box">
+                <span class="stat-label">Snacks Eaten</span>
+                <span class="stat-val" id="debrief-mass-val">45 kg</span>
+              </div>
+              <div class="debrief-stat-box">
+                <span class="stat-label">Coins Won</span>
+                <span
+                  class="stat-val"
+                  id="debrief-credits-val"
+                  style="color: #facc15"
+                  >+250 🪙</span
+                >
+              </div>
+            </div>
+
+            <div style="display: flex; gap: 12px; margin-top: 6px; width: 100%">
+              <button
+                class="btn-cartoon-secondary"
+                id="btn-debrief-replay"
+                style="flex: 1; padding: 12px"
+              >
+                Play Again
+              </button>
+              <button
+                class="btn-cartoon-primary"
+                id="btn-debrief-next"
+                style="flex: 1; padding: 12px"
+              >
+                Next Map ▶
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 9. Toast Notifications -->
+      <div id="toast-container"></div>
+    </div>
+
+    <!-- Application Script -->
+    <script type="module" src="main.js"></script>
+  </body>
+</html>
