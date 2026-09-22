@@ -86,7 +86,38 @@ To ensure clear mechanical superiority over generic clones:
    - Periodic **Solar Flares** or **Gravitational Waves** momentarily shift the gravity vector, requiring players to react and compensate with counter-rotations.
 
 3. **Multi-Stage Orbital Concentric Rings:**
-   - Advanced sector puzzles feature an **Inner Primary Ring** and an **Outer Staging Ring**. Players must line up the transfer airlocks between both rotating rings to funnel debris into the singularity.
+   - Advanced sector puzzles feature an **Inner Primary Ring** and an **Outer Staging Ring** separated by concentric rails with transfer airlocks, requiring players to route debris between orbital altitudes before final release.
+4. **Differentiated Multiplier Gate Archetypes:**
+   - Rather than homogenous indicators, each gate possesses distinct silhouettes, color palettes, animations, and acoustic signatures:
+     - **Rotary Sawblade (Multiply < 4):** Warning Amber/Orange (`#f97316`), dual spinning circular saw/gear pylons with rotating teeth (120 RPM), hazard stripe beam, and `⚡ ×N` hexagonal badge.
+     - **Super Shredder (Multiply >= 4):** Neon Hot Pink / Vivid Magenta (`#ec4899`), spiked hazard diamond frame with rotating diamond core, crackling electric lightning arcs, and `💥 ×N!` explosive badge.
+     - **Magnetic Compactor (Add +N):** Cyan / Electric Blue (`#06b6d4`), dual heavy magnetic bracket coils with rounded pole caps, glowing magnetic forcefield wave rings pulsing inward, and `🧲 +N` rounded capsule badge.
+     - **Accelerator Booster (BOOST):** Electric Lime Green (`#84cc16`), sleek forward-swept velocity wings, scrolling neon speed chevrons (`>>>`), and `⏩ BOOST` aerodynamic badge with tangential slingshot acceleration.
+
+5. **Pinball Deflector Bumpers:**
+   - Circular obstacles placed within corridor chutes featuring heavy chrome outer trim, illuminated neon domes, and dynamic squash-and-stretch pulse animations on impact.
+   - Bumper collisions provide high-energy elastic rebound ($e = 1.35 - 1.5$) plus random tangential scatter to break dense debris clumps into fluid, exciting cascades.
+   - Triggers energetic cartoon spring boing audio (`playBumperBounce`) and animated neon shockwaves.
+
+### 3.3 Cartoon Procedural Audio Architecture
+
+1. **Tactile Toy Ratchet Feedback:** Spinning the centrifuge ring produces soft, warm wooden ratchet clicks (`playSpinRatchet`) rather than harsh white/pink noise, providing satisfying analog-style haptic audio.
+2. **Arpeggiated Pentatonic Chimes:** Ingested debris triggers a sparkling major pentatonic arpeggio (C4 to C6) on cartoon marimba chimes, accompanied by juicy bubble gulps that scale gracefully without digital clipping.
+3. **Voice Limiting & Collision Debounce:** Debris collisions are strictly rate-limited (minimum 48ms cooldown) with per-material acoustic tuning (tinny bell for solar panels, rubber thud for batteries, wooden block tap for titanium hull scrap).
+4. **Master Dynamics Compressor:** A built-in Web Audio dynamics compressor guarantees zero distortion or acoustic fatigue during high-volume debris cascades.
+
+### 3.4 Dynamic Black Hole Visual Growth & 50-Level Campaign Architecture
+
+1. **Dynamic Black Hole Growth:**
+   - As debris is ingested into the singularity, Nibbles visually scales from a compact starting size ($1.0\times$) up to a massive, plump, satisfied cosmic entity ($1.65\times$) with bouncy elastic wobble physics upon swallowing snacks.
+   - To preserve competitive fairness and level consistency, the physical event horizon and quota thresholds remain strictly constant—only the visual presentation, blushing cheeks, and celebratory animations scale.
+
+2. **The 50-Level Progressive Campaign (5 Planetary Sectors):**
+   - **World 1: Bubblegum Belt (Levels 1–10)** — Funnel Baffles, introductory shredders, learning rotational tilt & gravity flow.
+   - **World 2: Cheese Moon Chutes (Levels 11–20)** — Switchback zigzags and volatile battery management requiring smooth directional reversals.
+   - **World 3: Cyber Donut Rings (Levels 21–30)** — Dual concentric orbital tracks with transfer gateways and introductory deflector bumpers.
+   - **World 4: Nebula Pinball (Levels 31–40)** — High-energy pinball bumper fields, boost slingshots, and tactical forking paths (safe addition vs. volatile $\times 4$ multiplication).
+   - **World 5: Singularity Horizon (Levels 41–50)** — Master orbital gauntlets concluding with _Level 50: The Kessler Singularity_.
 
 ---
 
