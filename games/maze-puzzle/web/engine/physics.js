@@ -46,6 +46,15 @@ export class PhysicsEngine {
     // Deflector Bumpers (Pachinko Pins)
     this.deflectorPins = [];
 
+    // One-Way Gravity Flappers
+    this.oneWayFlaps = [];
+
+    // Concentric Dual-Ring Gearing
+    this.concentricRings = false;
+    this.gearRatio = -1.0;
+    this.innerRingAngle = 0;
+    this.trackRadius = 130;
+
     // Callbacks
     this.onDebrisSwallowed = null;
     this.onDebrisExploded = null;
@@ -71,6 +80,28 @@ export class PhysicsEngine {
     this.lastRatchetAngle = 0;
     this.debrisList = [];
 
+    // Concentric Dual-Ring Setup
+    this.concentricRings = !!sectorConfig.concentricRings;
+    this.gearRatio = sectorConfig.gearRatio !== undefined ? sectorConfig.gearRatio : -1.0;
+    this.innerRingAngle = 0;
+    this.trackRadius = sectorConfig.trackWalls && sectorConfig.trackWalls[0]
+      ? sectorConfig.trackWalls[0].r
+      : (this.innerRadius + this.ringRadius) * 0.5;
+
+    // One-Way Flappers
+    this.oneWayFlaps = (sectorConfig.oneWayFlaps || []).map((f, idx) => ({
+      ...f,
+      id: idx,
+      rMin: f.rMin !== undefined ? f.rMin : this.innerRadius + 5,
+      rMax: f.rMax !== undefined ? f.rMax : this.ringRadius - 5,
+      angle: f.angle || 0,
+      swing: 0,
+      swingVel: 0,
+      maxSwing: f.maxSwing || Math.PI * 0.35,
+      normalSign: f.normalSign !== undefined ? f.normalSign : 1,
+      isInner: !!f.isInner,
+    }));
+
     // Support radial span [rMin, rMax] for each shredder gate
     this.gates = sectorConfig.gates.map((g, idx) => ({
       ...g,
@@ -79,18 +110,25 @@ export class PhysicsEngine {
         g.rMin !== undefined ? g.rMin : (g.r || 120) - (g.length || 34) * 0.5,
       rMax:
         g.rMax !== undefined ? g.rMax : (g.r || 120) + (g.length || 34) * 0.5,
+      isInner: g.isInner !== undefined ? g.isInner : (this.concentricRings && g.rMax <= this.trackRadius + 5),
       processedDebris: new Set(),
     }));
 
-    this.dividers = [...sectorConfig.dividers];
+    this.dividers = (sectorConfig.dividers || []).map((d) => ({
+      ...d,
+      isInner: d.isInner !== undefined ? d.isInner : (this.concentricRings && d.rMax <= this.trackRadius + 5),
+    }));
+
     this.trackWalls = sectorConfig.trackWalls
       ? [...sectorConfig.trackWalls]
       : [];
+
     this.deflectorPins = (sectorConfig.deflectorPins || []).map((p, idx) => ({
       ...p,
       id: idx,
       radius: p.radius || 9,
       restitution: p.restitution || 1.35,
+      isInner: p.isInner !== undefined ? p.isInner : (this.concentricRings && p.r <= this.trackRadius),
       hitTimer: 0,
     }));
 
@@ -186,6 +224,26 @@ export class PhysicsEngine {
       this.angularVelocity = 0;
     }
 
+    // Concentric Differential Rotation
+    if (this.concentricRings) {
+      this.innerRingAngle += this.angularVelocity * this.gearRatio * dt;
+    } else {
+      this.innerRingAngle = this.ringAngle;
+    }
+
+    // Update One-Way Gravity Flappers (Spring return to stopper at 0)
+    for (const f of this.oneWayFlaps) {
+      f.swingVel += (-f.swing * 28 - f.swingVel * 10) * dt;
+      f.swing += f.swingVel * dt;
+      if (f.swing < 0) {
+        f.swing = 0;
+        f.swingVel = 0;
+      } else if (f.swing > f.maxSwing) {
+        f.swing = f.maxSwing;
+        f.swingVel = 0;
+      }
+    }
+
     // Play subtle wooden ratchet clicks when wheel rotates through angle increments
     const angleTraveled = Math.abs(this.ringAngle - this.lastRatchetAngle);
     if (angleTraveled >= Math.PI / 16) {
@@ -260,9 +318,13 @@ export class PhysicsEngine {
       const distToCenter = Math.hypot(dxToCenter, dyToCenter);
 
       if (d.state === "IN_RING") {
+        const ringVel = (this.concentricRings && distToCenter < this.trackRadius)
+          ? this.angularVelocity * this.gearRatio
+          : this.angularVelocity;
+
         // Mild centrifugal outward force
         const centrifugal =
-          distToCenter * (this.angularVelocity * this.angularVelocity) * 0.06;
+          distToCenter * (ringVel * ringVel) * 0.06;
         if (distToCenter > 1) {
           d.vx += (dxToCenter / distToCenter) * centrifugal * dt;
           d.vy += (dyToCenter / distToCenter) * centrifugal * dt;
@@ -271,7 +333,7 @@ export class PhysicsEngine {
         // Tangential friction drag from moving corridors
         const tangX = -dyToCenter / distToCenter;
         const tangY = dxToCenter / distToCenter;
-        const ringSurfaceSpeed = this.angularVelocity * distToCenter;
+        const ringSurfaceSpeed = ringVel * distToCenter;
         const debrisTangSpeed = d.vx * tangX + d.vy * tangY;
         const speedDiff = ringSurfaceSpeed - debrisTangSpeed;
         d.vx += tangX * speedDiff * dt * 1.4;
@@ -289,9 +351,10 @@ export class PhysicsEngine {
       // Boundary Collisions
       this.resolveRingCollisions(d, worldApertureStart, worldApertureEnd);
 
-      // Radial Dividers, Track Walls, Bumpers & Shredder Gates
+      // Radial Dividers, One-Way Flappers, Track Walls, Bumpers & Shredder Gates
       if (d.state === "IN_RING") {
         this.resolveDividerCollisions(d);
+        this.resolveFlapperCollisions(d);
         this.resolveTrackWallCollisions(d);
         this.resolveDeflectorCollisions(d);
         this.checkMultiplierGates(d);
@@ -374,13 +437,16 @@ export class PhysicsEngine {
     const dy = d.y - this.center.y;
     const dist = Math.hypot(dx, dy);
 
-    // Relative angle in ring coordinate frame
-    const angleInRing = this.normalizeAngle(
-      Math.atan2(dy, dx) - this.ringAngle,
-    );
-
     for (const div of this.dividers) {
       if (dist < div.rMin - d.radius || dist > div.rMax + d.radius) continue;
+
+      const ringRot = (div.isInner && this.concentricRings)
+        ? this.innerRingAngle
+        : this.ringAngle;
+
+      const angleInRing = this.normalizeAngle(
+        Math.atan2(dy, dx) - ringRot,
+      );
 
       const divAngle = this.normalizeAngle(div.angle);
       let angleDiff = angleInRing - divAngle;
@@ -393,7 +459,7 @@ export class PhysicsEngine {
       if (Math.abs(arcDist) < thickness * 0.5 + d.radius) {
         // Collision with divider normal
         const normalSign = arcDist > 0 ? 1 : -1;
-        const worldDivAngle = divAngle + this.ringAngle;
+        const worldDivAngle = divAngle + ringRot;
         const normalX = -Math.sin(worldDivAngle) * normalSign;
         const normalY = Math.cos(worldDivAngle) * normalSign;
 
@@ -411,6 +477,65 @@ export class PhysicsEngine {
             d.type,
           );
           this.checkVolatileDetonation(d, Math.abs(dot));
+        }
+      }
+    }
+  }
+
+  resolveFlapperCollisions(d) {
+    if (!this.oneWayFlaps || !this.oneWayFlaps.length) return;
+    const dx = d.x - this.center.x;
+    const dy = d.y - this.center.y;
+    const dist = Math.hypot(dx, dy);
+
+    for (const f of this.oneWayFlaps) {
+      if (dist < f.rMin - d.radius || dist > f.rMax + d.radius) continue;
+
+      const ringRot = (f.isInner && this.concentricRings)
+        ? this.innerRingAngle
+        : this.ringAngle;
+
+      const angleInRing = this.normalizeAngle(
+        Math.atan2(dy, dx) - ringRot,
+      );
+
+      const currentFlapAngle = this.normalizeAngle(f.angle + f.swing * (f.normalSign || 1));
+      let angleDiff = angleInRing - currentFlapAngle;
+      while (angleDiff > Math.PI) angleDiff -= Math.PI * 2;
+      while (angleDiff < -Math.PI) angleDiff += Math.PI * 2;
+
+      const arcDist = angleDiff * dist;
+      const thickness = 7;
+
+      if (Math.abs(arcDist) < thickness * 0.5 + d.radius) {
+        const forwardSign = f.normalSign || 1;
+        const pushDirection = (arcDist * forwardSign);
+
+        if (pushDirection < 0) {
+          // Debris is pushing in opening direction
+          const pushForce = Math.min(2.5, (thickness * 0.5 + d.radius - Math.abs(arcDist)) * 0.18);
+          f.swing += pushForce * 0.3;
+          f.swingVel += pushForce * 12;
+          if (f.swing > f.maxSwing) f.swing = f.maxSwing;
+        } else {
+          // Debris is pushing against closed stopper
+          if (f.swing <= 0.08) {
+            const normalSign = arcDist > 0 ? 1 : -1;
+            const worldFlapAngle = currentFlapAngle + ringRot;
+            const normalX = -Math.sin(worldFlapAngle) * normalSign;
+            const normalY = Math.cos(worldFlapAngle) * normalSign;
+
+            const penetration = thickness * 0.5 + d.radius - Math.abs(arcDist);
+            d.x += normalX * penetration;
+            d.y += normalY * penetration;
+
+            const dot = d.vx * normalX + d.vy * normalY;
+            if (dot < 0) {
+              d.vx = (d.vx - 1.25 * dot * normalX) * 0.75;
+              d.vy = (d.vy - 1.25 * dot * normalY) * 0.75;
+              this.audio.playDebrisCollision(Math.min(1.0, Math.abs(dot) / 60), d.type);
+            }
+          }
         }
       }
     }
@@ -470,8 +595,15 @@ export class PhysicsEngine {
     if (!this.deflectorPins || this.deflectorPins.length === 0) return;
 
     for (const pin of this.deflectorPins) {
+      const ringRot = (pin.isInner && this.concentricRings)
+        ? this.innerRingAngle
+        : this.ringAngle;
+      const ringVel = (pin.isInner && this.concentricRings)
+        ? this.angularVelocity * this.gearRatio
+        : this.angularVelocity;
+
       // Calculate current world position of pin inside rotating ring
-      const worldAngle = this.ringAngle + pin.angle;
+      const worldAngle = ringRot + pin.angle;
       const pinX = this.center.x + Math.cos(worldAngle) * pin.r;
       const pinY = this.center.y + Math.sin(worldAngle) * pin.r;
 
@@ -490,8 +622,8 @@ export class PhysicsEngine {
         d.y += ny * overlap;
 
         // Bumper tangential surface velocity due to ring rotation
-        const pinVx = -Math.sin(worldAngle) * pin.r * this.angularVelocity;
-        const pinVy = Math.cos(worldAngle) * pin.r * this.angularVelocity;
+        const pinVx = -Math.sin(worldAngle) * pin.r * ringVel;
+        const pinVy = Math.cos(worldAngle) * pin.r * ringVel;
 
         // Relative velocity
         const relVx = d.vx - pinVx;
@@ -526,12 +658,17 @@ export class PhysicsEngine {
     const dx = d.x - this.center.x;
     const dy = d.y - this.center.y;
     const dist = Math.hypot(dx, dy);
-    const angleInRing = this.normalizeAngle(
-      Math.atan2(dy, dx) - this.ringAngle,
-    );
 
     for (const gate of this.gates) {
       if (gate.processedDebris.has(d.id)) continue;
+
+      const ringRot = (gate.isInner && this.concentricRings)
+        ? this.innerRingAngle
+        : this.ringAngle;
+
+      const angleInRing = this.normalizeAngle(
+        Math.atan2(dy, dx) - ringRot,
+      );
 
       const gateAngle = this.normalizeAngle(gate.angle);
       let angleDiff = angleInRing - gateAngle;
@@ -558,32 +695,34 @@ export class PhysicsEngine {
           // Tangential and radial slingshot acceleration
           const boostMagnitude = gate.value || 150;
           const ringDir = Math.sign(this.angularVelocity) || 1;
-          const tangX = (-dy / dist) * ringDir;
-          const tangY = (dx / dist) * ringDir;
-          d.vx += tangX * boostMagnitude;
-          d.vy += tangY * boostMagnitude;
-        } else {
-          // Duplication or Addition
-          let spawnCount = 0;
-          if (gate.type === "MULTIPLY") {
-            spawnCount = gate.value - 1;
-          } else if (gate.type === "ADD") {
-            spawnCount = gate.value;
-          }
+          const boostAngle = ringRot + gateAngle + Math.PI * 0.5 * ringDir;
+          d.vx += Math.cos(boostAngle) * boostMagnitude;
+          d.vy += Math.sin(boostAngle) * boostMagnitude;
+          this.audio.playRcsThrust();
+          continue;
+        }
 
-          for (let s = 0; s < spawnCount; s++) {
-            const jitterTheta = Math.random() * Math.PI * 2;
-            const jitterDist = Math.random() * (d.radius * 0.75);
-            const clone = this.spawnDebris({
-              x: d.x + Math.cos(jitterTheta) * jitterDist,
-              y: d.y + Math.sin(jitterTheta) * jitterDist,
-              vx: d.vx * 0.95 + (Math.random() - 0.5) * 15,
-              vy: d.vy * 0.95 + (Math.random() - 0.5) * 15,
-              type: d.type,
-            });
-            if (clone) {
-              gate.processedDebris.add(clone.id);
-            }
+        // Clone or multiply debris
+        let newCount = 0;
+        if (gate.type === "MULTIPLY") {
+          newCount = Math.max(0, gate.value - 1);
+        } else if (gate.type === "ADD") {
+          newCount = gate.value;
+        }
+
+        for (let k = 0; k < newCount; k++) {
+          const jitterX = (Math.random() - 0.5) * d.radius * 0.8;
+          const jitterY = (Math.random() - 0.5) * d.radius * 0.8;
+          const spawned = this.spawnDebris({
+            x: d.x + jitterX,
+            y: d.y + jitterY,
+            vx: d.vx * (0.85 + Math.random() * 0.3) + (Math.random() - 0.5) * 15,
+            vy: d.vy * (0.85 + Math.random() * 0.3) + (Math.random() - 0.5) * 15,
+            type: d.type,
+            weight: 1,
+          });
+          if (spawned) {
+            gate.processedDebris.add(spawned.id);
           }
         }
       }
