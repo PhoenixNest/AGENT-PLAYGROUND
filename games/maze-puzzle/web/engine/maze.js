@@ -1,10 +1,118 @@
 /**
  * Orbital Salvage: Professional Maze & Corridor Topology Engine
  * Powers a 50-Level Campaign across 5 Cosmic Sectors with curated difficulty,
- * solvable non-blocking chute geometry, concentric orbital rails, and shredder gates.
+ * solvable non-blocking chute geometry, concentric orbital rails, one-way flappers, and shredder gates.
  */
 
 export class MazeLevelBuilder {
+  /**
+   * Automatically inspects and resolves any angular overlaps between gates, dividers,
+   * deflector pins, and flappers to guarantee 100% visual and rule clarity.
+   */
+  static sanitizeSector(config) {
+    const norm = (a) => {
+      let v = a % (Math.PI * 2);
+      if (v < 0) v += Math.PI * 2;
+      return v;
+    };
+
+    const angDiff = (a, b) => {
+      let d = Math.abs(norm(a) - norm(b));
+      if (d > Math.PI) d = Math.PI * 2 - d;
+      return d;
+    };
+
+    const MIN_CLEARANCE = 0.16 * Math.PI; // ~28.8 degrees minimum angular margin
+    const gates = config.gates || [];
+    const dividers = config.dividers || [];
+    const pins = config.deflectorPins || [];
+    const flaps = config.oneWayFlaps || [];
+
+    // 1. Resolve Gate-Divider overlaps using radial slot search
+    for (const gate of gates) {
+      const gRMin = gate.rMin !== undefined ? gate.rMin : 85;
+      const gRMax = gate.rMax !== undefined ? gate.rMax : 160;
+
+      let minD = 999;
+      for (const div of dividers) {
+        if (config.concentricRings && (gate.isInner !== div.isInner)) continue;
+        const dRMin = div.rMin !== undefined ? div.rMin : 85;
+        const dRMax = div.rMax !== undefined ? div.rMax : 160;
+        if (gRMax <= dRMin || gRMin >= dRMax) continue;
+        const diff = angDiff(gate.angle, div.angle);
+        if (diff < minD) minD = diff;
+      }
+
+      if (minD < MIN_CLEARANCE) {
+        let bestAng = gate.angle;
+        let bestDist = minD;
+        for (let delta = -0.4 * Math.PI; delta <= 0.4 * Math.PI; delta += 0.01 * Math.PI) {
+          const testAng = gate.angle + delta;
+          let testMin = 999;
+          for (const div of dividers) {
+            if (config.concentricRings && (gate.isInner !== div.isInner)) continue;
+            const dRMin = div.rMin !== undefined ? div.rMin : 85;
+            const dRMax = div.rMax !== undefined ? div.rMax : 160;
+            if (gRMax <= dRMin || gRMin >= dRMax) continue;
+            const diff = angDiff(testAng, div.angle);
+            if (diff < testMin) testMin = diff;
+          }
+          if (testMin > bestDist) {
+            bestDist = testMin;
+            bestAng = testAng;
+          }
+        }
+        gate.angle = bestAng;
+      }
+    }
+
+    // 2. Resolve Gate-Pin overlaps
+    for (const pin of pins) {
+      for (const gate of gates) {
+        if (config.concentricRings && (pin.isInner !== gate.isInner)) continue;
+        const gRMin = gate.rMin !== undefined ? gate.rMin : 85;
+        const gRMax = gate.rMax !== undefined ? gate.rMax : 160;
+        if (pin.r < gRMin - 12 || pin.r > gRMax + 12) continue;
+
+        const diff = angDiff(pin.angle, gate.angle);
+        if (diff < MIN_CLEARANCE) {
+          let bestAng = pin.angle;
+          let bestDist = diff;
+          for (let delta = -0.35 * Math.PI; delta <= 0.35 * Math.PI; delta += 0.01 * Math.PI) {
+            const testAng = pin.angle + delta;
+            const testDiff = angDiff(testAng, gate.angle);
+            if (testDiff > bestDist) {
+              bestDist = testDiff;
+              bestAng = testAng;
+            }
+          }
+          pin.angle = bestAng;
+        }
+      }
+    }
+
+    // 3. Resolve Gate-Flap overlaps
+    for (const flap of flaps) {
+      for (const gate of gates) {
+        if (config.concentricRings && (flap.isInner !== gate.isInner)) continue;
+        const gRMin = gate.rMin !== undefined ? gate.rMin : 85;
+        const gRMax = gate.rMax !== undefined ? gate.rMax : 160;
+        const fRMin = flap.rMin !== undefined ? flap.rMin : 85;
+        const fRMax = flap.rMax !== undefined ? flap.rMax : 160;
+        if (gRMax <= fRMin || gRMin >= fRMax) continue;
+
+        const diff = angDiff(flap.angle, gate.angle);
+        if (diff < MIN_CLEARANCE) {
+          const shift = (MIN_CLEARANCE - diff) + 0.02 * Math.PI;
+          const dir = norm(gate.angle) >= norm(flap.angle) ? 1 : -1;
+          gate.angle += dir * shift;
+        }
+      }
+    }
+
+    return config;
+  }
+
   /**
    * Returns all 50 levels structured into 5 progressive cosmic worlds.
    */
@@ -22,7 +130,7 @@ export class MazeLevelBuilder {
         id: "world_1",
         worldIndex: 1,
         title: "Bubblegum Belt",
-        tagline: "Orbital Gravity Basics & Flow",
+        tagline: "Orbital Gravity Basics & Clean Flow",
         icon: "🍬",
         color: "#f472b6",
         levelRange: [1, 10],
@@ -31,7 +139,7 @@ export class MazeLevelBuilder {
         id: "world_2",
         worldIndex: 2,
         title: "Cheese Moon Chutes",
-        tagline: "Switchbacks & Volatile Scrap",
+        tagline: "Switchbacks & One-Way Flappers",
         icon: "🧀",
         color: "#facc15",
         levelRange: [11, 20],
@@ -40,7 +148,7 @@ export class MazeLevelBuilder {
         id: "world_3",
         worldIndex: 3,
         title: "Cyber Donut Rings",
-        tagline: "Concentric Dual-Track Transfers",
+        tagline: "Concentric Planetary Dual-Track Gearing",
         icon: "🍩",
         color: "#38bdf8",
         levelRange: [21, 30],
@@ -49,7 +157,7 @@ export class MazeLevelBuilder {
         id: "world_4",
         worldIndex: 4,
         title: "Nebula Pinball",
-        tagline: "Pinball Bumpers & Boost Slingshots",
+        tagline: "Pinball Bumpers, Forking Gauntlets & Boost",
         icon: "🌌",
         color: "#c084fc",
         levelRange: [31, 40],
@@ -58,7 +166,7 @@ export class MazeLevelBuilder {
         id: "world_5",
         worldIndex: 5,
         title: "Singularity Horizon",
-        tagline: "Master Orbital Gauntlets",
+        tagline: "Master Dual-Ring Orbital Gauntlets",
         icon: "🕳️",
         color: "#4ade80",
         levelRange: [41, 50],
@@ -72,18 +180,21 @@ export class MazeLevelBuilder {
   static buildLevel(levelNumber) {
     const worldIndex = Math.ceil(levelNumber / 10);
     const subLevel = ((levelNumber - 1) % 10) + 1; // 1 to 10
+    let config;
 
     if (worldIndex === 1) {
-      return this.buildWorld1Level(levelNumber, subLevel);
+      config = this.buildWorld1Level(levelNumber, subLevel);
     } else if (worldIndex === 2) {
-      return this.buildWorld2Level(levelNumber, subLevel);
+      config = this.buildWorld2Level(levelNumber, subLevel);
     } else if (worldIndex === 3) {
-      return this.buildWorld3Level(levelNumber, subLevel);
+      config = this.buildWorld3Level(levelNumber, subLevel);
     } else if (worldIndex === 4) {
-      return this.buildWorld4Level(levelNumber, subLevel);
+      config = this.buildWorld4Level(levelNumber, subLevel);
     } else {
-      return this.buildWorld5Level(levelNumber, subLevel);
+      config = this.buildWorld5Level(levelNumber, subLevel);
     }
+
+    return this.sanitizeSector(config);
   }
 
   // =========================================================================
@@ -97,27 +208,28 @@ export class MazeLevelBuilder {
     const initialDebrisCount = 10 + sub;
     const apertureAngle = Math.PI * (0.32 - sub * 0.005);
 
-    // Progressive divider complexity
+    // Dividers with ample clearance from gates
     const dividers = [
       { rMin: 85, rMax: 155, angle: -Math.PI * 0.5 }, // Top barrier separating left/right
       { rMin: 115, rMax: 155, angle: 0 },
-      { rMin: 85, rMax: 125, angle: Math.PI * (0.16 + sub * 0.01) },
+      { rMin: 85, rMax: 125, angle: Math.PI * (0.32 + sub * 0.005) },
       { rMin: 115, rMax: 155, angle: Math.PI },
-      { rMin: 85, rMax: 125, angle: Math.PI * (0.84 - sub * 0.01) },
+      { rMin: 85, rMax: 125, angle: Math.PI * (0.68 - sub * 0.005) },
     ];
 
     if (sub >= 4) {
-      dividers.push({ rMin: 120, rMax: 155, angle: -Math.PI * 0.2 });
+      dividers.push({ rMin: 120, rMax: 155, angle: -Math.PI * 0.28 });
     }
     if (sub >= 7) {
-      dividers.push({ rMin: 120, rMax: 155, angle: Math.PI * 1.2 });
+      dividers.push({ rMin: 120, rMax: 155, angle: Math.PI * 1.28 });
     }
 
+    // Well-spaced gates with >= 0.16pi clearance from all walls
     const gates = [
       {
         type: "MULTIPLY",
         value: 2,
-        angle: -Math.PI * 0.15,
+        angle: -Math.PI * 0.14,
         rMin: 85,
         rMax: 155,
         color: "#facc15",
@@ -125,7 +237,7 @@ export class MazeLevelBuilder {
       {
         type: "ADD",
         value: 3 + Math.floor(sub * 0.5),
-        angle: Math.PI * 0.15,
+        angle: Math.PI * 0.16,
         rMin: 85,
         rMax: 155,
         color: "#38bdf8",
@@ -133,7 +245,7 @@ export class MazeLevelBuilder {
       {
         type: "MULTIPLY",
         value: sub >= 5 ? 3 : 2,
-        angle: Math.PI * 0.85,
+        angle: Math.PI * 0.84,
         rMin: 85,
         rMax: 155,
         color: "#f472b6",
@@ -161,7 +273,7 @@ export class MazeLevelBuilder {
 
   // =========================================================================
   // WORLD 2: CHEESE MOON CHUTES (Levels 11 - 20)
-  // Theme: Switchback Zigzags, pacing rotation, handling volatile batteries.
+  // Theme: Switchback Zigzags, One-Way Flappers, handling volatile batteries.
   // =========================================================================
   static buildWorld2Level(levelNum, sub) {
     const ringRadius = 162;
@@ -170,35 +282,35 @@ export class MazeLevelBuilder {
     const initialDebrisCount = 14 + sub;
     const apertureAngle = Math.PI * 0.28;
 
-    // Switchback baffles: alternating inner/outer teeth requiring back-and-forth rocking
+    // Staggered switchback baffles
     const dividers = [
       { rMin: 86, rMax: 162, angle: -Math.PI * 0.5 }, // Top barrier
-      { rMin: 86, rMax: 135, angle: -Math.PI * 0.15 },
-      { rMin: 118, rMax: 162, angle: Math.PI * 0.08 },
-      { rMin: 86, rMax: 135, angle: Math.PI * 0.24 }, // Steers toward bottom right
-      { rMin: 86, rMax: 135, angle: Math.PI * 1.15 },
-      { rMin: 118, rMax: 162, angle: Math.PI * 0.92 },
-      { rMin: 86, rMax: 135, angle: Math.PI * 0.76 }, // Steers toward bottom left
+      { rMin: 86, rMax: 132, angle: -Math.PI * 0.20 },
+      { rMin: 120, rMax: 162, angle: Math.PI * 0.12 },
+      { rMin: 86, rMax: 132, angle: Math.PI * 0.42 },
+      { rMin: 86, rMax: 132, angle: Math.PI * 1.20 },
+      { rMin: 120, rMax: 162, angle: Math.PI * 0.88 },
+      { rMin: 86, rMax: 132, angle: Math.PI * 0.60 },
     ];
 
     if (sub >= 5) {
-      dividers.push({ rMin: 120, rMax: 162, angle: -Math.PI * 0.35 });
-      dividers.push({ rMin: 120, rMax: 162, angle: Math.PI * 1.35 });
+      dividers.push({ rMin: 120, rMax: 162, angle: -Math.PI * 0.48 });
+      dividers.push({ rMin: 120, rMax: 162, angle: Math.PI * 1.48 });
     }
 
     const gates = [
       {
         type: "MULTIPLY",
         value: 3,
-        angle: 0,
+        angle: -Math.PI * 0.32,
         rMin: 86,
-        rMax: 162,
+        rMax: 122,
         color: "#f472b6",
       },
       {
         type: "ADD",
         value: 5 + Math.floor(sub * 0.6),
-        angle: Math.PI * 0.2,
+        angle: -Math.PI * 0.04,
         rMin: 86,
         rMax: 162,
         color: "#38bdf8",
@@ -206,20 +318,41 @@ export class MazeLevelBuilder {
       {
         type: "MULTIPLY",
         value: 2,
-        angle: Math.PI * 0.8,
-        rMin: 86,
+        angle: Math.PI * 0.25,
+        rMin: 120,
         rMax: 162,
         color: "#4ade80",
       },
       {
         type: "MULTIPLY",
         value: sub >= 6 ? 3 : 2,
-        angle: Math.PI * 1.0,
+        angle: Math.PI * 1.04,
         rMin: 86,
         rMax: 162,
         color: "#facc15",
       },
     ];
+
+    // Introduce Mechanical One-Way Gravity Flapper starting from Level 14
+    const oneWayFlaps = [];
+    if (sub >= 4) {
+      oneWayFlaps.push({
+        rMin: 86,
+        rMax: 132,
+        angle: Math.PI * 0.25,
+        maxSwing: Math.PI * 0.35,
+        normalSign: 1, // Opens downward towards collection funnel
+      });
+    }
+    if (sub >= 7) {
+      oneWayFlaps.push({
+        rMin: 86,
+        rMax: 132,
+        angle: Math.PI * 0.75,
+        maxSwing: Math.PI * 0.35,
+        normalSign: -1,
+      });
+    }
 
     return {
       id: `level_${levelNum}`,
@@ -227,7 +360,7 @@ export class MazeLevelBuilder {
       worldIndex: 2,
       name: `Moon Chute ${sub}`,
       code: `LVL ${levelNum}`,
-      description: `Watch the spicy batteries! Rock back and forth through the lunar switchbacks!`,
+      description: `Watch the spicy batteries! Rock back and forth through switchbacks and one-way valves!`,
       quota,
       initialDebrisCount,
       initialDebrisTypes: ["titanium", "solar", "volatile"],
@@ -237,16 +370,18 @@ export class MazeLevelBuilder {
       apertureAngle,
       dividers,
       gates,
+      oneWayFlaps,
     };
   }
 
   // =========================================================================
   // WORLD 3: CYBER DONUT RINGS (Levels 21 - 30)
-  // Theme: Dual concentric orbital tracks with transfer gateways.
+  // Theme: Concentric Planetary Dual-Track Gearing & Orbital Alignment.
   // =========================================================================
   static buildWorld3Level(levelNum, sub) {
     const ringRadius = 172;
     const innerRadius = 90;
+    const trackRadius = 131;
     const quota = 105 + (sub - 1) * 9;
     const initialDebrisCount = 16 + sub;
     const apertureAngle = Math.PI * 0.26;
@@ -255,59 +390,64 @@ export class MazeLevelBuilder {
     const gapAngle = sub % 2 === 1 ? -Math.PI * 0.5 : 0;
     const trackWalls = [
       {
-        r: 131,
+        r: trackRadius,
         gapAngle: gapAngle,
         gapSize: Math.PI * (0.44 - sub * 0.01),
       },
     ];
 
+    // Inner track dividers (rotate with inner planetary gear)
     const dividers = [
-      // Inner track guide baffles
-      { rMin: 90, rMax: 131, angle: Math.PI * 0.25 },
-      { rMin: 90, rMax: 131, angle: Math.PI * 0.75 },
-      { rMin: 90, rMax: 131, angle: Math.PI * 1.25 },
-      // Outer track guide baffles directing to bottom exit
-      { rMin: 131, rMax: 172, angle: -Math.PI * 0.15 },
-      { rMin: 131, rMax: 172, angle: Math.PI * 0.22 },
-      { rMin: 131, rMax: 172, angle: Math.PI * 0.78 },
-      { rMin: 131, rMax: 172, angle: Math.PI * 1.15 },
+      { rMin: 90, rMax: 131, angle: -Math.PI * 0.15, isInner: true },
+      { rMin: 90, rMax: 131, angle: Math.PI * 0.45, isInner: true },
+      { rMin: 90, rMax: 131, angle: Math.PI * 1.15, isInner: true },
+
+      // Outer track dividers (rotate with outer player ring)
+      { rMin: 131, rMax: 172, angle: -Math.PI * 0.15, isInner: false },
+      { rMin: 131, rMax: 172, angle: Math.PI * 0.25, isInner: false },
+      { rMin: 131, rMax: 172, angle: Math.PI * 0.75, isInner: false },
+      { rMin: 131, rMax: 172, angle: Math.PI * 1.15, isInner: false },
     ];
 
     if (sub >= 6) {
-      dividers.push({ rMin: 131, rMax: 172, angle: -Math.PI * 0.4 });
+      dividers.push({ rMin: 131, rMax: 172, angle: -Math.PI * 0.4, isInner: false });
     }
 
     const gates = [
       {
         type: "MULTIPLY",
         value: 2,
-        angle: Math.PI * 0.5,
+        angle: Math.PI * 0.15,
         rMin: 90,
         rMax: 131,
+        isInner: true,
         color: "#38bdf8",
       },
       {
         type: "ADD",
         value: 8 + sub,
-        angle: 0,
+        angle: 0.04,
         rMin: 131,
         rMax: 172,
+        isInner: false,
         color: "#facc15",
       },
       {
         type: "MULTIPLY",
         value: 3,
-        angle: Math.PI,
+        angle: Math.PI * 0.95,
         rMin: 131,
         rMax: 172,
+        isInner: false,
         color: "#c084fc",
       },
       {
         type: "MULTIPLY",
         value: 2,
-        angle: -Math.PI * 0.2,
+        angle: -Math.PI * 0.28,
         rMin: 131,
         rMax: 172,
+        isInner: false,
         color: "#4ade80",
       },
     ];
@@ -315,17 +455,19 @@ export class MazeLevelBuilder {
     const deflectorPins = [
       {
         r: 152,
-        angle: Math.PI * 0.5,
+        angle: Math.PI * 0.50,
         radius: 9.5,
         restitution: 1.35,
+        isInner: false,
         color: "#38bdf8",
         accent: "#0284c7",
       },
       {
         r: 110,
-        angle: -Math.PI * 0.2,
+        angle: -Math.PI * 0.45,
         radius: 9,
         restitution: 1.3,
+        isInner: true,
         color: "#facc15",
         accent: "#eab308",
       },
@@ -337,7 +479,7 @@ export class MazeLevelBuilder {
       worldIndex: 3,
       name: `Cyber Orbit ${sub}`,
       code: `LVL ${levelNum}`,
-      description: `Dual tracks! Transfer scrap from inner orbit into outer launch channels!`,
+      description: `Planetary Gears! Inner and outer tracks counter-rotate. Align airlocks to launch scrap!`,
       quota,
       initialDebrisCount,
       initialDebrisTypes: ["titanium", "solar", "magnetic"],
@@ -345,6 +487,8 @@ export class MazeLevelBuilder {
       corridorWidth: 41,
       innerRadius,
       apertureAngle,
+      concentricRings: true,
+      gearRatio: -1.0,
       trackWalls,
       dividers,
       gates,
@@ -363,25 +507,24 @@ export class MazeLevelBuilder {
     const initialDebrisCount = 18 + sub;
     const apertureAngle = Math.PI * 0.25;
 
-    // Split divergent paths: Left branch is safe with ADD gates;
-    // Right branch is narrower with MEGA MULTIPLY and volatile battery hazards!
+    // Split divergent paths: Left branch safe, Right branch high-risk high-reward
     const dividers = [
       { rMin: 92, rMax: 176, angle: -Math.PI * 0.5 }, // Center splitter
       // Safe left branch baffles
-      { rMin: 92, rMax: 145, angle: Math.PI * 1.15 },
-      { rMin: 125, rMax: 176, angle: Math.PI * 0.95 },
-      { rMin: 92, rMax: 145, angle: Math.PI * 0.78 },
+      { rMin: 92, rMax: 145, angle: Math.PI * 1.25 },
+      { rMin: 125, rMax: 176, angle: Math.PI * 0.92 },
+      { rMin: 92, rMax: 145, angle: Math.PI * 0.60 },
       // High-yield right branch baffles
-      { rMin: 120, rMax: 176, angle: -Math.PI * 0.15 },
-      { rMin: 92, rMax: 148, angle: Math.PI * 0.08 },
-      { rMin: 125, rMax: 176, angle: Math.PI * 0.22 },
+      { rMin: 120, rMax: 176, angle: -Math.PI * 0.26 },
+      { rMin: 92, rMax: 148, angle: Math.PI * 0.06 },
+      { rMin: 125, rMax: 176, angle: Math.PI * 0.38 },
     ];
 
     if (sub >= 4) {
-      dividers.push({ rMin: 92, rMax: 140, angle: -Math.PI * 0.3 });
+      dividers.push({ rMin: 92, rMax: 140, angle: -Math.PI * 0.40 });
     }
     if (sub >= 7) {
-      dividers.push({ rMin: 92, rMax: 140, angle: Math.PI * 1.3 });
+      dividers.push({ rMin: 92, rMax: 140, angle: Math.PI * 1.42 });
     }
 
     const gates = [
@@ -389,7 +532,7 @@ export class MazeLevelBuilder {
       {
         type: "ADD",
         value: 10 + sub,
-        angle: Math.PI * 1.05,
+        angle: Math.PI * 1.08,
         rMin: 92,
         rMax: 176,
         color: "#38bdf8",
@@ -398,7 +541,7 @@ export class MazeLevelBuilder {
       {
         type: "MULTIPLY",
         value: sub >= 5 ? 4 : 3,
-        angle: 0,
+        angle: -Math.PI * 0.10,
         rMin: 92,
         rMax: 176,
         color: "#f472b6",
@@ -406,7 +549,7 @@ export class MazeLevelBuilder {
       {
         type: "MULTIPLY",
         value: 2,
-        angle: Math.PI * 0.2,
+        angle: Math.PI * 0.22,
         rMin: 92,
         rMax: 176,
         color: "#facc15",
@@ -414,18 +557,18 @@ export class MazeLevelBuilder {
       {
         type: "MULTIPLY",
         value: 2,
-        angle: Math.PI * 0.8,
+        angle: Math.PI * 0.76,
         rMin: 92,
         rMax: 176,
         color: "#4ade80",
       },
     ];
 
-    // High-energy pinball deflector bumpers placed along chutes!
+    // High-energy pinball deflector bumpers placed with strict clearances
     const deflectorPins = [
       {
         r: 135,
-        angle: -Math.PI * 0.35,
+        angle: -Math.PI * 0.38,
         radius: 10.5,
         restitution: 1.4,
         color: "#ec4899",
@@ -433,7 +576,7 @@ export class MazeLevelBuilder {
       },
       {
         r: 135,
-        angle: Math.PI * 0.12,
+        angle: Math.PI * 0.54,
         radius: 10.5,
         restitution: 1.4,
         color: "#facc15",
@@ -441,7 +584,7 @@ export class MazeLevelBuilder {
       },
       {
         r: 110,
-        angle: Math.PI * 1.0,
+        angle: Math.PI * 1.42,
         radius: 9.5,
         restitution: 1.35,
         color: "#06b6d4",
@@ -452,21 +595,11 @@ export class MazeLevelBuilder {
     if (sub >= 4) {
       deflectorPins.push({
         r: 155,
-        angle: Math.PI * 0.5,
+        angle: -Math.PI * 0.48,
         radius: 11,
         restitution: 1.45,
         color: "#a855f7",
         accent: "#9333ea",
-      });
-    }
-    if (sub >= 7) {
-      deflectorPins.push({
-        r: 115,
-        angle: -Math.PI * 0.05,
-        radius: 10,
-        restitution: 1.4,
-        color: "#f97316",
-        accent: "#ea580c",
       });
     }
 
@@ -474,12 +607,22 @@ export class MazeLevelBuilder {
       gates.push({
         type: "BOOST",
         value: 160,
-        angle: Math.PI * 0.5,
+        angle: Math.PI * 0.54,
         rMin: 92,
-        rMax: 176,
+        rMax: 130, // Inner lane boost
         color: "#84cc16",
       });
     }
+
+    const oneWayFlaps = [
+      {
+        rMin: 92,
+        rMax: 145,
+        angle: Math.PI * 0.76,
+        maxSwing: Math.PI * 0.35,
+        normalSign: 1,
+      },
+    ];
 
     return {
       id: `level_${levelNum}`,
@@ -498,42 +641,45 @@ export class MazeLevelBuilder {
       dividers,
       gates,
       deflectorPins,
+      oneWayFlaps,
     };
   }
 
   // =========================================================================
   // WORLD 5: SINGULARITY HORIZON (Levels 41 - 50)
-  // Theme: Master orbital gauntlets, dual tracks, grand finale.
+  // Theme: Master orbital gauntlets, concentric planetary gears, grand finale.
   // =========================================================================
   static buildWorld5Level(levelNum, sub) {
     const ringRadius = 180;
     const innerRadius = 94;
-    const quota = 210 + (sub - 1) * 16; // Level 50 quota = 354!
+    const trackRadius = 137;
+    const quota = 210 + (sub - 1) * 16;
     const initialDebrisCount = 20 + sub;
     const apertureAngle = Math.PI * 0.24;
 
     // Dual tracks with multi-stage release
     const trackWalls = [
       {
-        r: 137,
+        r: trackRadius,
         gapAngle: -Math.PI * 0.5 + (sub % 2 === 0 ? 0.3 : -0.3),
         gapSize: Math.PI * 0.4,
       },
     ];
 
     const dividers = [
-      // Inner staging spokes
-      { rMin: 94, rMax: 137, angle: -Math.PI * 0.1 },
-      { rMin: 94, rMax: 137, angle: Math.PI * 0.4 },
-      { rMin: 94, rMax: 137, angle: Math.PI * 0.8 },
-      { rMin: 94, rMax: 137, angle: Math.PI * 1.2 },
-      // Outer release maze
-      { rMin: 137, rMax: 180, angle: -Math.PI * 0.3 },
-      { rMin: 137, rMax: 180, angle: 0 },
-      { rMin: 137, rMax: 180, angle: Math.PI * 0.22 },
-      { rMin: 137, rMax: 180, angle: Math.PI * 0.78 },
-      { rMin: 137, rMax: 180, angle: Math.PI * 1.05 },
-      { rMin: 137, rMax: 180, angle: Math.PI * 1.35 },
+      // Inner staging spokes (rotate with inner planetary ring)
+      { rMin: 94, rMax: 137, angle: -Math.PI * 0.12, isInner: true },
+      { rMin: 94, rMax: 137, angle: Math.PI * 0.42, isInner: true },
+      { rMin: 94, rMax: 137, angle: Math.PI * 0.82, isInner: true },
+      { rMin: 94, rMax: 137, angle: Math.PI * 1.22, isInner: true },
+
+      // Outer release maze (rotate with outer ring)
+      { rMin: 137, rMax: 180, angle: -Math.PI * 0.32, isInner: false },
+      { rMin: 137, rMax: 180, angle: 0, isInner: false },
+      { rMin: 137, rMax: 180, angle: Math.PI * 0.24, isInner: false },
+      { rMin: 137, rMax: 180, angle: Math.PI * 0.76, isInner: false },
+      { rMin: 137, rMax: 180, angle: Math.PI * 1.06, isInner: false },
+      { rMin: 137, rMax: 180, angle: Math.PI * 1.36, isInner: false },
     ];
 
     const gates = [
@@ -543,67 +689,75 @@ export class MazeLevelBuilder {
         angle: Math.PI * 0.15,
         rMin: 94,
         rMax: 137,
+        isInner: true,
         color: "#c084fc",
       },
       {
         type: "ADD",
         value: 12 + sub,
-        angle: -Math.PI * 0.15,
+        angle: -Math.PI * 0.16,
         rMin: 137,
         rMax: 180,
+        isInner: false,
         color: "#facc15",
       },
       {
         type: "MULTIPLY",
         value: 3,
-        angle: Math.PI * 0.95,
+        angle: Math.PI * 0.90,
         rMin: 137,
         rMax: 180,
+        isInner: false,
         color: "#f472b6",
       },
       {
         type: "MULTIPLY",
         value: 4,
-        angle: -Math.PI * 0.45,
+        angle: -Math.PI * 0.48,
         rMin: 137,
         rMax: 180,
+        isInner: false,
         color: "#4ade80",
       },
     ];
 
     const isFinale = levelNum === 50;
 
-    // Grand gauntlet deflector pins
+    // Grand gauntlet deflector pins with clear angular margins
     const deflectorPins = [
       {
         r: 115,
-        angle: Math.PI * 0.15,
+        angle: Math.PI * 0.35,
         radius: 10,
         restitution: 1.4,
+        isInner: true,
         color: "#ec4899",
         accent: "#f43f5e",
       },
       {
         r: 160,
-        angle: -Math.PI * 0.1,
+        angle: 0.12,
         radius: 11,
         restitution: 1.45,
+        isInner: false,
         color: "#facc15",
         accent: "#eab308",
       },
       {
         r: 160,
-        angle: Math.PI * 1.2,
+        angle: Math.PI * 1.22,
         radius: 10,
         restitution: 1.4,
+        isInner: false,
         color: "#06b6d4",
         accent: "#0891b2",
       },
       {
         r: 115,
-        angle: Math.PI * 1.0,
+        angle: Math.PI * 1.02,
         radius: 10,
         restitution: 1.35,
+        isInner: true,
         color: "#a855f7",
         accent: "#9333ea",
       },
@@ -612,9 +766,10 @@ export class MazeLevelBuilder {
     if (sub >= 5) {
       deflectorPins.push({
         r: 158,
-        angle: Math.PI * 0.45,
+        angle: Math.PI * 0.46,
         radius: 12,
         restitution: 1.5,
+        isInner: false,
         color: "#f43f5e",
         accent: "#e11d48",
       });
@@ -624,12 +779,32 @@ export class MazeLevelBuilder {
       gates.push({
         type: "BOOST",
         value: 180,
-        angle: -Math.PI * 0.35,
-        rMin: 137,
-        rMax: 180,
+        angle: -Math.PI * 0.48,
+        rMin: 94,
+        rMax: 137, // Inner lane booster
+        isInner: true,
         color: "#84cc16",
       });
     }
+
+    const oneWayFlaps = [
+      {
+        rMin: 137,
+        rMax: 180,
+        angle: Math.PI * 0.24,
+        maxSwing: Math.PI * 0.35,
+        normalSign: 1,
+        isInner: false,
+      },
+      {
+        rMin: 94,
+        rMax: 137,
+        angle: Math.PI * 0.82,
+        maxSwing: Math.PI * 0.35,
+        normalSign: 1,
+        isInner: true,
+      },
+    ];
 
     return {
       id: `level_${levelNum}`,
@@ -639,7 +814,7 @@ export class MazeLevelBuilder {
       code: `LVL ${levelNum}`,
       description: isFinale
         ? "⭐ GRAND FINALE! Clear humanity's greatest orbital debris cascade to save Earth!"
-        : "Master orbital gauntlet! Route high-density debris through multi-stage shredder fields!",
+        : "Master planetary gear gauntlet! Route high-density debris through multi-stage shredders!",
       quota,
       initialDebrisCount,
       initialDebrisTypes: ["titanium", "solar", "volatile", "magnetic"],
@@ -647,10 +822,13 @@ export class MazeLevelBuilder {
       corridorWidth: 43,
       innerRadius,
       apertureAngle,
+      concentricRings: true,
+      gearRatio: -1.25,
       trackWalls,
       dividers,
       gates,
       deflectorPins,
+      oneWayFlaps,
       isFinale,
     };
   }
@@ -674,11 +852,26 @@ export class MazeLevelBuilder {
     const apCenter = Math.PI * 0.5;
     const apHalfWidth = 0.22 * Math.PI;
 
+    // Defined gate angles at corridor midpoints
+    const gateAngles = [-Math.PI * 0.5, step * 0.5, step * 2.5];
+
     for (let i = 0; i < numDividers; i++) {
-      const ang = i * step + (rnd() - 0.5) * 0.15;
+      const ang = i * step + (rnd() - 0.5) * 0.08;
       let diff = Math.abs(ang - apCenter);
       while (diff > Math.PI) diff = Math.PI * 2 - diff;
       if (diff < apHalfWidth) continue;
+
+      // Skip if too close to planned gates
+      let tooCloseToGate = false;
+      for (const ga of gateAngles) {
+        let gDiff = Math.abs(ang - ga);
+        while (gDiff > Math.PI) gDiff = Math.PI * 2 - gDiff;
+        if (gDiff < 0.16 * Math.PI) {
+          tooCloseToGate = true;
+          break;
+        }
+      }
+      if (tooCloseToGate) continue;
 
       const mid = 125;
       if (rnd() > 0.5) {
@@ -692,7 +885,7 @@ export class MazeLevelBuilder {
       {
         type: "MULTIPLY",
         value: 2 + Math.floor(rnd() * 2),
-        angle: 0.15 * Math.PI,
+        angle: gateAngles[1], // ~0.167pi
         rMin: 88,
         rMax: 165,
         color: "#facc15",
@@ -700,7 +893,7 @@ export class MazeLevelBuilder {
       {
         type: "ADD",
         value: 5 + Math.floor(rnd() * 5),
-        angle: 0.85 * Math.PI,
+        angle: gateAngles[2], // ~0.833pi
         rMin: 88,
         rMax: 165,
         color: "#38bdf8",
@@ -708,14 +901,24 @@ export class MazeLevelBuilder {
       {
         type: "MULTIPLY",
         value: 3,
-        angle: -0.5 * Math.PI,
+        angle: gateAngles[0], // -0.5pi
         rMin: 88,
         rMax: 165,
         color: "#f472b6",
       },
     ];
 
-    return {
+    const oneWayFlaps = [
+      {
+        rMin: 88,
+        rMax: 135,
+        angle: -0.15 * Math.PI,
+        maxSwing: Math.PI * 0.35,
+        normalSign: 1,
+      },
+    ];
+
+    const config = {
       id: "daily_shift",
       name: dailyInfo.title,
       code: "FIESTA",
@@ -729,8 +932,11 @@ export class MazeLevelBuilder {
       apertureAngle: Math.PI * 0.28,
       dividers,
       gates,
+      oneWayFlaps,
       isDaily: true,
       rewardCredits: dailyInfo.rewardCredits,
     };
+
+    return this.sanitizeSector(config);
   }
 }

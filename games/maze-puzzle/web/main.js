@@ -231,20 +231,26 @@ class OrbitalApp {
     };
 
     this.physics.onGatePassed = (gate) => {
+      const rot =
+        gate.isInner && this.physics.concentricRings
+          ? this.physics.innerRingAngle - this.physics.ringAngle
+          : 0;
       const rMid =
         gate.rMin !== undefined && gate.rMax !== undefined
           ? (gate.rMin + gate.rMax) * 0.5
           : gate.r || 120;
       const gx =
         this.physics.center.x +
-        Math.cos(gate.angle + this.physics.ringAngle) * rMid;
+        Math.cos(gate.angle + rot + this.physics.ringAngle) * rMid;
       const gy =
         this.physics.center.y +
-        Math.sin(gate.angle + this.physics.ringAngle) * rMid;
+        Math.sin(gate.angle + rot + this.physics.ringAngle) * rMid;
       const label =
         gate.type === "MULTIPLY"
           ? `×${gate.value}! SHRED ⚡`
-          : `+${gate.value}! COMPACT ✨`;
+          : gate.type === "ADD"
+            ? `+${gate.value}! COMPACT ✨`
+            : `BOOST! ⏩`;
 
       this.renderer.addFloatingText(gx, gy - 16, label, "#fde047");
       this.renderer.addConfetti(gx, gy, 8);
@@ -595,20 +601,28 @@ class OrbitalApp {
     const dt = Math.min((currentTime - this.lastTime) / 1000, 0.05);
     this.lastTime = currentTime;
 
-    // 1. Update Physics
-    this.physics.update(dt);
+    try {
+      // 1. Update Physics
+      this.physics.update(dt);
 
-    // 2. Render Canvas with Dynamic Black Hole Growth Info
-    this.renderer.render(this.physics, this.economy, dt, {
-      collectedMass: this.collectedMass,
-      quota: this.activeSector ? this.activeSector.quota : 30,
-    });
+      // 2. Render Canvas with Dynamic Black Hole Growth Info
+      this.renderer.render(this.physics, this.economy, dt, {
+        collectedMass: this.collectedMass,
+        quota: this.activeSector ? this.activeSector.quota : 30,
+      });
+    } catch (err) {
+      console.error("Simulation loop error:", err);
+    }
 
     requestAnimationFrame((t) => this.loop(t));
   }
 }
 
 // Boot application on DOM ready
-window.addEventListener("DOMContentLoaded", () => {
-  new OrbitalApp();
-});
+if (document.readyState === "loading") {
+  window.addEventListener("DOMContentLoaded", () => {
+    window.app = new OrbitalApp();
+  });
+} else {
+  window.app = new OrbitalApp();
+}

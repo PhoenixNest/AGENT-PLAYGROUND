@@ -7,6 +7,33 @@
 
 import { COSMETIC_CATALOG } from "./economy.js";
 
+// Bulletproof roundRect polyfill for maximum cross-browser/webview compatibility
+if (
+  typeof CanvasRenderingContext2D !== "undefined" &&
+  !CanvasRenderingContext2D.prototype.roundRect
+) {
+  CanvasRenderingContext2D.prototype.roundRect = function (x, y, w, h, radii = 0) {
+    let r = radii;
+    if (typeof r === "number") r = [r, r, r, r];
+    else if (!Array.isArray(r)) r = [0, 0, 0, 0];
+    const tl = r[0] || 0;
+    const tr = r[1] || r[0] || 0;
+    const br = r[2] || r[0] || 0;
+    const bl = r[3] || r[1] || r[0] || 0;
+    this.moveTo(x + tl, y);
+    this.lineTo(x + w - tr, y);
+    this.quadraticCurveTo(x + w, y, x + w, y + tr);
+    this.lineTo(x + w, y + h - br);
+    this.quadraticCurveTo(x + w, y + h, x + w - br, y + h);
+    this.lineTo(x + bl, y + h);
+    this.quadraticCurveTo(x, y + h, x, y + h - bl);
+    this.lineTo(x, y + tl);
+    this.quadraticCurveTo(x, y, x + tl, y);
+    this.closePath();
+    return this;
+  };
+}
+
 export class GameRenderer {
   constructor(canvas) {
     this.canvas = canvas;
@@ -183,6 +210,9 @@ export class GameRenderer {
 
     // 3. Render Chunky Cartoon Centrifuge Ring & Candy Chutes
     this.renderCartoonRing(ctx, physics, ringSkin);
+
+    // 3b. Render Mechanical One-Way Gravity Flapper Valves
+    this.renderOneWayFlappers(ctx, physics);
 
     // 4. Render Bouncy Cartoon Pinball Bumpers
     this.renderCartoonBumpers(ctx, physics);
@@ -487,190 +517,89 @@ export class GameRenderer {
     ctx.restore();
   }
 
-  renderCartoonRing(ctx, physics, ringSkin) {
+  renderOneWayFlappers(ctx, physics) {
+    if (!physics.oneWayFlaps || !physics.oneWayFlaps.length) return;
+
     const cx = physics.center.x;
     const cy = physics.center.y;
-    const rOut = physics.ringRadius;
-    const rIn = physics.innerRadius;
     const angle = physics.ringAngle;
-    const apAngle = physics.apertureAngle;
 
     ctx.save();
     ctx.translate(cx, cy);
-
-    // 1. Cartoon Air Puffs / Wind Lines when rotating
-    if (Math.abs(physics.angularVelocity) > 0.4 || physics.rcsThrusting) {
-      const dir = Math.sign(physics.angularVelocity || 1);
-      this.renderCartoonWhoosh(ctx, rOut + 10, angle, dir);
-    }
-
     ctx.rotate(angle);
 
-    // 2. Chunky Outer Ring (Thick Cartoon Border)
-    const apStart = Math.PI * 0.5 + apAngle * 0.5;
-    const apEnd = Math.PI * 0.5 - apAngle * 0.5;
+    for (const flap of physics.oneWayFlaps) {
+      const rot = (flap.isInner && physics.concentricRings)
+        ? (physics.innerRingAngle - physics.ringAngle)
+        : 0;
+      const baseAngle = flap.angle + rot;
+      const currentAngle = baseAngle + flap.swing * (flap.normalSign || 1);
+      const isLocked = flap.swing <= 0.05;
 
-    // Dark bottom drop shadow
-    ctx.lineWidth = 18;
-    ctx.strokeStyle = "rgba(15, 23, 42, 0.45)";
-    ctx.beginPath();
-    ctx.arc(0, 4, rOut, apStart, apEnd);
-    ctx.stroke();
+      const rMin = flap.rMin;
+      const rMax = flap.rMax;
 
-    // Main colorful cartoon outer rim
-    ctx.lineWidth = 14;
-    ctx.strokeStyle = ringSkin.color;
-    ctx.beginPath();
-    ctx.arc(0, 0, rOut, apStart, apEnd);
-    ctx.stroke();
+      const cosCur = Math.cos(currentAngle);
+      const sinCur = Math.sin(currentAngle);
 
-    // White glossy highlight line along the upper arc
-    ctx.lineWidth = 3.5;
-    ctx.strokeStyle = "rgba(255, 255, 255, 0.75)";
-    ctx.beginPath();
-    ctx.arc(0, 0, rOut - 4, Math.PI * 1.1, Math.PI * 1.9);
-    ctx.stroke();
-
-    // Cute decorative candy sprinkles / bolts on outer ring
-    for (let i = 0; i < 10; i++) {
-      const a = (Math.PI * 2 * i) / 10;
-      // Skip aperture gap
-      if (a > apEnd && a < apStart) continue;
-      const bx = Math.cos(a) * (rOut - 1);
-      const by = Math.sin(a) * (rOut - 1);
-      ctx.fillStyle = ringSkin.accent;
-      ctx.beginPath();
-      ctx.arc(bx, by, 3.5, 0, Math.PI * 2);
-      ctx.fill();
-    }
-
-    // 3. Aperture Cartoon Chevron Arrows (Pointing out to Nibbles)
-    this.renderCartoonChevrons(ctx, rOut, apEnd, apStart);
-
-    // 4. Inner Hub (Chunky central circle)
-    ctx.lineWidth = 10;
-    ctx.strokeStyle = "#1e1b4b";
-    ctx.fillStyle = ringSkin.color;
-    ctx.beginPath();
-    ctx.arc(0, 0, rIn, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.stroke();
-
-    // Inner hub face
-    ctx.fillStyle = "#ffffff";
-    ctx.beginPath();
-    ctx.arc(0, 0, rIn - 8, 0, Math.PI * 2);
-    ctx.fill();
-
-    // Happy cute station face
-    ctx.fillStyle = "#1e1b4b";
-    ctx.font = "bold 13px Fredoka, sans-serif";
-    ctx.textAlign = "center";
-    ctx.textBaseline = "middle";
-    ctx.fillText("✨ ORBITAL ✨", 0, -7);
-    ctx.font = "11px Nunito, sans-serif";
-    ctx.fillStyle = "#64748b";
-    ctx.fillText("SORT RIG", 0, 9);
-
-    // 4b. Concentric Track Partitions (if present)
-    if (physics.trackWalls && physics.trackWalls.length > 0) {
-      for (const tw of physics.trackWalls) {
-        const gapHalf = (tw.gapSize || 0.45) * 0.5;
-        const gapAng = tw.gapAngle;
-        const startA = gapAng + gapHalf;
-        const endA = gapAng - gapHalf + Math.PI * 2;
-
-        // Dark track outline
-        ctx.lineWidth = 8;
-        ctx.strokeStyle = "#1e1b4b";
-        ctx.beginPath();
-        ctx.arc(0, 0, tw.r, startA, endA);
-        ctx.stroke();
-
-        // Bright candy rail
-        ctx.lineWidth = 4;
-        ctx.strokeStyle = ringSkin.accent;
-        ctx.beginPath();
-        ctx.arc(0, 0, tw.r, startA, endA);
-        ctx.stroke();
-
-        // Cartoon gateway indicators at transfer gap
-        [-gapHalf, gapHalf].forEach((off) => {
-          const capAng = gapAng + off;
-          const capX = Math.cos(capAng) * tw.r;
-          const capY = Math.sin(capAng) * tw.r;
-          ctx.fillStyle = "#facc15";
-          ctx.strokeStyle = "#1e1b4b";
-          ctx.lineWidth = 2;
-          ctx.beginPath();
-          ctx.arc(capX, capY, 4, 0, Math.PI * 2);
-          ctx.fill();
-          ctx.stroke();
-        });
-      }
-    }
-
-    // 5. Chunky Radial Dividers (Candy Chutes)
-    ctx.lineWidth = 7;
-    ctx.lineCap = "round";
-    for (const div of physics.dividers) {
-      const dx1 = Math.cos(div.angle) * div.rMin;
-      const dy1 = Math.sin(div.angle) * div.rMin;
-      const dx2 = Math.cos(div.angle) * div.rMax;
-      const dy2 = Math.sin(div.angle) * div.rMax;
-
-      // Dark cartoon outline
-      ctx.strokeStyle = "#1e1b4b";
-      ctx.beginPath();
-      ctx.moveTo(dx1, dy1);
-      ctx.lineTo(dx2, dy2);
-      ctx.stroke();
-
-      // Bright candy center
-      ctx.lineWidth = 3.5;
-      ctx.strokeStyle = ringSkin.accent;
-      ctx.beginPath();
-      ctx.moveTo(dx1, dy1);
-      ctx.lineTo(dx2, dy2);
-      ctx.stroke();
-      ctx.lineWidth = 7;
-    }
-
-    ctx.restore();
-  }
-
-  renderCartoonWhoosh(ctx, radius, currentAngle, dir) {
-    ctx.save();
-    const count = 3;
-    for (let i = 0; i < count; i++) {
-      const a = currentAngle + i * 0.35 * dir;
-      const dist = radius + (i % 2) * 5;
-      const wx = Math.cos(a) * dist;
-      const wy = Math.sin(a) * dist;
-
-      ctx.fillStyle = "#ffffff";
-      ctx.globalAlpha = 0.75 - i * 0.2;
-      ctx.beginPath();
-      ctx.arc(wx, wy, 4.5 - i, 0, Math.PI * 2);
-      ctx.fill();
-    }
-    ctx.restore();
-  }
-
-  renderCartoonChevrons(ctx, rOut, apEnd, apStart) {
-    ctx.save();
-    [-0.07, 0.07].forEach((offset) => {
-      const ang = Math.PI * 0.5 + offset;
-      const x = Math.cos(ang) * (rOut + 4);
-      const y = Math.sin(ang) * (rOut + 4);
-      ctx.fillStyle = "#facc15";
+      // 1. Rigid Stopper Peg
+      const stopAng = baseAngle - 0.08 * (flap.normalSign || 1);
+      const stopX = Math.cos(stopAng) * (rMin + 14);
+      const stopY = Math.sin(stopAng) * (rMin + 14);
+      ctx.fillStyle = "#64748b";
       ctx.strokeStyle = "#1e1b4b";
       ctx.lineWidth = 2;
       ctx.beginPath();
-      ctx.arc(x, y, 4.5, 0, Math.PI * 2);
+      ctx.arc(stopX, stopY, 4, 0, Math.PI * 2);
       ctx.fill();
       ctx.stroke();
-    });
+
+      // 2. Swinging Flapper Arm
+      const x1 = cosCur * rMin;
+      const y1 = sinCur * rMin;
+      const x2 = cosCur * rMax;
+      const y2 = sinCur * rMax;
+
+      ctx.lineWidth = 8;
+      ctx.lineCap = "round";
+      ctx.strokeStyle = "#1e1b4b";
+      ctx.beginPath();
+      ctx.moveTo(x1, y1);
+      ctx.lineTo(x2, y2);
+      ctx.stroke();
+
+      ctx.lineWidth = 4;
+      ctx.strokeStyle = isLocked ? "#f59e0b" : "#22c55e"; // Amber when locked, emerald green when open
+      ctx.beginPath();
+      ctx.moveTo(x1, y1);
+      ctx.lineTo(x2, y2);
+      ctx.stroke();
+
+      // 3. Heavy Industrial Hinge Bolt
+      ctx.fillStyle = "#e2e8f0";
+      ctx.strokeStyle = "#1e1b4b";
+      ctx.lineWidth = 2.5;
+      ctx.beginPath();
+      ctx.arc(x1, y1, 7, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+
+      // Status LED indicator
+      ctx.fillStyle = isLocked ? "#f59e0b" : "#4ade80";
+      ctx.beginPath();
+      ctx.arc(x1, y1, 2.8, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Flap tip bumper roller
+      ctx.fillStyle = "#38bdf8";
+      ctx.strokeStyle = "#1e1b4b";
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.arc(x2, y2, 4, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+    }
+
     ctx.restore();
   }
 
@@ -686,8 +615,12 @@ export class GameRenderer {
     ctx.rotate(angle);
 
     for (const pin of physics.deflectorPins) {
-      const px = Math.cos(pin.angle) * pin.r;
-      const py = Math.sin(pin.angle) * pin.r;
+      const rot = (pin.isInner && physics.concentricRings)
+        ? (physics.innerRingAngle - physics.ringAngle)
+        : 0;
+      const finalAngle = pin.angle + rot;
+      const px = Math.cos(finalAngle) * pin.r;
+      const py = Math.sin(finalAngle) * pin.r;
       const r = pin.radius || 9.5;
       const isHit = pin.hitTimer > 0;
       const hitProgress = isHit ? pin.hitTimer / 0.25 : 0; // 1 down to 0
@@ -745,6 +678,238 @@ export class GameRenderer {
     ctx.restore();
   }
 
+  renderCartoonRing(ctx, physics, ringSkin) {
+    const cx = physics.center.x;
+    const cy = physics.center.y;
+    const rOut = physics.ringRadius;
+    const rIn = physics.innerRadius;
+    const angle = physics.ringAngle;
+    const apAngle = physics.apertureAngle;
+
+    ctx.save();
+    ctx.translate(cx, cy);
+
+    // 1. Cartoon Air Puffs / Wind Lines when rotating
+    if (Math.abs(physics.angularVelocity) > 0.4 || physics.rcsThrusting) {
+      const dir = Math.sign(physics.angularVelocity || 1);
+      this.renderCartoonWhoosh(ctx, rOut + 10, angle, dir);
+    }
+
+    ctx.rotate(angle);
+
+    // 2. Chunky Outer Ring (Thick Cartoon Border)
+    const apStart = Math.PI * 0.5 + apAngle * 0.5;
+    const apEnd = Math.PI * 0.5 - apAngle * 0.5;
+
+    // Dark bottom drop shadow
+    ctx.lineWidth = 18;
+    ctx.strokeStyle = "rgba(15, 23, 42, 0.45)";
+    ctx.beginPath();
+    ctx.arc(0, 4, rOut, apStart, apEnd);
+    ctx.stroke();
+
+    // Main colorful cartoon outer rim
+    ctx.lineWidth = 14;
+    ctx.strokeStyle = ringSkin.color;
+    ctx.lineCap = "round";
+    ctx.beginPath();
+    ctx.arc(0, 0, rOut, apStart, apEnd);
+    ctx.stroke();
+
+    // Dark cartoon border outlines
+    ctx.lineWidth = 3;
+    ctx.strokeStyle = "#1e1b4b";
+    ctx.beginPath();
+    ctx.arc(0, 0, rOut + 7, apStart, apEnd);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.arc(0, 0, rOut - 7, apStart, apEnd);
+    ctx.stroke();
+
+    // Outer rim glossy top highlight
+    ctx.lineWidth = 3;
+    ctx.strokeStyle = "rgba(255, 255, 255, 0.65)";
+    ctx.beginPath();
+    ctx.arc(0, 0, rOut - 4, Math.PI * 1.1, Math.PI * 1.9);
+    ctx.stroke();
+
+    // Decorative candy sprinkles / bolts on outer ring
+    for (let i = 0; i < 10; i++) {
+      const a = (Math.PI * 2 * i) / 10;
+      if (a > apEnd && a < apStart) continue;
+      const bx = Math.cos(a) * (rOut - 1);
+      const by = Math.sin(a) * (rOut - 1);
+      ctx.fillStyle = ringSkin.accent;
+      ctx.beginPath();
+      ctx.arc(bx, by, 3.5, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    // 3. Aperture Cartoon Chevron Arrows (Pointing out to Nibbles)
+    this.renderCartoonChevrons(ctx, rOut, apEnd, apStart);
+
+    // 4. Inner Hub (Rotating in sync with planetary gears if concentric)
+    ctx.save();
+    if (physics.concentricRings) {
+      ctx.rotate(physics.innerRingAngle - physics.ringAngle);
+    }
+    ctx.lineWidth = 10;
+    ctx.strokeStyle = "#1e1b4b";
+    ctx.fillStyle = ringSkin.color;
+    ctx.beginPath();
+    ctx.arc(0, 0, rIn, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+
+    // Inner hub face
+    ctx.fillStyle = "#ffffff";
+    ctx.beginPath();
+    ctx.arc(0, 0, rIn - 8, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Station face text
+    ctx.fillStyle = "#1e1b4b";
+    ctx.font = "bold 13px Fredoka, sans-serif";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText(physics.concentricRings ? "⚙️ GEAR RIG ⚙️" : "✨ ORBITAL ✨", 0, -7);
+    ctx.font = "11px Nunito, sans-serif";
+    ctx.fillStyle = "#64748b";
+    ctx.fillText(physics.concentricRings ? "PLANETARY" : "SORT RIG", 0, 9);
+    ctx.restore();
+
+    // 4b. Concentric Track Partitions & Planetary Gear Teeth
+    if (physics.trackWalls && physics.trackWalls.length > 0) {
+      for (const tw of physics.trackWalls) {
+        const gapHalf = (tw.gapSize || 0.45) * 0.5;
+        const gapAng = tw.gapAngle;
+        const startA = gapAng + gapHalf;
+        const endA = gapAng - gapHalf + Math.PI * 2;
+
+        // Dark track outline
+        ctx.lineWidth = 8;
+        ctx.strokeStyle = "#1e1b4b";
+        ctx.beginPath();
+        ctx.arc(0, 0, tw.r, startA, endA);
+        ctx.stroke();
+
+        // Bright candy rail
+        ctx.lineWidth = 4;
+        ctx.strokeStyle = ringSkin.accent;
+        ctx.beginPath();
+        ctx.arc(0, 0, tw.r, startA, endA);
+        ctx.stroke();
+
+        // Animated Planetary Gear Teeth along track wall (if concentric)
+        if (physics.concentricRings) {
+          const numCogs = 24;
+          const cogStep = (Math.PI * 2) / numCogs;
+          const cogRot = (physics.innerRingAngle - physics.ringAngle) * 0.6;
+          ctx.fillStyle = "#facc15";
+          ctx.strokeStyle = "#1e1b4b";
+          ctx.lineWidth = 1.5;
+
+          for (let i = 0; i < numCogs; i++) {
+            const cogAng = i * cogStep + cogRot;
+            let diff = cogAng - gapAng;
+            while (diff > Math.PI) diff -= Math.PI * 2;
+            while (diff < -Math.PI) diff += Math.PI * 2;
+            if (Math.abs(diff) < gapHalf + 0.1) continue;
+
+            const cx1 = Math.cos(cogAng) * (tw.r - 4);
+            const cy1 = Math.sin(cogAng) * (tw.r - 4);
+            ctx.beginPath();
+            ctx.arc(cx1, cy1, 2.5, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.stroke();
+          }
+        }
+
+        // Cartoon gateway indicators at transfer gap
+        [-gapHalf, gapHalf].forEach((off) => {
+          const capAng = gapAng + off;
+          const capX = Math.cos(capAng) * tw.r;
+          const capY = Math.sin(capAng) * tw.r;
+          ctx.fillStyle = "#facc15";
+          ctx.strokeStyle = "#1e1b4b";
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.arc(capX, capY, 4.5, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.stroke();
+        });
+      }
+    }
+
+    // 5. Chunky Radial Dividers (Candy Chutes)
+    ctx.lineWidth = 7;
+    ctx.lineCap = "round";
+    for (const div of physics.dividers) {
+      const rot = (div.isInner && physics.concentricRings)
+        ? (physics.innerRingAngle - physics.ringAngle)
+        : 0;
+      const finalAngle = div.angle + rot;
+
+      const dx1 = Math.cos(finalAngle) * div.rMin;
+      const dy1 = Math.sin(finalAngle) * div.rMin;
+      const dx2 = Math.cos(finalAngle) * div.rMax;
+      const dy2 = Math.sin(finalAngle) * div.rMax;
+
+      // Dark cartoon outline
+      ctx.strokeStyle = "#1e1b4b";
+      ctx.beginPath();
+      ctx.moveTo(dx1, dy1);
+      ctx.lineTo(dx2, dy2);
+      ctx.stroke();
+
+      // Bright candy center
+      ctx.lineWidth = 3.5;
+      ctx.strokeStyle = ringSkin.accent;
+      ctx.beginPath();
+      ctx.moveTo(dx1, dy1);
+      ctx.lineTo(dx2, dy2);
+      ctx.stroke();
+      ctx.lineWidth = 7;
+    }
+
+    ctx.restore();
+  }
+
+  renderCartoonWhoosh(ctx, radius, currentAngle, dir) {
+    ctx.save();
+    const count = 3;
+    for (let i = 0; i < count; i++) {
+      const a = currentAngle + i * 0.35 * dir;
+      const dist = radius + (i % 2) * 5;
+      const wx = Math.cos(a) * dist;
+      const wy = Math.sin(a) * dist;
+
+      ctx.fillStyle = "#ffffff";
+      ctx.globalAlpha = 0.75 - i * 0.2;
+      ctx.beginPath();
+      ctx.arc(wx, wy, 4.5 - i, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.restore();
+  }
+
+  renderCartoonChevrons(ctx, rOut, apEnd, apStart) {
+    ctx.save();
+    [-0.07, 0.07].forEach((offset) => {
+      const ang = Math.PI * 0.5 + offset;
+      const x = Math.cos(ang) * (rOut + 4);
+      const y = Math.sin(ang) * (rOut + 4);
+      ctx.fillStyle = "#facc15";
+      ctx.strokeStyle = "#1e1b4b";
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.arc(x, y, 4.5, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+    });
+    ctx.restore();
+  }
+
   renderSpinningGear(ctx, x, y, radius, rot, color) {
     ctx.save();
     ctx.translate(x, y);
@@ -789,7 +954,7 @@ export class GameRenderer {
     const mainColor = "#f97316";
 
     // Track outline
-    ctx.lineWidth = 7;
+    ctx.lineWidth = 6;
     ctx.strokeStyle = "#1e1b4b";
     ctx.beginPath();
     ctx.moveTo(x1, y1);
@@ -797,7 +962,7 @@ export class GameRenderer {
     ctx.stroke();
 
     // Hazard orange beam
-    ctx.lineWidth = 4;
+    ctx.lineWidth = 3.5;
     ctx.strokeStyle = mainColor;
     ctx.beginPath();
     ctx.moveTo(x1, y1);
@@ -805,47 +970,47 @@ export class GameRenderer {
     ctx.stroke();
 
     // Warm inner core
-    ctx.lineWidth = 1.6;
+    ctx.lineWidth = 1.4;
     ctx.strokeStyle = "#fef08a";
     ctx.beginPath();
     ctx.moveTo(x1, y1);
     ctx.lineTo(x2, y2);
     ctx.stroke();
 
-    // Dual spinning cartoon sawblade gears
+    // Dual spinning cartoon sawblade gears at aperture anchors
     const spin = this.cosmicTime * 7;
-    this.renderSpinningGear(ctx, x1, y1, 6.5, spin, mainColor);
-    this.renderSpinningGear(ctx, x2, y2, 6.5, -spin, mainColor);
+    this.renderSpinningGear(ctx, x1, y1, 5.5, spin, mainColor);
+    this.renderSpinningGear(ctx, x2, y2, 5.5, -spin, mainColor);
 
-    // Hexagonal Badge
+    // Compact Outer-Anchored Hexagonal Badge
     ctx.save();
     ctx.translate(gx, gy);
     ctx.rotate(gAngle + Math.PI * 0.5);
 
-    const bw = 24;
-    const bh = 11;
+    const bw = 17;
+    const bh = 8.5;
 
     // Badge shadow
     ctx.fillStyle = "#1e1b4b";
     ctx.beginPath();
-    ctx.moveTo(-bw - 5, 2.5);
-    ctx.lineTo(-bw, -bh + 2.5);
-    ctx.lineTo(bw, -bh + 2.5);
-    ctx.lineTo(bw + 5, 2.5);
-    ctx.lineTo(bw, bh + 2.5);
-    ctx.lineTo(-bw, bh + 2.5);
+    ctx.moveTo(-bw - 4, 2);
+    ctx.lineTo(-bw, -bh + 2);
+    ctx.lineTo(bw, -bh + 2);
+    ctx.lineTo(bw + 4, 2);
+    ctx.lineTo(bw, bh + 2);
+    ctx.lineTo(-bw, bh + 2);
     ctx.closePath();
     ctx.fill();
 
     // Hex body
     ctx.fillStyle = "#ffffff";
     ctx.strokeStyle = mainColor;
-    ctx.lineWidth = 2.5;
+    ctx.lineWidth = 2.2;
     ctx.beginPath();
-    ctx.moveTo(-bw - 5, 0);
+    ctx.moveTo(-bw - 4, 0);
     ctx.lineTo(-bw, -bh);
     ctx.lineTo(bw, -bh);
-    ctx.lineTo(bw + 5, 0);
+    ctx.lineTo(bw + 4, 0);
     ctx.lineTo(bw, bh);
     ctx.lineTo(-bw, bh);
     ctx.closePath();
@@ -854,7 +1019,7 @@ export class GameRenderer {
 
     // Text: ⚡ ×N
     ctx.fillStyle = "#c2410c";
-    ctx.font = "bold 11px Fredoka, sans-serif";
+    ctx.font = "bold 10px Fredoka, sans-serif";
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
     ctx.fillText(`⚡ ×${gate.value}`, 0, 0.5);
@@ -866,7 +1031,7 @@ export class GameRenderer {
     const mainColor = "#ec4899";
 
     // Wide electric glow
-    ctx.lineWidth = 10;
+    ctx.lineWidth = 8;
     ctx.strokeStyle = "rgba(236, 72, 153, 0.4)";
     ctx.beginPath();
     ctx.moveTo(x1, y1);
@@ -877,7 +1042,7 @@ export class GameRenderer {
     const dx = x2 - x1;
     const dy = y2 - y1;
     const segCount = 6;
-    ctx.lineWidth = 3;
+    ctx.lineWidth = 2.5;
     ctx.strokeStyle = "#ffffff";
     ctx.beginPath();
     ctx.moveTo(x1, y1);
@@ -887,7 +1052,7 @@ export class GameRenderer {
       const py = y1 + dy * frac;
       const perpX = -dy / (Math.hypot(dx, dy) + 0.001);
       const perpY = dx / (Math.hypot(dx, dy) + 0.001);
-      const jitter = Math.sin(this.cosmicTime * 32 + i * 2) * 3.5;
+      const jitter = Math.sin(this.cosmicTime * 32 + i * 2) * 3;
       ctx.lineTo(px + perpX * jitter, py + perpY * jitter);
     }
     ctx.lineTo(x2, y2);
@@ -904,71 +1069,74 @@ export class GameRenderer {
 
       ctx.fillStyle = mainColor;
       ctx.strokeStyle = "#1e1b4b";
-      ctx.lineWidth = 1.8;
+      ctx.lineWidth = 1.6;
       ctx.beginPath();
-      ctx.moveTo(0, -9);
-      ctx.lineTo(3, -3);
-      ctx.lineTo(9, 0);
-      ctx.lineTo(3, 3);
-      ctx.lineTo(0, 9);
-      ctx.lineTo(-3, 3);
-      ctx.lineTo(-9, 0);
-      ctx.lineTo(-3, -3);
+      ctx.moveTo(0, -7.5);
+      ctx.lineTo(2.5, -2.5);
+      ctx.lineTo(7.5, 0);
+      ctx.lineTo(2.5, 2.5);
+      ctx.lineTo(0, 7.5);
+      ctx.lineTo(-2.5, 2.5);
+      ctx.lineTo(-7.5, 0);
+      ctx.lineTo(-2.5, -2.5);
       ctx.closePath();
       ctx.fill();
       ctx.stroke();
 
       ctx.fillStyle = "#ffffff";
       ctx.beginPath();
-      ctx.arc(0, 0, 2.5, 0, Math.PI * 2);
+      ctx.arc(0, 0, 2.2, 0, Math.PI * 2);
       ctx.fill();
 
       ctx.restore();
     });
 
-    // Spiked Diamond Super Badge
+    // Spiked Super Badge
     ctx.save();
     ctx.translate(gx, gy);
     ctx.rotate(gAngle + Math.PI * 0.5);
 
+    const bw = 19;
+    const bh = 9;
+
     // Glowing aura
-    ctx.fillStyle = "rgba(236, 72, 153, 0.45)";
+    ctx.fillStyle = "rgba(236, 72, 153, 0.4)";
     ctx.beginPath();
-    ctx.arc(0, 0, 20, 0, Math.PI * 2);
+    ctx.arc(0, 0, 16, 0, Math.PI * 2);
     ctx.fill();
 
     // Drop shadow
     ctx.fillStyle = "#1e1b4b";
     ctx.beginPath();
-    ctx.roundRect(-26, -11 + 2.5, 52, 22, 6);
+    ctx.roundRect(-bw, -bh + 2, bw * 2, bh * 2, 5);
     ctx.fill();
 
     // Magenta badge body
     ctx.fillStyle = "#ec4899";
     ctx.strokeStyle = "#ffffff";
-    ctx.lineWidth = 2.2;
+    ctx.lineWidth = 2;
     ctx.beginPath();
-    ctx.roundRect(-26, -11, 52, 22, 6);
+    ctx.roundRect(-bw, -bh, bw * 2, bh * 2, 5);
     ctx.fill();
     ctx.stroke();
 
     // Text: 💥 ×N!
     ctx.fillStyle = "#ffffff";
-    ctx.font = "900 12px Fredoka, sans-serif";
+    ctx.font = "900 10.5px Fredoka, sans-serif";
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
-    ctx.fillText(`💥 ×${gate.value}!`, 0, 1);
+    ctx.fillText(`💥 ×${gate.value}!`, 0, 0.5);
 
     ctx.restore();
   }
 
   renderCompactorGate(ctx, x1, y1, x2, y2, gx, gy, gAngle, gate) {
     const perpAngle = gAngle + Math.PI * 0.5;
-    const offX = Math.cos(perpAngle) * 3;
-    const offY = Math.sin(perpAngle) * 3;
+    const offX = Math.cos(perpAngle) * 2.5;
+    const offY = Math.sin(perpAngle) * 2.5;
 
     // Dual cyan magnetic guide rails
-    ctx.lineWidth = 3.5;
+    ctx.lineWidth = 3;
     ctx.strokeStyle = "#0891b2";
     ctx.beginPath();
     ctx.moveTo(x1 - offX, y1 - offY);
@@ -988,9 +1156,9 @@ export class GameRenderer {
       const wy = y1 + dy * frac;
 
       ctx.strokeStyle = `rgba(6, 182, 212, ${0.8 - frac * 0.6})`;
-      ctx.lineWidth = 2;
+      ctx.lineWidth = 1.8;
       ctx.beginPath();
-      ctx.arc(wx, wy, 4 + wavePhase * 6, 0, Math.PI * 2);
+      ctx.arc(wx, wy, 3.5 + wavePhase * 5, 0, Math.PI * 2);
       ctx.stroke();
     }
 
@@ -1003,15 +1171,15 @@ export class GameRenderer {
       ctx.translate(p.x, p.y);
       ctx.fillStyle = "#0284c7";
       ctx.strokeStyle = "#1e1b4b";
-      ctx.lineWidth = 2;
+      ctx.lineWidth = 1.8;
       ctx.beginPath();
-      ctx.roundRect(-5.5, -5.5, 11, 11, 3);
+      ctx.roundRect(-4.5, -4.5, 9, 9, 2.5);
       ctx.fill();
       ctx.stroke();
 
       ctx.fillStyle = "#67e8f9";
       ctx.beginPath();
-      ctx.arc(0, 0, 2.8, 0, Math.PI * 2);
+      ctx.arc(0, 0, 2.2, 0, Math.PI * 2);
       ctx.fill();
       ctx.restore();
     });
@@ -1021,24 +1189,27 @@ export class GameRenderer {
     ctx.translate(gx, gy);
     ctx.rotate(gAngle + Math.PI * 0.5);
 
+    const bw = 17;
+    const bh = 8.5;
+
     // Drop shadow
     ctx.fillStyle = "#1e1b4b";
     ctx.beginPath();
-    ctx.roundRect(-24, -10 + 2.5, 48, 20, 10);
+    ctx.roundRect(-bw, -bh + 2, bw * 2, bh * 2, 8.5);
     ctx.fill();
 
     // Capsule body
     ctx.fillStyle = "#ffffff";
     ctx.strokeStyle = "#0891b2";
-    ctx.lineWidth = 2.5;
+    ctx.lineWidth = 2.2;
     ctx.beginPath();
-    ctx.roundRect(-24, -10, 48, 20, 10);
+    ctx.roundRect(-bw, -bh, bw * 2, bh * 2, 8.5);
     ctx.fill();
     ctx.stroke();
 
     // Text: 🧲 +N
     ctx.fillStyle = "#0369a1";
-    ctx.font = "bold 11px Fredoka, sans-serif";
+    ctx.font = "bold 10px Fredoka, sans-serif";
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
     ctx.fillText(`🧲 +${gate.value}`, 0, 0.5);
@@ -1048,14 +1219,14 @@ export class GameRenderer {
 
   renderBoosterGate(ctx, x1, y1, x2, y2, gx, gy, gAngle, gate) {
     // Glowing lime green accelerator track
-    ctx.lineWidth = 7;
+    ctx.lineWidth = 6;
     ctx.strokeStyle = "rgba(132, 204, 22, 0.35)";
     ctx.beginPath();
     ctx.moveTo(x1, y1);
     ctx.lineTo(x2, y2);
     ctx.stroke();
 
-    ctx.lineWidth = 3.5;
+    ctx.lineWidth = 3;
     ctx.strokeStyle = "#65a30d";
     ctx.beginPath();
     ctx.moveTo(x1, y1);
@@ -1071,15 +1242,15 @@ export class GameRenderer {
       ctx.translate(p.x, p.y);
       ctx.fillStyle = "#84cc16";
       ctx.strokeStyle = "#1e1b4b";
-      ctx.lineWidth = 2;
+      ctx.lineWidth = 1.8;
       ctx.beginPath();
-      ctx.arc(0, 0, 5, 0, Math.PI * 2);
+      ctx.arc(0, 0, 4.5, 0, Math.PI * 2);
       ctx.fill();
       ctx.stroke();
 
       ctx.fillStyle = "#facc15";
       ctx.beginPath();
-      ctx.arc(0, 0, 2.5, 0, Math.PI * 2);
+      ctx.arc(0, 0, 2.2, 0, Math.PI * 2);
       ctx.fill();
       ctx.restore();
     });
@@ -1089,26 +1260,29 @@ export class GameRenderer {
     ctx.translate(gx, gy);
     ctx.rotate(gAngle + Math.PI * 0.5);
 
-    ctx.transform(1, 0, -0.25, 1, 0, 0);
+    ctx.transform(1, 0, -0.22, 1, 0, 0);
+
+    const bw = 18;
+    const bh = 8.5;
 
     // Shadow
     ctx.fillStyle = "#1e1b4b";
     ctx.beginPath();
-    ctx.roundRect(-26, -10 + 2.5, 52, 20, 5);
+    ctx.roundRect(-bw, -bh + 2, bw * 2, bh * 2, 4.5);
     ctx.fill();
 
     // Body
     ctx.fillStyle = "#84cc16";
     ctx.strokeStyle = "#1e1b4b";
-    ctx.lineWidth = 2.2;
+    ctx.lineWidth = 2;
     ctx.beginPath();
-    ctx.roundRect(-26, -10, 52, 20, 5);
+    ctx.roundRect(-bw, -bh, bw * 2, bh * 2, 4.5);
     ctx.fill();
     ctx.stroke();
 
     // Text: ⏩ BOOST
     ctx.fillStyle = "#ffffff";
-    ctx.font = "bold 10.5px Fredoka, sans-serif";
+    ctx.font = "bold 9.5px Fredoka, sans-serif";
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
     ctx.fillText("⏩ BOOST", 0, 0.5);
@@ -1126,10 +1300,14 @@ export class GameRenderer {
     ctx.rotate(angle);
 
     for (const gate of physics.gates) {
-      const gAngle = gate.angle;
+      const rot = (gate.isInner && physics.concentricRings)
+        ? (physics.innerRingAngle - physics.ringAngle)
+        : 0;
+      const gAngle = gate.angle + rot;
       const rMin = gate.rMin !== undefined ? gate.rMin : (gate.r || 120) - 17;
       const rMax = gate.rMax !== undefined ? gate.rMax : (gate.r || 120) + 17;
-      const rMid = (rMin + rMax) * 0.5;
+      // Phase 2: Outer-anchored badge position leaves center channel open
+      const rBadge = rMin + (rMax - rMin) * 0.82;
 
       const cosA = Math.cos(gAngle);
       const sinA = Math.sin(gAngle);
@@ -1138,8 +1316,8 @@ export class GameRenderer {
       const y1 = sinA * rMin;
       const x2 = cosA * rMax;
       const y2 = sinA * rMax;
-      const gx = cosA * rMid;
-      const gy = sinA * rMid;
+      const gx = cosA * rBadge;
+      const gy = sinA * rBadge;
 
       if (gate.type === "BOOST") {
         this.renderBoosterGate(ctx, x1, y1, x2, y2, gx, gy, gAngle, gate);
