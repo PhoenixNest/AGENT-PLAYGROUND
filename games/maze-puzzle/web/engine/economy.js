@@ -179,7 +179,22 @@ export class EconomyManager {
       completedSectors: [],
       dailyShiftCompletedToday: false,
       lastDailyShiftDate: "",
+      lastDailyGiftDate: "",
     };
+  }
+
+  canClaimDailyGift() {
+    const today = new Date().toISOString().slice(0, 10);
+    return this.profile.lastDailyGiftDate !== today;
+  }
+
+  claimDailyGift(amount = 100) {
+    if (!this.canClaimDailyGift()) return false;
+    const today = new Date().toISOString().slice(0, 10);
+    this.profile.lastDailyGiftDate = today;
+    this.profile.credits += amount;
+    this.saveProfile();
+    return true;
   }
 
   normalizeCategory(cat) {

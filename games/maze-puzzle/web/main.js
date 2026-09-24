@@ -150,10 +150,24 @@ class OrbitalApp {
       const el = document.getElementById(id);
       if (el) el.textContent = credits;
     });
+    this.updateShopDockBadge();
+  }
+
+  updateShopDockBadge() {
+    const badge = document.getElementById("shop-dock-badge");
+    if (!badge) return;
+    const canClaim = this.economy.canClaimDailyGift();
+    if (canClaim) {
+      badge.style.display = "inline-block";
+      badge.textContent = "FREE";
+    } else {
+      badge.style.display = "none";
+    }
   }
 
   updateHomeView() {
     this.updateAllCreditDisplays();
+    this.updateShopDockBadge();
 
     // 1. Mission Info
     const sec = this.activeSector || this.sectors[0];
@@ -925,6 +939,50 @@ class OrbitalApp {
      (5) Dedicated Toy Shop Page
      ========================================================= */
   renderStorePage() {
+    // 1. Update Daily Janitor Stipend Banner
+    const giftBanner = document.getElementById("daily-gift-banner");
+    const giftBtn = document.getElementById("btn-claim-daily-gift");
+    const giftTitle = document.getElementById("gift-banner-title");
+    const giftDesc = document.getElementById("gift-banner-desc");
+    const giftIcon = document.getElementById("gift-banner-icon");
+
+    if (giftBanner && giftBtn) {
+      const canClaim = this.economy.canClaimDailyGift();
+      if (canClaim) {
+        giftBanner.classList.remove("claimed");
+        giftBtn.textContent = "Claim +100 🪙";
+        giftBtn.disabled = false;
+        if (giftTitle) giftTitle.textContent = "Janitor Care Package!";
+        if (giftDesc) giftDesc.textContent = "Claim your free daily +100 🪙 allowance.";
+        if (giftIcon) giftIcon.textContent = "🎁";
+      } else {
+        giftBanner.classList.add("claimed");
+        giftBtn.textContent = "Claimed Today ✨";
+        giftBtn.disabled = true;
+        if (giftTitle) giftTitle.textContent = "Allowance Claimed! ✨";
+        if (giftDesc) giftDesc.textContent = "Come back tomorrow for another +100 🪙 care package!";
+        if (giftIcon) giftIcon.textContent = "🎉";
+      }
+
+      if (!giftBtn._bound) {
+        giftBtn._bound = true;
+        giftBtn.addEventListener("click", () => {
+          if (!this.economy.canClaimDailyGift()) return;
+          const claimed = this.economy.claimDailyGift(100);
+          if (claimed) {
+            try {
+              this.audio.publicInit();
+              this.audio.playBoosterPass();
+            } catch (e) {}
+            this.triggerHaptic(40);
+            this.updateAllCreditDisplays();
+            this.renderStorePage();
+            this.showToast("🎁 Claimed +100 🪙 Janitor Stipend!");
+          }
+        });
+      }
+    }
+
     const container = document.getElementById("store-page-container");
     if (!container) return;
     container.innerHTML = "";
@@ -938,12 +996,16 @@ class OrbitalApp {
       card.className = "store-card";
       const isUnlocked = this.economy.isUnlocked(tab, item.id);
       const isEquipped = equippedId === item.id;
+      const isFreeStarter = item.cost === 0;
 
       card.innerHTML = `
         <div class="card-title-row">
           <span class="card-title">${item.name}</span>
-          ${item.color ? `<span style="display:inline-block; width:16px; height:16px; border-radius:50%; background:${item.color}; border:2px solid #1e1b4b;"></span>` : ""}
-          ${item.haloColor ? `<span style="display:inline-block; width:16px; height:16px; border-radius:50%; background:${item.haloColor}; border:2px solid #1e1b4b;"></span>` : ""}
+          <div style="display:flex; align-items:center; gap:6px;">
+            ${isFreeStarter ? `<span style="font-family:var(--font-bubble); font-size:10px; color:var(--green-main); font-weight:900; background:rgba(74,222,128,0.15); border:1.5px solid var(--green-main); border-radius:999px; padding:1px 6px;">STARTER FREE</span>` : ""}
+            ${item.color ? `<span style="display:inline-block; width:16px; height:16px; border-radius:50%; background:${item.color}; border:2px solid #1e1b4b;"></span>` : ""}
+            ${item.haloColor ? `<span style="display:inline-block; width:16px; height:16px; border-radius:50%; background:${item.haloColor}; border:2px solid #1e1b4b;"></span>` : ""}
+          </div>
         </div>
         <div class="card-desc">${item.desc}</div>
         <div class="card-footer">
@@ -952,7 +1014,7 @@ class OrbitalApp {
               ? `<span class="badge-equipped">EQUIPPED ✨</span>`
               : isUnlocked
                 ? `<button class="btn-cartoon-secondary btn-equip-item" data-tab="${tab}" data-id="${item.id}">Wear</button>`
-                : `<button class="btn-cartoon-primary btn-buy-item" data-tab="${tab}" data-id="${item.id}" data-cost="${item.cost}">Unlock (${item.cost} 🪙)</button>`
+                : `<button class="btn-cartoon-primary btn-buy-item" data-tab="${tab}" data-id="${item.id}" data-cost="${item.cost}">${isFreeStarter ? "Free Starter" : `Unlock (${item.cost} 🪙)`}</button>`
           }
         </div>
       `;
