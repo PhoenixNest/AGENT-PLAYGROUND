@@ -188,7 +188,9 @@ export class AudioEngine {
     }
   }
 
-  playShredderPass(now, value) {
+  playShredderPass(now = (this.ctx ? this.ctx.currentTime : 0), value) {
+    if (!this.ctx || this.isMuted) return;
+    now = now || this.ctx.currentTime;
     // Electric cartoon slicing "Zzzt-Boing!"
     const osc = this.ctx.createOscillator();
     const gain = this.ctx.createGain();
@@ -212,7 +214,9 @@ export class AudioEngine {
     osc.stop(now + 0.14);
   }
 
-  playCompactorPass(now, value) {
+  playCompactorPass(now = (this.ctx ? this.ctx.currentTime : 0), value) {
+    if (!this.ctx || this.isMuted) return;
+    now = now || this.ctx.currentTime;
     // Deep magnetic resonant chime (Sine with gentle sub-bass sweep)
     const osc = this.ctx.createOscillator();
     const gain = this.ctx.createGain();
@@ -231,7 +235,9 @@ export class AudioEngine {
     osc.stop(now + 0.24);
   }
 
-  playSuperShredderPass(now, value) {
+  playSuperShredderPass(now = (this.ctx ? this.ctx.currentTime : 0), value) {
+    if (!this.ctx || this.isMuted) return;
+    now = now || this.ctx.currentTime;
     // Dramatic power-up chord (Ascending dual sine oscillators)
     [523.25, 783.99, 1046.5].forEach((f, idx) => {
       const osc = this.ctx.createOscillator();
@@ -253,22 +259,24 @@ export class AudioEngine {
   }
 
   playBoosterPass(now) {
+    if (!this.ctx || this.isMuted) return;
+    const t = (isFinite(now) && now > 0) ? now : (this.ctx.currentTime || 0.001);
     // Comic jet whistle whoosh
     const osc = this.ctx.createOscillator();
     const gain = this.ctx.createGain();
 
     osc.type = "sine";
-    osc.frequency.setValueAtTime(350, now);
-    osc.frequency.exponentialRampToValueAtTime(1100, now + 0.12);
+    osc.frequency.setValueAtTime(350, t);
+    osc.frequency.exponentialRampToValueAtTime(1100, t + 0.12);
 
-    gain.gain.setValueAtTime(0.16, now);
-    gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.15);
+    gain.gain.setValueAtTime(0.16, t);
+    gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.15);
 
     osc.connect(gain);
     gain.connect(this.masterCompressor);
 
-    osc.start(now);
-    osc.stop(now + 0.17);
+    osc.start(t);
+    osc.stop(t + 0.17);
   }
 
   /**

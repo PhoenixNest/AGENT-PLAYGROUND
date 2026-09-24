@@ -1,7 +1,7 @@
 /**
  * Orbital Salvage: Pure Gesture Mobile App Controller
- * Full-screen tactile swipe gestures, Nibbles chewing animations,
- * procedural sound, and the toy shop metagame.
+ * Multi-page game architecture: Loading Screen, Homepage, Settings,
+ * dedicated Maps/Shop/Trophies pages, and active gameplay canvas.
  */
 
 import { AudioEngine } from "./engine/audio.js";
@@ -32,6 +32,7 @@ class OrbitalApp {
     this.activeSector = null;
     this.collectedMass = 0;
     this.isLevelCleared = false;
+    this.isPaused = false;
 
     // Gesture Input State
     this.isDragging = false;
@@ -41,18 +42,238 @@ class OrbitalApp {
 
     // Active Store Tab
     this.currentStoreTab = "rings";
+    this.currentPage = "loading";
 
-    // Setup
+    // Setup Layout & Listeners
     this.initLayout();
     this.bindEvents();
-    this.loadSector(this.sectors[0]);
+    this.setupMascotInteractions();
+    this.setupSettingsPage();
+    this.loadSector(this.sectors[0], false);
 
-    // Dismiss gesture hint after 3.5 seconds automatically
-    setTimeout(() => this.dismissGestureHint(), 3500);
+    // Start Boot Sequence
+    this.startBootSequence();
 
-    // Start Game Loop
+    // Start Simulation Loop
     this.lastTime = performance.now();
     requestAnimationFrame((t) => this.loop(t));
+  }
+
+  /* =========================================================
+     Page Navigation Router
+     ========================================================= */
+  showPage(pageId) {
+    this.currentPage = pageId;
+
+    const allPages = [
+      "loading",
+      "home",
+      "game",
+      "maps",
+      "shop",
+      "achievements",
+      "settings",
+    ];
+
+    allPages.forEach((p) => {
+      const el = document.getElementById(`page-${p}`);
+      if (el) {
+        if (p === pageId) {
+          el.classList.remove("page-hidden");
+          el.classList.add("page-active");
+        } else {
+          el.classList.add("page-hidden");
+          el.classList.remove("page-active");
+        }
+      }
+    });
+
+    this.updateAllCreditDisplays();
+
+    if (pageId === "home") {
+      this.updateHomeView();
+    } else if (pageId === "maps") {
+      this.renderSectorsPage();
+    } else if (pageId === "shop") {
+      this.renderStorePage();
+    } else if (pageId === "achievements") {
+      this.renderAchievementsPage();
+    } else if (pageId === "settings") {
+      this.syncSettingsUI();
+    } else if (pageId === "game") {
+      this.initLayout();
+      // Dismiss gesture hint after 3.5 seconds automatically
+      setTimeout(() => this.dismissGestureHint(), 3500);
+    }
+  }
+
+  startBootSequence() {
+    const bar = document.getElementById("loading-bar-fill");
+    const tip = document.getElementById("loading-tip-text");
+    const tips = [
+      "Calibrating cosmic centrifuges...",
+      "Polishing space soda cans...",
+      "Waking up Nibbles for breakfast...",
+      "Sprinkling candy on orbital rings...",
+      "Ready for cleanup launch! 🚀",
+    ];
+
+    let progress = 12;
+    let tipIdx = 0;
+
+    const interval = setInterval(() => {
+      progress += Math.floor(Math.random() * 22) + 14;
+      if (progress > 100) progress = 100;
+
+      if (bar) bar.style.width = `${progress}%`;
+      tipIdx = (tipIdx + 1) % tips.length;
+      if (tip) tip.textContent = tips[tipIdx];
+
+      if (progress >= 100) {
+        clearInterval(interval);
+        setTimeout(() => {
+          this.showPage("home");
+        }, 350);
+      }
+    }, 240);
+  }
+
+  updateAllCreditDisplays() {
+    const credits = this.economy.profile.credits;
+    [
+      "home-credits-val",
+      "hud-credits-val",
+      "maps-credits-val",
+      "shop-credits-val",
+      "ach-credits-val",
+    ].forEach((id) => {
+      const el = document.getElementById(id);
+      if (el) el.textContent = credits;
+    });
+  }
+
+  updateHomeView() {
+    this.updateAllCreditDisplays();
+
+    // 1. Mission Info
+    const sec = this.activeSector || this.sectors[0];
+    const nameEl = document.getElementById("home-mission-name");
+    const goalEl = document.getElementById("home-mission-goal");
+    const worldEl = document.getElementById("home-mission-world");
+    if (nameEl) nameEl.textContent = `${sec.code} • ${sec.name}`;
+    if (goalEl) goalEl.textContent = `Goal: ${sec.quota} kg`;
+    if (worldEl) {
+      const curWorld = this.worlds.find((w) => w.worldIndex === (sec.worldIndex || 1));
+      worldEl.textContent = curWorld ? curWorld.title : `World ${sec.worldIndex || 1}`;
+    }
+
+    // 2. Daily Shift Bounty Preview
+    const dailyBountyEl = document.getElementById("home-daily-bounty");
+    if (dailyBountyEl) {
+      const dailyInfo = this.economy.getDailyShiftInfo();
+      dailyBountyEl.textContent = `+${dailyInfo.rewardCredits} 🪙 Bounty`;
+    }
+
+    // 3. Update Mascot Diorama with Equipped Skins
+    const equippedRing = this.economy.profile.equipped.ring || "ring_donut";
+    const equippedSingularity = this.economy.profile.equipped.singularity || "singularity_nibbles";
+
+    const ringEl = document.getElementById("home-diorama-ring");
+    const ringLabelEl = document.getElementById("home-diorama-ring-label");
+    const nibblesEl = document.getElementById("home-diorama-nibbles");
+    const faceEl = document.getElementById("home-diorama-face");
+
+    if (ringEl && ringLabelEl) {
+      if (equippedRing === "ring_duckie") {
+        ringEl.style.borderColor = "#facc15";
+        ringEl.style.boxShadow = "0 0 25px rgba(250, 204, 21, 0.5), inset 0 0 15px rgba(250, 204, 21, 0.3)";
+        ringLabelEl.textContent = "🦆 DUCKIE FLOAT";
+      } else if (equippedRing === "ring_candyland") {
+        ringEl.style.borderColor = "#ef4444";
+        ringEl.style.boxShadow = "0 0 25px rgba(239, 68, 68, 0.5), inset 0 0 15px rgba(239, 68, 68, 0.3)";
+        ringLabelEl.textContent = "🍬 CANDY RING";
+      } else if (equippedRing === "ring_spacecat") {
+        ringEl.style.borderColor = "#c084fc";
+        ringEl.style.boxShadow = "0 0 25px rgba(192, 132, 252, 0.5), inset 0 0 15px rgba(192, 132, 252, 0.3)";
+        ringLabelEl.textContent = "🐱 KITTY SAUCER";
+      } else {
+        ringEl.style.borderColor = "#f472b6";
+        ringEl.style.boxShadow = "0 0 25px rgba(244, 114, 182, 0.5), inset 0 0 15px rgba(244, 114, 182, 0.3)";
+        ringLabelEl.textContent = "🍩 DONUT FLOAT";
+      }
+    }
+
+    if (nibblesEl && faceEl) {
+      if (equippedSingularity === "singularity_strawberry") {
+        nibblesEl.style.background = "radial-gradient(circle at 35% 35%, #f43f5e 0%, #881337 75%, #4c0519 100%)";
+        nibblesEl.style.borderColor = "#fda4af";
+        nibblesEl.style.boxShadow = "0 0 22px rgba(244, 63, 94, 0.6)";
+        faceEl.textContent = "🍓";
+      } else if (equippedSingularity === "singularity_sleepy") {
+        nibblesEl.style.background = "radial-gradient(circle at 35% 35%, #38bdf8 0%, #0369a1 75%, #082f49 100%)";
+        nibblesEl.style.borderColor = "#7dd3fc";
+        nibblesEl.style.boxShadow = "0 0 22px rgba(56, 189, 248, 0.6)";
+        faceEl.textContent = "💤";
+      } else if (equippedSingularity === "singularity_confetti") {
+        nibblesEl.style.background = "radial-gradient(circle at 35% 35%, #a855f7 0%, #581c87 75%, #3b0764 100%)";
+        nibblesEl.style.borderColor = "#facc15";
+        nibblesEl.style.boxShadow = "0 0 22px rgba(168, 85, 247, 0.6)";
+        faceEl.textContent = "🎉";
+      } else {
+        nibblesEl.style.background = "radial-gradient(circle at 35% 35%, #6366f1 0%, #1e1b4b 75%, #0f0c29 100%)";
+        nibblesEl.style.borderColor = "#38bdf8";
+        nibblesEl.style.boxShadow = "0 0 22px rgba(56, 189, 248, 0.6)";
+        faceEl.textContent = "😋";
+      }
+    }
+  }
+
+  setupMascotInteractions() {
+    const stage = document.getElementById("home-mascot-stage");
+    const nibbles = document.getElementById("home-diorama-nibbles");
+    const anchor = document.getElementById("home-hearts-anchor");
+    if (!stage || !nibbles) return;
+
+    stage.addEventListener("click", () => {
+      try {
+        this.audio.publicInit();
+        this.audio.playBoosterPass();
+      } catch (err) {
+        // audio context may be restricted in headless testing
+      }
+      this.triggerHaptic(30);
+
+      // 1. Squash & Stretch animation
+      nibbles.classList.remove("squash");
+      void nibbles.offsetWidth; // re-flow
+      nibbles.classList.add("squash");
+
+      // 2. Change face momentarily
+      const face = document.getElementById("home-diorama-face");
+      if (face) {
+        const orig = face.textContent;
+        face.textContent = "🥰";
+        setTimeout(() => {
+          if (face) face.textContent = orig;
+        }, 600);
+      }
+
+      // 3. Spawn floating heart / star particle
+      if (anchor) {
+        const p = document.createElement("div");
+        p.className = "spawned-particle";
+        const emojis = ["❤️", "✨", "⭐", "💖", "🌟"];
+        p.textContent = emojis[Math.floor(Math.random() * emojis.length)];
+        const dx = (Math.random() - 0.5) * 80;
+        p.style.setProperty("--dx", `${dx}px`);
+        p.style.left = "50%";
+        p.style.top = "50%";
+        anchor.appendChild(p);
+        setTimeout(() => {
+          if (p.parentNode) p.parentNode.removeChild(p);
+        }, 1200);
+      }
+    });
   }
 
   initLayout() {
@@ -76,6 +297,9 @@ class OrbitalApp {
     }
   }
 
+  /* =========================================================
+     Event Listeners & Input Binding
+     ========================================================= */
   bindEvents() {
     window.addEventListener("resize", () => {
       this.initLayout();
@@ -94,11 +318,12 @@ class OrbitalApp {
       const distFromLastTap = Math.abs(e.clientX - this.lastTapX);
 
       if (timeSinceLastTap < 280 && distFromLastTap < 45) {
-        // Quick double tap on left or right half gives a fun whoosh burst
+        // Quick double tap gives a fun whoosh burst
         const rect = this.canvas.getBoundingClientRect();
         const tapNormX = (e.clientX - rect.left) / rect.width;
         const dir = tapNormX > 0.5 ? 1 : -1;
         this.physics.applyRcsBurst(dir);
+        this.triggerHaptic(50);
       }
       this.lastTapTime = now;
       this.lastTapX = e.clientX;
@@ -108,7 +333,6 @@ class OrbitalApp {
       if (!this.isDragging) return;
       const deltaX = e.clientX - this.lastPointerX;
       this.lastPointerX = e.clientX;
-      // 1:1 direct tactile angular response with inertia
       this.physics.applyInputDrag(deltaX * 1.3);
     });
 
@@ -128,78 +352,188 @@ class OrbitalApp {
         this.physics.applyRcsBurst(1);
       } else if (e.key === "r" || e.key === "R") {
         this.restartSector();
+      } else if (e.key === "Escape") {
+        if (this.currentPage === "game") {
+          this.showPage("home");
+        }
       }
     });
 
-    // 3. Audio Mute Toggle
-    document
-      .getElementById("btn-toggle-audio")
-      .addEventListener("click", () => {
-        this.audio.publicInit();
-        const isMuted = this.audio.toggleMute();
-        document.getElementById("audio-icon").textContent = isMuted
-          ? "🔇"
-          : "🔊";
-        this.showToast(isMuted ? "Sound Off 🔇" : "Sound On 🔊");
-      });
+    // 3. Audio Mute Toggle (HUD & Home)
+    const toggleAudioHandler = () => {
+      this.audio.publicInit();
+      const isMuted = this.audio.toggleMute();
+      const icon = isMuted ? "🔇" : "🔊";
+      const hudIcon = document.getElementById("audio-icon");
+      const homeIcon = document.getElementById("home-audio-icon");
+      if (hudIcon) hudIcon.textContent = icon;
+      if (homeIcon) homeIcon.textContent = icon;
+      this.economy.profile.settings.soundEnabled = !isMuted;
+      this.economy.saveProfile();
+      this.showToast(isMuted ? "Sound Off 🔇" : "Sound On 🔊");
+    };
 
-    // 4. Bottom Tab Modals
-    this.bindModal(
-      "btn-open-sectors",
-      "modal-sectors",
-      "btn-close-sectors",
-      () => this.renderSectorsModal(),
-    );
-    this.bindModal("btn-open-store", "modal-store", "btn-close-store", () =>
-      this.renderStoreModal(),
-    );
-    this.bindModal(
-      "btn-open-achievements",
-      "modal-achievements",
-      "btn-close-achievements",
-      () => this.renderAchievementsModal(),
-    );
-    document
-      .getElementById("btn-restart-sector")
-      .addEventListener("click", () => {
+    const btnToggleAudio = document.getElementById("btn-toggle-audio");
+    if (btnToggleAudio) btnToggleAudio.addEventListener("click", toggleAudioHandler);
+
+    const btnHomeAudio = document.getElementById("btn-home-audio");
+    if (btnHomeAudio) btnHomeAudio.addEventListener("click", toggleAudioHandler);
+
+    // 4. Homepage Navigation Buttons
+    document.getElementById("btn-home-play").addEventListener("click", () => {
+      this.audio.publicInit();
+      this.showPage("game");
+    });
+
+    document.getElementById("btn-open-maps-page").addEventListener("click", () => {
+      this.audio.publicInit();
+      this.showPage("maps");
+    });
+
+    document.getElementById("btn-open-shop-page").addEventListener("click", () => {
+      this.audio.publicInit();
+      this.showPage("shop");
+    });
+
+    const btnDailyShift = document.getElementById("btn-open-daily-shift");
+    if (btnDailyShift) {
+      btnDailyShift.addEventListener("click", () => {
+        this.audio.publicInit();
+        this.selectedWorldIndex = "daily";
+        this.showPage("maps");
+      });
+    }
+
+    document.getElementById("btn-open-trophies-page").addEventListener("click", () => {
+      this.audio.publicInit();
+      this.showPage("achievements");
+    });
+
+    const openSettings = () => {
+      this.audio.publicInit();
+      this.showPage("settings");
+    };
+    const btnOpenSettings = document.getElementById("btn-open-settings-page");
+    if (btnOpenSettings) btnOpenSettings.addEventListener("click", openSettings);
+    const btnHomeSettings = document.getElementById("btn-home-settings");
+    if (btnHomeSettings) btnHomeSettings.addEventListener("click", openSettings);
+
+    // 5. Back to Home Buttons from Sub-Pages
+    const backMaps = document.getElementById("btn-back-maps");
+    if (backMaps) backMaps.addEventListener("click", () => this.showPage("home"));
+    const backShop = document.getElementById("btn-back-shop");
+    if (backShop) backShop.addEventListener("click", () => this.showPage("home"));
+    const backAch = document.getElementById("btn-back-achievements");
+    if (backAch) backAch.addEventListener("click", () => this.showPage("home"));
+    const backSet = document.getElementById("btn-back-settings");
+    if (backSet) backSet.addEventListener("click", () => this.showPage("home"));
+    const btnGameToHome = document.getElementById("btn-game-to-home");
+    if (btnGameToHome) btnGameToHome.addEventListener("click", () => this.showPage("home"));
+
+    const btnRestart = document.getElementById("btn-game-restart");
+    if (btnRestart) {
+      btnRestart.addEventListener("click", () => {
         this.restartSector();
       });
+    }
 
-    // Toy Shop Tabs
+    // 5b. In-Game Pause Modal Handlers
+    const pauseModal = document.getElementById("modal-pause");
+    const openPause = () => {
+      this.isPaused = true;
+      const pauseLvlName = document.getElementById("pause-level-name");
+      const pauseLvlQuota = document.getElementById("pause-level-quota");
+      if (pauseLvlName && this.activeSector) {
+        pauseLvlName.textContent = `${this.activeSector.code} • ${this.activeSector.name}`;
+      }
+      if (pauseLvlQuota && this.activeSector) {
+        pauseLvlQuota.textContent = `Goal: Feed Nibbles ${this.activeSector.quota} kg (${this.collectedMass}/${this.activeSector.quota} kg eaten)`;
+      }
+      const pauseSoundBtn = document.getElementById("btn-pause-sound");
+      if (pauseSoundBtn) {
+        pauseSoundBtn.innerHTML = `<span id="pause-sound-icon">${this.audio.isMuted ? "🔇" : "🔊"}</span> Sound: ${this.audio.isMuted ? "OFF" : "ON"}`;
+      }
+      if (pauseModal) pauseModal.classList.add("active");
+    };
+
+    const closePause = () => {
+      this.isPaused = false;
+      if (pauseModal) pauseModal.classList.remove("active");
+    };
+
+    const btnGamePause = document.getElementById("btn-game-pause");
+    if (btnGamePause) btnGamePause.addEventListener("click", openPause);
+
+    const btnPauseResume = document.getElementById("btn-pause-resume");
+    if (btnPauseResume) btnPauseResume.addEventListener("click", closePause);
+
+    const btnClosePause = document.getElementById("btn-close-pause");
+    if (btnClosePause) btnClosePause.addEventListener("click", closePause);
+
+    const btnPauseRestart = document.getElementById("btn-pause-restart");
+    if (btnPauseRestart) {
+      btnPauseRestart.addEventListener("click", () => {
+        closePause();
+        this.restartSector();
+      });
+    }
+
+    const btnPauseSound = document.getElementById("btn-pause-sound");
+    if (btnPauseSound) {
+      btnPauseSound.addEventListener("click", () => {
+        this.audio.publicInit();
+        const isMuted = this.audio.toggleMute();
+        btnPauseSound.innerHTML = `<span id="pause-sound-icon">${isMuted ? "🔇" : "🔊"}</span> Sound: ${isMuted ? "OFF" : "ON"}`;
+        const homeIcon = document.getElementById("home-audio-icon");
+        if (homeIcon) homeIcon.textContent = isMuted ? "🔇" : "🔊";
+        this.economy.profile.settings.soundEnabled = !isMuted;
+        this.economy.saveProfile();
+      });
+    }
+
+    const btnPauseMaps = document.getElementById("btn-pause-maps");
+    if (btnPauseMaps) {
+      btnPauseMaps.addEventListener("click", () => {
+        closePause();
+        this.showPage("maps");
+      });
+    }
+
+    const btnPauseHome = document.getElementById("btn-pause-home");
+    if (btnPauseHome) {
+      btnPauseHome.addEventListener("click", () => {
+        closePause();
+        this.showPage("home");
+      });
+    }
+
+    // 6. Toy Shop Tabs
     document.querySelectorAll(".tab-btn").forEach((btn) => {
       btn.addEventListener("click", () => {
-        document
-          .querySelectorAll(".tab-btn")
-          .forEach((b) => b.classList.remove("active"));
+        document.querySelectorAll(".tab-btn").forEach((b) => b.classList.remove("active"));
         btn.classList.add("active");
         this.currentStoreTab = btn.dataset.tab;
-        this.renderStoreModal();
+        this.renderStorePage();
       });
     });
 
-    // Debrief Victory Pop-up Buttons
-    document
-      .getElementById("btn-debrief-replay")
-      .addEventListener("click", () => {
-        document.getElementById("modal-debrief").classList.remove("active");
-        this.restartSector();
-      });
-    document
-      .getElementById("btn-debrief-next")
-      .addEventListener("click", () => {
-        document.getElementById("modal-debrief").classList.remove("active");
-        this.nextSector();
-      });
+    // 7. Debrief Victory Pop-up Buttons
+    document.getElementById("btn-debrief-replay").addEventListener("click", () => {
+      document.getElementById("modal-debrief").classList.remove("active");
+      this.restartSector();
+    });
+    document.getElementById("btn-debrief-next").addEventListener("click", () => {
+      document.getElementById("modal-debrief").classList.remove("active");
+      this.nextSector();
+    });
 
-    // 5. Physics Simulation Callbacks
+    // 8. Physics Simulation Callbacks
     this.physics.onDebrisSwallowed = (d) => {
       this.collectedMass += d.weight * 2;
       this.updateQuotaDisplay();
-
-      // Trigger Nibbles chewing animation!
       this.renderer.triggerNibblesChew();
+      this.triggerHaptic(20);
 
-      // Cute pop text and star confetti
       const nomWords = ["NOM! 😋", "YUM! ✨", "GULP! 🍩", "TASTY! ⭐"];
       const word = nomWords[Math.floor(Math.random() * nomWords.length)];
       this.renderer.addFloatingText(
@@ -215,17 +549,12 @@ class OrbitalApp {
         "#facc15",
       );
 
-      // Check achievement progression
       const newlyUnlocked = this.economy.recordDebrisSwallowed(1);
       newlyUnlocked.forEach((ach) => {
         this.showToast(`🏆 Trophy: ${ach.title} (+${ach.reward} 🪙)`);
       });
 
-      // Check Victory
-      if (
-        !this.isLevelCleared &&
-        this.collectedMass >= this.activeSector.quota
-      ) {
+      if (!this.isLevelCleared && this.collectedMass >= this.activeSector.quota) {
         this.handleLevelVictory();
       }
     };
@@ -261,23 +590,127 @@ class OrbitalApp {
       this.renderer.addFloatingText(d.x, d.y - 20, "POOF! 💨", "#f472b6");
       this.showToast("💨 Spicy battery popped into confetti!");
     };
+
+    this.physics.onBoostTriggered = (dir) => {
+      const cx = this.physics.center.x;
+      const cy = this.physics.center.y;
+      const rOut = this.physics.ringRadius;
+      this.renderer.addBoostShockwave(cx, cy, rOut, "#38bdf8");
+      const label = dir > 0 ? "TURBO! ⏩" : "⏪ TURBO!";
+      this.renderer.addFloatingText(cx, cy - rOut * 0.4, label, "#38bdf8");
+      if (this.audio && this.audio.ctx) {
+        this.audio.playBoosterPass(this.audio.ctx.currentTime);
+      }
+      this.triggerHaptic(40);
+    };
   }
 
-  bindModal(openBtnId, modalId, closeBtnId, onOpen) {
-    const modal = document.getElementById(modalId);
-    document.getElementById(openBtnId).addEventListener("click", () => {
-      if (onOpen) onOpen();
-      modal.classList.add("active");
+  triggerHaptic(ms = 30) {
+    if (
+      this.economy.profile.settings &&
+      this.economy.profile.settings.hapticsEnabled &&
+      navigator.vibrate
+    ) {
+      try {
+        navigator.vibrate(ms);
+      } catch (e) {}
+    }
+  }
+
+  /* =========================================================
+     (3) Settings Page Wiring
+     ========================================================= */
+  setupSettingsPage() {
+    const soundToggle = document.getElementById("settings-sound-toggle");
+    const sfxSlider = document.getElementById("settings-sfx-slider");
+    const ambienceSlider = document.getElementById("settings-ambience-slider");
+    const hapticsToggle = document.getElementById("settings-haptics-toggle");
+
+    if (soundToggle) {
+      soundToggle.addEventListener("change", (e) => {
+        this.economy.profile.settings.soundEnabled = e.target.checked;
+        if (this.audio.isMuted === e.target.checked) {
+          this.audio.toggleMute();
+        }
+        this.economy.saveProfile();
+      });
+    }
+
+    if (sfxSlider) {
+      sfxSlider.addEventListener("input", (e) => {
+        this.economy.profile.settings.sfxVolume = parseInt(e.target.value, 10);
+        this.economy.saveProfile();
+      });
+    }
+
+    if (ambienceSlider) {
+      ambienceSlider.addEventListener("input", (e) => {
+        this.economy.profile.settings.ambientVolume = parseInt(e.target.value, 10);
+        this.economy.saveProfile();
+      });
+    }
+
+    if (hapticsToggle) {
+      hapticsToggle.addEventListener("change", (e) => {
+        this.economy.profile.settings.hapticsEnabled = e.target.checked;
+        this.economy.saveProfile();
+      });
+    }
+
+    // Privacy Policy Modal
+    const privacyModal = document.getElementById("modal-privacy");
+    document.getElementById("btn-open-privacy").addEventListener("click", () => {
+      privacyModal.classList.add("active");
     });
-    document.getElementById(closeBtnId).addEventListener("click", () => {
-      modal.classList.remove("active");
+    document.getElementById("btn-close-privacy").addEventListener("click", () => {
+      privacyModal.classList.remove("active");
     });
-    modal.addEventListener("click", (e) => {
-      if (e.target === modal) modal.classList.remove("active");
+    document.getElementById("btn-dismiss-privacy").addEventListener("click", () => {
+      privacyModal.classList.remove("active");
+    });
+
+    // Reset Progress Modal
+    const resetModal = document.getElementById("modal-reset-confirm");
+    document.getElementById("btn-reset-game-data").addEventListener("click", () => {
+      resetModal.classList.add("active");
+    });
+    document.getElementById("btn-cancel-reset").addEventListener("click", () => {
+      resetModal.classList.remove("active");
+    });
+    document.getElementById("btn-confirm-reset").addEventListener("click", () => {
+      this.economy.resetProfile();
+      resetModal.classList.remove("active");
+      this.loadSector(this.sectors[0], false);
+      this.syncSettingsUI();
+      this.updateAllCreditDisplays();
+      this.updateHomeView();
+      this.showToast("Progress Reset to Day 1! 🧹");
+      this.showPage("home");
     });
   }
 
-  loadSector(sectorConfig) {
+  syncSettingsUI() {
+    const s = this.economy.profile.settings || {
+      soundEnabled: true,
+      sfxVolume: 80,
+      ambientVolume: 70,
+      hapticsEnabled: true,
+    };
+    const soundToggle = document.getElementById("settings-sound-toggle");
+    const sfxSlider = document.getElementById("settings-sfx-slider");
+    const ambienceSlider = document.getElementById("settings-ambience-slider");
+    const hapticsToggle = document.getElementById("settings-haptics-toggle");
+
+    if (soundToggle) soundToggle.checked = !!s.soundEnabled;
+    if (sfxSlider) sfxSlider.value = s.sfxVolume !== undefined ? s.sfxVolume : 80;
+    if (ambienceSlider) ambienceSlider.value = s.ambientVolume !== undefined ? s.ambientVolume : 70;
+    if (hapticsToggle) hapticsToggle.checked = !!s.hapticsEnabled;
+  }
+
+  /* =========================================================
+     Gameplay Sector Management
+     ========================================================= */
+  loadSector(sectorConfig, showToastMsg = true) {
     this.activeSector = sectorConfig;
     this.collectedMass = 0;
     this.isLevelCleared = false;
@@ -293,12 +726,12 @@ class OrbitalApp {
       this.physics.blackHole,
     );
 
-    // Update HUD
-    document.getElementById("hud-sector-code").textContent =
-      `⭐ ${sectorConfig.code}`;
+    document.getElementById("hud-sector-code").textContent = `⭐ ${sectorConfig.code}`;
     this.updateQuotaDisplay();
-    this.updateCreditsDisplay();
-    this.showToast(`Clean up ${sectorConfig.name}! 🚀`);
+    this.updateAllCreditDisplays();
+    if (showToastMsg) {
+      this.showToast(`Clean up ${sectorConfig.name}! 🚀`);
+    }
   }
 
   restartSector() {
@@ -319,33 +752,24 @@ class OrbitalApp {
     this.isLevelCleared = true;
     this.audio.playVictoryFanfare();
 
-    // Reward calculation
     const baseReward = this.activeSector.rewardCredits || 250;
     const surplus = Math.max(0, this.collectedMass - this.activeSector.quota);
     const totalPayout = baseReward + surplus * 4;
 
     this.economy.addCredits(totalPayout);
-    this.updateCreditsDisplay();
+    this.updateAllCreditDisplays();
 
-    if (
-      this.activeSector &&
-      !this.activeSector.isDaily &&
-      this.activeSector.id
-    ) {
+    if (this.activeSector && !this.activeSector.isDaily && this.activeSector.id) {
       this.economy.recordSectorCompleted(this.activeSector.id);
     }
 
-    const newlyUnlocked = this.economy.recordContractComplete(
-      !!this.activeSector.isDaily,
-    );
+    const newlyUnlocked = this.economy.recordContractComplete(!!this.activeSector.isDaily);
     newlyUnlocked.forEach((ach) => {
       this.showToast(`🏆 Trophy: ${ach.title} (+${ach.reward} 🪙)`);
     });
 
-    document.getElementById("debrief-mass-val").textContent =
-      `${this.collectedMass} kg`;
-    document.getElementById("debrief-credits-val").textContent =
-      `+${totalPayout} 🪙`;
+    document.getElementById("debrief-mass-val").textContent = `${this.collectedMass} kg`;
+    document.getElementById("debrief-credits-val").textContent = `+${totalPayout} 🪙`;
 
     setTimeout(() => {
       document.getElementById("modal-debrief").classList.add("active");
@@ -357,26 +781,21 @@ class OrbitalApp {
     const target = this.activeSector ? this.activeSector.quota : 30;
     const pct = Math.min(100, (current / target) * 100);
 
-    document.getElementById("hud-quota-text").textContent =
-      `${current} / ${target} kg`;
-    document.getElementById("hud-quota-bar").style.width = `${pct}%`;
-
-    if (current >= target) {
-      document.getElementById("hud-quota-bar").style.background =
-        "linear-gradient(90deg, #4ade80, #facc15)";
-    } else {
-      document.getElementById("hud-quota-bar").style.background =
-        "linear-gradient(90deg, #facc15, #f472b6)";
+    const txt = document.getElementById("hud-quota-text");
+    const bar = document.getElementById("hud-quota-bar");
+    if (txt) txt.textContent = `${current} / ${target} kg`;
+    if (bar) {
+      bar.style.width = `${pct}%`;
+      bar.style.background =
+        current >= target
+          ? "linear-gradient(90deg, #4ade80, #facc15)"
+          : "linear-gradient(90deg, #facc15, #f472b6)";
     }
-  }
-
-  updateCreditsDisplay() {
-    document.getElementById("hud-credits-val").textContent =
-      this.economy.profile.credits;
   }
 
   showToast(msg) {
     const container = document.getElementById("toast-container");
+    if (!container) return;
     const toast = document.createElement("div");
     toast.className = "toast";
     toast.textContent = msg;
@@ -386,8 +805,12 @@ class OrbitalApp {
     }, 2500);
   }
 
-  renderSectorsModal() {
-    const container = document.getElementById("sectors-container");
+  /* =========================================================
+     (4) Dedicated Maps Page
+     ========================================================= */
+  renderSectorsPage() {
+    const container = document.getElementById("sectors-page-container");
+    if (!container) return;
     container.innerHTML = "";
 
     // 1. World Tabs Row (Worlds 1-5 + Daily)
@@ -402,12 +825,11 @@ class OrbitalApp {
       tabBtn.textContent = `${w.icon} W${w.worldIndex}`;
       tabBtn.addEventListener("click", () => {
         this.selectedWorldIndex = w.worldIndex;
-        this.renderSectorsModal();
+        this.renderSectorsPage();
       });
       tabsRow.appendChild(tabBtn);
     });
 
-    // Daily Tab
     const dailyTab = document.createElement("button");
     dailyTab.className = `world-tab-btn ${
       this.selectedWorldIndex === "daily" ? "active" : ""
@@ -415,19 +837,17 @@ class OrbitalApp {
     dailyTab.textContent = "📅 Daily Shift";
     dailyTab.addEventListener("click", () => {
       this.selectedWorldIndex = "daily";
-      this.renderSectorsModal();
+      this.renderSectorsPage();
     });
     tabsRow.appendChild(dailyTab);
     container.appendChild(tabsRow);
 
     if (this.selectedWorldIndex === "daily") {
-      // Render Daily Shift Card
       const daily = this.economy.getDailyShiftInfo();
       const dailyCard = document.createElement("div");
       dailyCard.className = "sector-card";
       dailyCard.style.borderColor = "var(--yellow-main)";
 
-      const isDailyActive = this.activeSector && this.activeSector.isDaily;
       dailyCard.innerHTML = `
         <div class="card-title-row">
           <span class="card-title" style="color:var(--yellow-main);">★ ${daily.title}</span>
@@ -436,41 +856,36 @@ class OrbitalApp {
         <div class="card-desc">${daily.hazardModifier}</div>
         <div class="card-footer">
           <span class="badge-cost">+${daily.rewardCredits} 🪙 Bounty</span>
-          ${
-            isDailyActive
-              ? `<span class="badge-equipped">PLAYING</span>`
-              : `<button class="btn-cartoon-primary btn-select-daily" style="background:var(--pink-main); color:#fff;">Start Party ▶</button>`
-          }
+          <button class="btn-cartoon-primary" id="btn-play-daily">
+            ${daily.isCompleted ? "Play Again" : "Start Shift ▶"}
+          </button>
         </div>
       `;
       container.appendChild(dailyCard);
 
-      const dailyBtn = container.querySelector(".btn-select-daily");
-      if (dailyBtn) {
-        dailyBtn.addEventListener("click", () => {
-          const dailyLevel = MazeLevelBuilder.buildDailyShift(daily);
-          this.loadSector(dailyLevel);
-          document.getElementById("modal-sectors").classList.remove("active");
-        });
-      }
+      dailyCard.querySelector("#btn-play-daily").addEventListener("click", () => {
+        const sector = MazeLevelBuilder.buildDailyShift(daily);
+        this.loadSector(sector);
+        this.showPage("game");
+      });
       return;
     }
 
-    // 2. Active World Banner
     const currentWorld =
       this.worlds.find((w) => w.worldIndex === this.selectedWorldIndex) ||
       this.worlds[0];
+
     const banner = document.createElement("div");
-    banner.className = "world-banner";
+    banner.className = "world-banner-card";
     banner.innerHTML = `
+      <div style="font-size: 32px;">${currentWorld.icon}</div>
       <div class="world-banner-info">
-        <h4>${currentWorld.icon} World ${currentWorld.worldIndex}: ${currentWorld.title}</h4>
+        <h3>${currentWorld.title || currentWorld.name}</h3>
         <p>${currentWorld.tagline} • Levels ${currentWorld.levelRange[0]}-${currentWorld.levelRange[1]}</p>
       </div>
     `;
     container.appendChild(banner);
 
-    // 3. 10-Level Responsive Grid for Selected World
     const grid = document.createElement("div");
     grid.className = "level-grid-50";
 
@@ -481,9 +896,7 @@ class OrbitalApp {
       if (!sec) continue;
 
       const isCurrent = this.activeSector && this.activeSector.id === sec.id;
-      const isCompleted = (
-        this.economy.profile.completedSectors || []
-      ).includes(sec.id);
+      const isCompleted = (this.economy.profile.completedSectors || []).includes(sec.id);
 
       const tile = document.createElement("div");
       tile.className = `level-tile ${isCurrent ? "active-level" : ""}`;
@@ -499,7 +912,7 @@ class OrbitalApp {
       tile.addEventListener("click", () => {
         this.currentSectorIndex = secIdx;
         this.loadSector(sec);
-        document.getElementById("modal-sectors").classList.remove("active");
+        this.showPage("game");
       });
 
       grid.appendChild(tile);
@@ -508,12 +921,17 @@ class OrbitalApp {
     container.appendChild(grid);
   }
 
-  renderStoreModal() {
-    const container = document.getElementById("store-container");
+  /* =========================================================
+     (5) Dedicated Toy Shop Page
+     ========================================================= */
+  renderStorePage() {
+    const container = document.getElementById("store-page-container");
+    if (!container) return;
     container.innerHTML = "";
     const tab = this.currentStoreTab;
     const items = COSMETIC_CATALOG[tab] || [];
-    const equippedId = this.economy.profile.equipped[tab.slice(0, -1)];
+    const singularCat = this.economy.normalizeCategory(tab).singular;
+    const equippedId = this.economy.profile.equipped[singularCat];
 
     items.forEach((item) => {
       const card = document.createElement("div");
@@ -550,9 +968,10 @@ class OrbitalApp {
           cost,
         );
         if (success) {
-          this.economy.equipItem(btn.dataset.tab.slice(0, -1), btn.dataset.id);
-          this.updateCreditsDisplay();
-          this.renderStoreModal();
+          this.economy.equipItem(btn.dataset.tab, btn.dataset.id);
+          this.updateAllCreditDisplays();
+          this.renderStorePage();
+          this.updateHomeView();
           this.showToast("Item Unlocked & Equipped! 🎉");
         } else {
           this.showToast("Need more gold coins! 🪙");
@@ -562,15 +981,20 @@ class OrbitalApp {
 
     container.querySelectorAll(".btn-equip-item").forEach((btn) => {
       btn.addEventListener("click", () => {
-        this.economy.equipItem(btn.dataset.tab.slice(0, -1), btn.dataset.id);
-        this.renderStoreModal();
+        this.economy.equipItem(btn.dataset.tab, btn.dataset.id);
+        this.renderStorePage();
+        this.updateHomeView();
         this.showToast("Item Equipped! ✨");
       });
     });
   }
 
-  renderAchievementsModal() {
-    const container = document.getElementById("achievements-container");
+  /* =========================================================
+     (6) Dedicated Trophies Page
+     ========================================================= */
+  renderAchievementsPage() {
+    const container = document.getElementById("achievements-page-container");
+    if (!container) return;
     container.innerHTML = "";
     const unlockedList = this.economy.profile.achievements;
 
@@ -597,19 +1021,26 @@ class OrbitalApp {
     });
   }
 
+  /* =========================================================
+     Main Simulation Loop
+     ========================================================= */
   loop(currentTime) {
     const dt = Math.min((currentTime - this.lastTime) / 1000, 0.05);
     this.lastTime = currentTime;
 
     try {
-      // 1. Update Physics
-      this.physics.update(dt);
+      if (this.currentPage === "game") {
+        // 1. Update Physics (only when not paused)
+        if (!this.isPaused) {
+          this.physics.update(dt);
+        }
 
-      // 2. Render Canvas with Dynamic Black Hole Growth Info
-      this.renderer.render(this.physics, this.economy, dt, {
-        collectedMass: this.collectedMass,
-        quota: this.activeSector ? this.activeSector.quota : 30,
-      });
+        // 2. Render Canvas with Dynamic Black Hole Growth Info
+        this.renderer.render(this.physics, this.economy, dt, {
+          collectedMass: this.collectedMass,
+          quota: this.activeSector ? this.activeSector.quota : 30,
+        });
+      }
     } catch (err) {
       console.error("Simulation loop error:", err);
     }

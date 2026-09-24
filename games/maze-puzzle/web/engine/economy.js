@@ -169,11 +169,24 @@ export class EconomyManager {
         singularities: ["singularity_nibbles"],
         skyboxes: ["skybox_cotton_candy"],
       },
+      settings: {
+        soundEnabled: true,
+        sfxVolume: 80,
+        ambientVolume: 70,
+        hapticsEnabled: true,
+      },
       achievements: [],
       completedSectors: [],
       dailyShiftCompletedToday: false,
       lastDailyShiftDate: "",
     };
+  }
+
+  normalizeCategory(cat) {
+    if (cat === "ring" || cat === "rings") return { singular: "ring", plural: "rings" };
+    if (cat === "singularity" || cat === "singularities") return { singular: "singularity", plural: "singularities" };
+    if (cat === "skybox" || cat === "skyboxes") return { singular: "skybox", plural: "skyboxes" };
+    return { singular: cat, plural: cat };
   }
 
   loadProfile() {
@@ -182,12 +195,26 @@ export class EconomyManager {
       if (raw) {
         const parsed = JSON.parse(raw);
         if (!parsed.completedSectors) parsed.completedSectors = [];
+        if (!parsed.settings) {
+          parsed.settings = {
+            soundEnabled: true,
+            sfxVolume: 80,
+            ambientVolume: 70,
+            hapticsEnabled: true,
+          };
+        }
         return { ...this.getDefaultProfile(), ...parsed };
       }
     } catch (e) {
       console.warn("Could not load save profile from localStorage", e);
     }
     return this.getDefaultProfile();
+  }
+
+  resetProfile() {
+    this.profile = this.getDefaultProfile();
+    this.saveProfile();
+    return this.profile;
   }
 
   recordSectorCompleted(sectorId) {
@@ -224,17 +251,19 @@ export class EconomyManager {
   }
 
   isUnlocked(category, itemId) {
-    const list = this.profile.unlocked[category] || [];
+    const { plural } = this.normalizeCategory(category);
+    const list = this.profile.unlocked[plural] || [];
     return list.includes(itemId);
   }
 
   unlockItem(category, itemId, cost) {
-    if (this.isUnlocked(category, itemId)) return true;
+    const { plural } = this.normalizeCategory(category);
+    if (this.isUnlocked(plural, itemId)) return true;
     if (this.spendCredits(cost)) {
-      if (!this.profile.unlocked[category]) {
-        this.profile.unlocked[category] = [];
+      if (!this.profile.unlocked[plural]) {
+        this.profile.unlocked[plural] = [];
       }
-      this.profile.unlocked[category].push(itemId);
+      this.profile.unlocked[plural].push(itemId);
       this.saveProfile();
       return true;
     }
@@ -242,8 +271,9 @@ export class EconomyManager {
   }
 
   equipItem(category, itemId) {
-    if (this.isUnlocked(category, itemId)) {
-      this.profile.equipped[category] = itemId;
+    const { singular, plural } = this.normalizeCategory(category);
+    if (this.isUnlocked(plural, itemId)) {
+      this.profile.equipped[singular] = itemId;
       this.saveProfile();
       return true;
     }

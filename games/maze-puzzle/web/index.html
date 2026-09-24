@@ -16,132 +16,531 @@
   <body>
     <!-- Mobile Portrait Container Frame -->
     <div id="mobile-frame">
-      <!-- 1. Interactive Simulation Canvas -->
-      <canvas id="game-canvas"></canvas>
-
-      <!-- 2. HUD: Top Mobile Header -->
-      <header class="hud-top-mobile">
-        <div class="level-badge" id="hud-sector-code">⭐ MAP 1</div>
-
-        <div class="quota-meter-pill">
-          <div class="quota-meter-label">
-            <span>SNACK GOAL</span>
-            <span id="hud-quota-text">0 / 35 kg</span>
-          </div>
-          <div class="quota-bar-track">
-            <div class="quota-bar-fill" id="hud-quota-bar"></div>
-          </div>
+      <!-- =========================================================
+           (1) Loading Screen Page
+           ========================================================= -->
+      <div id="page-loading" class="app-page page-active">
+        <div class="loading-mascot-box">
+          <div class="loading-mascot-anim">🍩</div>
         </div>
-
-        <div class="coins-pill" title="Recycling Gold Coins">
-          <span>🪙</span>
-          <span id="hud-credits-val">250</span>
+        <div class="loading-title-box">
+          <h1>ORBITAL SALVAGE</h1>
+          <p>Cute Cosmic Janitor</p>
         </div>
-
-        <button
-          class="btn-sound-mini"
-          id="btn-toggle-audio"
-          title="Mute/Unmute Sound"
-        >
-          <span id="audio-icon">🔊</span>
-        </button>
-      </header>
-
-      <!-- 3. Animated Gesture Tutorial Prompt -->
-      <div id="gesture-hint" class="gesture-hint">
-        <div class="hand-swipe-anim">👆</div>
-        <span class="hint-text">Swipe anywhere to spin!</span>
-      </div>
-
-      <!-- 4. HUD: Floating Bottom Tab Bar Navigation -->
-      <footer class="hud-bottom-mobile">
-        <nav class="mobile-tab-bar">
-          <button class="tab-nav-btn" id="btn-open-sectors">
-            <span>🚀</span>
-            <span>Maps</span>
-          </button>
-          <button class="tab-nav-btn" id="btn-open-store">
-            <span>🎁</span>
-            <span>Toy Shop</span>
-          </button>
-          <button class="tab-nav-btn" id="btn-open-achievements">
-            <span>🏆</span>
-            <span>Trophies</span>
-          </button>
-          <button class="tab-nav-btn" id="btn-restart-sector">
-            <span>🔄</span>
-            <span>Restart</span>
-          </button>
-        </nav>
-      </footer>
-
-      <!-- 5. Modals: Maps / Sector Select Bottom Sheet -->
-      <div class="modal-overlay" id="modal-sectors">
-        <div class="modal-card">
-          <div class="modal-header">
-            <h2 class="modal-title">🚀 CHOOSE YOUR CLEANUP MAP</h2>
-            <button class="btn-close" id="btn-close-sectors">&times;</button>
-          </div>
-          <div class="modal-body">
-            <div class="card-grid" id="sectors-container">
-              <!-- Dynamically populated via main.js -->
-            </div>
-          </div>
+        <div class="loading-bar-wrapper">
+          <div class="loading-bar-fill" id="loading-bar-fill"></div>
+        </div>
+        <div class="loading-tip-text" id="loading-tip-text">
+          Calibrating cosmic centrifuges...
         </div>
       </div>
 
-      <!-- 6. Modals: Toy Shop / Costume Depot -->
-      <div class="modal-overlay" id="modal-store">
-        <div class="modal-card">
-          <div class="modal-header">
-            <h2 class="modal-title">🎁 TOY & COSTUME SHOP</h2>
-            <button class="btn-close" id="btn-close-store">&times;</button>
+      <!-- =========================================================
+           (2) Game Homepage
+           ========================================================= -->
+      <div id="page-home" class="app-page page-hidden">
+        <!-- Floating Space Parallax Debris -->
+        <div class="home-space-bg" aria-hidden="true">
+          <div class="bg-debris debris-can">🥫</div>
+          <div class="bg-debris debris-bolt">🔩</div>
+          <div class="bg-debris debris-star-1">⭐</div>
+          <div class="bg-debris debris-star-2">✨</div>
+          <div class="bg-debris debris-fish">🐟</div>
+          <div class="bg-debris debris-planet">🪐</div>
+        </div>
+
+        <div class="home-top-bar">
+          <div class="coins-pill" title="Recycling Gold Coins">
+            <span>🪙</span>
+            <span id="home-credits-val">250</span>
           </div>
-          <div class="modal-body">
-            <p
-              style="
-                font-size: 12px;
-                color: rgba(255, 255, 255, 0.8);
-                text-align: center;
-              "
+          <div class="home-top-actions">
+            <button
+              class="btn-sound-mini"
+              id="btn-home-audio"
+              title="Mute/Unmute Sound"
             >
-              100% Free! Unlock cute costumes with your earned recycling coins
-              🪙
-            </p>
-            <div class="tab-row">
-              <button class="tab-btn active" data-tab="rings">
-                Donut Rings
-              </button>
-              <button class="tab-btn" data-tab="singularities">
-                Nibbles Hats
-              </button>
-              <button class="tab-btn" data-tab="skyboxes">Skies</button>
-            </div>
-            <div class="card-grid" id="store-container">
-              <!-- Dynamically populated via main.js -->
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- 7. Modals: Trophies / Holographic Dossier -->
-      <div class="modal-overlay" id="modal-achievements">
-        <div class="modal-card">
-          <div class="modal-header">
-            <h2 class="modal-title">🏆 YOUR SHINY TROPHIES</h2>
-            <button class="btn-close" id="btn-close-achievements">
-              &times;
+              <span id="home-audio-icon">🔊</span>
+            </button>
+            <button
+              class="btn-sound-mini"
+              id="btn-home-settings"
+              title="Settings"
+            >
+              <span>⚙️</span>
             </button>
           </div>
-          <div class="modal-body">
-            <div class="card-grid" id="achievements-container">
-              <!-- Dynamically populated via main.js -->
+        </div>
+
+        <div class="page-scroll-body home-scroll-body">
+          <div class="home-hero-section">
+            <div class="home-title-wrapper">
+              <h1 class="home-logo-title-3d">
+                <span>ORBITAL</span>
+                <span class="title-sub">SALVAGE</span>
+              </h1>
+              <div class="home-logo-subtitle">✨ SPACE TRASH CLEAN ✨</div>
+            </div>
+
+            <!-- Grand Central 3D Orbital Staging -->
+            <div class="home-hero-stage">
+              <!-- 3D Holographic Pedestal / Platform -->
+              <div class="stage-pedestal-3d" aria-hidden="true">
+                <div class="pedestal-shadow"></div>
+                <div class="pedestal-disc-base"></div>
+                <div class="pedestal-disc-rim"></div>
+                <div class="pedestal-glow-beam"></div>
+              </div>
+
+              <!-- Interactive Character Diorama Stage -->
+              <div class="mascot-diorama-stage" id="home-mascot-stage" title="Tap Nibbles!">
+                <div class="diorama-sunburst"></div>
+                <div class="diorama-ring-floater" id="home-diorama-ring">
+                  <span class="diorama-ring-label" id="home-diorama-ring-label">🍩 DONUT FLOAT</span>
+                </div>
+                <div class="diorama-nibbles" id="home-diorama-nibbles">
+                  <div class="diorama-nibbles-face" id="home-diorama-face">😋</div>
+                  <div class="diorama-nibbles-cheeks"></div>
+                </div>
+                <div class="diorama-hearts-anchor" id="home-hearts-anchor"></div>
+              </div>
+            </div>
+
+            <!-- Integrated Launch Console (Mission Deck + Play Button) -->
+            <div class="home-launch-console">
+              <div class="console-mission-bar">
+                <div class="console-mission-meta">
+                  <div class="console-sector-badge">
+                    <span class="console-tag">SECTOR</span>
+                    <span class="console-world" id="home-mission-world">World 1</span>
+                  </div>
+                  <span class="console-goal-pill" id="home-mission-goal">Goal: 20 kg</span>
+                </div>
+                <div class="console-level-row">
+                  <span class="console-level-star">⭐</span>
+                  <h2 id="home-mission-name">LVL 1 • Bubblegum Chute 1</h2>
+                </div>
+              </div>
+
+              <button class="btn-hero-play-3d" id="btn-home-play">
+                <span class="play-btn-glow"></span>
+                <span class="play-btn-icon">▶</span>
+                <span class="play-btn-text">PLAY MISSION</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Unified Bottom Arcade Navigation Dock -->
+        <nav class="home-arcade-dock" aria-label="Arcade Navigation">
+          <button class="dock-tab-btn" id="btn-open-maps-page" title="50 Level Gauntlets">
+            <span class="dock-tab-icon">🗺️</span>
+            <span class="dock-tab-label">MAPS</span>
+          </button>
+          <button class="dock-tab-btn" id="btn-open-daily-shift" title="Daily Shift Bounty">
+            <span class="dock-tab-icon">📅</span>
+            <span class="dock-tab-label">DAILY</span>
+            <span class="dock-badge dock-badge-hot">HOT</span>
+          </button>
+          <button class="dock-tab-btn" id="btn-open-shop-page" title="Costumes & Hats">
+            <span class="dock-tab-icon">🎁</span>
+            <span class="dock-tab-label">SHOP</span>
+            <span class="dock-badge dock-badge-free">FREE</span>
+          </button>
+          <button class="dock-tab-btn" id="btn-open-trophies-page" title="Trophies & Badges">
+            <span class="dock-tab-icon">🏆</span>
+            <span class="dock-tab-label">TROPHIES</span>
+          </button>
+        </nav>
+      </div>
+
+      <!-- =========================================================
+           (3) Active Gameplay Canvas View
+           ========================================================= -->
+      <div id="page-game" class="app-page page-hidden">
+        <canvas id="game-canvas"></canvas>
+
+        <!-- In-Game HUD: Streamlined Top Bar (3 balanced elements) -->
+        <header class="hud-top-mobile">
+          <button
+            class="btn-hud-circle"
+            id="btn-game-pause"
+            title="Pause Game"
+          >
+            <span>⏸️</span>
+          </button>
+
+          <div class="quota-capsule-unified" id="hud-quota-capsule">
+            <span class="capsule-lvl-badge" id="hud-sector-code">⭐ LVL 1</span>
+            <div class="capsule-progress-area">
+              <div class="capsule-bar-track">
+                <div class="capsule-bar-fill" id="hud-quota-bar"></div>
+              </div>
+              <span class="capsule-quota-text" id="hud-quota-text">0 / 20 kg</span>
+            </div>
+          </div>
+
+          <button
+            class="btn-hud-circle"
+            id="btn-game-restart"
+            title="Restart Level"
+          >
+            <span>🔄</span>
+          </button>
+        </header>
+
+        <!-- Animated Gesture Tutorial Prompt -->
+        <div id="gesture-hint" class="gesture-hint">
+          <div class="hand-swipe-anim">👆</div>
+          <span class="hint-text">Swipe anywhere to spin!</span>
+        </div>
+      </div>
+
+      <!-- =========================================================
+           (4) Dedicated Maps Page
+           ========================================================= -->
+      <div id="page-maps" class="app-page page-hidden">
+        <div class="page-header-bar">
+          <button class="btn-header-back" id="btn-back-maps">← Back</button>
+          <div class="page-header-title"><span>🚀</span> CLEANUP MAPS</div>
+          <div class="coins-pill" style="padding: 4px 10px">
+            <span>🪙</span> <span id="maps-credits-val">250</span>
+          </div>
+        </div>
+        <div class="page-scroll-body" id="sectors-page-container">
+          <!-- Dynamically populated via main.js -->
+        </div>
+      </div>
+
+      <!-- =========================================================
+           (5) Dedicated Toy Shop Page
+           ========================================================= -->
+      <div id="page-shop" class="app-page page-hidden">
+        <div class="page-header-bar">
+          <button class="btn-header-back" id="btn-back-shop">← Back</button>
+          <div class="page-header-title"><span>🎁</span> TOY SHOP</div>
+          <div class="coins-pill" style="padding: 4px 10px">
+            <span>🪙</span> <span id="shop-credits-val">250</span>
+          </div>
+        </div>
+        <div class="page-scroll-body">
+          <p
+            style="
+              font-size: 12px;
+              color: rgba(255, 255, 255, 0.8);
+              text-align: center;
+              margin-bottom: 2px;
+            "
+          >
+            100% Free! Unlock cute costumes with your earned recycling coins 🪙
+          </p>
+          <div class="tab-row">
+            <button class="tab-btn active" data-tab="rings">Donut Rings</button>
+            <button class="tab-btn" data-tab="singularities">
+              Nibbles Hats
+            </button>
+            <button class="tab-btn" data-tab="skyboxes">Skies</button>
+          </div>
+          <div class="card-grid" id="store-page-container">
+            <!-- Dynamically populated via main.js -->
+          </div>
+        </div>
+      </div>
+
+      <!-- =========================================================
+           (6) Dedicated Trophies Page
+           ========================================================= -->
+      <div id="page-achievements" class="app-page page-hidden">
+        <div class="page-header-bar">
+          <button class="btn-header-back" id="btn-back-achievements">
+            ← Back
+          </button>
+          <div class="page-header-title"><span>🏆</span> TROPHY ROOM</div>
+          <div class="coins-pill" style="padding: 4px 10px">
+            <span>🪙</span> <span id="ach-credits-val">250</span>
+          </div>
+        </div>
+        <div class="page-scroll-body">
+          <div class="card-grid" id="achievements-page-container">
+            <!-- Dynamically populated via main.js -->
+          </div>
+        </div>
+      </div>
+
+      <!-- =========================================================
+           (7) Dedicated Settings Page
+           ========================================================= -->
+      <div id="page-settings" class="app-page page-hidden">
+        <div class="page-header-bar">
+          <button class="btn-header-back" id="btn-back-settings">
+            ← Back
+          </button>
+          <div class="page-header-title"><span>⚙️</span> GAME SETTINGS</div>
+          <div style="width: 48px"></div>
+        </div>
+        <div class="page-scroll-body">
+          <!-- Audio Section -->
+          <div class="settings-section-card">
+            <span class="settings-section-title">🔊 Audio & Sound FX</span>
+            <div class="settings-row">
+              <div class="settings-label-box">
+                <span class="settings-label">Master Sound</span>
+                <span class="settings-sublabel"
+                  >Enable or mute all game audio</span
+                >
+              </div>
+              <label class="cartoon-switch">
+                <input type="checkbox" id="settings-sound-toggle" checked />
+                <span class="slider-round"></span>
+              </label>
+            </div>
+            <div class="settings-row">
+              <div class="settings-label-box">
+                <span class="settings-label">Sound FX Volume</span>
+                <span class="settings-sublabel"
+                  >Ratchet clicks, pops, bursts</span
+                >
+              </div>
+              <input
+                type="range"
+                class="cartoon-range"
+                id="settings-sfx-slider"
+                min="0"
+                max="100"
+                value="80"
+              />
+            </div>
+            <div class="settings-row">
+              <div class="settings-label-box">
+                <span class="settings-label">Cosmic Ambience</span>
+                <span class="settings-sublabel"
+                  >Background space synth melody</span
+                >
+              </div>
+              <input
+                type="range"
+                class="cartoon-range"
+                id="settings-ambience-slider"
+                min="0"
+                max="100"
+                value="70"
+              />
+            </div>
+          </div>
+
+          <!-- Gameplay & Feel -->
+          <div class="settings-section-card">
+            <span class="settings-section-title">🎮 Gameplay & Feel</span>
+            <div class="settings-row">
+              <div class="settings-label-box">
+                <span class="settings-label">Haptic Vibration</span>
+                <span class="settings-sublabel"
+                  >Tactile tap buzzes during spins & bumps</span
+                >
+              </div>
+              <label class="cartoon-switch">
+                <input type="checkbox" id="settings-haptics-toggle" checked />
+                <span class="slider-round"></span>
+              </label>
+            </div>
+          </div>
+
+          <!-- Privacy & Safety -->
+          <div class="settings-section-card">
+            <span class="settings-section-title">🛡️ Privacy & Safety</span>
+            <div class="settings-row">
+              <div class="settings-label-box">
+                <span class="settings-label">Privacy Policy</span>
+                <span class="settings-sublabel"
+                  >100% offline, kid-safe, no trackers</span
+                >
+              </div>
+              <button class="btn-cartoon-primary" id="btn-open-privacy">
+                View Policy
+              </button>
+            </div>
+          </div>
+
+          <!-- Data Management -->
+          <div class="settings-section-card">
+            <span class="settings-section-title">💾 Game Data</span>
+            <div class="settings-row">
+              <div class="settings-label-box">
+                <span class="settings-label">Reset Progress</span>
+                <span class="settings-sublabel"
+                  >Clear unlocked levels, skins & coins</span
+                >
+              </div>
+              <button
+                class="btn-cartoon-secondary"
+                id="btn-reset-game-data"
+                style="
+                  background: rgba(239, 68, 68, 0.3);
+                  border-color: #ef4444;
+                  color: #fee2e2;
+                "
+              >
+                Reset
+              </button>
+            </div>
+          </div>
+
+          <!-- App Credits & Version -->
+          <div
+            style="
+              text-align: center;
+              color: rgba(255, 255, 255, 0.5);
+              font-size: 12px;
+              margin-top: 8px;
+            "
+          >
+            Orbital Salvage • Space Trash Clean v1.2.0<br />
+            Pure Gesture Mobile Web Puzzle
+          </div>
+        </div>
+      </div>
+
+      <!-- =========================================================
+           (8) Modals: Pause, Privacy Policy, Reset Confirm, Debrief
+           ========================================================= -->
+      <!-- In-Game Pause Overlay Modal -->
+      <div class="modal-overlay" id="modal-pause">
+        <div class="modal-card pause-modal-card">
+          <div class="modal-header pause-header">
+            <h2 class="modal-title">⏸️ MISSION PAUSED</h2>
+            <button class="btn-close" id="btn-close-pause">&times;</button>
+          </div>
+          <div class="modal-body" style="align-items: center; gap: 14px; text-align: center;">
+            <div class="pause-level-info">
+              <div id="pause-level-name" style="font-family: var(--font-bubble); font-size: 19px; color: var(--yellow-main); font-weight: 800;">
+                LVL 1 • Bubblegum Chute 1
+              </div>
+              <div id="pause-level-quota" style="font-size: 13px; color: rgba(255, 255, 255, 0.75); margin-top: 4px;">
+                Goal: Feed Nibbles 20 kg space snacks
+              </div>
+            </div>
+
+            <div class="pause-actions-list" style="width: 100%; display: flex; flex-direction: column; gap: 10px;">
+              <button class="btn-cartoon-primary" id="btn-pause-resume" style="width: 100%; padding: 14px; font-size: 16px;">
+                <span>▶</span> RESUME PLAY
+              </button>
+              <button class="btn-cartoon-secondary" id="btn-pause-restart" style="width: 100%; padding: 12px;">
+                <span>🔄</span> Restart Sector
+              </button>
+              <button class="btn-cartoon-secondary" id="btn-pause-sound" style="width: 100%; padding: 12px;">
+                <span id="pause-sound-icon">🔊</span> Sound: ON
+              </button>
+              <button class="btn-cartoon-secondary" id="btn-pause-maps" style="width: 100%; padding: 12px;">
+                <span>🗺️</span> Choose Sector
+              </button>
+              <button class="btn-cartoon-secondary" id="btn-pause-home" style="width: 100%; padding: 12px; border-color: var(--pink-main);">
+                <span>🏠</span> Return to Home
+              </button>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- 8. Modals: Mission Debrief (Victory Pop-up) -->
+      <!-- Privacy Policy Modal -->
+      <div class="modal-overlay" id="modal-privacy">
+        <div class="modal-card">
+          <div class="modal-header">
+            <h2 class="modal-title">🛡️ PRIVACY & CHILD SAFETY</h2>
+            <button class="btn-close" id="btn-close-privacy">&times;</button>
+          </div>
+          <div class="modal-body" style="gap: 12px">
+            <p
+              style="
+                font-size: 13px;
+                line-height: 1.5;
+                color: rgba(255, 255, 255, 0.9);
+              "
+            >
+              <strong>Zero Personal Data Collected:</strong> Orbital Salvage is
+              built with strict privacy-by-design. We do not collect, store,
+              sell, or transmit any personally identifiable information,
+              cookies, device identifiers, or location data.
+            </p>
+            <p
+              style="
+                font-size: 13px;
+                line-height: 1.5;
+                color: rgba(255, 255, 255, 0.9);
+              "
+            >
+              <strong>100% Offline & Kid-Safe:</strong> All game progression,
+              gold coins, and cosmetic unlocks are saved locally on your device
+              via standard browser localStorage. No account creation, no
+              external tracking SDKs, and zero behavioral ads.
+            </p>
+            <p
+              style="
+                font-size: 13px;
+                line-height: 1.5;
+                color: rgba(255, 255, 255, 0.9);
+              "
+            >
+              <strong>Non-Monetized:</strong> All items in the Toy Shop are
+              earned through in-game gameplay coins. There are no real-money
+              in-app purchases.
+            </p>
+            <button
+              class="btn-cartoon-primary"
+              id="btn-dismiss-privacy"
+              style="width: 100%; padding: 12px; margin-top: 6px"
+            >
+              Awesome, Got It! 👍
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Reset Confirmation Modal -->
+      <div class="modal-overlay" id="modal-reset-confirm">
+        <div class="modal-card" style="text-align: center">
+          <div class="modal-header" style="justify-content: center">
+            <h2 class="modal-title" style="color: #ef4444">
+              ⚠️ RESET ALL PROGRESS?
+            </h2>
+          </div>
+          <div class="modal-body" style="align-items: center; gap: 14px">
+            <div style="font-size: 44px">🗑️</div>
+            <p
+              style="
+                font-size: 13px;
+                color: rgba(255, 255, 255, 0.85);
+                line-height: 1.4;
+              "
+            >
+              Are you sure? This will reset all your unlocked maps, custom
+              costumes, and earned gold coins. This cannot be undone!
+            </p>
+            <div style="display: flex; gap: 10px; width: 100%">
+              <button
+                class="btn-cartoon-secondary"
+                id="btn-cancel-reset"
+                style="flex: 1; padding: 12px"
+              >
+                Cancel
+              </button>
+              <button
+                class="btn-cartoon-primary"
+                id="btn-confirm-reset"
+                style="
+                  flex: 1;
+                  padding: 12px;
+                  background: #ef4444;
+                  color: #ffffff;
+                "
+              >
+                Yes, Reset
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Mission Debrief (Victory Pop-up) -->
       <div class="modal-overlay" id="modal-debrief">
         <div
           class="modal-card"
@@ -203,7 +602,9 @@
         </div>
       </div>
 
-      <!-- 9. Toast Notifications -->
+      <!-- =========================================================
+           (9) Toast Notifications
+           ========================================================= -->
       <div id="toast-container"></div>
     </div>
 
