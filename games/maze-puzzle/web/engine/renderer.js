@@ -76,10 +76,14 @@ export class GameRenderer {
   }
 
   resize(w, h) {
+    const dpr = Math.min(window.devicePixelRatio || 1, 3);
+    this.dpr = dpr;
     this.width = w;
     this.height = h;
-    this.canvas.width = w;
-    this.canvas.height = h;
+    this.canvas.width = Math.round(w * dpr);
+    this.canvas.height = Math.round(h * dpr);
+    this.canvas.style.width = `${w}px`;
+    this.canvas.style.height = `${h}px`;
   }
 
   generateCartoonStars(count) {
@@ -313,6 +317,7 @@ export class GameRenderer {
     this.updateThrusterPuffs(dt);
 
     const ctx = this.ctx;
+    ctx.setTransform(this.dpr || 1, 0, 0, this.dpr || 1, 0, 0);
     ctx.clearRect(0, 0, this.width, this.height);
 
     const equipped = economy.profile.equipped;
@@ -490,36 +495,82 @@ export class GameRenderer {
     const bh = physics.blackHole;
     const time = this.cosmicTime * 2.5;
 
-    // Upward Gravitational Funnel & Cosmic Radiation Cone
-    const funnelTopY = bh.y - 125;
+    // Upward Gravitational Funnel & Physical Magnetic Containment Rails
+    const funnelTopY = Math.min(bh.y - 120, physics.center.y + physics.ringRadius - 15);
+    const funnelHeight = bh.y - funnelTopY;
+    const topHalfW = 95;
+    const bottomHalfW = 46;
+
     const funnelGrad = ctx.createLinearGradient(bh.x, bh.y, bh.x, funnelTopY);
-    funnelGrad.addColorStop(0, (skin.haloColor || "#818cf8") + "44");
-    funnelGrad.addColorStop(0.65, (skin.haloColor || "#818cf8") + "15");
-    funnelGrad.addColorStop(1, "rgba(255, 255, 255, 0)");
+    funnelGrad.addColorStop(0, (skin.haloColor || "#818cf8") + "55");
+    funnelGrad.addColorStop(0.55, (skin.haloColor || "#818cf8") + "22");
+    funnelGrad.addColorStop(1, "rgba(56, 189, 248, 0.04)");
 
     ctx.save();
+    // 1. Soft glowing tractor beam polygon
     ctx.fillStyle = funnelGrad;
     ctx.beginPath();
-    ctx.moveTo(bh.x - bh.eventHorizonRadius * 1.5, bh.y);
-    ctx.lineTo(bh.x - bh.eventHorizonRadius * 2.6, funnelTopY);
-    ctx.lineTo(bh.x + bh.eventHorizonRadius * 2.6, funnelTopY);
-    ctx.lineTo(bh.x + bh.eventHorizonRadius * 1.5, bh.y);
+    ctx.moveTo(bh.x - bottomHalfW, bh.y);
+    ctx.lineTo(bh.x - topHalfW, funnelTopY);
+    ctx.lineTo(bh.x + topHalfW, funnelTopY);
+    ctx.lineTo(bh.x + bottomHalfW, bh.y);
     ctx.closePath();
     ctx.fill();
 
-    // Animated downward gravity ripples towards Nibbles
-    for (let b = 0; b < 3; b++) {
-      const offset = ((this.cosmicTime * 0.9 + b * 0.33) % 1.0);
-      const bY = funnelTopY + offset * 125;
-      const bW = (bh.eventHorizonRadius * 2.6) - offset * (bh.eventHorizonRadius * 1.1);
-      const bAlpha = Math.sin(offset * Math.PI) * 0.35;
+    // 2. Neon Magnetic Guide Rails (Left & Right boundaries)
+    const railColor = skin.haloColor || "#38bdf8";
+    ctx.save();
+    ctx.strokeStyle = railColor;
+    ctx.lineWidth = 3.5;
+    ctx.lineCap = "round";
+    ctx.setLineDash([12, 8]);
+    ctx.lineDashOffset = -this.cosmicTime * 55; // downward energy flow
+    ctx.shadowColor = railColor;
+    ctx.shadowBlur = 8;
+
+    // Left Guide Rail
+    ctx.beginPath();
+    ctx.moveTo(bh.x - topHalfW, funnelTopY);
+    ctx.lineTo(bh.x - bottomHalfW, bh.y);
+    ctx.stroke();
+
+    // Right Guide Rail
+    ctx.beginPath();
+    ctx.moveTo(bh.x + topHalfW, funnelTopY);
+    ctx.lineTo(bh.x + bottomHalfW, bh.y);
+    ctx.stroke();
+    ctx.restore();
+
+    // 3. Magnetic Emitter Pylons at Aperture Mouth
+    ctx.save();
+    ctx.fillStyle = "#38bdf8";
+    ctx.shadowColor = "#38bdf8";
+    ctx.shadowBlur = 6;
+    ctx.beginPath();
+    ctx.arc(bh.x - topHalfW, funnelTopY, 4, 0, Math.PI * 2);
+    ctx.arc(bh.x + topHalfW, funnelTopY, 4, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+
+    // 4. Animated downward magnetic chevrons towards Nibbles
+    for (let b = 0; b < 4; b++) {
+      const offset = ((this.cosmicTime * 0.75 + b * 0.25) % 1.0);
+      const bY = funnelTopY + offset * funnelHeight;
+      const t = offset;
+      const bW = (topHalfW * (1 - t) + bottomHalfW * t) * 1.6;
+      const bAlpha = Math.sin(offset * Math.PI) * 0.45;
+
+      ctx.save();
       ctx.strokeStyle = `rgba(255, 255, 255, ${bAlpha})`;
-      ctx.lineWidth = 2.2;
-      ctx.setLineDash([8, 8]);
+      ctx.lineWidth = 2.4;
+      ctx.lineCap = "round";
       ctx.beginPath();
-      ctx.moveTo(bh.x - bW * 0.5, bY);
-      ctx.lineTo(bh.x + bW * 0.5, bY);
+      // Chevron shape pointing downwards
+      ctx.moveTo(bh.x - bW * 0.5, bY - 6);
+      ctx.lineTo(bh.x, bY + 3);
+      ctx.lineTo(bh.x + bW * 0.5, bY - 6);
       ctx.stroke();
+      ctx.restore();
     }
     ctx.restore();
 

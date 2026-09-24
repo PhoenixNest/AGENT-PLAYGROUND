@@ -432,4 +432,81 @@ export class AudioEngine {
       this.playSpinRatchet(1.2);
     }
   }
+
+  /**
+   * Whimsical cartoon defeat jingle when scrap runs out (cute descending notes).
+   */
+  playDefeatSound() {
+    if (!this.ctx || this.isMuted) return;
+    const now = this.ctx.currentTime;
+
+    // Sweet cartoon descending notes (G4 -> E4 -> D4 -> C4)
+    const melody = [
+      { f: 392.0, dur: 0.16 }, // G4
+      { f: 329.63, dur: 0.16 }, // E4
+      { f: 293.66, dur: 0.18 }, // D4
+      { f: 261.63, dur: 0.38, bend: 220.0 }, // C4 bending down to A3
+    ];
+
+    let t = now;
+    melody.forEach((note) => {
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+
+      osc.type = "triangle";
+      osc.frequency.setValueAtTime(note.f, t);
+      if (note.bend) {
+        osc.frequency.exponentialRampToValueAtTime(note.bend, t + note.dur);
+      }
+
+      gain.gain.setValueAtTime(0, t);
+      gain.gain.linearRampToValueAtTime(0.18, t + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.0001, t + note.dur);
+
+      osc.connect(gain);
+      gain.connect(this.masterCompressor);
+
+      osc.start(t);
+      osc.stop(t + note.dur + 0.03);
+
+      t += note.dur * 0.85;
+    });
+  }
+
+  /**
+   * Cheerful rescue pod launch chime when the player calls in backup scrap!
+   */
+  playBackupPodSound() {
+    if (!this.ctx || this.isMuted) return;
+    const now = this.ctx.currentTime;
+
+    // Upbeat energetic ascending chime (C4 -> G4 -> C5 -> E5)
+    const melody = [
+      { f: 261.63, dur: 0.08 },
+      { f: 392.0, dur: 0.08 },
+      { f: 523.25, dur: 0.1 },
+      { f: 659.25, dur: 0.28 },
+    ];
+
+    let t = now;
+    melody.forEach((note) => {
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+
+      osc.type = "sine";
+      osc.frequency.setValueAtTime(note.f, t);
+
+      gain.gain.setValueAtTime(0, t);
+      gain.gain.linearRampToValueAtTime(0.2, t + 0.015);
+      gain.gain.exponentialRampToValueAtTime(0.0001, t + note.dur);
+
+      osc.connect(gain);
+      gain.connect(this.masterCompressor);
+
+      osc.start(t);
+      osc.stop(t + note.dur + 0.02);
+
+      t += note.dur * 0.75;
+    });
+  }
 }

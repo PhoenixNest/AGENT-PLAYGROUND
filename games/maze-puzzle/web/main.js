@@ -31,7 +31,11 @@ class OrbitalApp {
     this.currentSectorIndex = 0;
     this.activeSector = null;
     this.collectedMass = 0;
+    this.spilledMass = 0;
     this.isLevelCleared = false;
+    this.isLevelFailed = false;
+    this.failureCheckTimer = 0;
+    this.usedBackupPod = false;
     this.isPaused = false;
 
     // Gesture Input State
@@ -295,10 +299,11 @@ class OrbitalApp {
     const h = this.frame ? this.frame.clientHeight : window.innerHeight;
     this.renderer.resize(w, h);
 
-    // Centered layout with generous vertical fall space
+    // Centered layout proportionally balanced for iOS 430pt x 932pt
+    const scale = Math.min(1.0, w / 430);
     const centerX = w * 0.5;
-    const centerY = Math.max(170, h * 0.38);
-    const blackHoleY = Math.min(h - 105, centerY + 230);
+    const centerY = Math.max(175, h * 0.38);
+    const blackHoleY = Math.min(h - 110, Math.max(centerY + 240, h * 0.76));
 
     this.physics.center = { x: centerX, y: centerY };
     this.physics.blackHole.x = centerX;
@@ -541,7 +546,43 @@ class OrbitalApp {
       this.nextSector();
     });
 
+    // Defeat (Shift Incomplete) Buttons
+    const modalDefeat = document.getElementById("modal-defeat");
+    const btnDefeatRetry = document.getElementById("btn-defeat-retry");
+    if (btnDefeatRetry) {
+      btnDefeatRetry.addEventListener("click", () => {
+        if (modalDefeat) modalDefeat.classList.remove("active");
+        this.restartSector();
+      });
+    }
+
+    const btnDefeatHome = document.getElementById("btn-defeat-home");
+    if (btnDefeatHome) {
+      btnDefeatHome.addEventListener("click", () => {
+        if (modalDefeat) modalDefeat.classList.remove("active");
+        this.showPage("maps");
+      });
+    }
+
+    const btnDefeatBackup = document.getElementById("btn-defeat-backup");
+    if (btnDefeatBackup) {
+      btnDefeatBackup.addEventListener("click", () => {
+        if (modalDefeat) modalDefeat.classList.remove("active");
+        this.usedBackupPod = true;
+        this.isLevelFailed = false;
+        this.failureCheckTimer = 0;
+        this.physics.spawnBackupScrap(8);
+        this.audio.playBackupPodSound();
+        this.triggerHaptic(50);
+        this.showToast("🚀 Auxiliary Scrap Pod Deployed! (+8 Scrap)");
+      });
+    }
+
     // 8. Physics Simulation Callbacks
+    this.physics.onDebrisSpilled = (d) => {
+      this.spilledMass += d.weight * 2;
+    };
+
     this.physics.onDebrisSwallowed = (d) => {
       this.collectedMass += d.weight * 2;
       this.updateQuotaDisplay();
@@ -727,8 +768,18 @@ class OrbitalApp {
   loadSector(sectorConfig, showToastMsg = true) {
     this.activeSector = sectorConfig;
     this.collectedMass = 0;
+    this.spilledMass = 0;
     this.isLevelCleared = false;
+    this.isLevelFailed = false;
+    this.failureCheckTimer = 0;
+    this.usedBackupPod = false;
     this.renderer.resetNibblesScale();
+
+    // Ensure modals are dismissed
+    const modalDebrief = document.getElementById("modal-debrief");
+    if (modalDebrief) modalDebrief.classList.remove("active");
+    const modalDefeat = document.getElementById("modal-defeat");
+    if (modalDefeat) modalDefeat.classList.remove("active");
 
     if (sectorConfig.worldIndex) {
       this.selectedWorldIndex = sectorConfig.worldIndex;
@@ -788,6 +839,34 @@ class OrbitalApp {
     setTimeout(() => {
       document.getElementById("modal-debrief").classList.add("active");
     }, 600);
+  }
+
+  handleLevelFailure() {
+    if (this.isLevelCleared || this.isLevelFailed) return;
+    this.isLevelFailed = true;
+    this.audio.playDefeatSound();
+
+    const targetQuota = this.activeSector ? this.activeSector.quota : 30;
+    const massEl = document.getElementById("defeat-mass-val");
+    if (massEl) massEl.textContent = `${this.collectedMass} / ${targetQuota} kg`;
+
+    const spilledEl = document.getElementById("defeat-spilled-val");
+    if (spilledEl) spilledEl.textContent = `${this.spilledMass} kg`;
+
+    const backupContainer = document.getElementById("defeat-backup-container");
+    const progressRatio = this.collectedMass / Math.max(1, targetQuota);
+    if (backupContainer) {
+      if (progressRatio >= 0.70 && !this.usedBackupPod) {
+        backupContainer.style.display = "block";
+      } else {
+        backupContainer.style.display = "none";
+      }
+    }
+
+    setTimeout(() => {
+      const modalDefeat = document.getElementById("modal-defeat");
+      if (modalDefeat) modalDefeat.classList.add("active");
+    }, 400);
   }
 
   updateQuotaDisplay() {
@@ -1095,6 +1174,24 @@ class OrbitalApp {
         // 1. Update Physics (only when not paused)
         if (!this.isPaused) {
           this.physics.update(dt);
+
+          // Check defeat / out-of-scrap condition
+          if (!this.isLevelCleared && !this.isLevelFailed && this.activeSector) {
+            const hasDebrisInPlay = this.physics.debrisList.some(
+              (d) =>
+                d.state === "IN_RING" ||
+                d.state === "FALLING" ||
+                d.state === "INGESTING",
+            );
+            if (!hasDebrisInPlay && this.collectedMass < this.activeSector.quota) {
+              this.failureCheckTimer += dt;
+              if (this.failureCheckTimer >= 1.2) {
+                this.handleLevelFailure();
+              }
+            } else {
+              this.failureCheckTimer = 0;
+            }
+          }
         }
 
         // 2. Render Canvas with Dynamic Black Hole Growth Info
