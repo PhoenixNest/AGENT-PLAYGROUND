@@ -60,6 +60,13 @@ export class GameRenderer {
     this.particles = [];
     this.floatingTexts = [];
     this.popRings = [];
+
+    // Accretion Vortex Particles (Singularity Orbit)
+    this.singularityParticles = this.generateSingularityParticles(32);
+
+    // Comic Thruster Smoke Puffs & Sparks
+    this.thrusterPuffs = [];
+    this.sparkEmitTimer = 0;
   }
 
   resetNibblesScale() {
@@ -177,6 +184,122 @@ export class GameRenderer {
     }
   }
 
+  generateSingularityParticles(count) {
+    const list = [];
+    const colors = ["#fde047", "#38bdf8", "#f472b6", "#c084fc", "#ffffff", "#4ade80", "#fbbf24"];
+    for (let i = 0; i < count; i++) {
+      list.push({
+        rRatio: 1.05 + Math.random() * 2.0,
+        angle: Math.random() * Math.PI * 2,
+        speed: Math.random() * 1.6 + 1.2,
+        inwardRate: Math.random() * 0.35 + 0.22,
+        size: Math.random() * 2.6 + 1.8,
+        color: colors[Math.floor(Math.random() * colors.length)],
+        twinkle: Math.random() * Math.PI * 2,
+        twinkleSpeed: Math.random() * 4 + 2,
+      });
+    }
+    return list;
+  }
+
+  updateSingularityParticles(physics, dt) {
+    const bh = physics.blackHole;
+    let closestDist = 9999;
+    for (const d of physics.debrisList) {
+      if (d.state === "FALLING" || d.state === "INGESTING") {
+        const dist = Math.hypot(bh.x - d.x, bh.y - d.y);
+        if (dist < closestDist) closestDist = dist;
+      }
+    }
+    const suctionBoost = closestDist < 140 || this.chewTimer > 0 ? 1.85 : 1.0;
+
+    for (const p of this.singularityParticles) {
+      p.twinkle += dt * p.twinkleSpeed;
+      // Keplerian swirl: closer orbits revolve faster
+      const swirlSpeed = (p.speed / (p.rRatio * 0.65 + 0.35)) * suctionBoost;
+      p.angle += swirlSpeed * dt;
+      // Inward logarithmic drift
+      p.rRatio -= p.inwardRate * suctionBoost * dt;
+
+      // When reaching event horizon, respawn at outer accretion edge
+      if (p.rRatio <= 0.98) {
+        p.rRatio = 2.4 + Math.random() * 0.7;
+        p.angle = Math.random() * Math.PI * 2;
+      }
+    }
+  }
+
+  addBoostShockwave(x, y, radiusStart = 180, color = "#38bdf8") {
+    this.popRings.push({
+      x,
+      y,
+      radius: radiusStart * 0.88,
+      radiusMax: radiusStart + 90,
+      color,
+      alpha: 1.0,
+      lineWidth: 7,
+      speed: 260,
+      fadeRate: 2.4,
+    });
+    this.popRings.push({
+      x,
+      y,
+      radius: radiusStart * 0.72,
+      radiusMax: radiusStart + 60,
+      color: "#fde047",
+      alpha: 0.9,
+      lineWidth: 4,
+      speed: 190,
+      fadeRate: 2.8,
+    });
+  }
+
+  addThrusterPuff(x, y, vx, vy, radius = 7, color = "#ffffff") {
+    if (this.thrusterPuffs.length > 25) return;
+    this.thrusterPuffs.push({
+      x,
+      y,
+      vx,
+      vy,
+      radius,
+      color,
+      life: 0.28,
+      maxLife: 0.28,
+    });
+  }
+
+  addRimSpark(x, y, vx, vy, color = "#fde047") {
+    if (this.particles.length > 100) return;
+    this.particles.push({
+      x,
+      y,
+      vx: vx + (Math.random() - 0.5) * 40,
+      vy: vy + (Math.random() - 0.5) * 40,
+      gravity: 40,
+      rot: Math.random() * Math.PI,
+      vRot: (Math.random() - 0.5) * 12,
+      life: 0.32,
+      maxLife: 0.32,
+      w: Math.random() * 4 + 3,
+      h: Math.random() * 4 + 3,
+      color,
+    });
+  }
+
+  updateThrusterPuffs(dt) {
+    for (let i = this.thrusterPuffs.length - 1; i >= 0; i--) {
+      const puff = this.thrusterPuffs[i];
+      puff.life -= dt;
+      if (puff.life <= 0) {
+        this.thrusterPuffs.splice(i, 1);
+        continue;
+      }
+      puff.x += puff.vx * dt;
+      puff.y += puff.vy * dt;
+      puff.radius += dt * 32;
+    }
+  }
+
   triggerNibblesChew() {
     this.chewTimer = 0.35;
     this.mouthOpenAmount = 1.0;
@@ -186,6 +309,8 @@ export class GameRenderer {
   render(physics, economy, dt, progressInfo = null) {
     this.cosmicTime += dt;
     this.updateNibblesFace(physics, dt, progressInfo);
+    this.updateSingularityParticles(physics, dt);
+    this.updateThrusterPuffs(dt);
 
     const ctx = this.ctx;
     ctx.clearRect(0, 0, this.width, this.height);
@@ -365,31 +490,134 @@ export class GameRenderer {
     const bh = physics.blackHole;
     const time = this.cosmicTime * 2.5;
 
+    // Upward Gravitational Funnel & Cosmic Radiation Cone
+    const funnelTopY = bh.y - 125;
+    const funnelGrad = ctx.createLinearGradient(bh.x, bh.y, bh.x, funnelTopY);
+    funnelGrad.addColorStop(0, (skin.haloColor || "#818cf8") + "44");
+    funnelGrad.addColorStop(0.65, (skin.haloColor || "#818cf8") + "15");
+    funnelGrad.addColorStop(1, "rgba(255, 255, 255, 0)");
+
+    ctx.save();
+    ctx.fillStyle = funnelGrad;
+    ctx.beginPath();
+    ctx.moveTo(bh.x - bh.eventHorizonRadius * 1.5, bh.y);
+    ctx.lineTo(bh.x - bh.eventHorizonRadius * 2.6, funnelTopY);
+    ctx.lineTo(bh.x + bh.eventHorizonRadius * 2.6, funnelTopY);
+    ctx.lineTo(bh.x + bh.eventHorizonRadius * 1.5, bh.y);
+    ctx.closePath();
+    ctx.fill();
+
+    // Animated downward gravity ripples towards Nibbles
+    for (let b = 0; b < 3; b++) {
+      const offset = ((this.cosmicTime * 0.9 + b * 0.33) % 1.0);
+      const bY = funnelTopY + offset * 125;
+      const bW = (bh.eventHorizonRadius * 2.6) - offset * (bh.eventHorizonRadius * 1.1);
+      const bAlpha = Math.sin(offset * Math.PI) * 0.35;
+      ctx.strokeStyle = `rgba(255, 255, 255, ${bAlpha})`;
+      ctx.lineWidth = 2.2;
+      ctx.setLineDash([8, 8]);
+      ctx.beginPath();
+      ctx.moveTo(bh.x - bW * 0.5, bY);
+      ctx.lineTo(bh.x + bW * 0.5, bY);
+      ctx.stroke();
+    }
+    ctx.restore();
+
     ctx.save();
     // Dynamic Growth Scaling: visually scales from 1.0x to 1.65x without altering level completion conditions
     ctx.translate(bh.x, bh.y);
     ctx.scale(this.currentBhScale, this.currentBhScale);
     ctx.translate(-bh.x, -bh.y);
 
-    // 1. Swirling Candy Accretion Donut Ring
-    const haloRadius = bh.eventHorizonRadius * 2.5;
+    // 1. Swirling Comic Accretion Vortex & Multi-Layered Ribbons
+    const rHorizon = bh.eventHorizonRadius;
+    const haloRadius = rHorizon * 2.8 + Math.sin(time * 1.6) * 3;
+
     ctx.save();
     ctx.translate(bh.x, bh.y);
-    ctx.rotate(time * 0.5);
 
-    ctx.fillStyle = skin.haloColor + "44";
+    // A. Soft Pulsing Outer Glow
+    const haloGrad = ctx.createRadialGradient(0, 0, rHorizon * 0.7, 0, 0, haloRadius);
+    haloGrad.addColorStop(0, (skin.haloColor || "#818cf8") + "66");
+    haloGrad.addColorStop(0.45, (skin.haloColor || "#818cf8") + "28");
+    haloGrad.addColorStop(1, "rgba(0, 0, 0, 0)");
+    ctx.fillStyle = haloGrad;
     ctx.beginPath();
     ctx.arc(0, 0, haloRadius, 0, Math.PI * 2);
     ctx.fill();
 
-    // Swirling candy sprinkles around Nibbles
-    for (let i = 0; i < 8; i++) {
-      const a = (Math.PI * 2 * i) / 8 + time * 0.8;
-      const r = bh.eventHorizonRadius * 1.5 + Math.sin(time + i) * 6;
-      ctx.fillStyle = i % 2 === 0 ? "#fde047" : "#f472b6";
+    // B. Outer Accretion Ribbon (Dashed pastel track)
+    ctx.save();
+    ctx.rotate(time * 0.4);
+    ctx.setLineDash([14, 16]);
+    ctx.lineCap = "round";
+    ctx.lineWidth = 4;
+    ctx.strokeStyle = (skin.haloColor || "#818cf8") + "aa";
+    ctx.beginPath();
+    ctx.ellipse(0, 0, rHorizon * 2.35, rHorizon * 1.95, 0, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.restore();
+
+    // C. Middle Fast Ribbon (Vibrant Sunny Yellow)
+    ctx.save();
+    ctx.rotate(-time * 0.85);
+    ctx.setLineDash([10, 14]);
+    ctx.lineCap = "round";
+    ctx.lineWidth = 4.5;
+    ctx.strokeStyle = "#fde047dd";
+    ctx.beginPath();
+    ctx.ellipse(0, 0, rHorizon * 1.75, rHorizon * 1.48, 0, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.restore();
+
+    // D. Inner Relativistic Ring (Electric Cyan Core Accent)
+    ctx.save();
+    ctx.rotate(time * 1.8);
+    ctx.lineWidth = 3.2;
+    ctx.strokeStyle = "#38bdf8ee";
+    ctx.setLineDash([6, 8]);
+    ctx.lineCap = "round";
+    ctx.beginPath();
+    ctx.arc(0, 0, rHorizon + 6.5, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.restore();
+
+    // E. Spiraling Inward Cosmic Stardust & Candies
+    for (const p of this.singularityParticles) {
+      const pr = rHorizon * p.rRatio;
+      const px = Math.cos(p.angle) * pr;
+      const py = Math.sin(p.angle) * (pr * 0.82); // elliptical perspective
+
+      const horizonDist = p.rRatio - 1.0;
+      if (horizonDist < 0) continue;
+      const alpha = Math.min(1.0, horizonDist * 2.2) * (0.55 + Math.sin(p.twinkle) * 0.45);
+
+      ctx.save();
+      ctx.globalAlpha = Math.max(0, Math.min(1, alpha));
+      ctx.fillStyle = p.color;
+      ctx.translate(px, py);
+
+      // Star or Sparkle
       ctx.beginPath();
-      ctx.arc(Math.cos(a) * r, Math.sin(a) * r, 3.5, 0, Math.PI * 2);
+      ctx.arc(0, 0, p.size, 0, Math.PI * 2);
       ctx.fill();
+
+      // White hot center
+      ctx.fillStyle = "#ffffff";
+      ctx.beginPath();
+      ctx.arc(0, 0, p.size * 0.45, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Tangent streak
+      const tanAngle = p.angle + Math.PI * 0.5;
+      ctx.strokeStyle = p.color;
+      ctx.lineWidth = 1.3;
+      ctx.beginPath();
+      ctx.moveTo(0, 0);
+      ctx.lineTo(-Math.cos(tanAngle) * (p.size * 2.2), -Math.sin(tanAngle) * (p.size * 2.2));
+      ctx.stroke();
+
+      ctx.restore();
     }
     ctx.restore();
 
@@ -689,11 +917,8 @@ export class GameRenderer {
     ctx.save();
     ctx.translate(cx, cy);
 
-    // 1. Cartoon Air Puffs / Wind Lines when rotating
-    if (Math.abs(physics.angularVelocity) > 0.4 || physics.rcsThrusting) {
-      const dir = Math.sign(physics.angularVelocity || 1);
-      this.renderCartoonWhoosh(ctx, rOut + 10, angle, dir);
-    }
+    // 1. Dynamic Speed Arcs, RCS Jets & Boost VFX
+    this.renderRotationBoostVFX(ctx, physics, rOut, rIn, angle, ringSkin);
 
     ctx.rotate(angle);
 
@@ -711,10 +936,15 @@ export class GameRenderer {
     // Main colorful cartoon outer rim
     ctx.lineWidth = 14;
     ctx.strokeStyle = ringSkin.color;
+    if (physics.rcsThrusting) {
+      ctx.shadowBlur = 18;
+      ctx.shadowColor = "#38bdf8";
+    }
     ctx.lineCap = "round";
     ctx.beginPath();
     ctx.arc(0, 0, rOut, apStart, apEnd);
     ctx.stroke();
+    ctx.shadowBlur = 0;
 
     // Dark cartoon border outlines
     ctx.lineWidth = 3;
@@ -772,10 +1002,31 @@ export class GameRenderer {
     ctx.font = "bold 13px Fredoka, sans-serif";
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
-    ctx.fillText(physics.concentricRings ? "⚙️ GEAR RIG ⚙️" : "✨ ORBITAL ✨", 0, -7);
+
+    let hubEmoji = "✨ ORBITAL ✨";
+    let hubSubtitle = "SORT RIG";
+    if (ringSkin.id === "ring_duckie") {
+      hubEmoji = "🦆 DUCKIE 🦆";
+      hubSubtitle = "FLOAT RIG";
+    } else if (ringSkin.id === "ring_candyland") {
+      hubEmoji = "🍬 CANDY 🍬";
+      hubSubtitle = "MINT RIG";
+    } else if (ringSkin.id === "ring_spacecat") {
+      hubEmoji = "🐱 KITTY 🐱";
+      hubSubtitle = "COSMIC RIG";
+    } else if (ringSkin.id === "ring_donut") {
+      hubEmoji = "🍩 DONUT 🍩";
+      hubSubtitle = "SWEET RIG";
+    }
+    if (physics.concentricRings) {
+      hubEmoji = "⚙️ GEAR RIG ⚙️";
+      hubSubtitle = "PLANETARY";
+    }
+
+    ctx.fillText(hubEmoji, 0, -7);
     ctx.font = "11px Nunito, sans-serif";
     ctx.fillStyle = "#64748b";
-    ctx.fillText(physics.concentricRings ? "PLANETARY" : "SORT RIG", 0, 9);
+    ctx.fillText(hubSubtitle, 0, 9);
     ctx.restore();
 
     // 4b. Concentric Track Partitions & Planetary Gear Teeth
@@ -875,21 +1126,154 @@ export class GameRenderer {
     ctx.restore();
   }
 
-  renderCartoonWhoosh(ctx, radius, currentAngle, dir) {
-    ctx.save();
-    const count = 3;
-    for (let i = 0; i < count; i++) {
-      const a = currentAngle + i * 0.35 * dir;
-      const dist = radius + (i % 2) * 5;
-      const wx = Math.cos(a) * dist;
-      const wy = Math.sin(a) * dist;
+  renderRotationBoostVFX(ctx, physics, rOut, rIn, angle, ringSkin) {
+    const absSpeed = Math.abs(physics.angularVelocity);
+    const isBoosting = physics.rcsThrusting;
+    const hasMotion = absSpeed > 0.15 || isBoosting;
 
-      ctx.fillStyle = "#ffffff";
-      ctx.globalAlpha = 0.75 - i * 0.2;
-      ctx.beginPath();
-      ctx.arc(wx, wy, 4.5 - i, 0, Math.PI * 2);
-      ctx.fill();
+    if (!hasMotion) return;
+
+    const dir = Math.sign(physics.angularVelocity || physics.rcsDirection || 1);
+    const speedRatio = Math.min(1.0, absSpeed / 5.0);
+    const intensity = isBoosting ? Math.max(0.9, speedRatio) : speedRatio;
+
+    ctx.save();
+
+    // 1. Dynamic Curved Speed Streaks (Whoosh Ribbons) along outer & inner rims
+    const streakTracks = [
+      { r: rOut + 14, color: "#38bdf8", width: 5.5, arc: 0.55 + intensity * 0.65, count: 3 },
+      { r: rOut + 8, color: "#fde047", width: 4.0, arc: 0.45 + intensity * 0.55, count: 4 },
+      { r: rIn - 8, color: "#f472b6", width: 3.5, arc: 0.40 + intensity * 0.50, count: 3 },
+    ];
+
+    for (const track of streakTracks) {
+      for (let i = 0; i < track.count; i++) {
+        // Distribute arcs around the perimeter
+        const baseOffset = (Math.PI * 2 * i) / track.count + (angle * 0.35);
+        const headAngle = baseOffset;
+        const tailAngle = headAngle - track.arc * dir;
+
+        ctx.save();
+        ctx.strokeStyle = track.color;
+        ctx.globalAlpha = 0.35 + intensity * 0.55;
+        ctx.lineWidth = track.width * (0.7 + intensity * 0.5);
+        ctx.lineCap = "round";
+
+        ctx.beginPath();
+        if (dir > 0) {
+          ctx.arc(0, 0, track.r, tailAngle, headAngle);
+        } else {
+          ctx.arc(0, 0, track.r, headAngle, tailAngle);
+        }
+        ctx.stroke();
+
+        // Inner white hot core line
+        ctx.strokeStyle = "#ffffff";
+        ctx.lineWidth = track.width * 0.38;
+        ctx.globalAlpha = 0.65 + intensity * 0.35;
+        ctx.beginPath();
+        if (dir > 0) {
+          ctx.arc(0, 0, track.r, tailAngle + track.arc * 0.35, headAngle);
+        } else {
+          ctx.arc(0, 0, track.r, headAngle, tailAngle - track.arc * 0.35);
+        }
+        ctx.stroke();
+
+        // Comic trailing spark dots at tail
+        for (let d = 1; d <= 2; d++) {
+          const dotAngle = dir > 0 ? tailAngle - d * 0.08 : tailAngle + d * 0.08;
+          ctx.fillStyle = track.color;
+          ctx.globalAlpha = 0.5 - d * 0.15;
+          ctx.beginPath();
+          ctx.arc(Math.cos(dotAngle) * track.r, Math.sin(dotAngle) * track.r, track.width * 0.45, 0, Math.PI * 2);
+          ctx.fill();
+        }
+
+        ctx.restore();
+      }
     }
+
+    // 2. Centrifugal Rim Sparks (flying off tangentially at high speed)
+    if (absSpeed > 2.0 || isBoosting) {
+      this.sparkEmitTimer = (this.sparkEmitTimer || 0) + 1;
+      if (this.sparkEmitTimer % 2 === 0) {
+        const emitAngle = Math.random() * Math.PI * 2;
+        const ex = Math.cos(emitAngle) * (rOut + 4);
+        const ey = Math.sin(emitAngle) * (rOut + 4);
+        const tanAngle = emitAngle + Math.PI * 0.5 * dir;
+        const sparkSpeed = (120 + Math.random() * 80) * intensity;
+        const vx = Math.cos(tanAngle) * sparkSpeed;
+        const vy = Math.sin(tanAngle) * sparkSpeed;
+        const colors = ["#fde047", "#38bdf8", "#ffffff", "#f472b6"];
+        this.addRimSpark(
+          physics.center.x + ex,
+          physics.center.y + ey,
+          vx,
+          vy,
+          colors[Math.floor(Math.random() * colors.length)],
+        );
+      }
+    }
+
+    // 3. Comic RCS Thruster Jets on outer flanks
+    // Left thruster at (-rOut, 0), Right thruster at (rOut, 0)
+    const thrusters = [
+      { x: -rOut, y: 0, plumeDirY: dir > 0 ? -1 : 1 },
+      { x: rOut, y: 0, plumeDirY: dir > 0 ? 1 : -1 },
+    ];
+
+    for (const th of thrusters) {
+      const flameLength = (16 + intensity * 28) * (isBoosting ? 1.5 : 1.0);
+      const flameWidth = (8 + intensity * 8) * (isBoosting ? 1.4 : 1.0);
+
+      ctx.save();
+      ctx.translate(th.x, th.y);
+
+      // Nozzle mount bracket
+      ctx.fillStyle = "#1e1b4b";
+      ctx.strokeStyle = "#38bdf8";
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.roundRect(-5, -6, 10, 12, 3);
+      ctx.fill();
+      ctx.stroke();
+
+      // Outer Flame (Neon Cyan or Orange)
+      ctx.fillStyle = isBoosting ? "#f59e0b" : "#38bdf8";
+      ctx.strokeStyle = "#1e1b4b";
+      ctx.lineWidth = 1.8;
+      ctx.beginPath();
+      ctx.moveTo(-flameWidth * 0.5, 0);
+      ctx.lineTo(flameWidth * 0.5, 0);
+      ctx.lineTo(0, th.plumeDirY * flameLength);
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+
+      // Inner Core Flame (Bright Yellow / White)
+      ctx.fillStyle = "#ffffff";
+      ctx.beginPath();
+      ctx.moveTo(-flameWidth * 0.25, 0);
+      ctx.lineTo(flameWidth * 0.25, 0);
+      ctx.lineTo(0, th.plumeDirY * flameLength * 0.65);
+      ctx.closePath();
+      ctx.fill();
+
+      // Puff smoke bubbles during boost
+      if (isBoosting && Math.random() > 0.4) {
+        this.addThrusterPuff(
+          physics.center.x + th.x,
+          physics.center.y + th.y + th.plumeDirY * (flameLength * 0.8),
+          (Math.random() - 0.5) * 20,
+          th.plumeDirY * 50,
+          5 + Math.random() * 4,
+          isBoosting ? "#fef08a" : "#e0f2fe",
+        );
+      }
+
+      ctx.restore();
+    }
+
     ctx.restore();
   }
 
@@ -1452,21 +1836,38 @@ export class GameRenderer {
       ctx.restore();
     }
 
-    // 2. Comic Pop Rings
+    // 2. Comic Pop Rings & Boost Shockwaves
     for (let i = this.popRings.length - 1; i >= 0; i--) {
       const r = this.popRings[i];
-      r.radius += dt * 80;
-      r.alpha -= dt * 2.2;
+      r.radius += dt * (r.speed || 80);
+      r.alpha -= dt * (r.fadeRate || 2.2);
       if (r.alpha <= 0 || r.radius >= r.radiusMax) {
         this.popRings.splice(i, 1);
         continue;
       }
       ctx.save();
       ctx.strokeStyle = r.color;
-      ctx.globalAlpha = r.alpha;
-      ctx.lineWidth = 3;
+      ctx.globalAlpha = Math.max(0, Math.min(1, r.alpha));
+      ctx.lineWidth = r.lineWidth || 3;
       ctx.beginPath();
       ctx.arc(r.x, r.y, r.radius, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    // 2b. Comic Thruster Smoke Puffs
+    for (let i = this.thrusterPuffs.length - 1; i >= 0; i--) {
+      const puff = this.thrusterPuffs[i];
+      const alpha = (puff.life / puff.maxLife) * 0.85;
+
+      ctx.save();
+      ctx.globalAlpha = Math.max(0, Math.min(1, alpha));
+      ctx.fillStyle = puff.color || "#ffffff";
+      ctx.strokeStyle = "#1e1b4b";
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.arc(puff.x, puff.y, puff.radius, 0, Math.PI * 2);
+      ctx.fill();
       ctx.stroke();
       ctx.restore();
     }

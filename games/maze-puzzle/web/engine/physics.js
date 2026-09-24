@@ -26,6 +26,8 @@ export class PhysicsEngine {
     this.dragSensitivity = 0.005;
     this.damping = 0.94;
     this.rcsThrusting = false;
+    this.rcsDirection = 0;
+    this.rcsBoostTimer = 0;
     this.lastRatchetAngle = 0;
 
     // Environmental Gravity (Gentle downward drift)
@@ -60,6 +62,7 @@ export class PhysicsEngine {
     this.onDebrisExploded = null;
     this.onGatePassed = null;
     this.onBumperHit = null;
+    this.onBoostTriggered = null;
   }
 
   initSector(sectorConfig, centerPos, blackHolePos) {
@@ -207,15 +210,26 @@ export class PhysicsEngine {
   }
 
   applyRcsBurst(direction = 1) {
-    this.angularVelocity += direction * 3.5;
+    this.angularVelocity += direction * 3.8;
     this.rcsThrusting = true;
-    this.audio.playSpinRatchet(1.5);
-    setTimeout(() => {
-      this.rcsThrusting = false;
-    }, 280);
+    this.rcsDirection = direction;
+    this.rcsBoostTimer = 0.42;
+    this.audio.playSpinRatchet(1.6);
+    if (this.onBoostTriggered) {
+      this.onBoostTriggered(direction);
+    }
   }
 
   update(dt) {
+    // 0. Update RCS Thruster Timer
+    if (this.rcsBoostTimer > 0) {
+      this.rcsBoostTimer = Math.max(0, this.rcsBoostTimer - dt);
+      if (this.rcsBoostTimer === 0) {
+        this.rcsThrusting = false;
+        this.rcsDirection = 0;
+      }
+    }
+
     // 1. Update Ring Rotation & Ratchet Sound Feedback
     const prevAngle = this.ringAngle;
     this.ringAngle += this.angularVelocity * dt;
