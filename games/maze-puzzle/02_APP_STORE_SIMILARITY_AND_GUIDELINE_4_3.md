@@ -5,6 +5,14 @@
 - **Document Target:** Legal & Product Strategy Archive
 - **Subject:** Apple App Store Review Guideline 4.3 ("Design: Spam / Copycat")
 - **Reference Baseline:** _Multi Maze 3D_, _Balls Out 3D_, _Split Balls 3D_, _Bounce and Collect_
+- **Companion Documents:**
+  - [`01_REFERENCE_GAME_ANALYSIS.md`](./01_REFERENCE_GAME_ANALYSIS.md) — Reference Deconstruction & Kinematics
+  - [`03_GAME_DESIGN_DOCUMENT.md`](./03_GAME_DESIGN_DOCUMENT.md) — Master Game Design Document
+  - [`04_TECHNICAL_ARCHITECTURE.md`](./04_TECHNICAL_ARCHITECTURE.md) — Technical & Viewport Engineering Architecture
+  - [`05_GAME_UI_UX_DESIGN_SPECIFICATION.md`](./05_GAME_UI_UX_DESIGN_SPECIFICATION.md) — UI/UX Design System & Touch Wireframes
+  - [`06_GAMEPLAY_SYSTEMS_AND_LEVEL_DESIGN.md`](./06_GAMEPLAY_SYSTEMS_AND_LEVEL_DESIGN.md) — Gameplay Systems & 50-Level Matrix
+  - [`07_AUDIO_DESIGN_SPECIFICATION.md`](./07_AUDIO_DESIGN_SPECIFICATION.md) — Audio Design & Web Audio DSP Synthesis
+  - [`CHANGELOG.md`](./CHANGELOG.md) — Semantic Version Milestone History
 
 ---
 

@@ -6,6 +6,14 @@
 - **Reference URL:** [App Store Link](https://apps.apple.com/us/app/multi-maze-3d/id1583461846)
 - **Primary Mechanics:** Rotational 3D Labyrinth, Rigid-Body Ball Physics, Dynamic Multiplier Gates, Funnel Collection Receptacle.
 - **Monetization Status in Target Build:** **Completely Stripped** (0 Ads, 0 IAPs, 0 Subscriptions). Retaining persistent progression (Daily Contracts, In-Game Token Economy, Cosmetic Customization, Achievements).
+- **Companion Documents:**
+  - [`02_APP_STORE_SIMILARITY_AND_GUIDELINE_4_3.md`](./02_APP_STORE_SIMILARITY_AND_GUIDELINE_4_3.md) — App Store Review Guideline 4.3 Shield
+  - [`03_GAME_DESIGN_DOCUMENT.md`](./03_GAME_DESIGN_DOCUMENT.md) — Master Game Design Document
+  - [`04_TECHNICAL_ARCHITECTURE.md`](./04_TECHNICAL_ARCHITECTURE.md) — Technical & Viewport Engineering Architecture
+  - [`05_GAME_UI_UX_DESIGN_SPECIFICATION.md`](./05_GAME_UI_UX_DESIGN_SPECIFICATION.md) — UI/UX Design System & Touch Wireframes
+  - [`06_GAMEPLAY_SYSTEMS_AND_LEVEL_DESIGN.md`](./06_GAMEPLAY_SYSTEMS_AND_LEVEL_DESIGN.md) — Gameplay Systems & 50-Level Matrix
+  - [`07_AUDIO_DESIGN_SPECIFICATION.md`](./07_AUDIO_DESIGN_SPECIFICATION.md) — Audio Design & Web Audio DSP Synthesis
+  - [`CHANGELOG.md`](./CHANGELOG.md) — Semantic Version Milestone History
 
 ---
 
@@ -34,6 +42,9 @@ flowchart TD
     L -- Yes --> M[Level Complete: Reward In-Game Tokens]
     L -- No --> N[Level Failed: Retry / Reset Sector]
 ```
+
+> [!NOTE]
+> **Orbital Salvage Evolution Note:** In our target implementation, the passive plastic collection cup from _Multi Maze 3D_ is transformed into **Nibbles the Micro-Singularity**—an active cartoon entity featuring physical event horizon gravitational attraction, dynamic eye tracking, gulping mouth animations, and a neon magnetic guide funnel (see [`03_GAME_DESIGN_DOCUMENT.md`](./03_GAME_DESIGN_DOCUMENT.md) Section 2 and [`04_TECHNICAL_ARCHITECTURE.md`](./04_TECHNICAL_ARCHITECTURE.md) Section 2.2).
 
 ### 1.2 Sensory Feedback & Satisfaction Hooks
 
