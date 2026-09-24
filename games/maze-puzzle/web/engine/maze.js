@@ -22,41 +22,64 @@ export class MazeLevelBuilder {
       return d;
     };
 
-    const MIN_CLEARANCE = 0.16 * Math.PI; // ~28.8 degrees minimum angular margin
+    const radOverlap = (min1, max1, min2, max2) => !(max1 <= min2 || min1 >= max2);
+
+    const MIN_CLEARANCE = 0.12 * Math.PI; // ~21.6 degrees clearance from dividers
+    const MIN_GATE_CLEARANCE = 0.18 * Math.PI; // ~32.4 degrees minimum separation between gates
     const gates = config.gates || [];
     const dividers = config.dividers || [];
     const pins = config.deflectorPins || [];
     const flaps = config.oneWayFlaps || [];
 
-    // 1. Resolve Gate-Divider overlaps using radial slot search
-    for (const gate of gates) {
+    // 1. Joint Radial Slot Search for each gate considering dividers, flaps, and other gates
+    for (let i = 0; i < gates.length; i++) {
+      const gate = gates[i];
       const gRMin = gate.rMin !== undefined ? gate.rMin : 85;
       const gRMax = gate.rMax !== undefined ? gate.rMax : 160;
 
-      let minD = 999;
-      for (const div of dividers) {
-        if (config.concentricRings && (gate.isInner !== div.isInner)) continue;
-        const dRMin = div.rMin !== undefined ? div.rMin : 85;
-        const dRMax = div.rMax !== undefined ? div.rMax : 160;
-        if (gRMax <= dRMin || gRMin >= dRMax) continue;
-        const diff = angDiff(gate.angle, div.angle);
-        if (diff < minD) minD = diff;
-      }
-
-      if (minD < MIN_CLEARANCE) {
-        let bestAng = gate.angle;
-        let bestDist = minD;
-        for (let delta = -0.4 * Math.PI; delta <= 0.4 * Math.PI; delta += 0.01 * Math.PI) {
-          const testAng = gate.angle + delta;
-          let testMin = 999;
-          for (const div of dividers) {
-            if (config.concentricRings && (gate.isInner !== div.isInner)) continue;
-            const dRMin = div.rMin !== undefined ? div.rMin : 85;
-            const dRMax = div.rMax !== undefined ? div.rMax : 160;
-            if (gRMax <= dRMin || gRMin >= dRMax) continue;
-            const diff = angDiff(testAng, div.angle);
-            if (diff < testMin) testMin = diff;
+      const calcClearance = (testAng) => {
+        let minD = 999;
+        // Dividers
+        for (const div of dividers) {
+          if (config.concentricRings && (gate.isInner !== div.isInner)) continue;
+          const dRMin = div.rMin !== undefined ? div.rMin : 85;
+          const dRMax = div.rMax !== undefined ? div.rMax : 160;
+          if (!radOverlap(gRMin, gRMax, dRMin, dRMax)) continue;
+          const diff = angDiff(testAng, div.angle);
+          if (diff < minD) minD = diff;
+        }
+        // Other gates on same radial track
+        for (let j = 0; j < gates.length; j++) {
+          if (i === j) continue;
+          const og = gates[j];
+          if (config.concentricRings && (gate.isInner !== og.isInner)) continue;
+          const oRMin = og.rMin !== undefined ? og.rMin : 85;
+          const oRMax = og.rMax !== undefined ? og.rMax : 160;
+          if (!radOverlap(gRMin, gRMax, oRMin, oRMax)) continue;
+          const diff = angDiff(testAng, og.angle);
+          if (diff < MIN_GATE_CLEARANCE && diff * 0.7 < minD) {
+            minD = diff * 0.7;
           }
+        }
+        // Flaps
+        for (const flap of flaps) {
+          if (config.concentricRings && (gate.isInner !== flap.isInner)) continue;
+          const fRMin = flap.rMin !== undefined ? flap.rMin : 85;
+          const fRMax = flap.rMax !== undefined ? flap.rMax : 160;
+          if (!radOverlap(gRMin, gRMax, fRMin, fRMax)) continue;
+          const diff = angDiff(testAng, flap.angle);
+          if (diff < minD) minD = diff;
+        }
+        return minD;
+      };
+
+      let curClearance = calcClearance(gate.angle);
+      if (curClearance < MIN_CLEARANCE) {
+        let bestAng = gate.angle;
+        let bestDist = curClearance;
+        for (let delta = -0.5 * Math.PI; delta <= 0.5 * Math.PI; delta += 0.01 * Math.PI) {
+          const testAng = gate.angle + delta;
+          const testMin = calcClearance(testAng);
           if (testMin > bestDist) {
             bestDist = testMin;
             bestAng = testAng;
@@ -66,7 +89,51 @@ export class MazeLevelBuilder {
       }
     }
 
-    // 2. Resolve Gate-Pin overlaps
+    // 2. Strict Gate-to-Gate Separation Pass
+    for (let pass = 0; pass < 3; pass++) {
+      for (let i = 0; i < gates.length; i++) {
+        for (let j = i + 1; j < gates.length; j++) {
+          const g1 = gates[i];
+          const g2 = gates[j];
+          if (config.concentricRings && g1.isInner !== g2.isInner) continue;
+          const r1Min = g1.rMin !== undefined ? g1.rMin : 85;
+          const r1Max = g1.rMax !== undefined ? g1.rMax : 160;
+          const r2Min = g2.rMin !== undefined ? g2.rMin : 85;
+          const r2Max = g2.rMax !== undefined ? g2.rMax : 160;
+          if (!radOverlap(r1Min, r1Max, r2Min, r2Max)) continue;
+
+          const diff = angDiff(g1.angle, g2.angle);
+          if (diff < MIN_GATE_CLEARANCE) {
+            let bestAng = g2.angle;
+            let bestDist = -1;
+            for (let dir of [1, -1]) {
+              for (let step = 0.04 * Math.PI; step <= 0.5 * Math.PI; step += 0.02 * Math.PI) {
+                const testAng = g1.angle + dir * (MIN_GATE_CLEARANCE + step);
+                let minDivD = 999;
+                for (const div of dividers) {
+                  if (config.concentricRings && (g2.isInner !== div.isInner)) continue;
+                  const dRMin = div.rMin !== undefined ? div.rMin : 85;
+                  const dRMax = div.rMax !== undefined ? div.rMax : 160;
+                  if (!radOverlap(r2Min, r2Max, dRMin, dRMax)) continue;
+                  const dDiff = angDiff(testAng, div.angle);
+                  if (dDiff < minDivD) minDivD = dDiff;
+                }
+                if (minDivD >= MIN_CLEARANCE) {
+                  const sep1 = angDiff(testAng, g1.angle);
+                  if (sep1 > bestDist) {
+                    bestDist = sep1;
+                    bestAng = testAng;
+                  }
+                }
+              }
+            }
+            g2.angle = bestAng;
+          }
+        }
+      }
+    }
+
+    // 3. Resolve Gate-Pin overlaps
     for (const pin of pins) {
       for (const gate of gates) {
         if (config.concentricRings && (pin.isInner !== gate.isInner)) continue;
@@ -87,25 +154,6 @@ export class MazeLevelBuilder {
             }
           }
           pin.angle = bestAng;
-        }
-      }
-    }
-
-    // 3. Resolve Gate-Flap overlaps
-    for (const flap of flaps) {
-      for (const gate of gates) {
-        if (config.concentricRings && (flap.isInner !== gate.isInner)) continue;
-        const gRMin = gate.rMin !== undefined ? gate.rMin : 85;
-        const gRMax = gate.rMax !== undefined ? gate.rMax : 160;
-        const fRMin = flap.rMin !== undefined ? flap.rMin : 85;
-        const fRMax = flap.rMax !== undefined ? flap.rMax : 160;
-        if (gRMax <= fRMin || gRMin >= fRMax) continue;
-
-        const diff = angDiff(flap.angle, gate.angle);
-        if (diff < MIN_CLEARANCE) {
-          const shift = (MIN_CLEARANCE - diff) + 0.02 * Math.PI;
-          const dir = norm(gate.angle) >= norm(flap.angle) ? 1 : -1;
-          gate.angle += dir * shift;
         }
       }
     }
@@ -208,28 +256,28 @@ export class MazeLevelBuilder {
     const initialDebrisCount = 10 + sub;
     const apertureAngle = Math.PI * (0.32 - sub * 0.005);
 
-    // Dividers with ample clearance from gates
+    // Dividers with staggered switchback shelves that catch sliding debris
     const dividers = [
       { rMin: 85, rMax: 155, angle: -Math.PI * 0.5 }, // Top barrier separating left/right
-      { rMin: 115, rMax: 155, angle: 0 },
-      { rMin: 85, rMax: 125, angle: Math.PI * (0.32 + sub * 0.005) },
-      { rMin: 115, rMax: 155, angle: Math.PI },
-      { rMin: 85, rMax: 125, angle: Math.PI * (0.68 - sub * 0.005) },
+      { rMin: 85, rMax: 125, angle: 0 },              // Right retaining shelf (catches and holds right-sliding debris)
+      { rMin: 115, rMax: 155, angle: Math.PI * (0.32 + sub * 0.005) }, // Lower right aperture baffle
+      { rMin: 85, rMax: 125, angle: Math.PI },        // Left retaining shelf (catches and holds left-sliding debris)
+      { rMin: 115, rMax: 155, angle: Math.PI * (0.68 - sub * 0.005) }, // Lower left aperture baffle
     ];
 
     if (sub >= 4) {
-      dividers.push({ rMin: 120, rMax: 155, angle: -Math.PI * 0.28 });
+      dividers.push({ rMin: 115, rMax: 155, angle: -Math.PI * 0.28 });
     }
     if (sub >= 7) {
-      dividers.push({ rMin: 120, rMax: 155, angle: Math.PI * 1.28 });
+      dividers.push({ rMin: 115, rMax: 155, angle: Math.PI * 1.28 });
     }
 
-    // Well-spaced gates with >= 0.16pi clearance from all walls
+    // Well-spaced gates with ample clearance from all walls and hoppers
     const gates = [
       {
         type: "MULTIPLY",
         value: 2,
-        angle: -Math.PI * 0.14,
+        angle: -Math.PI * 0.12,
         rMin: 85,
         rMax: 155,
         color: "#facc15",
@@ -237,7 +285,7 @@ export class MazeLevelBuilder {
       {
         type: "ADD",
         value: 3 + Math.floor(sub * 0.5),
-        angle: Math.PI * 0.16,
+        angle: Math.PI * 0.20,
         rMin: 85,
         rMax: 155,
         color: "#38bdf8",
@@ -245,7 +293,7 @@ export class MazeLevelBuilder {
       {
         type: "MULTIPLY",
         value: sub >= 5 ? 3 : 2,
-        angle: Math.PI * 0.84,
+        angle: Math.PI * 0.85,
         rMin: 85,
         rMax: 155,
         color: "#f472b6",
@@ -302,9 +350,9 @@ export class MazeLevelBuilder {
       {
         type: "MULTIPLY",
         value: 3,
-        angle: -Math.PI * 0.32,
-        rMin: 86,
-        rMax: 122,
+        angle: -Math.PI * 0.35,
+        rMin: 120,
+        rMax: 162,
         color: "#f472b6",
       },
       {
@@ -312,13 +360,13 @@ export class MazeLevelBuilder {
         value: 5 + Math.floor(sub * 0.6),
         angle: -Math.PI * 0.04,
         rMin: 86,
-        rMax: 162,
+        rMax: 125,
         color: "#38bdf8",
       },
       {
         type: "MULTIPLY",
         value: 2,
-        angle: Math.PI * 0.25,
+        angle: Math.PI * 0.27,
         rMin: 120,
         rMax: 162,
         color: "#4ade80",
@@ -607,9 +655,9 @@ export class MazeLevelBuilder {
       gates.push({
         type: "BOOST",
         value: 160,
-        angle: Math.PI * 0.54,
+        angle: Math.PI * 1.40,
         rMin: 92,
-        rMax: 130, // Inner lane boost
+        rMax: 130, // Inner return lane boost
         color: "#84cc16",
       });
     }

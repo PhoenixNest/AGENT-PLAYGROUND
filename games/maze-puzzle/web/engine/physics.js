@@ -63,6 +63,7 @@ export class PhysicsEngine {
     this.onGatePassed = null;
     this.onBumperHit = null;
     this.onBoostTriggered = null;
+    this.onDebrisSpilled = null;
   }
 
   initSector(sectorConfig, centerPos, blackHolePos) {
@@ -198,10 +199,32 @@ export class PhysicsEngine {
       state: "IN_RING", // IN_RING | FALLING | INGESTING | REMOVED
       ingestProgress: 0,
       sparkTrails: [],
+      gateCooldown: 0,
     };
 
     this.debrisList.push(debris);
     return debris;
+  }
+
+  spawnBackupScrap(count = 8) {
+    const types = ["titanium", "solar", "titanium"];
+    for (let i = 0; i < count; i++) {
+      const type = types[i % types.length];
+      const spawnAngle = -Math.PI * 0.5 + (Math.random() - 0.5) * 0.8;
+      const spawnRadius =
+        this.innerRadius + 15 + Math.random() * (this.ringRadius - this.innerRadius - 30);
+      const x = this.center.x + Math.cos(spawnAngle) * spawnRadius;
+      const y = this.center.y + Math.sin(spawnAngle) * spawnRadius;
+
+      this.spawnDebris({
+        x,
+        y,
+        vx: (Math.random() - 0.5) * 40,
+        vy: (Math.random() - 0.5) * 40,
+        type,
+        weight: 1,
+      });
+    }
   }
 
   applyInputDrag(deltaX) {
@@ -354,6 +377,18 @@ export class PhysicsEngine {
         d.vy += tangY * speedDiff * dt * 1.4;
       }
 
+      // Update gate pass cooldown
+      if (d.gateCooldown > 0) {
+        d.gateCooldown = Math.max(0, d.gateCooldown - dt);
+      }
+
+      // Soft cap max velocity to prevent hyper-velocity explosive ejection
+      const currentSpeed = Math.hypot(d.vx, d.vy);
+      if (currentSpeed > 460) {
+        d.vx = (d.vx / currentSpeed) * 460;
+        d.vy = (d.vy / currentSpeed) * 460;
+      }
+
       // Integrate velocity to position
       d.x += d.vx * dt;
       d.y += d.vy * dt;
@@ -364,6 +399,19 @@ export class PhysicsEngine {
 
       // Boundary Collisions
       this.resolveRingCollisions(d, worldApertureStart, worldApertureEnd);
+
+      if (d.state === "FALLING") {
+        this.resolveMagneticFunnel(d, dt);
+
+        // Despawn off-screen or far past Nibbles
+        if (d.y > this.blackHole.y + 140 || d.x < -60 || d.x > 500) {
+          d.state = "REMOVED";
+          if (this.onDebrisSpilled) {
+            this.onDebrisSpilled(d);
+          }
+          continue;
+        }
+      }
 
       // Radial Dividers, One-Way Flappers, Track Walls, Bumpers & Shredder Gates
       if (d.state === "IN_RING") {
@@ -377,6 +425,37 @@ export class PhysicsEngine {
 
     // Inter-debris collisions
     this.resolveDebrisCollisions();
+  }
+
+  resolveMagneticFunnel(d, dt) {
+    const topY = this.center.y + this.ringRadius - 15;
+    const bottomY = this.blackHole.y;
+
+    if (d.y >= topY && d.y <= bottomY + 25) {
+      const t = Math.max(0, Math.min(1, (d.y - topY) / Math.max(1, bottomY - topY)));
+      const halfWidth = 95 * (1 - t) + 46 * t;
+      const centerX = this.blackHole.x;
+
+      // Magnetic centering tractor pull toward Nibbles central axis
+      const dx = centerX - d.x;
+      d.vx += dx * 16 * dt;
+
+      // Physical elastic rails (funnel containment)
+      const leftRail = centerX - halfWidth + d.radius;
+      const rightRail = centerX + halfWidth - d.radius;
+
+      if (d.x < leftRail) {
+        d.x = leftRail;
+        if (d.vx < 0) {
+          d.vx = -d.vx * 0.45;
+        }
+      } else if (d.x > rightRail) {
+        d.x = rightRail;
+        if (d.vx > 0) {
+          d.vx = -d.vx * 0.45;
+        }
+      }
+    }
   }
 
   updateIngestion(d, dt) {
@@ -394,6 +473,8 @@ export class PhysicsEngine {
   }
 
   resolveRingCollisions(d, apStart, apEnd) {
+    if (d.state !== "IN_RING") return;
+
     const dx = d.x - this.center.x;
     const dy = d.y - this.center.y;
     const dist = Math.hypot(dx, dy);
@@ -406,7 +487,12 @@ export class PhysicsEngine {
     if (dist > this.ringRadius - d.radius) {
       if (isOverAperture) {
         // Cleanly exiting through aperture into void toward Nibbles!
-        d.state = "FALLING";
+        if (d.state !== "FALLING") {
+          d.state = "FALLING";
+          // Aperture inertial dampers: damp horizontal spray from fast spinning ring
+          d.vx *= 0.35;
+          d.vy = Math.max(d.vy, 95);
+        }
       } else {
         // Push inside outer ring
         const overlap = dist - (this.ringRadius - d.radius);
@@ -669,6 +755,8 @@ export class PhysicsEngine {
   }
 
   checkMultiplierGates(d) {
+    if (d.gateCooldown > 0) return;
+
     const dx = d.x - this.center.x;
     const dy = d.y - this.center.y;
     const dist = Math.hypot(dx, dy);
@@ -696,7 +784,23 @@ export class PhysicsEngine {
         dist >= gate.rMin - d.radius &&
         dist <= gate.rMax + d.radius
       ) {
-        gate.processedDebris.add(d.id);
+        d.gateCooldown = 0.22;
+
+        const syncAdjacentGates = (debrisId) => {
+          gate.processedDebris.add(debrisId);
+          for (const otherGate of this.gates) {
+            if (otherGate === gate) continue;
+            if (this.concentricRings && otherGate.isInner !== gate.isInner) continue;
+            let diff = Math.abs(this.normalizeAngle(otherGate.angle) - this.normalizeAngle(gate.angle));
+            if (diff > Math.PI) diff = Math.PI * 2 - diff;
+            if (diff < 0.16 * Math.PI) {
+              otherGate.processedDebris.add(debrisId);
+            }
+          }
+        };
+
+        syncAdjacentGates(d.id);
+
         if (this.audio && this.audio.playGatePass) {
           this.audio.playGatePass(gate.type, gate.value);
         }
@@ -724,19 +828,29 @@ export class PhysicsEngine {
           newCount = gate.value;
         }
 
+        const span = Math.min(24, (gate.rMax - gate.rMin) * 0.35);
+        const worldGateAngle = ringRot + gateAngle;
+        const nx = Math.cos(worldGateAngle);
+        const ny = Math.sin(worldGateAngle);
+        const tx = -ny;
+        const ty = nx;
+
         for (let k = 0; k < newCount; k++) {
-          const jitterX = (Math.random() - 0.5) * d.radius * 0.8;
-          const jitterY = (Math.random() - 0.5) * d.radius * 0.8;
+          const radialOffset = newCount > 1
+            ? ((k / (newCount - 1)) - 0.5) * span
+            : 0;
+          const jitterTang = (Math.random() - 0.5) * d.radius * 0.4;
           const spawned = this.spawnDebris({
-            x: d.x + jitterX,
-            y: d.y + jitterY,
-            vx: d.vx * (0.85 + Math.random() * 0.3) + (Math.random() - 0.5) * 15,
-            vy: d.vy * (0.85 + Math.random() * 0.3) + (Math.random() - 0.5) * 15,
+            x: d.x + nx * radialOffset + tx * jitterTang,
+            y: d.y + ny * radialOffset + ty * jitterTang,
+            vx: d.vx * (0.85 + Math.random() * 0.25) + (Math.random() - 0.5) * 12,
+            vy: d.vy * (0.85 + Math.random() * 0.25) + (Math.random() - 0.5) * 12,
             type: d.type,
             weight: 1,
           });
           if (spawned) {
-            gate.processedDebris.add(spawned.id);
+            spawned.gateCooldown = 0.25;
+            syncAdjacentGates(spawned.id);
           }
         }
       }
@@ -784,20 +898,21 @@ export class PhysicsEngine {
         const minDist = a.radius + b.radius;
 
         if (dist < minDist && dist > 0.001) {
-          const overlap = minDist - dist;
+          const overlap = Math.min(minDist - dist, Math.min(a.radius, b.radius) * 0.75);
           const nx = dx / dist;
           const ny = dy / dist;
 
-          // Push apart
+          // Smoothly push apart
           a.x -= nx * overlap * 0.5;
           a.y -= ny * overlap * 0.5;
           b.x += nx * overlap * 0.5;
           b.y += ny * overlap * 0.5;
 
-          // Impulse exchange
+          // Impulse exchange with clamp to prevent explosive repulsion
           const kx = a.vx - b.vx;
           const ky = a.vy - b.vy;
-          const p = (2 * (nx * kx + ny * ky)) / (a.mass + b.mass);
+          const rawP = (2 * (nx * kx + ny * ky)) / (a.mass + b.mass);
+          const p = Math.min(38, Math.max(0, rawP));
 
           if (p > 0) {
             a.vx -= p * b.mass * nx * 0.8;
