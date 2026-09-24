@@ -145,7 +145,7 @@
           <button class="dock-tab-btn" id="btn-open-shop-page" title="Costumes & Hats">
             <span class="dock-tab-icon">🎁</span>
             <span class="dock-tab-label">SHOP</span>
-            <span class="dock-badge dock-badge-free">FREE</span>
+            <span class="dock-badge dock-badge-free" id="shop-dock-badge">FREE</span>
           </button>
           <button class="dock-tab-btn" id="btn-open-trophies-page" title="Trophies & Badges">
             <span class="dock-tab-icon">🏆</span>
@@ -224,12 +224,27 @@
           </div>
         </div>
         <div class="page-scroll-body">
+          <!-- Daily Free Janitor Stipend Box -->
+          <div class="daily-gift-banner" id="daily-gift-banner">
+            <div class="gift-banner-icon-box">
+              <span class="gift-banner-icon" id="gift-banner-icon">🎁</span>
+            </div>
+            <div class="gift-banner-info">
+              <div class="gift-banner-tag">FREE DAILY STIPEND</div>
+              <div class="gift-banner-title" id="gift-banner-title">Janitor Care Package!</div>
+              <div class="gift-banner-desc" id="gift-banner-desc">Claim your free daily +100 🪙 allowance.</div>
+            </div>
+            <button class="btn-cartoon-primary gift-claim-btn" id="btn-claim-daily-gift">
+              Claim +100 🪙
+            </button>
+          </div>
+
           <p
             style="
               font-size: 12px;
-              color: rgba(255, 255, 255, 0.8);
+              color: rgba(255, 255, 255, 0.7);
               text-align: center;
-              margin-bottom: 2px;
+              margin: 4px 0 2px;
             "
           >
             100% Free! Unlock cute costumes with your earned recycling coins 🪙
