@@ -973,7 +973,7 @@ class OrbitalApp {
       tabBtn.className = `world-tab-btn ${
         this.selectedWorldIndex === w.worldIndex ? "active" : ""
       }`;
-      tabBtn.textContent = `${w.icon} W${w.worldIndex}`;
+      tabBtn.innerHTML = `<span>${w.icon}</span> <span>${w.levelRange[0]}-${w.levelRange[1]}</span>`;
       tabBtn.addEventListener("click", () => {
         this.selectedWorldIndex = w.worldIndex;
         this.renderSectorsPage();
