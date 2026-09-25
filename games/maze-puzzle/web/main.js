@@ -74,6 +74,7 @@ class OrbitalApp {
       "home",
       "game",
       "maps",
+      "daily",
       "shop",
       "achievements",
       "settings",
@@ -98,6 +99,8 @@ class OrbitalApp {
       this.updateHomeView();
     } else if (pageId === "maps") {
       this.renderSectorsPage();
+    } else if (pageId === "daily") {
+      this.renderDailyPage();
     } else if (pageId === "shop") {
       this.renderStorePage();
     } else if (pageId === "achievements") {
@@ -148,6 +151,7 @@ class OrbitalApp {
       "home-credits-val",
       "hud-credits-val",
       "maps-credits-val",
+      "daily-credits-val",
       "shop-credits-val",
       "ach-credits-val",
     ].forEach((id) => {
@@ -155,6 +159,7 @@ class OrbitalApp {
       if (el) el.textContent = credits;
     });
     this.updateShopDockBadge();
+    this.updateDailyDockBadge();
   }
 
   updateShopDockBadge() {
@@ -169,9 +174,35 @@ class OrbitalApp {
     }
   }
 
+  updateDailyDockBadge() {
+    const badge = document.getElementById("dock-daily-badge");
+    if (!badge) return;
+    const shifts = this.economy.getDailyShifts();
+    const completedCount = shifts.filter((s) => s.isCompleted).length;
+    if (completedCount === 3) {
+      if (this.economy.canClaimDailyMasterBonus()) {
+        badge.textContent = "GIFT";
+        badge.className = "dock-badge dock-badge-free";
+        badge.style.background = "";
+        badge.style.color = "";
+      } else {
+        badge.textContent = "✓";
+        badge.className = "dock-badge";
+        badge.style.background = "#22c55e";
+        badge.style.color = "#ffffff";
+      }
+    } else {
+      badge.textContent = `${3 - completedCount} NEW`;
+      badge.className = "dock-badge dock-badge-hot";
+      badge.style.background = "";
+      badge.style.color = "";
+    }
+  }
+
   updateHomeView() {
     this.updateAllCreditDisplays();
     this.updateShopDockBadge();
+    this.updateDailyDockBadge();
 
     // 1. Mission Info
     const sec = this.activeSector || this.sectors[0];
@@ -418,8 +449,7 @@ class OrbitalApp {
     if (btnDailyShift) {
       btnDailyShift.addEventListener("click", () => {
         this.audio.publicInit();
-        this.selectedWorldIndex = "daily";
-        this.showPage("maps");
+        this.showPage("daily");
       });
     }
 
@@ -440,6 +470,8 @@ class OrbitalApp {
     // 5. Back to Home Buttons from Sub-Pages
     const backMaps = document.getElementById("btn-back-maps");
     if (backMaps) backMaps.addEventListener("click", () => this.showPage("home"));
+    const backDaily = document.getElementById("btn-back-daily");
+    if (backDaily) backDaily.addEventListener("click", () => this.showPage("home"));
     const backShop = document.getElementById("btn-back-shop");
     if (backShop) backShop.addEventListener("click", () => this.showPage("home"));
     const backAch = document.getElementById("btn-back-achievements");
@@ -804,8 +836,22 @@ class OrbitalApp {
   }
 
   nextSector() {
-    if (this.activeSector.isDaily) {
-      this.loadSector(this.sectors[0]);
+    if (this.activeSector && this.activeSector.isDaily) {
+      const shifts = this.economy.getDailyShifts();
+      const currentTier = this.activeSector.dailyTier;
+      let nextTier = null;
+      if (currentTier === "bronze") {
+        nextTier = shifts.find((s) => s.tier === "silver");
+      } else if (currentTier === "silver") {
+        nextTier = shifts.find((s) => s.tier === "gold");
+      }
+
+      if (nextTier) {
+        const sector = MazeLevelBuilder.buildDailyShift(nextTier);
+        this.loadSector(sector);
+      } else {
+        this.showPage("daily");
+      }
       return;
     }
     this.currentSectorIndex =
@@ -828,10 +874,22 @@ class OrbitalApp {
       this.economy.recordSectorCompleted(this.activeSector.id);
     }
 
-    const newlyUnlocked = this.economy.recordContractComplete(!!this.activeSector.isDaily);
+    const isDaily = !!(this.activeSector && this.activeSector.isDaily);
+    const dailyTier = this.activeSector ? this.activeSector.dailyTier || "silver" : "silver";
+    const newlyUnlocked = this.economy.recordContractComplete(isDaily, dailyTier);
     newlyUnlocked.forEach((ach) => {
       this.showToast(`🏆 Trophy: ${ach.title} (+${ach.reward} 🪙)`);
     });
+
+    if (isDaily) {
+      const shifts = this.economy.getDailyShifts();
+      const completedCount = shifts.filter((s) => s.isCompleted).length;
+      if (completedCount === 3 && this.economy.canClaimDailyMasterBonus()) {
+        setTimeout(() => {
+          this.showToast("🎉 All 3 Daily Shifts Cleared! Claim Master Bonus in Daily Tab! 🏆");
+        }, 1200);
+      }
+    }
 
     document.getElementById("debrief-mass-val").textContent = `${this.collectedMass} kg`;
     document.getElementById("debrief-credits-val").textContent = `+${totalPayout} 🪙`;
@@ -923,66 +981,42 @@ class OrbitalApp {
       tabsRow.appendChild(tabBtn);
     });
 
-    const dailyTab = document.createElement("button");
-    dailyTab.className = `world-tab-btn ${
-      this.selectedWorldIndex === "daily" ? "active" : ""
-    }`;
-    dailyTab.textContent = "📅 Daily Shift";
-    dailyTab.addEventListener("click", () => {
-      this.selectedWorldIndex = "daily";
-      this.renderSectorsPage();
-    });
-    tabsRow.appendChild(dailyTab);
     container.appendChild(tabsRow);
 
-    if (this.selectedWorldIndex === "daily") {
-      const daily = this.economy.getDailyShiftInfo();
-      const dailyCard = document.createElement("div");
-      dailyCard.className = "sector-card";
-      dailyCard.style.borderColor = "var(--yellow-main)";
-
-      dailyCard.innerHTML = `
-        <div class="card-title-row">
-          <span class="card-title" style="color:var(--yellow-main);">★ ${daily.title}</span>
-          <span style="font-size:11px; color:var(--yellow-main); font-weight:800;">${daily.isCompleted ? "COMPLETED" : "TODAY"}</span>
-        </div>
-        <div class="card-desc">${daily.hazardModifier}</div>
-        <div class="card-footer">
-          <span class="badge-cost">+${daily.rewardCredits} 🪙 Bounty</span>
-          <button class="btn-cartoon-primary" id="btn-play-daily">
-            ${daily.isCompleted ? "Play Again" : "Start Shift ▶"}
-          </button>
-        </div>
-      `;
-      container.appendChild(dailyCard);
-
-      dailyCard.querySelector("#btn-play-daily").addEventListener("click", () => {
-        const sector = MazeLevelBuilder.buildDailyShift(daily);
-        this.loadSector(sector);
-        this.showPage("game");
-      });
-      return;
+    if (typeof this.selectedWorldIndex !== "number" || this.selectedWorldIndex < 1 || this.selectedWorldIndex > 5) {
+      this.selectedWorldIndex = 1;
     }
 
     const currentWorld =
       this.worlds.find((w) => w.worldIndex === this.selectedWorldIndex) ||
       this.worlds[0];
 
+    const [startLvl, endLvl] = currentWorld.levelRange;
+    const completedSectors = this.economy.profile.completedSectors || [];
+    let worldCompletedCount = 0;
+    for (let l = startLvl; l <= endLvl; l++) {
+      const sec = this.sectors[l - 1];
+      if (sec && completedSectors.includes(sec.id)) {
+        worldCompletedCount++;
+      }
+    }
+    const worldTotalCount = endLvl - startLvl + 1;
+
     const banner = document.createElement("div");
     banner.className = "world-banner-card";
     banner.innerHTML = `
-      <div style="font-size: 32px;">${currentWorld.icon}</div>
+      <div class="world-banner-icon-box">${currentWorld.icon}</div>
       <div class="world-banner-info">
-        <h3>${currentWorld.title || currentWorld.name}</h3>
-        <p>${currentWorld.tagline} • Levels ${currentWorld.levelRange[0]}-${currentWorld.levelRange[1]}</p>
+        <div class="world-banner-title">${currentWorld.title || currentWorld.name}</div>
+        <div class="world-banner-desc">${currentWorld.tagline}</div>
       </div>
+      <div class="world-banner-progress">⭐ ${worldCompletedCount}/${worldTotalCount}</div>
     `;
     container.appendChild(banner);
 
     const grid = document.createElement("div");
     grid.className = "level-grid-50";
 
-    const [startLvl, endLvl] = currentWorld.levelRange;
     for (let l = startLvl; l <= endLvl; l++) {
       const secIdx = l - 1;
       const sec = this.sectors[secIdx];
@@ -1012,6 +1046,141 @@ class OrbitalApp {
     }
 
     container.appendChild(grid);
+  }
+
+  /* =========================================================
+     (4b) Dedicated Daily Operations Page
+     ========================================================= */
+  getDailyResetCountdown() {
+    const now = new Date();
+    const tomorrow = new Date(now);
+    tomorrow.setHours(24, 0, 0, 0);
+    const diff = tomorrow - now;
+    const hours = Math.floor(diff / (1000 * 60 * 60));
+    const mins = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+    return `Resets in ${hours}h ${mins}m`;
+  }
+
+  renderDailyPage() {
+    const container = document.getElementById("daily-page-container");
+    if (!container) return;
+    container.innerHTML = "";
+
+    const shifts = this.economy.getDailyShifts();
+    const completedCount = shifts.filter((s) => s.isCompleted).length;
+    const canClaimMaster = this.economy.canClaimDailyMasterBonus();
+    const isMasterClaimed = this.economy.isDailyMasterClaimed();
+    const resetTime = this.getDailyResetCountdown();
+
+    // 1. Daily Operations Header Banner & Master Bonus Container
+    const hubBanner = document.createElement("div");
+    hubBanner.className = "daily-hub-banner";
+    hubBanner.innerHTML = `
+      <div class="daily-hub-header">
+        <div class="daily-hub-title"><span>📅</span> DAILY OPERATIONS</div>
+        <div style="display:flex; gap:6px; align-items:center;">
+          <span style="font-size:10.5px; color:rgba(255,255,255,0.75); background:rgba(255,255,255,0.1); padding:2px 8px; border-radius:999px;">⏰ ${resetTime}</span>
+          <div class="daily-hub-pill">${completedCount} / 3 CLEARED</div>
+        </div>
+      </div>
+      <div class="daily-progress-container">
+        <div style="display:flex; justify-content:space-between; font-size:10px; font-weight:800; color:rgba(255,255,255,0.7); margin-bottom:5px; letter-spacing:0.3px;">
+          <span style="color:${shifts[0].isCompleted ? '#4ade80' : 'rgba(255,255,255,0.7)'}">🥉 BRONZE ${shifts[0].isCompleted ? '✓' : ''}</span>
+          <span style="color:${shifts[1].isCompleted ? '#4ade80' : 'rgba(255,255,255,0.7)'}">🥈 SILVER ${shifts[1].isCompleted ? '✓' : ''}</span>
+          <span style="color:${shifts[2].isCompleted ? '#4ade80' : 'rgba(255,255,255,0.7)'}">🥇 GOLD ${shifts[2].isCompleted ? '✓' : ''}</span>
+        </div>
+        <div class="daily-progress-track">
+          <div class="daily-progress-fill" style="width: ${(completedCount / 3) * 100}%"></div>
+        </div>
+      </div>
+      <div class="daily-master-box ${canClaimMaster ? "unlocked" : isMasterClaimed ? "claimed" : ""}" id="daily-master-box">
+        <div class="daily-master-info">
+          <div class="daily-master-icon">${isMasterClaimed ? "✨" : canClaimMaster ? "🎁" : "🔒"}</div>
+          <div>
+            <div class="daily-master-label">Master All-Clear Bounty</div>
+            <div class="daily-master-sub">
+              ${
+                isMasterClaimed
+                  ? "Bonus claimed today! Refreshes tomorrow."
+                  : canClaimMaster
+                  ? "All 3 shifts completed! Claim your reward!"
+                  : "Complete all 3 daily shifts to unlock +300 🪙"
+              }
+            </div>
+          </div>
+        </div>
+        ${
+          canClaimMaster
+            ? `<button class="btn-cartoon-primary" id="btn-claim-master-bonus" style="padding: 6px 14px; white-space: nowrap;">Claim +300 🪙</button>`
+            : isMasterClaimed
+            ? `<span style="font-size: 11px; font-weight: 800; color: #4ade80;">CLAIMED ✓</span>`
+            : `<span class="badge-cost" style="opacity: 0.6; font-size: 11px;">+300 🪙</span>`
+        }
+      </div>
+    `;
+    container.appendChild(hubBanner);
+
+    if (canClaimMaster) {
+      const claimBtn = hubBanner.querySelector("#btn-claim-master-bonus");
+      if (claimBtn) {
+        claimBtn.addEventListener("click", () => {
+          if (this.economy.claimDailyMasterBonus(300)) {
+            try {
+              this.audio.publicInit();
+              this.audio.playBoosterPass();
+            } catch (e) {}
+            this.triggerHaptic(50);
+            this.updateAllCreditDisplays();
+            this.showToast("🏆 Claimed +300 🪙 Daily Master Bonus!");
+            this.renderDailyPage();
+          }
+        });
+      }
+    }
+
+    // 2. Render 3 Tier Shift Cards
+    shifts.forEach((shift) => {
+      const card = document.createElement("div");
+      card.className = "sector-card daily-shift-card";
+      card.style.borderColor = shift.themeColor;
+      card.style.background = shift.isCompleted
+        ? "rgba(255, 255, 255, 0.04)"
+        : "rgba(255, 255, 255, 0.08)";
+
+      card.innerHTML = `
+        <div class="card-title-row">
+          <span class="daily-tier-tag" style="background: ${shift.themeColor}25; color: ${shift.themeColor}; border: 1.5px solid ${shift.themeColor};">
+            ${shift.tierBadge}
+          </span>
+          <span style="font-size:11px; font-weight:800; color: ${shift.isCompleted ? "#4ade80" : "var(--yellow-main);"}">
+            ${shift.isCompleted ? "CLEARED ✓" : "TODAY"}
+          </span>
+        </div>
+        <div class="card-title" style="font-size:14.5px; margin-top:2px;">
+          ${shift.title}
+        </div>
+        <div class="daily-hazard-chip">
+          <span>⚠️</span>
+          <span>${shift.hazardModifier}</span>
+        </div>
+        <div class="card-footer">
+          <div style="display:flex; gap:8px; align-items:center;">
+            <span class="badge-cost">+${shift.rewardCredits} 🪙</span>
+            <span style="font-size:11px; color:rgba(255,255,255,0.6);">Goal: ${shift.quota} kg</span>
+          </div>
+          <button class="btn-cartoon-primary btn-play-daily-tier" style="${shift.isCompleted ? "background:rgba(255,255,255,0.2); color:#fff;" : ""}">
+            ${shift.isCompleted ? "Play Again" : "Start Shift ▶"}
+          </button>
+        </div>
+      `;
+      container.appendChild(card);
+
+      card.querySelector(".btn-play-daily-tier").addEventListener("click", () => {
+        const sector = MazeLevelBuilder.buildDailyShift(shift);
+        this.loadSector(sector);
+        this.showPage("game");
+      });
+    });
   }
 
   /* =========================================================

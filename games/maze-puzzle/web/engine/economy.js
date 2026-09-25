@@ -179,6 +179,8 @@ export class EconomyManager {
       completedSectors: [],
       dailyShiftCompletedToday: false,
       lastDailyShiftDate: "",
+      completedDailyTiers: [],
+      dailyMasterClaimedDate: "",
       lastDailyGiftDate: "",
     };
   }
@@ -210,6 +212,13 @@ export class EconomyManager {
       if (raw) {
         const parsed = JSON.parse(raw);
         if (!parsed.completedSectors) parsed.completedSectors = [];
+        if (!parsed.completedDailyTiers) parsed.completedDailyTiers = [];
+        if (!parsed.dailyMasterClaimedDate) parsed.dailyMasterClaimedDate = "";
+        const today = new Date().toISOString().slice(0, 10);
+        if (parsed.lastDailyShiftDate !== today) {
+          parsed.completedDailyTiers = [];
+          parsed.dailyShiftCompletedToday = false;
+        }
         if (!parsed.settings) {
           parsed.settings = {
             soundEnabled: true,
@@ -301,15 +310,46 @@ export class EconomyManager {
     return this.checkAchievements();
   }
 
-  recordContractComplete(isDaily = false) {
+  recordContractComplete(isDaily = false, tier = "silver") {
     this.profile.careerContracts++;
     if (isDaily) {
       const today = new Date().toISOString().slice(0, 10);
-      this.profile.lastDailyShiftDate = today;
+      if (this.profile.lastDailyShiftDate !== today) {
+        this.profile.lastDailyShiftDate = today;
+        this.profile.completedDailyTiers = [];
+        this.profile.dailyMasterClaimedDate = "";
+      }
+      if (!this.profile.completedDailyTiers) {
+        this.profile.completedDailyTiers = [];
+      }
+      if (tier && !this.profile.completedDailyTiers.includes(tier)) {
+        this.profile.completedDailyTiers.push(tier);
+      }
       this.profile.dailyShiftCompletedToday = true;
     }
     this.saveProfile();
     return this.checkAchievements();
+  }
+
+  canClaimDailyMasterBonus() {
+    const today = new Date().toISOString().slice(0, 10);
+    const shifts = this.getDailyShifts();
+    const allCompleted = shifts.length > 0 && shifts.every((s) => s.isCompleted);
+    return allCompleted && this.profile.dailyMasterClaimedDate !== today;
+  }
+
+  isDailyMasterClaimed() {
+    const today = new Date().toISOString().slice(0, 10);
+    return this.profile.dailyMasterClaimedDate === today;
+  }
+
+  claimDailyMasterBonus(amount = 300) {
+    if (!this.canClaimDailyMasterBonus()) return false;
+    const today = new Date().toISOString().slice(0, 10);
+    this.profile.dailyMasterClaimedDate = today;
+    this.profile.credits += amount;
+    this.saveProfile();
+    return true;
   }
 
   checkAchievements() {
@@ -342,9 +382,12 @@ export class EconomyManager {
     return newlyUnlocked;
   }
 
-  getDailyShiftInfo() {
+  getDailyShifts() {
     const today = new Date().toISOString().slice(0, 10);
-    const isDone = this.profile.lastDailyShiftDate === today;
+    const completedTiers =
+      this.profile.lastDailyShiftDate === today
+        ? this.profile.completedDailyTiers || []
+        : [];
 
     let seed = 0;
     for (let i = 0; i < today.length; i++) {
@@ -357,17 +400,62 @@ export class EconomyManager {
       "Double Sprinkles: Bonus coins for sweet recycling!",
       "Snack Attack: Nibbles is extra hungry today!",
     ];
-    const mod = funModifiers[seed % funModifiers.length];
 
-    return {
-      date: today,
-      isCompleted: isDone,
-      title: `Daily Trash Fiesta`,
-      sectorCode: `MAP-${(seed % 89) + 10}`,
-      quota: 40 + (seed % 35),
-      rewardCredits: 350 + (seed % 200),
-      hazardModifier: mod,
-      seed: seed,
-    };
+    const modBronze =
+      "Calm Orbit Sweep: Gentle centrifugal speed, wide gates & easy flow.";
+    const modSilver = funModifiers[seed % funModifiers.length];
+    const modGold =
+      "Cosmic Vortex Overdrive: High-density debris cloud & dual shredder gates!";
+
+    const bronzeSeed = (seed * 7 + 101) & 0xffffff;
+    const silverSeed = (seed * 13 + 307) & 0xffffff;
+    const goldSeed = (seed * 23 + 709) & 0xffffff;
+
+    return [
+      {
+        id: "daily_bronze",
+        tier: "bronze",
+        tierBadge: "🥉 BRONZE",
+        tierName: "Morning Warmup",
+        title: "Bronze Shift • Cadet Sweep",
+        quota: 25 + (bronzeSeed % 10),
+        rewardCredits: 200,
+        hazardModifier: modBronze,
+        themeColor: "#f59e0b",
+        seed: bronzeSeed,
+        isCompleted: completedTiers.includes("bronze"),
+      },
+      {
+        id: "daily_silver",
+        tier: "silver",
+        tierBadge: "🥈 SILVER",
+        tierName: "Hazard Shift",
+        title: "Silver Shift • Sector Hazard",
+        quota: 50 + (silverSeed % 15),
+        rewardCredits: 350,
+        hazardModifier: modSilver,
+        themeColor: "#38bdf8",
+        seed: silverSeed,
+        isCompleted: completedTiers.includes("silver"),
+      },
+      {
+        id: "daily_gold",
+        tier: "gold",
+        tierBadge: "🥇 GOLD",
+        tierName: "Apex Overdrive",
+        title: "Gold Shift • Vortex Apex",
+        quota: 80 + (goldSeed % 20),
+        rewardCredits: 500,
+        hazardModifier: modGold,
+        themeColor: "#facc15",
+        seed: goldSeed,
+        isCompleted: completedTiers.includes("gold"),
+      },
+    ];
+  }
+
+  getDailyShiftInfo() {
+    const shifts = this.getDailyShifts();
+    return shifts[1] || shifts[0];
   }
 }

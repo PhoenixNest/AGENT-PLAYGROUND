@@ -892,16 +892,42 @@ export class MazeLevelBuilder {
       return s / 4294967296;
     };
 
-    const numDividers = 6;
+    const tier = dailyInfo.tier || "silver";
+    let numDividers = 6;
+    let apertureAngle = Math.PI * 0.28;
+    let initialDebrisCount = 16;
+    let initialDebrisTypes = ["titanium", "solar"];
+    let numGates = 3;
+
+    if (tier === "bronze") {
+      numDividers = 4;
+      apertureAngle = Math.PI * 0.35;
+      initialDebrisCount = 12;
+      initialDebrisTypes = ["solar", "titanium"];
+      numGates = 2;
+    } else if (tier === "gold") {
+      numDividers = 8;
+      apertureAngle = Math.PI * 0.22;
+      initialDebrisCount = 22;
+      initialDebrisTypes = ["titanium", "solar", "volatile"];
+      numGates = 4;
+    } else {
+      numDividers = 6;
+      apertureAngle = Math.PI * 0.28;
+      initialDebrisCount = 16;
+      initialDebrisTypes = ["titanium", "solar", "volatile"];
+      numGates = 3;
+    }
+
     const dividers = [];
     const step = (Math.PI * 2) / numDividers;
 
     // Aperture exclusion window around bottom PI/2
     const apCenter = Math.PI * 0.5;
-    const apHalfWidth = 0.22 * Math.PI;
+    const apHalfWidth = apertureAngle * 0.5 + 0.08;
 
     // Defined gate angles at corridor midpoints
-    const gateAngles = [-Math.PI * 0.5, step * 0.5, step * 2.5];
+    const gateAngles = [-Math.PI * 0.5, step * 0.5, step * 2.5, step * 1.5];
 
     for (let i = 0; i < numDividers; i++) {
       const ang = i * step + (rnd() - 0.5) * 0.08;
@@ -911,7 +937,8 @@ export class MazeLevelBuilder {
 
       // Skip if too close to planned gates
       let tooCloseToGate = false;
-      for (const ga of gateAngles) {
+      for (let g = 0; g < numGates; g++) {
+        const ga = gateAngles[g];
         let gDiff = Math.abs(ang - ga);
         while (gDiff > Math.PI) gDiff = Math.PI * 2 - gDiff;
         if (gDiff < 0.16 * Math.PI) {
@@ -929,59 +956,136 @@ export class MazeLevelBuilder {
       }
     }
 
-    const gates = [
-      {
-        type: "MULTIPLY",
-        value: 2 + Math.floor(rnd() * 2),
-        angle: gateAngles[1], // ~0.167pi
-        rMin: 88,
-        rMax: 165,
-        color: "#facc15",
-      },
-      {
-        type: "ADD",
-        value: 5 + Math.floor(rnd() * 5),
-        angle: gateAngles[2], // ~0.833pi
-        rMin: 88,
-        rMax: 165,
-        color: "#38bdf8",
-      },
-      {
-        type: "MULTIPLY",
-        value: 3,
-        angle: gateAngles[0], // -0.5pi
-        rMin: 88,
-        rMax: 165,
-        color: "#f472b6",
-      },
-    ];
+    let gates = [];
+    let oneWayFlaps = [];
 
-    const oneWayFlaps = [
-      {
-        rMin: 88,
-        rMax: 135,
-        angle: -0.15 * Math.PI,
-        maxSwing: Math.PI * 0.35,
-        normalSign: 1,
-      },
-    ];
+    if (tier === "bronze") {
+      gates = [
+        {
+          type: "MULTIPLY",
+          value: 2,
+          angle: gateAngles[0],
+          rMin: 88,
+          rMax: 165,
+          color: "#facc15",
+        },
+        {
+          type: "ADD",
+          value: 5,
+          angle: gateAngles[1],
+          rMin: 88,
+          rMax: 165,
+          color: "#38bdf8",
+        },
+      ];
+      oneWayFlaps = [];
+    } else if (tier === "gold") {
+      gates = [
+        {
+          type: "MULTIPLY",
+          value: 3,
+          angle: gateAngles[0],
+          rMin: 88,
+          rMax: 165,
+          color: "#f472b6",
+        },
+        {
+          type: "ADD",
+          value: 10 + Math.floor(rnd() * 6),
+          angle: gateAngles[1],
+          rMin: 88,
+          rMax: 165,
+          color: "#38bdf8",
+        },
+        {
+          type: "MULTIPLY",
+          value: 2,
+          angle: gateAngles[2],
+          rMin: 88,
+          rMax: 165,
+          color: "#facc15",
+        },
+        {
+          type: "MULTIPLY",
+          value: 2,
+          angle: gateAngles[3],
+          rMin: 88,
+          rMax: 165,
+          color: "#4ade80",
+        },
+      ];
+      oneWayFlaps = [
+        {
+          rMin: 88,
+          rMax: 135,
+          angle: -0.15 * Math.PI,
+          maxSwing: Math.PI * 0.35,
+          normalSign: 1,
+        },
+        {
+          rMin: 120,
+          rMax: 165,
+          angle: 0.85 * Math.PI,
+          maxSwing: Math.PI * 0.35,
+          normalSign: -1,
+        },
+      ];
+    } else {
+      // silver
+      gates = [
+        {
+          type: "MULTIPLY",
+          value: 2 + Math.floor(rnd() * 2),
+          angle: gateAngles[1],
+          rMin: 88,
+          rMax: 165,
+          color: "#facc15",
+        },
+        {
+          type: "ADD",
+          value: 5 + Math.floor(rnd() * 5),
+          angle: gateAngles[2],
+          rMin: 88,
+          rMax: 165,
+          color: "#38bdf8",
+        },
+        {
+          type: "MULTIPLY",
+          value: 3,
+          angle: gateAngles[0],
+          rMin: 88,
+          rMax: 165,
+          color: "#f472b6",
+        },
+      ];
+      oneWayFlaps = [
+        {
+          rMin: 88,
+          rMax: 135,
+          angle: -0.15 * Math.PI,
+          maxSwing: Math.PI * 0.35,
+          normalSign: 1,
+        },
+      ];
+    }
 
     const config = {
-      id: "daily_shift",
+      id: dailyInfo.id || "daily_shift",
       name: dailyInfo.title,
-      code: "FIESTA",
-      description: `Daily Fun Contract! ${dailyInfo.hazardModifier}`,
+      code: tier.toUpperCase(),
+      description: `Daily Contract: ${dailyInfo.hazardModifier}`,
       quota: dailyInfo.quota,
-      initialDebrisCount: 15,
-      initialDebrisTypes: ["titanium", "solar", "volatile"],
+      initialDebrisCount,
+      initialDebrisTypes,
       ringRadius: 165,
       corridorWidth: 38,
       innerRadius: 89,
-      apertureAngle: Math.PI * 0.28,
+      apertureAngle,
       dividers,
       gates,
       oneWayFlaps,
       isDaily: true,
+      dailyTier: tier,
       rewardCredits: dailyInfo.rewardCredits,
     };
 
