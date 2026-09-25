@@ -494,14 +494,19 @@ html {
   display: none;
 }
 .world-tab-btn {
-  flex: 0 0 auto;
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
   background: rgba(255, 255, 255, 0.08);
   border: 2px solid transparent;
   color: rgba(255, 255, 255, 0.85);
   font-family: var(--font-bubble);
   font-size: 11px;
   font-weight: 700;
-  padding: 6px 12px;
+  padding: 6px 3px;
   border-radius: 12px;
   cursor: pointer;
   white-space: nowrap;
@@ -1359,12 +1364,20 @@ html {
   border: 2px dashed rgba(56, 189, 248, 0.7);
   box-shadow: 0 0 16px rgba(56, 189, 248, 0.6);
   transform: perspective(300px) rotateX(40deg);
-  animation: pedestalSpin 20s linear infinite;
+  animation: rimPulse 3.5s ease-in-out infinite alternate;
 }
 
-@keyframes pedestalSpin {
-  0% { transform: perspective(300px) rotateX(40deg) rotate(0deg); }
-  100% { transform: perspective(300px) rotateX(40deg) rotate(360deg); }
+@keyframes rimPulse {
+  0% {
+    opacity: 0.65;
+    box-shadow: 0 0 10px rgba(56, 189, 248, 0.45);
+    border-color: rgba(56, 189, 248, 0.55);
+  }
+  100% {
+    opacity: 1;
+    box-shadow: 0 0 22px rgba(56, 189, 248, 0.85), inset 0 0 8px rgba(56, 189, 248, 0.4);
+    border-color: rgba(56, 189, 248, 0.95);
+  }
 }
 
 .pedestal-glow-beam {
