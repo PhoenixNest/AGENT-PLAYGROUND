@@ -140,7 +140,7 @@
           <button class="dock-tab-btn" id="btn-open-daily-shift" title="Daily Shift Bounty">
             <span class="dock-tab-icon">📅</span>
             <span class="dock-tab-label">DAILY</span>
-            <span class="dock-badge dock-badge-hot">HOT</span>
+            <span class="dock-badge dock-badge-hot" id="dock-daily-badge">HOT</span>
           </button>
           <button class="dock-tab-btn" id="btn-open-shop-page" title="Costumes & Hats">
             <span class="dock-tab-icon">🎁</span>
@@ -209,6 +209,22 @@
         </div>
         <div class="page-scroll-body" id="sectors-page-container">
           <!-- Dynamically populated via main.js -->
+        </div>
+      </div>
+
+      <!-- =========================================================
+           (4b) Dedicated Daily Operations Page
+           ========================================================= -->
+      <div id="page-daily" class="app-page page-hidden">
+        <div class="page-header-bar">
+          <button class="btn-header-back" id="btn-back-daily">← Back</button>
+          <div class="page-header-title"><span>📅</span> DAILY OPERATIONS</div>
+          <div class="coins-pill" style="padding: 4px 10px">
+            <span>🪙</span> <span id="daily-credits-val">250</span>
+          </div>
+        </div>
+        <div class="page-scroll-body" id="daily-page-container">
+          <!-- Dynamically populated via main.js renderDailyPage() -->
         </div>
       </div>
 
