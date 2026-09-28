@@ -36,6 +36,56 @@ namespace OrbitalSalvage.Physics
             Instance = this;
             if (mascotVisualRoot == null) mascotVisualRoot = transform;
             baseScale = mascotVisualRoot.localScale;
+
+            var col = GetComponent<CircleCollider2D>();
+            if (col != null) col.radius = eventHorizonRadius;
+        }
+
+        private void Start()
+        {
+            ConfigureVisuals();
+        }
+
+        public void ConfigureVisuals()
+        {
+            // 1. Mascot Body with 3D Hole Emoji
+            Transform bodyTr = transform.Find("MascotBody");
+            if (bodyTr == null)
+            {
+                var bodyGo = new GameObject("MascotBody");
+                bodyGo.transform.SetParent(transform, false);
+                bodyTr = bodyGo.transform;
+            }
+
+            var sr = bodyTr.GetComponent<SpriteRenderer>();
+            if (sr == null) sr = bodyTr.gameObject.AddComponent<SpriteRenderer>();
+            sr.sprite = Utils.SpriteHelper.GetEmojiSprite("emoji_3d_hole");
+            sr.sortingOrder = 5;
+            bodyTr.localScale = Vector3.one * 1.5f;
+
+            // 2. Accretion Disk Swirl Ring
+            Transform diskTr = transform.Find("AccretionDisk");
+            if (diskTr == null)
+            {
+                var diskGo = new GameObject("AccretionDisk");
+                diskGo.transform.SetParent(transform, false);
+                var lr = diskGo.AddComponent<LineRenderer>();
+                lr.useWorldSpace = false;
+                lr.loop = true;
+                lr.positionCount = 36;
+                lr.startWidth = 0.05f;
+                lr.endWidth = 0.05f;
+                lr.material = Utils.SpriteHelper.GetGlowMaterial(Color.white);
+                lr.startColor = new Color(0.7f, 0.2f, 1f, 0.6f);
+                lr.endColor = new Color(0.3f, 0.8f, 1f, 0.6f);
+
+                float r = 0.85f;
+                for (int i = 0; i < 36; i++)
+                {
+                    float a = i * Mathf.PI * 2f / 36f;
+                    lr.SetPosition(i, new Vector3(Mathf.Cos(a) * r, Mathf.Sin(a) * r, 0f));
+                }
+            }
         }
 
         private void FixedUpdate()

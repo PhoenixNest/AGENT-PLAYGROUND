@@ -37,6 +37,8 @@ namespace OrbitalSalvage.Physics
         public void ConfigurePhysics()
         {
             if (Rb == null) Rb = GetComponent<Rigidbody2D>();
+            if (Col == null) Col = GetComponent<CircleCollider2D>();
+            Col.sharedMaterial = new PhysicsMaterial2D("DebrisMat") { bounciness = bounceRestitution, friction = 0.1f };
             Rb.gravityScale = 1.0f;
             Rb.linearDamping = 0.05f;
             Rb.angularDamping = 0.1f;
@@ -55,6 +57,34 @@ namespace OrbitalSalvage.Physics
                 case DebrisType.Volatile:
                     Rb.mass = 1.0f;
                     scrapValue = 3;
+                    break;
+            }
+            ConfigureVisuals();
+        }
+
+        public void ConfigureVisuals()
+        {
+            var sr = GetComponent<SpriteRenderer>();
+            if (sr == null) sr = gameObject.AddComponent<SpriteRenderer>();
+
+            sr.sortingOrder = 10;
+
+            switch (type)
+            {
+                case DebrisType.Titanium:
+                    sr.sprite = Utils.SpriteHelper.GetEmojiSprite("emoji_3d_gear");
+                    sr.color = new Color(0.85f, 0.92f, 1f, 1f);
+                    transform.localScale = Vector3.one * 0.28f;
+                    break;
+                case DebrisType.Solar:
+                    sr.sprite = Utils.SpriteHelper.GetEmojiSprite("emoji_3d_coin");
+                    sr.color = new Color(1f, 0.9f, 0.4f, 1f);
+                    transform.localScale = Vector3.one * 0.28f;
+                    break;
+                case DebrisType.Volatile:
+                    sr.sprite = Utils.SpriteHelper.GetEmojiSprite("emoji_3d_sparkles");
+                    sr.color = new Color(1f, 0.5f, 0.9f, 1f);
+                    transform.localScale = Vector3.one * 0.28f;
                     break;
             }
         }

@@ -149,5 +149,125 @@ namespace OrbitalSalvage.Physics
                 outerRingTransform.rotation = Quaternion.Euler(0f, 0f, CurrentAngle * Mathf.Rad2Deg);
             }
         }
+
+        public void BuildSectorMaze(Data.SectorDefinition sector)
+        {
+            if (outerRingTransform == null) outerRingTransform = transform;
+
+            // Clean previous dynamically built geometry
+            for (int i = outerRingTransform.childCount - 1; i >= 0; i--)
+            {
+                var child = outerRingTransform.GetChild(i);
+                if (child.name.StartsWith("Dynamic_"))
+                {
+                    Destroy(child.gameObject);
+                }
+            }
+
+            float scale = 0.015f;
+            float outerR = sector.ringRadius * scale;
+            float apHalf = Mathf.Max(0.35f, sector.apertureAngle * 0.5f);
+
+            // 1. Build Outer Perimeter Arc
+            GameObject outerWallGo = new GameObject("Dynamic_OuterWall");
+            outerWallGo.transform.SetParent(outerRingTransform, false);
+
+            var lr = outerWallGo.AddComponent<LineRenderer>();
+            lr.useWorldSpace = false;
+            lr.startWidth = 0.09f;
+            lr.endWidth = 0.09f;
+            lr.material = Utils.SpriteHelper.GetGlowMaterial(Color.white);
+            lr.startColor = new Color(0.2f, 0.85f, 1f, 1f);
+            lr.endColor = new Color(0.15f, 0.65f, 1f, 1f);
+
+            var edgeCol = outerWallGo.AddComponent<EdgeCollider2D>();
+
+            int segCount = 48;
+            Vector3[] linePoints = new Vector3[segCount + 1];
+            Vector2[] colPoints = new Vector2[segCount + 1];
+
+            // Arc from aperture start to aperture end (gap centered at bottom -PI/2)
+            float startAngle = -Mathf.PI * 0.5f + apHalf;
+            float endAngle = -Mathf.PI * 0.5f + (Mathf.PI * 2f - apHalf);
+
+            for (int i = 0; i <= segCount; i++)
+            {
+                float t = (float)i / segCount;
+                float ang = Mathf.Lerp(startAngle, endAngle, t);
+                float x = Mathf.Cos(ang) * outerR;
+                float y = Mathf.Sin(ang) * outerR;
+
+                linePoints[i] = new Vector3(x, y, 0f);
+                colPoints[i] = new Vector2(x, y);
+            }
+
+            lr.positionCount = linePoints.Length;
+            lr.SetPositions(linePoints);
+            edgeCol.points = colPoints;
+
+            // 2. Build Dividers
+            if (sector.dividers != null)
+            {
+                for (int i = 0; i < sector.dividers.Count; i++)
+                {
+                    var div = sector.dividers[i];
+                    float rMin = div.rMin * scale;
+                    float rMax = div.rMax * scale;
+
+                    GameObject divGo = new GameObject($"Dynamic_Divider_{i}");
+                    divGo.transform.SetParent(outerRingTransform, false);
+
+                    var divLr = divGo.AddComponent<LineRenderer>();
+                    divLr.useWorldSpace = false;
+                    divLr.startWidth = 0.07f;
+                    divLr.endWidth = 0.07f;
+                    divLr.material = Utils.SpriteHelper.GetGlowMaterial(Color.white);
+                    divLr.startColor = new Color(0.5f, 0.95f, 1f, 0.95f);
+                    divLr.endColor = new Color(0.4f, 0.85f, 1f, 0.95f);
+
+                    float x0 = Mathf.Cos(div.angle) * rMin;
+                    float y0 = Mathf.Sin(div.angle) * rMin;
+                    float x1 = Mathf.Cos(div.angle) * rMax;
+                    float y1 = Mathf.Sin(div.angle) * rMax;
+
+                    divLr.positionCount = 2;
+                    divLr.SetPositions(new Vector3[] { new Vector3(x0, y0, 0f), new Vector3(x1, y1, 0f) });
+
+                    var divCol = divGo.AddComponent<EdgeCollider2D>();
+                    divCol.points = new Vector2[] { new Vector2(x0, y0), new Vector2(x1, y1) };
+                }
+            }
+
+            // 3. Build Multiplier Gates
+            if (sector.gates != null)
+            {
+                for (int i = 0; i < sector.gates.Count; i++)
+                {
+                    var gate = sector.gates[i];
+                    float rMid = (gate.rMin + gate.rMax) * 0.5f * scale;
+                    float gateSpan = Mathf.Max(0.5f, (gate.rMax - gate.rMin) * scale);
+
+                    GameObject gateGo = new GameObject($"Dynamic_Gate_{i}");
+                    gateGo.transform.SetParent(outerRingTransform, false);
+
+                    float gx = Mathf.Cos(gate.angle) * rMid;
+                    float gy = Mathf.Sin(gate.angle) * rMid;
+                    gateGo.transform.localPosition = new Vector3(gx, gy, 0f);
+                    gateGo.transform.localRotation = Quaternion.Euler(0f, 0f, gate.angle * Mathf.Rad2Deg);
+
+                    var boxCol = gateGo.AddComponent<BoxCollider2D>();
+                    boxCol.size = new Vector2(0.4f, gateSpan);
+                    boxCol.isTrigger = true;
+
+                    var gateComp = gateGo.AddComponent<MultiplierGate>();
+                    GateType gType = GateType.Multiply;
+                    if (gate.type.ToUpper().Contains("ADD")) gType = GateType.Add;
+                    else if (gate.type.ToUpper().Contains("BOOST")) gType = GateType.Booster;
+                    else if (gate.type.ToUpper().Contains("FLAP")) gType = GateType.Flapper;
+
+                    gateComp.Setup(gType, gate.value);
+                }
+            }
+        }
     }
 }

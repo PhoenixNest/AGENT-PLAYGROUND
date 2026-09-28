@@ -9,7 +9,6 @@ namespace OrbitalSalvage.Editor
 {
     public static class LevelImporter
     {
-        [MenuItem("Orbital Salvage/Batch Import 50 Sectors")]
         public static void BatchImportAll50Levels()
         {
             Debug.Log("[LevelImporter] Starting batch import of all 50 sectors...");
