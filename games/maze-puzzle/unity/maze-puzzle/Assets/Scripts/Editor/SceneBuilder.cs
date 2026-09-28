@@ -16,11 +16,11 @@ namespace OrbitalSalvage.Editor
 {
     public static class SceneBuilder
     {
-        [MenuItem("Orbital Salvage/Build Complete Game Scene & Prefabs")]
         public static void BuildAll()
         {
             Debug.Log("[SceneBuilder] Starting complete 1:1 Unity Game Scene and Prefabs build...");
 
+            ConfigureEmojiSprites.ReimportAllEmojisAsSprites();
             SetupResourcesFolder();
             GameObject debrisPrefab = CreateDebrisPrefabs();
             CreateGatePrefabs();
@@ -163,11 +163,29 @@ namespace OrbitalSalvage.Editor
             leftRail.transform.SetParent(funnelGo.transform, false);
             var leftEdge = leftRail.AddComponent<EdgeCollider2D>();
             leftEdge.points = new Vector2[] { new Vector2(-2.2f, 0.8f), new Vector2(-0.6f, -1.8f) };
+            var leftLr = leftRail.AddComponent<LineRenderer>();
+            leftLr.useWorldSpace = false;
+            leftLr.startWidth = 0.08f;
+            leftLr.endWidth = 0.08f;
+            leftLr.material = Utils.SpriteHelper.GetGlowMaterial(Color.white);
+            leftLr.startColor = new Color(0.85f, 0.25f, 1f, 0.9f);
+            leftLr.endColor = new Color(0.6f, 0.15f, 0.95f, 0.9f);
+            leftLr.positionCount = 2;
+            leftLr.SetPositions(new Vector3[] { new Vector3(-2.2f, 0.8f, 0f), new Vector3(-0.6f, -1.8f, 0f) });
 
             var rightRail = new GameObject("RightGuideRail");
             rightRail.transform.SetParent(funnelGo.transform, false);
             var rightEdge = rightRail.AddComponent<EdgeCollider2D>();
             rightEdge.points = new Vector2[] { new Vector2(2.2f, 0.8f), new Vector2(0.6f, -1.8f) };
+            var rightLr = rightRail.AddComponent<LineRenderer>();
+            rightLr.useWorldSpace = false;
+            rightLr.startWidth = 0.08f;
+            rightLr.endWidth = 0.08f;
+            rightLr.material = Utils.SpriteHelper.GetGlowMaterial(Color.white);
+            rightLr.startColor = new Color(0.85f, 0.25f, 1f, 0.9f);
+            rightLr.endColor = new Color(0.6f, 0.15f, 0.95f, 0.9f);
+            rightLr.positionCount = 2;
+            rightLr.SetPositions(new Vector3[] { new Vector3(2.2f, 0.8f, 0f), new Vector3(0.6f, -1.8f, 0f) });
 
             // 5. Debris Container
             GameObject debrisContainer = new GameObject("DebrisContainer");
@@ -226,6 +244,8 @@ namespace OrbitalSalvage.Editor
             safeAreaGo.AddComponent<SafeAreaFitter>();
 
             var uiMgr = canvasGo.AddComponent<UIManager>();
+            uiMgr.EnsureHierarchyBuilt();
+            uiMgr.ShowHome();
 
             // Wire GameManager references
             var gmSo = new SerializedObject(gm);

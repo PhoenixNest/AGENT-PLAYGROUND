@@ -35,10 +35,11 @@ namespace OrbitalSalvage.Animation
 
         private void TrackGaze()
         {
+            if (isBlinking) return;
             Vector2 targetGaze = Vector2.zero;
 
             // Find closest active debris piece
-            var allDebris = FindObjectsByType<DebrisPiece>(FindObjectsSortMode.None);
+            var allDebris = FindObjectsByType<DebrisPiece>();
             float closestDist = float.MaxValue;
             Vector2 myPos = transform.position;
 

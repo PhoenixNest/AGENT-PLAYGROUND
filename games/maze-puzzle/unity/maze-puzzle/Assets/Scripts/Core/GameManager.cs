@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using OrbitalSalvage.Data;
 using OrbitalSalvage.Physics;
+using OrbitalSalvage.UI;
 
 namespace OrbitalSalvage.Core
 {
@@ -57,7 +58,64 @@ namespace OrbitalSalvage.Core
 
         private void Start()
         {
+            if (centrifuge == null) centrifuge = FindAnyObjectByType<CentrifugeController>();
+            if (debrisContainer == null)
+            {
+                var dc = GameObject.Find("DebrisContainer");
+                if (dc != null) debrisContainer = dc.transform;
+            }
+
+            ConfigureContainmentRails();
+            SetGameplayWorldVisible(false);
             SetState(GameState.MainMenu);
+            UIManager.Instance?.ShowHome();
+        }
+
+        public void SetGameplayWorldVisible(bool visible)
+        {
+            if (centrifuge != null) centrifuge.gameObject.SetActive(visible);
+            if (debrisContainer != null) debrisContainer.gameObject.SetActive(visible);
+
+            var funnel = GameObject.Find("ContainmentFunnel");
+            if (funnel != null) funnel.SetActive(visible);
+
+            var nibbles = GameObject.Find("NibblesMascot");
+            if (nibbles != null) nibbles.SetActive(visible);
+        }
+
+        private void ConfigureContainmentRails()
+        {
+            var funnelGo = GameObject.Find("ContainmentFunnel");
+            if (funnelGo == null) return;
+
+            Transform left = funnelGo.transform.Find("LeftGuideRail");
+            Transform right = funnelGo.transform.Find("RightGuideRail");
+
+            if (left != null && left.GetComponent<LineRenderer>() == null)
+            {
+                var lr = left.gameObject.AddComponent<LineRenderer>();
+                lr.useWorldSpace = false;
+                lr.startWidth = 0.08f;
+                lr.endWidth = 0.08f;
+                lr.material = Utils.SpriteHelper.GetGlowMaterial(Color.white);
+                lr.startColor = new Color(0.85f, 0.25f, 1f, 0.9f);
+                lr.endColor = new Color(0.6f, 0.15f, 0.95f, 0.9f);
+                lr.positionCount = 2;
+                lr.SetPositions(new Vector3[] { new Vector3(-2.2f, 0.8f, 0f), new Vector3(-0.6f, -1.8f, 0f) });
+            }
+
+            if (right != null && right.GetComponent<LineRenderer>() == null)
+            {
+                var lr = right.gameObject.AddComponent<LineRenderer>();
+                lr.useWorldSpace = false;
+                lr.startWidth = 0.08f;
+                lr.endWidth = 0.08f;
+                lr.material = Utils.SpriteHelper.GetGlowMaterial(Color.white);
+                lr.startColor = new Color(0.85f, 0.25f, 1f, 0.9f);
+                lr.endColor = new Color(0.6f, 0.15f, 0.95f, 0.9f);
+                lr.positionCount = 2;
+                lr.SetPositions(new Vector3[] { new Vector3(2.2f, 0.8f, 0f), new Vector3(0.6f, -1.8f, 0f) });
+            }
         }
 
         private void LoadAllSectors()
@@ -81,6 +139,7 @@ namespace OrbitalSalvage.Core
 
         public void StartSector(int levelNum)
         {
+            SetGameplayWorldVisible(true);
             currentLevelNumber = Mathf.Clamp(levelNum, 1, 50);
             currentSector = allSectors.Find(s => s.levelNumber == currentLevelNumber);
             if (currentSector == null && allSectors.Count > 0) currentSector = allSectors[0];
@@ -98,31 +157,52 @@ namespace OrbitalSalvage.Core
                 }
             }
 
-            // Spawn initial debris
-            SpawnInitialDebris(currentSector);
-
-            if (centrifuge != null)
+            // 1. Build sector topology in Centrifuge
+            if (centrifuge != null && currentSector != null)
             {
+                centrifuge.BuildSectorMaze(currentSector);
                 centrifuge.SetAngle(0f);
             }
+
+            // 2. Spawn initial debris inside centrifuge
+            SpawnInitialDebris(currentSector);
 
             SetState(GameState.Playing);
         }
 
         private void SpawnInitialDebris(SectorDefinition sector)
         {
-            if (debrisPrefab == null || sector == null) return;
+            if (sector == null) return;
 
             int count = sector.initialDebrisCount > 0 ? sector.initialDebrisCount : 10;
             float r = (sector.innerRadius + sector.ringRadius) * 0.5f * 0.015f; // scale factor
             totalDebrisSpawned = count;
 
+            Vector3 centerPos = centrifuge != null ? centrifuge.transform.position : new Vector3(0f, 0.8f, 0f);
+
             for (int i = 0; i < count; i++)
             {
-                float ang = (i / (float)count) * Mathf.PI * 0.8f + Mathf.PI * 0.1f;
-                Vector3 spawnPos = new Vector3(Mathf.Cos(ang) * r, Mathf.Sin(ang) * r, 0f);
+                float ang = (i / (float)count) * Mathf.PI * 0.7f + Mathf.PI * 0.15f;
+                Vector3 spawnPos = centerPos + new Vector3(Mathf.Cos(ang) * r, Mathf.Sin(ang) * r, 0f);
 
-                var go = Instantiate(debrisPrefab, spawnPos, Quaternion.identity, debrisContainer);
+                GameObject go;
+                if (debrisPrefab != null)
+                {
+                    go = Instantiate(debrisPrefab, spawnPos, Quaternion.identity, debrisContainer);
+                }
+                else
+                {
+                    go = new GameObject($"Debris_{i}");
+                    go.transform.position = spawnPos;
+                    if (debrisContainer != null) go.transform.SetParent(debrisContainer);
+                    var col = go.AddComponent<CircleCollider2D>();
+                    col.radius = 0.14f;
+                    var rb = go.AddComponent<Rigidbody2D>();
+                    rb.mass = 1.2f;
+                    rb.collisionDetectionMode = CollisionDetectionMode2D.Continuous;
+                    go.AddComponent<DebrisPiece>();
+                }
+
                 var piece = go.GetComponent<DebrisPiece>();
                 if (piece != null)
                 {
