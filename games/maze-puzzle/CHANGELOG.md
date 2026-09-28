@@ -7,6 +7,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.9.0] - 2026-09-28
+
+### Added
+
+- **Native Unity 6 Project Scaffolding (`games/maze-puzzle/unity/maze-puzzle/`):** Initialized the native Unity 6 (`6000.4.6f1`) project `maze-puzzle` via Unity Batchmode CLI, configured for iOS Portrait orientation.
+- **Git Worktree Collaborative Development (`.worktrees/unity-migration/`):** Utilized isolated git worktree branch `unity-migration` for parallel multi-agent development and seamless merging into `maze-puzzle`.
+- **Pre-baked Asset Pipelines:**
+  - Archived all 34 pre-rendered Microsoft Fluent 3D Emoji PNG assets directly into `Assets/Sprites/Emojis/3D/`.
+  - Synthesized all 15 discrete uncompressed 16-bit PCM `.wav` audio cues into `Assets/Audio/` matching the studio Audio Design Specification.
+- **50-Level Campaign Data & Level Sanitizer:**
+  - Exported complete 50-sector campaign matrix from `web/engine/maze.js` to `Assets/Scripts/Data/sectors_50.json`.
+  - Implemented C# `SectorData.cs` and `MazeSanitizer.cs` guaranteeing zero gate-wall overlaps.
+  - Verified 50/50 level import via `-executeMethod OrbitalSalvage.Editor.LevelImporter.BatchImportAll50Levels` with exit code 0.
+- **Complete Core C# Gameplay Architecture:**
+  - `CentrifugeController.cs`: 1:1 tactile drag, Euler integration, 0.94 inertia damping, and double-tap attitude thrusters.
+  - `DebrisPiece.cs`: Rigid body dynamics, material restitution, and scrap valuation.
+  - `MultiplierGate.cs`: Multiplier, adder, booster, and flapper gates with radial clone fanning.
+  - `NibblesController.cs`: Mascot micro-black hole with inverse-square gravitational pull, event horizon ingestion, dynamic quota growth ($1.0\times \to 1.65\times$), and squash-and-stretch wobble.
+  - `MascotEyeTracker.cs`: Real-time pupil gaze tracking towards falling scrap with natural blinking routines.
+  - `GameManager.cs` & `EconomyManager.cs`: Game state machine, offline JSON persistence, scrap credits, and backup pod recovery flow.
+  - `AudioManager.cs`: Master audio manager pooling AudioSources for the 15 sound cues.
+  - `SafeAreaFitter.cs` & `UIManager.cs`: Screen safe area adaptation for iPhone 16 Pro Max ($430\text{pt} \times 932\text{pt}$).
+
+---
+
 ## [0.8.0] - 2026-09-27
 
 ### Added
