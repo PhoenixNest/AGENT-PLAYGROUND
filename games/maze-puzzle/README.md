@@ -20,8 +20,7 @@ Welcome to the project repository for the **Space Debris Cleanup Puzzle Game** (
 | [`08_UNITY_MIGRATION_AND_IOS_DEPLOYMENT_PLAN.md`](./08_UNITY_MIGRATION_AND_IOS_DEPLOYMENT_PLAN.md) | Unity Migration & iOS Deployment Specification              | Web-to-Unity architecture mapping, C# code translation evaluation, iOS Metal performance, CoreHaptics, and phased roadmap.              |
 | [`CHANGELOG.md`](./CHANGELOG.md)                                                                   | Milestone Release History & Version Changelog               | Semantic versioning changelog tracing all milestone releases, feature additions, bug fixes, and commit hashes.                          |
 | [`web/`](./web/)                                                                                   | Playable Mobile Web Prototype                               | Modern HTML5 Canvas/Web Audio game implementation adhering to iOS 430pt × 932pt ergonomics with 50 progressive campaign sectors.        |
-| [`unity/`](./unity/)                                                                               | Native Unity Project Target Directory                       | Target location for native Unity project initialization, 3D emoji assets, and iOS export pipeline.                                      |
-| [`scripts/`](./scripts/)                                                                           | Automation & Extraction Scripts                             | Turnkey scripts for 1:1 asset fetching (e.g., `download_fluent_3d_emojis.js`).                                                          |
+| [`unity/maze-puzzle/`](./unity/maze-puzzle/)                                                       | Native Unity 6 Project Directory                            | Native Unity 6 (`6000.4.6f1`) project configured for iOS Portrait with core C# architecture, 3D emojis, audio, and 50 levels.           |
 
 ---
 
