@@ -18,3 +18,22 @@ Thumbs.db
 *.swo
 .idea/
 *.log
+
+# Git Worktrees
+.worktrees/
+
+# Unity generated files & caches
+**/[Ll]ibrary/
+**/[Tt]emp/
+**/[Oo]bj/
+**/[Bb]uild/
+**/[Bb]uilds/
+**/[Ll]ogs/
+**/[Uu]ser[Ss]ettings/
+**/[Mm]emoryCaptures/
+**/.vs/
+*.pid
+*.pid.meta
+sysinfo.txt
+*.unitypackage
+
