@@ -1,0 +1,17 @@
+{
+  "mcpServers": {
+    "UnityMCP": {
+      "command": "uvx",
+      "args": [
+        "--from",
+        "mcpforunityserver",
+        "mcp-for-unity",
+        "--transport",
+        "stdio"
+      ],
+      "env": {
+        "UNITY_MCP_SKIP_STARTUP_CONNECT": "true"
+      }
+    }
+  }
+}
