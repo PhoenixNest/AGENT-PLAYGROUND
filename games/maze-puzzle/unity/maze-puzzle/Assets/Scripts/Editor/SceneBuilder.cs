@@ -157,35 +157,75 @@ namespace OrbitalSalvage.Editor
 
             // 4. Containment Funnel (Magnetic guide rails directing scrap to Nibbles)
             GameObject funnelGo = new GameObject("ContainmentFunnel");
-            funnelGo.transform.position = new Vector3(0f, -1.2f, 0f);
+            funnelGo.transform.position = Vector3.zero;
+
+            float topY = -1.09f;
+            float topX = 1.05f;
+            float botY = -2.75f;
+            float botX = 0.51f;
 
             var leftRail = new GameObject("LeftGuideRail");
             leftRail.transform.SetParent(funnelGo.transform, false);
             var leftEdge = leftRail.AddComponent<EdgeCollider2D>();
-            leftEdge.points = new Vector2[] { new Vector2(-2.2f, 0.8f), new Vector2(-0.6f, -1.8f) };
+            leftEdge.points = new Vector2[] { new Vector2(-topX, topY), new Vector2(-botX, botY) };
             var leftLr = leftRail.AddComponent<LineRenderer>();
-            leftLr.useWorldSpace = false;
-            leftLr.startWidth = 0.08f;
-            leftLr.endWidth = 0.08f;
-            leftLr.material = Utils.SpriteHelper.GetGlowMaterial(Color.white);
-            leftLr.startColor = new Color(0.85f, 0.25f, 1f, 0.9f);
-            leftLr.endColor = new Color(0.6f, 0.15f, 0.95f, 0.9f);
+            leftLr.useWorldSpace = true;
+            leftLr.startWidth = 0.05f;
+            leftLr.endWidth = 0.05f;
+            leftLr.material = Utils.SpriteHelper.GetDashedLineMaterial(new Color(0.22f, 0.74f, 0.97f, 0.85f));
+            leftLr.textureMode = LineTextureMode.Tile;
             leftLr.positionCount = 2;
-            leftLr.SetPositions(new Vector3[] { new Vector3(-2.2f, 0.8f, 0f), new Vector3(-0.6f, -1.8f, 0f) });
+            leftLr.SetPositions(new Vector3[] { new Vector3(-topX, topY, 0f), new Vector3(-botX, botY, 0f) });
+            leftLr.sortingOrder = 4;
 
             var rightRail = new GameObject("RightGuideRail");
             rightRail.transform.SetParent(funnelGo.transform, false);
             var rightEdge = rightRail.AddComponent<EdgeCollider2D>();
-            rightEdge.points = new Vector2[] { new Vector2(2.2f, 0.8f), new Vector2(0.6f, -1.8f) };
+            rightEdge.points = new Vector2[] { new Vector2(topX, topY), new Vector2(botX, botY) };
             var rightLr = rightRail.AddComponent<LineRenderer>();
-            rightLr.useWorldSpace = false;
-            rightLr.startWidth = 0.08f;
-            rightLr.endWidth = 0.08f;
-            rightLr.material = Utils.SpriteHelper.GetGlowMaterial(Color.white);
-            rightLr.startColor = new Color(0.85f, 0.25f, 1f, 0.9f);
-            rightLr.endColor = new Color(0.6f, 0.15f, 0.95f, 0.9f);
+            rightLr.useWorldSpace = true;
+            rightLr.startWidth = 0.05f;
+            rightLr.endWidth = 0.05f;
+            rightLr.material = Utils.SpriteHelper.GetDashedLineMaterial(new Color(0.22f, 0.74f, 0.97f, 0.85f));
+            rightLr.textureMode = LineTextureMode.Tile;
             rightLr.positionCount = 2;
-            rightLr.SetPositions(new Vector3[] { new Vector3(2.2f, 0.8f, 0f), new Vector3(0.6f, -1.8f, 0f) });
+            rightLr.SetPositions(new Vector3[] { new Vector3(topX, topY, 0f), new Vector3(botX, botY, 0f) });
+            rightLr.sortingOrder = 4;
+
+            for (int r = 0; r < 4; r++)
+            {
+                var rungGo = new GameObject($"FunnelRung_{r}");
+                rungGo.transform.SetParent(funnelGo.transform, false);
+                var rungLr = rungGo.AddComponent<LineRenderer>();
+                rungLr.useWorldSpace = true;
+                rungLr.startWidth = 0.025f;
+                rungLr.endWidth = 0.025f;
+                rungLr.material = Utils.SpriteHelper.GetGlowMaterial(Color.white);
+                rungLr.startColor = new Color(0.22f, 0.74f, 0.97f, 0.35f);
+                rungLr.endColor = new Color(0.22f, 0.74f, 0.97f, 0.35f);
+                rungLr.positionCount = 3;
+                float t = (r + 1) / 5f;
+                float ry = Mathf.Lerp(topY, botY, t);
+                float rx = Mathf.Lerp(topX, botX, t);
+                rungLr.SetPositions(new Vector3[] {
+                    new Vector3(-rx, ry, 0f),
+                    new Vector3(0f, ry - 0.06f, 0f),
+                    new Vector3(rx, ry, 0f)
+                });
+                rungLr.sortingOrder = 3;
+            }
+
+            for (int side = -1; side <= 1; side += 2)
+            {
+                var dotGo = new GameObject($"EmitterDot_{side}");
+                dotGo.transform.SetParent(funnelGo.transform, false);
+                dotGo.transform.localPosition = new Vector3(side * topX, topY, 0f);
+                var sr = dotGo.AddComponent<SpriteRenderer>();
+                sr.sprite = Utils.SpriteHelper.GetCircleSprite();
+                sr.color = new Color(0.22f, 0.74f, 0.97f, 0.95f);
+                sr.sortingOrder = 5;
+                dotGo.transform.localScale = Vector3.one * 0.12f;
+            }
 
             // 5. Debris Container
             GameObject debrisContainer = new GameObject("DebrisContainer");
@@ -193,35 +233,21 @@ namespace OrbitalSalvage.Editor
 
             // 6. Nibbles the Micro-Black Hole Mascot
             GameObject nibblesGo = new GameObject("NibblesMascot");
-            nibblesGo.transform.position = new Vector3(0f, -3.3f, 0f);
+            nibblesGo.transform.position = new Vector3(0f, -2.75f, 0f);
 
             var nibblesCtrl = nibblesGo.AddComponent<NibblesController>();
 
             var eventHorizonCol = nibblesGo.AddComponent<CircleCollider2D>();
-            eventHorizonCol.radius = 0.55f;
+            eventHorizonCol.radius = 0.32f;
             eventHorizonCol.isTrigger = true;
 
             // Visual body & facial rigging
             GameObject bodyGo = new GameObject("MascotBody");
             bodyGo.transform.SetParent(nibblesGo.transform, false);
             var bodySr = bodyGo.AddComponent<SpriteRenderer>();
-            bodySr.color = new Color(0.12f, 0.08f, 0.22f, 1f); // Deep singularity purple
-
-            GameObject eyesRoot = new GameObject("EyesRoot");
-            eyesRoot.transform.SetParent(nibblesGo.transform, false);
-            eyesRoot.transform.localPosition = new Vector3(0f, 0.1f, 0f);
-
-            GameObject leftEye = new GameObject("LeftEye");
-            leftEye.transform.SetParent(eyesRoot.transform, false);
-            leftEye.transform.localPosition = new Vector3(-0.16f, 0f, 0f);
-            var leftPupil = new GameObject("LeftPupil");
-            leftPupil.transform.SetParent(leftEye.transform, false);
-
-            GameObject rightEye = new GameObject("RightEye");
-            rightEye.transform.SetParent(eyesRoot.transform, false);
-            rightEye.transform.localPosition = new Vector3(0.16f, 0f, 0f);
-            var rightPupil = new GameObject("RightPupil");
-            rightPupil.transform.SetParent(rightEye.transform, false);
+            bodySr.color = Color.white;
+            bodySr.sortingOrder = 6;
+            bodyGo.transform.localScale = Vector3.one * 0.62f;
 
             var eyeTracker = nibblesGo.AddComponent<MascotEyeTracker>();
 

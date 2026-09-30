@@ -53,6 +53,7 @@ namespace OrbitalSalvage.Core
                 return;
             }
             Instance = this;
+            Screen.orientation = ScreenOrientation.Portrait;
             LoadAllSectors();
         }
 
@@ -153,7 +154,8 @@ namespace OrbitalSalvage.Core
             {
                 foreach (Transform child in debrisContainer)
                 {
-                    Destroy(child.gameObject);
+                    if (Application.isPlaying) Destroy(child.gameObject);
+                    else DestroyImmediate(child.gameObject);
                 }
             }
 

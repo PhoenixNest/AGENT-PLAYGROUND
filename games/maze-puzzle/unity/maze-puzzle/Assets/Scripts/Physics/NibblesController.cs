@@ -48,7 +48,7 @@ namespace OrbitalSalvage.Physics
 
         public void ConfigureVisuals()
         {
-            // 1. Mascot Body with 3D Hole Emoji
+            // 1. Mascot Body with Canonical Cute Anime Black Hole Face
             Transform bodyTr = transform.Find("MascotBody");
             if (bodyTr == null)
             {
@@ -59,32 +59,44 @@ namespace OrbitalSalvage.Physics
 
             var sr = bodyTr.GetComponent<SpriteRenderer>();
             if (sr == null) sr = bodyTr.gameObject.AddComponent<SpriteRenderer>();
-            sr.sprite = Utils.SpriteHelper.GetEmojiSprite("emoji_3d_hole");
-            sr.sortingOrder = 5;
-            bodyTr.localScale = Vector3.one * 1.5f;
+            sr.sprite = Utils.SpriteHelper.GetNibblesMascotSprite();
+            sr.color = Color.white;
+            sr.sortingOrder = 6;
+            bodyTr.localScale = Vector3.one * 0.62f;
 
-            // 2. Accretion Disk Swirl Ring
-            Transform diskTr = transform.Find("AccretionDisk");
-            if (diskTr == null)
+            var oldEyes = transform.Find("EyesRoot");
+            if (oldEyes != null)
             {
-                var diskGo = new GameObject("AccretionDisk");
-                diskGo.transform.SetParent(transform, false);
-                var lr = diskGo.AddComponent<LineRenderer>();
-                lr.useWorldSpace = false;
-                lr.loop = true;
-                lr.positionCount = 36;
-                lr.startWidth = 0.05f;
-                lr.endWidth = 0.05f;
-                lr.material = Utils.SpriteHelper.GetGlowMaterial(Color.white);
-                lr.startColor = new Color(0.7f, 0.2f, 1f, 0.6f);
-                lr.endColor = new Color(0.3f, 0.8f, 1f, 0.6f);
+                if (Application.isPlaying) Destroy(oldEyes.gameObject);
+                else DestroyImmediate(oldEyes.gameObject);
+            }
 
-                float r = 0.85f;
-                for (int i = 0; i < 36; i++)
-                {
-                    float a = i * Mathf.PI * 2f / 36f;
-                    lr.SetPosition(i, new Vector3(Mathf.Cos(a) * r, Mathf.Sin(a) * r, 0f));
-                }
+            // 2. Accretion Vortex Disk & Ribbons (1:1 Web: multi-layered dashed tracks & stardust tightly around Nibbles)
+            Transform vortexTr = transform.Find("AccretionVortex");
+            if (vortexTr == null)
+            {
+                var vGo = new GameObject("AccretionVortex");
+                vGo.transform.SetParent(transform, false);
+                vortexTr = vGo.transform;
+            }
+            var vsr = vortexTr.GetComponent<SpriteRenderer>();
+            if (vsr == null) vsr = vortexTr.gameObject.AddComponent<SpriteRenderer>();
+            vsr.sprite = Utils.SpriteHelper.GetAccretionVortexSprite();
+            vsr.sortingOrder = 4;
+            vortexTr.localScale = Vector3.one * 0.72f;
+
+            // Clean up obsolete legacy objects
+            var oldDisk = transform.Find("AccretionDisk");
+            if (oldDisk != null) Destroy(oldDisk.gameObject);
+            var oldInner = transform.Find("InnerRing");
+            if (oldInner != null) Destroy(oldInner.gameObject);
+            var oldGlow = transform.Find("AccretionGlow");
+            if (oldGlow != null) Destroy(oldGlow.gameObject);
+            var oldFunnel = transform.Find("SuctionFunnel");
+            if (oldFunnel != null)
+            {
+                if (Application.isPlaying) Destroy(oldFunnel.gameObject);
+                else DestroyImmediate(oldFunnel.gameObject);
             }
         }
 
