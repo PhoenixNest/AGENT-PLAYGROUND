@@ -41,62 +41,29 @@ namespace OrbitalSalvage.Physics
             UpdateVisuals();
         }
 
-        private void LateUpdate()
-        {
-            if (labelText != null)
-            {
-                labelText.transform.rotation = Quaternion.identity;
-            }
-        }
-
         private void UpdateVisuals()
         {
-            if (gateRenderer == null)
+            // Clean up any legacy children
+            for (int i = transform.childCount - 1; i >= 0; i--)
             {
-                gateRenderer = GetComponent<SpriteRenderer>();
-                if (gateRenderer == null) gateRenderer = gameObject.AddComponent<SpriteRenderer>();
-                gateRenderer.sprite = Utils.SpriteHelper.GetCircleSprite();
-                gateRenderer.sortingOrder = 3;
+                var child = transform.GetChild(i).gameObject;
+                if (Application.isPlaying) Destroy(child);
+                else DestroyImmediate(child);
             }
 
-            Color gateColor = gateType switch
-            {
-                GateType.Multiply => new Color(0.98f, 0.8f, 0.1f, 0.75f), // Gold
-                GateType.Add => new Color(0.2f, 0.75f, 1f, 0.75f), // Cyan
-                GateType.Booster => new Color(0.85f, 0.3f, 1f, 0.75f), // Magenta
-                _ => new Color(0.3f, 1f, 0.5f, 0.75f)
-            };
-            gateRenderer.color = gateColor;
+            if (gateRenderer == null) gateRenderer = GetComponent<SpriteRenderer>();
+            if (gateRenderer == null) gateRenderer = gameObject.AddComponent<SpriteRenderer>();
 
-            if (labelText == null)
-            {
-                var textGo = new GameObject("LabelText");
-                textGo.transform.SetParent(transform, false);
-                textGo.transform.localPosition = Vector3.zero;
-                labelText = textGo.AddComponent<TMPro.TextMeshPro>();
-                labelText.alignment = TMPro.TextAlignmentOptions.Center;
-                labelText.fontSize = 3.2f;
-                labelText.sortingOrder = 4;
-            }
+            gateRenderer.sprite = Utils.SpriteHelper.GetGateBadgeSprite(gateType, value);
+            gateRenderer.color = Color.white;
+            gateRenderer.sortingOrder = 6;
+            transform.localScale = Vector3.one * 0.38f;
 
-            switch (gateType)
+            var col = GetComponent<BoxCollider2D>();
+            if (col != null)
             {
-                case GateType.Multiply:
-                    labelText.text = $"x{value}";
-                    labelText.color = Color.white;
-                    break;
-                case GateType.Add:
-                    labelText.text = $"+{value}";
-                    labelText.color = Color.white;
-                    break;
-                case GateType.Booster:
-                    labelText.text = "▲";
-                    labelText.color = Color.yellow;
-                    break;
-                case GateType.Flapper:
-                    labelText.text = "▶";
-                    labelText.color = Color.cyan;
-                    break;
+                col.isTrigger = true;
+                col.size = new Vector2(1.1f, 0.45f);
             }
         }
 
