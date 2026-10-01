@@ -42,6 +42,8 @@ namespace OrbitalSalvage.Editor
             string exePath = Path.Combine(projectRoot, OutputRelative);
             Directory.CreateDirectory(Path.GetDirectoryName(exePath));
 
+            string settingsPath = Path.Combine(projectRoot, "ProjectSettings", "ProjectSettings.asset");
+            byte[] settingsBytes = File.Exists(settingsPath) ? File.ReadAllBytes(settingsPath) : null;
             var saved = Snapshot();
             try
             {
@@ -64,6 +66,16 @@ namespace OrbitalSalvage.Editor
             finally
             {
                 Restore(saved);
+                AssetDatabase.SaveAssets();
+                if (settingsBytes != null && File.Exists(settingsPath))
+                {
+                    var after = File.ReadAllBytes(settingsPath);
+                    if (!after.AsSpan().SequenceEqual(settingsBytes))
+                    {
+                        Debug.LogWarning("[ParityBuild] ProjectSettings.asset differs after restore; writing the original bytes back");
+                        File.WriteAllBytes(settingsPath, settingsBytes);
+                    }
+                }
             }
         }
 
