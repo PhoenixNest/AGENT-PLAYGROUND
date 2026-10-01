@@ -31,6 +31,35 @@ namespace OrbitalSalvage.Render.Editor
             EditorApplication.Exit(code);
         }
 
+        /// <summary>Batchmode: draws the home screen from the web spec (HomeChrome) for both profiles into <c>-out DIR/home_default__&lt;profile&gt;.png</c>.</summary>
+        public static void HomeChromeRender()
+        {
+            int code = 0;
+            try
+            {
+                string outDir = Arg(Environment.GetCommandLineArgs(), "-out");
+                Directory.CreateDirectory(outDir);
+                foreach (var profile in new[] { "zero", "iphone" })
+                {
+                    using (var chrome = HomeChrome.Load(profile))
+                    {
+                        chrome.Draw();
+                        Sync(chrome.Target);
+                        WritePng(chrome.Target, Path.Combine(outDir, "home_default__" + profile + ".png"));
+                        var sb = new StringBuilder();
+                        foreach (var kv in chrome.Deferred) sb.Append(kv.Key + " x" + kv.Value + "; ");
+                        Debug.Log("[HomeChrome] " + profile + " boxes=" + chrome.DrawnBoxes + " runs=" + chrome.DrawnRuns + " emoji=" + chrome.DrawnEmoji + " deferred: " + sb);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.LogError("[HomeChromeRender] " + ex);
+                code = 1;
+            }
+            EditorApplication.Exit(code);
+        }
+
         /// <summary>
         /// Batchmode: writes <c>-out DIR/unity-metrics.json</c> with Canvas2D.MeasureText widths for the fonts and strings of
         /// <c>probe-metrics.mjs</c> so they can be compared with Chromium's <c>measureText</c> (out/metrics.json).

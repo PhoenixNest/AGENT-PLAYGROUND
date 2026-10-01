@@ -23,6 +23,7 @@ namespace OrbitalSalvage.Parity
         bool booted;
         bool pointerTouched;
         int exitCode;
+        readonly Dictionary<string, OrbitalSalvage.Render.HomeChrome> homeChromes = new Dictionary<string, OrbitalSalvage.Render.HomeChrome>();
 
         readonly List<Dictionary<string, object>> errors = new List<Dictionary<string, object>>();
         readonly List<object> timings = new List<object>();
@@ -282,8 +283,11 @@ namespace OrbitalSalvage.Parity
                     float until = Time.realtimeSinceStartup + UiTweenFlushSeconds;
                     while (Time.realtimeSinceStartup < until) yield return null;
                 }
+                bool chrome = OrbitalSalvage.Render.HomeChrome.Applies(ctx.StateId);
+                if (chrome) HideLegacyPage("AppRoot/Page_Home");
                 rig.Refresh();
                 yield return new WaitForEndOfFrame();
+                if (chrome) DrawHomeChrome();
 
                 string stem = Path.Combine(options.OutDir, ctx.StateId + "__" + ctx.Profile);
                 File.WriteAllBytes(stem + ".png", rig.ReadPng());
@@ -302,6 +306,36 @@ namespace OrbitalSalvage.Parity
                 target.Release();
                 holding = false;
             }
+        }
+
+        // Pages drawn from the web's measured layout by Canvas2D replace the legacy UI for their state (SPEC 6.4 / reports/iter-01).
+        static void HideLegacyPage(string path)
+        {
+            int slash = path.LastIndexOf('/');
+            string parentName = path.Substring(0, slash), name = path.Substring(slash + 1);
+            foreach (var t in FindObjectsByType<Transform>(FindObjectsInactive.Exclude, FindObjectsSortMode.None))
+                if (t.name == name && t.parent != null && t.parent.name == parentName)
+                    t.gameObject.SetActive(false);
+        }
+
+        void DrawHomeChrome()
+        {
+            if (!homeChromes.TryGetValue(ctx.Profile, out var chrome))
+            {
+                chrome = OrbitalSalvage.Render.HomeChrome.Load(ctx.Profile);
+                homeChromes[ctx.Profile] = chrome;
+            }
+            chrome.Draw();
+            Graphics.CopyTexture(chrome.Target, rig.Target);
+            var deferred = new List<object>();
+            foreach (var kv in chrome.Deferred) deferred.Add(kv.Key + " x" + kv.Value);
+            ctx.Extra["homeChrome"] = new Dictionary<string, object>
+            {
+                ["boxes"] = chrome.DrawnBoxes,
+                ["textRuns"] = chrome.DrawnRuns,
+                ["emoji"] = chrome.DrawnEmoji,
+                ["deferred"] = deferred
+            };
         }
 
         void WriteLayout(string path)

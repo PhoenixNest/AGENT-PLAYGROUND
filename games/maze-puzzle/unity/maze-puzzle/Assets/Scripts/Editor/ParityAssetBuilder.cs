@@ -55,6 +55,7 @@ namespace OrbitalSalvage.Editor
                 AssetDatabase.Refresh(ImportAssetOptions.ForceSynchronousImport);
                 ConfigureEmojiImporters();
                 BuildTmpFontAssets();
+                BuildCanvasMaterials();
                 AssetDatabase.SaveAssets();
                 AssetDatabase.Refresh();
                 Debug.Log("[ParityAssetBuilder] BuildAll completed");
@@ -64,6 +65,26 @@ namespace OrbitalSalvage.Editor
                 Debug.LogError($"[ParityAssetBuilder] BuildAll failed: {e}");
                 throw;
             }
+        }
+
+        /// <summary>
+        /// A Player only contains shaders that something references: the Canvas2D shaders are found by name, so a material per shader
+        /// in Resources keeps them in every build (Canvas2D.MakeMaterial falls back to these when Shader.Find misses).
+        /// </summary>
+        public static void BuildCanvasMaterials()
+        {
+            Directory.CreateDirectory(Path.Combine(Application.dataPath, "Resources", "Canvas2D"));
+            foreach (var name in new[] { "Accumulate", "Fill", "Mask", "Image", "Text" })
+            {
+                string path = "Assets/Resources/Canvas2D/" + name + ".mat";
+                var shader = Shader.Find("Hidden/Canvas2D/" + name);
+                if (shader == null) throw new InvalidOperationException("Canvas2D shader not found: " + name);
+                var existing = AssetDatabase.LoadAssetAtPath<Material>(path);
+                if (existing != null && existing.shader == shader) continue;
+                if (existing != null) AssetDatabase.DeleteAsset(path);
+                AssetDatabase.CreateAsset(new Material(shader) { name = name }, path);
+            }
+            AssetDatabase.SaveAssets();
         }
 
         // Batchmode check (-executeMethod ...VerifyFonts): ParityFonts.Resolve must return the SPEC 5 effective face
