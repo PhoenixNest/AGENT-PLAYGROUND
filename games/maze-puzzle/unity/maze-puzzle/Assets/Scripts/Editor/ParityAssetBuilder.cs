@@ -19,6 +19,11 @@ namespace OrbitalSalvage.Editor
         private const string EmojiIndexPath = "Assets/Resources/Emojis/emoji_index.json";
         private const string LicensesDir = "Assets/Licenses";
 
+        // Fluent 3D PNGs are 256 px wide; 1fa90 (ringed planet) is 256x264, so 256 would resample it.
+        // 512 is the smallest power-of-two cap that never resizes any pinned emoji.
+        private const int EmojiMaxTextureSize = 512;
+        private static readonly string[] EmojiPlatforms = { "Standalone", "iPhone", "Android", "WebGL", "Server" };
+
         private const int SamplingPointSize = 96;
         private const int AtlasPadding = 12;
         private const int AtlasSize = 4096;
@@ -148,9 +153,38 @@ namespace OrbitalSalvage.Editor
                     importer.spriteImportMode = SpriteImportMode.Single;
                     importer.mipmapEnabled = false;
                     importer.alphaIsTransparency = true;
-                    importer.maxTextureSize = 256;
-                    importer.textureCompression = TextureImporterCompression.Uncompressed;
+                    importer.sRGBTexture = true;
+                    importer.isReadable = false;
+                    importer.npotScale = TextureImporterNPOTScale.None;
                     importer.filterMode = FilterMode.Bilinear;
+                    importer.wrapMode = TextureWrapMode.Clamp;
+                    importer.maxTextureSize = EmojiMaxTextureSize;
+                    importer.textureCompression = TextureImporterCompression.Uncompressed;
+                    importer.crunchedCompression = false;
+
+                    // The default settings alone are not enough: a platform entry that exists in the .meta (the
+                    // old importer left a Standalone entry with textureCompression 1) is applied by that platform.
+                    // Every platform therefore gets an explicit, overridden RGBA32 entry.
+                    var def = importer.GetDefaultPlatformTextureSettings();
+                    def.maxTextureSize = EmojiMaxTextureSize;
+                    def.textureCompression = TextureImporterCompression.Uncompressed;
+                    def.crunchedCompression = false;
+                    importer.SetPlatformTextureSettings(def);
+                    foreach (var platform in EmojiPlatforms)
+                    {
+                        importer.SetPlatformTextureSettings(new TextureImporterPlatformSettings
+                        {
+                            name = platform,
+                            overridden = true,
+                            maxTextureSize = EmojiMaxTextureSize,
+                            resizeAlgorithm = TextureResizeAlgorithm.Mitchell,
+                            format = TextureImporterFormat.RGBA32,
+                            textureCompression = TextureImporterCompression.Uncompressed,
+                            compressionQuality = 50,
+                            crunchedCompression = false,
+                            allowsAlphaSplitting = false,
+                        });
+                    }
                     importer.SaveAndReimport();
                 }
             }
