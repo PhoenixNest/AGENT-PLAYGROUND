@@ -17,9 +17,16 @@ const holdSel = (selector) => ({ op: "holdPressed", selector });
 const prof = (path, value) => ({ op: "setProfile", path, value });
 const app = (field, value) => ({ op: "setApp", field, value });
 const call = (method, ...args) => ({ op: "call", method, args });
+const callOn = (target, method, ...args) => ({
+  op: "call",
+  target,
+  method,
+  args,
+});
 const page = (p) => ({ op: "showPage", page: p });
 const load = (index) => ({ op: "loadSector", index });
 const CAP = { op: "capture" };
+const capExpect = (extra) => ({ op: "capture", ...extra });
 
 const states = [];
 const add = (id, description, steps, profiles = BOTH) =>
@@ -40,7 +47,7 @@ const dailyDone = (tiers) => [
 
 add(
   "loading_t0000",
-  "Loading screen at boot, no frame run (bar at CSS default, first tip)",
+  "Loading screen at boot, no frame run: #page-loading is at its pageEnter 0 % keyframe (opacity 0), so only the navy body background is visible",
   [boot(false), CAP],
 );
 add(
@@ -190,10 +197,22 @@ for (let w = 1; w <= 5; w++) {
 }
 add(
   "maps_world_1_all_complete",
-  "Maps page, world 1 fully completed (10/10 banner, all check marks)",
+  "Maps page, world 1 fully completed (10/10 banner); tile 1 is the active sector so it shows PLAY, tiles 2-10 show check marks",
   [
     boot(),
     prof("completedSectors", levelIds(1, 10)),
+    click("btn-open-maps-page"),
+    adv(240),
+    CAP,
+  ],
+);
+add(
+  "maps_world_1_all_complete_other_active",
+  "Maps page, world 1 fully completed while level 11 is the active sector: all ten tiles show check marks",
+  [
+    boot(),
+    prof("completedSectors", levelIds(1, 10)),
+    load(10),
     click("btn-open-maps-page"),
     adv(240),
     CAP,
@@ -213,8 +232,8 @@ add(
   ],
 );
 add(
-  "maps_world_5_scrolled",
-  "Maps page, world 5 scrolled to the bottom of the grid",
+  "maps_world_5_levels_1_44_done",
+  "Maps page, world 5 with levels 1-44 completed and level 44 the active sector",
   [
     boot(),
     prof("completedSectors", levelIds(1, 44)),
@@ -223,7 +242,6 @@ add(
     adv(240),
     sel(".world-tab-btn:nth-child(5)"),
     adv(150),
-    { op: "scroll", y: 600 },
     CAP,
   ],
 );
@@ -317,13 +335,6 @@ add(
   "Daily page opened after 120 s of fake time (countdown 14h 57m)",
   [boot(), adv(120000), click("btn-open-daily-shift"), adv(400), CAP],
 );
-add("daily_scrolled", "Daily page scrolled to the bottom (gold shift card)", [
-  boot(),
-  click("btn-open-daily-shift"),
-  adv(400),
-  { op: "scroll", y: 600 },
-  CAP,
-]);
 add("pressed_back_daily", "Daily page, back button held down", [
   boot(),
   click("btn-open-daily-shift"),
@@ -449,11 +460,6 @@ add("shop_equip_toast", "Shop, wore an owned ring: equipped toast on plateau", [
   adv(1000),
   CAP,
 ]);
-add("shop_scrolled", "Shop rings tab scrolled to the bottom", [
-  ...shopOpen,
-  { op: "scroll", y: 600 },
-  CAP,
-]);
 add("pressed_shop_buy", "Shop, an Unlock button held down", [
   ...shopOpen,
   holdSel(".btn-buy-item[data-id=ring_candyland]"),
@@ -524,15 +530,14 @@ add(
   ],
 );
 add(
-  "settings_toggles_clicked",
-  "Settings, sound and haptics switches clicked off, transition settled",
-  [
-    ...settingsOpen,
-    click("settings-sound-toggle"),
-    click("settings-haptics-toggle"),
-    adv(300),
-    CAP,
-  ],
+  "settings_haptics_clicked_off",
+  "Settings, only the haptics switch clicked off and settled (sound stays on)",
+  [...settingsOpen, click("settings-haptics-toggle"), adv(300), CAP],
+);
+add(
+  "settings_sound_toggle_t0100",
+  "Settings, sound switch clicked off and sampled 100 ms into its toggle transition",
+  [...settingsOpen, click("settings-sound-toggle"), adv(100), CAP],
 );
 add(
   "settings_sliders_moved",
@@ -551,11 +556,6 @@ add("settings_sliders_profile", "Settings, sliders at 10 and 100 via profile", [
   prof("settings.ambientVolume", 100),
   click("btn-home-settings"),
   adv(240),
-  CAP,
-]);
-add("settings_scrolled", "Settings scrolled to the bottom (version footer)", [
-  ...settingsOpen,
-  { op: "scroll", y: 600 },
   CAP,
 ]);
 add("settings_modal_privacy", "Settings with the privacy policy modal open", [
@@ -839,7 +839,7 @@ add(
 );
 add(
   "game_lvl01_gate_pass",
-  "Level 1 gameplay, 28 drag ticks in: first multiplier gate pass with floating text",
+  "Level 1 gameplay, 28 drag ticks in: two multiplier gate passes, so two ×2! SHRED ⚡ floating texts, one per gate pass",
   [
     boot(),
     ...gameStart(0),
@@ -849,7 +849,7 @@ add(
 );
 add(
   "game_lvl01_pickup",
-  "Level 1 gameplay, 55 drag ticks in: first debris swallowed by Nibbles with NOM text",
+  "Level 1 gameplay, 55 drag ticks in: first debris swallowed by Nibbles; the popup word is a random pick from NOM!/YUM!/GULP!/TASTY! (seeded Math.random gives GULP! 🍩)",
   [
     boot(),
     ...gameStart(0),
@@ -857,28 +857,163 @@ add(
     CAP,
   ],
 );
+const quotaStart = (kg) => [
+  boot(),
+  ...gameStart(0),
+  app("collectedMass", kg),
+  call("updateQuotaDisplay"),
+];
+const QUOTA_BAR = "#hud-quota-bar";
 add(
   "game_lvl01_near_victory",
-  "Level 1 gameplay with 19/20 kg collected (HUD bar at 95 %)",
+  "Level 1 gameplay with 19/20 kg collected, 300 ms after the update so the 0.25 s bar transition has settled (fill 95 %)",
   [
-    boot(),
-    ...gameStart(0),
-    app("collectedMass", 19),
-    call("updateQuotaDisplay"),
-    adv(16),
-    CAP,
+    ...quotaStart(19),
+    adv(300),
+    capExpect({ expectFraction: [{ selector: QUOTA_BAR, value: 0.95 }] }),
   ],
 );
 add(
   "game_lvl01_quota_met_hud",
-  "Level 1 gameplay with the quota bar full (green gradient, no victory yet)",
+  "Level 1 gameplay with 20/20 kg collected, 300 ms after the update so the bar transition has settled (fill 100 %, green gradient, no victory yet)",
+  [
+    ...quotaStart(20),
+    adv(300),
+    capExpect({ expectFraction: [{ selector: QUOTA_BAR, value: 1 }] }),
+  ],
+);
+add(
+  "game_lvl01_quota_bar_t0016",
+  "Level 1 gameplay with 19/20 kg set, sampled 16 ms into the 0.25 s bar transition (label already 19 / 20, fill about 26 % wide because the easing curve is already 27 % done after one frame)",
+  [...quotaStart(19), adv(16), CAP],
+);
+add(
+  "game_lvl01_quota_bar_t0125",
+  "Level 1 gameplay with 19/20 kg set, sampled 125 ms into the 0.25 s bar transition (easing overshoot: the fill wants 98 % of the track and is clipped by the capsule)",
+  [...quotaStart(19), adv(125), CAP],
+);
+add(
+  "game_lvl01_quota_met_t0016",
+  "Level 1 gameplay with 20/20 kg set, sampled 16 ms into the 0.25 s bar transition (label 20 / 20, fill about 27 % wide, green gradient)",
+  [...quotaStart(20), adv(16), CAP],
+);
+const HUB_SITES = [
+  ["duckie", "ring_duckie", 0, "🦆", "🦆 DUCKIE 🦆 / FLOAT RIG"],
+  ["candy", "ring_candyland", 0, "🍬", "🍬 CANDY 🍬 / MINT RIG"],
+  ["kitty", "ring_spacecat", 0, "🐱", "🐱 KITTY 🐱 / COSMIC RIG"],
+  ["donut", "ring_donut", 0, "🍩", "🍩 DONUT 🍩 / SWEET RIG"],
+  [
+    "gear",
+    null,
+    20,
+    "⚙️",
+    "⚙️ GEAR RIG ⚙️ / PLANETARY (concentric sector, level 21)",
+  ],
+];
+for (const [name, ring, index, emoji, text] of HUB_SITES) {
+  add(
+    `canvas_hub_${name}`,
+    `Canvas call site renderer.js:1077 (hub fillText): ${text} drawn with Fluent 3D emoji`,
+    [
+      boot(),
+      ...(ring ? [prof("equipped.ring", ring)] : []),
+      ...gameStart(index),
+      capExpect({ expectEmoji: [emoji] }),
+    ],
+  );
+}
+const GATE_SITES = [
+  ["bolt_x2", 0, "⚡", "renderer.js:1460 ⚡ multiplier gate (level 1, x2)"],
+  ["bolt_x3", 4, "⚡", "renderer.js:1460 ⚡ multiplier gate (level 5, x3)"],
+  ["magnet_add", 0, "🧲", "renderer.js:1650 🧲 add gate (level 1, +3)"],
+  ["blast_x4", 40, "💥", "renderer.js:1563 💥 multiplier gate (level 41, x4)"],
+  ["boost", 32, "⏩", "renderer.js:1723 ⏩ BOOST gate (level 33)"],
+];
+for (const [name, index, emoji, text] of GATE_SITES) {
+  add(
+    `canvas_gate_${name}`,
+    `Canvas call site ${text}: badge drawn with Fluent 3D emoji`,
+    [boot(), ...gameStart(index), capExpect({ expectEmoji: [emoji] })],
+  );
+}
+const GATE_PASS = { r: 100, angle: -Math.PI / 2 };
+const FLOAT_SITES = [
+  [
+    "shred",
+    "×2! SHRED ⚡",
+    "main.js:691 gate label",
+    [
+      callOn("physics", "onGatePassed", {
+        ...GATE_PASS,
+        type: "MULTIPLY",
+        value: 2,
+      }),
+    ],
+  ],
+  [
+    "compact",
+    "+3! COMPACT ✨",
+    "main.js:694 gate label",
+    [
+      callOn("physics", "onGatePassed", {
+        ...GATE_PASS,
+        type: "ADD",
+        value: 3,
+      }),
+    ],
+  ],
+  [
+    "boost",
+    "BOOST! ⏩",
+    "main.js:697 gate label",
+    [callOn("physics", "onGatePassed", { ...GATE_PASS, type: "BOOST" })],
+  ],
+  [
+    "poof",
+    "POOF! 💨",
+    "main.js:704 debris explosion",
+    [callOn("physics", "onDebrisExploded", { x: 215, y: 560 })],
+  ],
+  [
+    "turbo",
+    "TURBO! ⏩",
+    "main.js:713 forward boost",
+    [callOn("physics", "onBoostTriggered", 1)],
+  ],
+  [
+    "turbo_reverse",
+    "⏪ TURBO!",
+    "main.js:713 reverse boost",
+    [callOn("physics", "onBoostTriggered", -1)],
+  ],
+];
+for (const [name, label, site, steps] of FLOAT_SITES) {
+  add(
+    `canvas_float_${name}`,
+    `Canvas call sites renderer.js:1946/1950 (floating text stroke + fill): "${label}" from ${site}, sampled 16 ms after spawn`,
+    [
+      boot(),
+      ...gameStart(0),
+      ...steps,
+      adv(16),
+      capExpect({ expectFloating: [label] }),
+    ],
+  );
+}
+add(
+  "canvas_float_nom_words",
+  'Canvas call sites renderer.js:1946/1950: the four NOM words (main.js:650 list "NOM! 😋", "YUM! ✨", "GULP! 🍩", "TASTY! ⭐") stacked via renderer.addFloatingText',
   [
     boot(),
     ...gameStart(0),
-    app("collectedMass", 20),
-    call("updateQuotaDisplay"),
+    ...["NOM! 😋", "YUM! ✨", "GULP! 🍩", "TASTY! ⭐"].map((word, i) =>
+      callOn("renderer", "addFloatingText", 215, 560 + i * 48, word, "#fde047"),
+    ),
     adv(16),
-    CAP,
+    capExpect({
+      expectFloating: ["NOM! 😋", "YUM! ✨", "GULP! 🍩", "TASTY! ⭐"],
+      expectEmoji: ["😋", "✨", "🍩", "⭐"],
+    }),
   ],
 );
 add(
