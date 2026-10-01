@@ -450,6 +450,8 @@ export class Session {
     await m.move(x, y);
     await m.down();
     await m.up();
+    // Chromium re-evaluates :hover under a resting cursor from a real-time timer after layout changes, which the fake clock cannot order; parking the pointer outside the viewport removes hover entirely (Unity has none).
+    await m.move(-1, -1);
   }
 
   async runStep(step) {
