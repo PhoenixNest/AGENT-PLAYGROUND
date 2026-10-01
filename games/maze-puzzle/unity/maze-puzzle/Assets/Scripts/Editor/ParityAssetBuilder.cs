@@ -246,9 +246,26 @@ namespace OrbitalSalvage.Editor
                 }
             }
 
+            MakeBuildStable(fontAsset);
             EditorUtility.SetDirty(fontAsset);
             AssetDatabase.SaveAssetIfDirty(fontAsset);
             return fontAsset;
+        }
+
+        // TMP_PreBuildProcessor empties every dynamic font asset that has clearDynamicDataOnBuild set, which rewrites
+        // the atlas subasset. Saving the assets already in that emptied state keeps player builds from touching them.
+        private static void MakeBuildStable(TMP_FontAsset fontAsset)
+        {
+            var so = new SerializedObject(fontAsset);
+            var flag = so.FindProperty("m_ClearDynamicDataOnBuild");
+            if (flag == null) throw new InvalidOperationException("m_ClearDynamicDataOnBuild not found on " + fontAsset.name);
+            flag.boolValue = true;
+            so.ApplyModifiedPropertiesWithoutUndo();
+
+            var clear = typeof(TMP_FontAsset).GetMethod("ClearCharacterAndGlyphTablesInternal",
+                System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
+            if (clear == null) throw new MissingMethodException(nameof(TMP_FontAsset), "ClearCharacterAndGlyphTablesInternal");
+            clear.Invoke(fontAsset, null);
         }
     }
 }

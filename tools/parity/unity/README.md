@@ -26,7 +26,14 @@ Exit codes: 0 ok, 1 one or more captures failed, 2 usage or invalid states file.
 
 Player CLI (SPEC section 11): `OrbitalSalvageParity.exe --parity <statesJson> <outDir> [--only ids] [--profile p] [--summary dir]`.
 
-Unity rewrites some tracked files while building (TMP font assets, `ProjectSettings.asset`). Revert them before committing.
+## Builds leave the working tree clean
+
+`git status --porcelain` stays empty after `build.ps1` and `capture.ps1`; there is nothing to revert.
+
+- `ProjectSettings.asset`: `ParityBuild` snapshots every `PlayerSettings` value it changes (fullscreen mode, resolution, resizable window, run in background, visible in background, scripting backend, stripping level, splash) and restores them in a `finally` block, then calls `AssetDatabase.SaveAssets()`. `ORBITAL_PARITY` is passed through `BuildPlayerOptions.extraScriptingDefines`, so no define is written to the project. Unity still re-serialises the file on that save and adds fields that were absent from the committed version (`targetPixelDensity: 30`, a `buildNumber` map, iOS/tvOS/visionOS target OS strings), which no `PlayerSettings` setter can undo. `ParityBuild` therefore keeps the original bytes of the file and writes them back if they differ after the save (logged as a warning in `build.log`).
+- TMP font assets (`Assets/Resources/Fonts/TMP`): they are dynamic atlases with `m_ClearDynamicDataOnBuild: 1`, so `TMP_PreBuildProcessor` empties each atlas at the start of every player build (in the committed assets that rewrote `m_ColorSpace: 1` to `0` and `_typelessdata: cd` to `00` in the atlas subasset). `ParityAssetBuilder.BuildAll` now saves each font asset already in that emptied state (it sets `m_ClearDynamicDataOnBuild` and calls `ClearCharacterAndGlyphTablesInternal`), and the regenerated assets are committed, so builds no longer change them. Glyphs are generated at runtime from the same TTFs into the empty atlas, in the editor as in the player, so rendering is unaffected.
+- Re-run `Unity -batchmode -quit -executeMethod OrbitalSalvage.Editor.ParityAssetBuilder.BuildAll` after changing fonts and commit the result.
+- On this machine `core.autocrlf=true` / `core.eol=crlf` make git compare the stored CRLF size of text assets that Unity rewrites with LF. If `git status` lists a file whose `git diff` is empty, `git add` that file once to refresh its index entry.
 
 ## Window mode
 
