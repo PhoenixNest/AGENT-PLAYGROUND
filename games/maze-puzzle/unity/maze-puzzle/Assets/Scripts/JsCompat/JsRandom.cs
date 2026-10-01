@@ -34,6 +34,12 @@ namespace OrbitalSalvage.JsCompat
             set { _global = value ?? new JsRandom(DefaultSeed); }
         }
 
+        public uint State
+        {
+            get { return _state; }
+            set { _state = value; }
+        }
+
         public long CallCount { get; private set; }
 
         public bool LogEnabled { get; set; }

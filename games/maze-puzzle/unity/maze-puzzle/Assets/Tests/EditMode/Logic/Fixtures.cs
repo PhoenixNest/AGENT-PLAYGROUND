@@ -64,6 +64,28 @@ namespace OrbitalSalvage.Logic.Tests
             return File.ReadAllText(path, Encoding.UTF8);
         }
 
+        public static byte[] ReadBytes(string name)
+        {
+            string path = Path_(name);
+            if (!File.Exists(path)) throw new FileNotFoundException("missing fixture " + name, path);
+            using (var fs = File.OpenRead(path))
+            {
+                Stream src = fs;
+                GZipStream gz = null;
+                if (name.EndsWith(".gz", StringComparison.Ordinal))
+                {
+                    gz = new GZipStream(fs, CompressionMode.Decompress);
+                    src = gz;
+                }
+                using (var ms = new MemoryStream())
+                {
+                    src.CopyTo(ms);
+                    if (gz != null) gz.Dispose();
+                    return ms.ToArray();
+                }
+            }
+        }
+
         public static JsonValue Load(string name)
         {
             return JsonParser.Parse(ReadText(name));

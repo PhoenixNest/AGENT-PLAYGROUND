@@ -111,7 +111,15 @@ namespace OrbitalSalvage.JsCompat
                 if (pos == es) throw Error(s, pos, "bad exponent");
             }
             string token = s.Substring(start, pos - start);
-            double d = double.Parse(token, NumberStyles.Float, CultureInfo.InvariantCulture);
+            double d;
+            try
+            {
+                d = double.Parse(token, NumberStyles.Float, CultureInfo.InvariantCulture);
+            }
+            catch (OverflowException)
+            {
+                d = token[0] == '-' ? double.NegativeInfinity : double.PositiveInfinity;
+            }
             return JsonValue.FromNumber(d);
         }
 
