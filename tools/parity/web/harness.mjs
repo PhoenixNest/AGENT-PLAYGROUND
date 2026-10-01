@@ -45,6 +45,16 @@ export const CALL_ALLOWLIST = new Set([
   "initLayout",
   "triggerHaptic",
 ]);
+export const CALL_TARGETS = {
+  app: CALL_ALLOWLIST,
+  renderer: new Set(["addFloatingText"]),
+  physics: new Set([
+    "onGatePassed",
+    "onDebrisSwallowed",
+    "onDebrisExploded",
+    "onBoostTriggered",
+  ]),
+};
 export const PAGES = [
   "loading",
   "home",
@@ -481,14 +491,21 @@ export class Session {
           value: step.value,
         });
         break;
-      case "call":
-        if (!CALL_ALLOWLIST.has(step.method))
-          this.fail(`call: ${step.method} not in allow-list`);
-        await page.evaluate(({ method, args }) => window.app[method](...args), {
-          method: step.method,
-          args: step.args ?? [],
-        });
+      case "call": {
+        const target = step.target ?? "app";
+        const allowed = CALL_TARGETS[target];
+        if (!allowed) this.fail(`call: bad target ${target}`);
+        if (!allowed.has(step.method))
+          this.fail(`call: ${target}.${step.method} not in allow-list`);
+        await page.evaluate(
+          ({ target, method, args }) => {
+            const obj = target === "app" ? window.app : window.app[target];
+            return obj[method](...args);
+          },
+          { target, method: step.method, args: step.args ?? [] },
+        );
         break;
+      }
       case "click":
       case "clickSelector":
         await this.click(step);
@@ -521,13 +538,15 @@ export class Session {
               : document.querySelector(
                   ".app-page.page-active .page-scroll-body",
                 );
-            if (!el) return false;
+            if (!el) return "target missing";
             el.scrollTop = y;
-            return true;
+            if (el.scrollTop === 0 && y > 0)
+              return `nothing to scroll (scrollHeight ${el.scrollHeight}, clientHeight ${el.clientHeight})`;
+            return null;
           },
           { target: step.target, y: step.y },
         );
-        if (!ok) this.fail("scroll: target missing");
+        if (ok) this.fail(`scroll: ${ok}`);
         break;
       }
       case "holdPressed": {
@@ -540,7 +559,7 @@ export class Session {
         return;
       }
       case "capture":
-        return this.capture();
+        return this.capture(step);
       default:
         this.fail(`unknown op ${step.op}`);
     }
@@ -548,7 +567,7 @@ export class Session {
     this.checkErrors();
   }
 
-  async capture() {
+  async capture(step = {}) {
     const page = this.page;
     await page.evaluate(() => window.__parity.waitEmoji());
     await page.evaluate(() => window.__parity.sweep());
@@ -558,6 +577,33 @@ export class Session {
       tracked,
     );
     const events = await this.traceEvents();
+    const canvas = await page.evaluate(() => window.__parity.canvasCheck());
+    if (canvas.page === "game") {
+      if (canvas.calls === 0) this.fail("game frame drew no canvas text");
+      if (canvas.bad.length)
+        this.fail(`canvas emoji self-check: ${canvas.bad.join(" | ")}`);
+    }
+    for (const g of step.expectEmoji ?? []) {
+      if (!canvas.graphemes.includes(g))
+        this.fail(`expectEmoji: ${g} not drawn as an image this frame`);
+    }
+    for (const t of step.expectFloating ?? []) {
+      if (!canvas.floating.includes(t))
+        this.fail(`expectFloating: ${JSON.stringify(t)} not on screen`);
+    }
+    for (const e of step.expectFraction ?? []) {
+      const got = await page.evaluate((selector) => {
+        const el = document.querySelector(selector);
+        if (!el || !el.parentElement) return null;
+        return el.getBoundingClientRect().width / el.parentElement.clientWidth;
+      }, e.selector);
+      if (got === null) this.fail(`expectFraction: ${e.selector} missing`);
+      if (Math.abs(got - e.value) > (e.tol ?? 0.01))
+        this.fail(
+          `expectFraction: ${e.selector} is ${got.toFixed(4)} of its parent, expected ${e.value}`,
+        );
+    }
+    this.canvasStats = canvas;
     const raw = await page.screenshot({ animations: "allow", caret: "hide" });
     this.checkErrors();
     const { png, width, height } = pngToRgbPng(raw);
@@ -601,6 +647,7 @@ export class Session {
       perfOffset: this.perfOffset,
       bootFrames: this.bootFrames,
       safeArea: this.safeArea,
+      canvas: this.canvasStats,
       ...m,
     };
   }
