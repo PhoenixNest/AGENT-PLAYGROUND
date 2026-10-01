@@ -40,6 +40,36 @@ namespace OrbitalSalvage.Render.Editor
             string perfArg = Arg(args, "-perf");
             int perfN = perfArg != null ? int.Parse(perfArg) : 0;
             if (streams == null || outDir == null) throw new ArgumentException("-streams and -out are required");
+            for (int a = 0; a < args.Length - 1; a++)
+            {
+                if (args[a] != "-set") continue;
+                int eq = args[a + 1].IndexOf('=');
+                string fieldName = args[a + 1].Substring(0, eq), value = args[a + 1].Substring(eq + 1);
+                var field = typeof(Canvas2D).GetField(fieldName);
+                if (field == null) throw new ArgumentException("unknown Canvas2D static: " + fieldName);
+                object parsed = field.FieldType == typeof(bool) ? (object)(value == "1" || value == "true") : Convert.ChangeType(value, field.FieldType, CultureInfo.InvariantCulture);
+                field.SetValue(null, parsed);
+                Debug.Log("[CanvasConformance] set " + fieldName + " = " + parsed);
+            }
+            var combos = new List<KeyValuePair<string, List<KeyValuePair<System.Reflection.FieldInfo, object>>>>();
+            combos.Add(new KeyValuePair<string, List<KeyValuePair<System.Reflection.FieldInfo, object>>>("", new List<KeyValuePair<System.Reflection.FieldInfo, object>>()));
+            for (int a = 0; a < args.Length - 1; a++)
+            {
+                if (args[a] != "-sweep") continue;
+                int eq = args[a + 1].IndexOf('=');
+                string fieldName = args[a + 1].Substring(0, eq);
+                var field = typeof(Canvas2D).GetField(fieldName);
+                if (field == null) throw new ArgumentException("unknown Canvas2D static: " + fieldName);
+                var next = new List<KeyValuePair<string, List<KeyValuePair<System.Reflection.FieldInfo, object>>>>();
+                foreach (var combo in combos)
+                    foreach (var v in args[a + 1].Substring(eq + 1).Split(','))
+                    {
+                        object parsed = field.FieldType == typeof(bool) ? (object)(v == "1" || v == "true") : Convert.ChangeType(v, field.FieldType, CultureInfo.InvariantCulture);
+                        var sets = new List<KeyValuePair<System.Reflection.FieldInfo, object>>(combo.Value) { new KeyValuePair<System.Reflection.FieldInfo, object>(field, parsed) };
+                        next.Add(new KeyValuePair<string, List<KeyValuePair<System.Reflection.FieldInfo, object>>>(combo.Key + "~" + fieldName + "=" + v, sets));
+                    }
+                combos = next;
+            }
             Directory.CreateDirectory(outDir);
 
             var gdt = SystemInfo.graphicsDeviceType;
@@ -74,14 +104,18 @@ namespace OrbitalSalvage.Render.Editor
                         canvas?.Dispose();
                         canvas = new Canvas2D(player.Width, player.Height);
                     }
-                    var sw = Stopwatch.StartNew();
-                    canvas.BeginFrame();
-                    player.Play(canvas);
-                    double recordMs = sw.Elapsed.TotalMilliseconds;
-                    canvas.EndFrame();
-                    double submitMs = sw.Elapsed.TotalMilliseconds - recordMs;
-                    WritePng(canvas.Target, Path.Combine(outDir, name + ".png"));
-                    double firstMs = sw.Elapsed.TotalMilliseconds;
+                    double recordMs = 0, submitMs = 0;
+                    foreach (var combo in combos)
+                    {
+                        foreach (var set in combo.Value) set.Key.SetValue(null, set.Value);
+                        var sw = Stopwatch.StartNew();
+                        canvas.BeginFrame();
+                        player.Play(canvas);
+                        recordMs = sw.Elapsed.TotalMilliseconds;
+                        canvas.EndFrame();
+                        submitMs = sw.Elapsed.TotalMilliseconds - recordMs;
+                        WritePng(canvas.Target, Path.Combine(outDir, name + combo.Key + ".png"));
+                    }
 
                     double avgRecord = 0, avgSubmit = 0, avgTotal = 0;
                     if (perfN > 0)

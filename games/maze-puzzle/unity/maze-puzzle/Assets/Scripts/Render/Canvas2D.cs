@@ -61,6 +61,7 @@ namespace OrbitalSalvage.Render
 
         public static bool GradientInterpolatesPremultiplied = false;
         public static double ShadowScale = 1.0;
+        public static bool SnapRects = true;
 
         State state = new State();
         readonly Stack<State> stack = new Stack<State>();
@@ -252,7 +253,7 @@ namespace OrbitalSalvage.Render
             tmpPath.Reset();
             tmpPath.Rect(state.ctm, x, y, w, h);
             BuildFillPolygons(tmpPath, polys);
-            RenderShape(polys, false, false, 1f);
+            RenderShape(polys, false, false, 1f, SnapRects);
         }
 
         public void StrokeRect(double x, double y, double w, double h)
@@ -269,7 +270,7 @@ namespace OrbitalSalvage.Render
             tmpPath.Reset();
             tmpPath.Rect(state.ctm, x, y, w, h);
             BuildFillPolygons(tmpPath, polys);
-            RenderClear(polys);
+            RenderClear(polys, SnapRects);
         }
 
         static void BuildFillPolygons(PathData p, PolygonSet dst)
@@ -319,7 +320,7 @@ namespace OrbitalSalvage.Render
                     foreach (var l in dashList) dashPool.Push(l);
                     dashList.Clear();
                     Dasher.Dash(userPts, sp.closed, st.lineDash, st.lineDashOffset, dashList, dashPool, eps);
-                    foreach (var piece in dashList) stroker.Stroke(piece, false, userPolys, eps);
+                    foreach (var piece in dashList) stroker.Stroke(piece, false, userPolys, eps, true);
                 }
                 else
                 {
