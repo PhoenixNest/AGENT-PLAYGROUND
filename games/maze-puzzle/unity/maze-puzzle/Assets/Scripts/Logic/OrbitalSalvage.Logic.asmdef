@@ -1,0 +1,16 @@
+{
+    "name": "OrbitalSalvage.Logic",
+    "rootNamespace": "OrbitalSalvage.Logic",
+    "references": [
+        "OrbitalSalvage.JsCompat"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": true
+}
