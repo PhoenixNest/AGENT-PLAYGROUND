@@ -112,7 +112,7 @@ namespace OrbitalSalvage.Parity
                 case "shop": ui.ShowShop(StoreTabIndex()); break;
                 case "achievements": ui.ShowTrophies(); break;
                 case "settings": ui.ShowSettings(); break;
-                default: return OpResult.Failed($"unknown page '{page}'");
+                default: return OpResult.Unsupported($"unknown page '{page}'");
             }
             ctx.AddTrace("page", page);
             return OpResult.Ok();
@@ -162,7 +162,7 @@ namespace OrbitalSalvage.Parity
             switch (method)
             {
                 case "showPage":
-                    return args.Count > 0 ? ShowPage(Convert.ToString(args[0])) : OpResult.Failed("showPage needs a page argument");
+                    return args.Count > 0 ? ShowPage(Convert.ToString(args[0])) : OpResult.Unsupported("showPage needs a page argument");
                 case "exitGameToHome":
                     if (ui == null) return OpResult.Failed("UIManager missing");
                     ui.ShowHome();
@@ -259,8 +259,8 @@ namespace OrbitalSalvage.Parity
 
         OpResult ClickTransform(Transform t, string label)
         {
-            if (!t.gameObject.activeInHierarchy) return OpResult.Failed($"'{label}' is not visible");
-            if (!TryCenter(t, out var center)) return OpResult.Failed($"'{label}' has no RectTransform");
+            if (!t.gameObject.activeInHierarchy) return OpResult.Unsupported($"'{label}' is not visible");
+            if (!TryCenter(t, out var center)) return OpResult.Unsupported($"'{label}' has no RectTransform");
             pointer.Move(center);
             pointer.Down();
             pointer.Up();
@@ -279,7 +279,7 @@ namespace OrbitalSalvage.Parity
         public OpResult ClickSelector(string selector)
         {
             string name = BaselineIdMap.DeriveSelectorName(selector);
-            if (name == null) return OpResult.Failed($"selector '{selector}' is outside the SPEC 8.1 forms");
+            if (name == null) return OpResult.Unsupported($"selector '{selector}' is outside the SPEC 8.1 forms");
             var t = ResolveSelector(selector);
             if (t == null) return OpResult.Unsupported($"no Unity element for selector '{selector}' (derived name '{name}')");
             return ClickTransform(t, name);
@@ -294,7 +294,7 @@ namespace OrbitalSalvage.Parity
                 case "down": pointer.Down(); break;
                 case "up": pointer.Up(); break;
                 case "move": break;
-                default: return OpResult.Failed($"unknown pointer kind '{kind}'");
+                default: return OpResult.Unsupported($"unknown pointer kind '{kind}'");
             }
             if (Gm != null && Gm.CurrentState == GameState.Playing)
                 return OpResult.Unsupported("gameplay input in the current Unity code reads the legacy Input class, which the parity player cannot inject");
@@ -319,7 +319,7 @@ namespace OrbitalSalvage.Parity
         {
             var t = ResolveId(id);
             if (t == null) return OpResult.Unsupported($"no Unity element for DOM id '{id}'");
-            if (!TryCenter(t, out var center)) return OpResult.Failed($"'{id}' has no RectTransform");
+            if (!TryCenter(t, out var center)) return OpResult.Unsupported($"'{id}' has no RectTransform");
             pointer.Move(center);
             pointer.Down();
             return OpResult.Ok();
