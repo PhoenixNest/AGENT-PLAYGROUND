@@ -73,3 +73,27 @@ Build: 10-67 s (cold first run longest). Capture: ~0.25 s per state in-process a
 ## Baseline adapter
 
 `BaselineAdapter` maps SPEC ops onto the current `UIManager` / `GameManager` / `EconomyManager`. The DOM id to Unity path table is `BaselineIdMap.Entries` (80 mapped web ids, 13 unmapped); `layoutUnmappedIds` in each `.unity-notes.json` lists the unmapped ones. The baseline UI has no toast, gesture hint, privacy or reset modals, no scrollable page, and ignores world-tab clicks.
+
+
+## Baseline known gaps
+
+**Safe-area shift is proportional, not additive (legacy `UIManager` layout).** Measured on `iphone` vs `zero`: home top bar +163 px (not 177), game HUD +164 px, home dock top edge up ~75 px and bottom edge up 98 px (dock ~22 px shorter) instead of the web's taller bottom-anchored dock.
+
+The infrastructure is correct. Logged per capture in `<state>__<profile>.unity-notes.json` (`screen`, `safeAreaProviderPx`, `canvases[].scaler`, `safeContents`):
+
+| Value | zero | iphone |
+| --- | --- | --- |
+| `Screen.width x height` seen by code (real window) | 430x932 | 430x932 |
+| `ParityScreen.Size` (reported) | 1290x2796 | 1290x2796 |
+| `SafeAreaProvider.SafeAreaPx` (x, y, w, h; bottom-left px) | 0, 0, 1290, 2796 | 0, 102, 1290, 2517 (= 2796-177-102) |
+| `UI_Canvas` render mode / `scaleFactor` / rect | ScreenSpaceCamera / 3 / 430x932 | same |
+| `CanvasScaler` | ScaleWithScreenSize, ref 430x932, MatchWidthOrHeight 0.5 | same |
+| `Page_Home/SafeContent` anchors | (0,0)-(1,1), offsets 0 | (0,0.03648)-(1,0.93670), offsets 0; rect 430x839 pt, y 102..2619 px |
+
+`SafeAreaFitter` therefore delivers exactly the intended inset rect at exactly 3.0 px/pt. The legacy page builders then place children inside `SafeContent` with fractional anchors and zero offsets, so every child is scaled by the safe rect's height (2517/2796 = 0.9003) and offset by its bottom inset instead of being pinned by a fixed pt distance to the safe-area edge:
+
+- `HomeTopBar` anchors y 0.92-0.98 (centre line at fraction 0.95): centre y = `y0 + H*0.95`, i.e. 2796*0.95 = 2656.2 px (zero) and 102 + 2517*0.95 = 2493.15 px (iphone). Downward shift = `0.95*(top+bottom inset) - bottom inset` = 0.95*279 - 102 = 163.05 px, not the top inset 177 px.
+- Game HUD `TopBar` anchors y 0.92-0.985: centre 2663.19 -> 2499.44 px, shift 163.75 px.
+- `ArcadeDock` anchors y 0.015-0.095: bottom edge 41.94 -> 139.755 px (up 97.8), top edge 265.62 -> 341.12 px (up 75.5), height 74.56 -> 67.12 pt.
+
+The web rule is absolute: header offset by the 59 pt top inset and dock height 68+34 pt with `padding-bottom` 34+6 pt anchored to the screen edge. The legacy layout is intentionally left as is; the UI port that replaces `UIManager` should anchor to the screen edges and apply the inset in pt (3 px/pt).

@@ -342,14 +342,41 @@ namespace OrbitalSalvage.Parity
             {
                 if (!canvas.isRootCanvas) continue;
                 var rt = (RectTransform)canvas.transform;
+                var scalerInfo = new Dictionary<string, object>();
+                var scaler = canvas.GetComponent<UnityEngine.UI.CanvasScaler>();
+                if (scaler != null)
+                {
+                    scalerInfo["uiScaleMode"] = scaler.uiScaleMode.ToString();
+                    scalerInfo["referenceResolution"] = scaler.referenceResolution.x + "x" + scaler.referenceResolution.y;
+                    scalerInfo["screenMatchMode"] = scaler.screenMatchMode.ToString();
+                    scalerInfo["matchWidthOrHeight"] = scaler.matchWidthOrHeight;
+                }
                 canvases.Add(new Dictionary<string, object>
                 {
                     ["name"] = canvas.name,
                     ["renderMode"] = canvas.renderMode.ToString(),
                     ["scaleFactor"] = canvas.scaleFactor,
                     ["rectW"] = rt.rect.width,
-                    ["rectH"] = rt.rect.height
+                    ["rectH"] = rt.rect.height,
+                    ["scaler"] = scalerInfo
                 });
+            }
+
+            var safeRect = SafeAreaProvider.SafeAreaPx;
+            var safeContents = new List<object>();
+            foreach (var fitter in FindObjectsByType<OrbitalSalvage.UI.SafeAreaFitter>(FindObjectsInactive.Exclude, FindObjectsSortMode.None))
+            {
+                var frt = (RectTransform)fitter.transform;
+                var children = new List<object>();
+                for (int i = 0; i < frt.childCount; i++)
+                {
+                    if (!(frt.GetChild(i) is RectTransform c) || !c.gameObject.activeInHierarchy) continue;
+                    children.Add(DescribeRect(c));
+                }
+                var info = DescribeRect(frt);
+                info["path"] = HierarchyPath(frt);
+                info["children"] = children;
+                safeContents.Add(info);
             }
 
             var doc = new Dictionary<string, object>
@@ -359,11 +386,46 @@ namespace OrbitalSalvage.Parity
                 ["target"] = target.Name,
                 ["virtualNowMs"] = clock.NowMs,
                 ["screen"] = new Dictionary<string, object> { ["width"] = Screen.width, ["height"] = Screen.height, ["reported"] = ParityScreen.Width + "x" + ParityScreen.Height },
+                ["safeAreaProviderPx"] = new Dictionary<string, object> { ["x"] = safeRect.x, ["y"] = safeRect.y, ["w"] = safeRect.width, ["h"] = safeRect.height },
                 ["canvases"] = canvases,
+                ["safeContents"] = safeContents,
                 ["notes"] = notes
             };
             foreach (var kv in ctx.Extra) doc[kv.Key] = kv.Value;
             File.WriteAllText(path, MiniJson.Serialize(doc, true));
+        }
+
+        static string HierarchyPath(Transform t)
+        {
+            var path = t.name;
+            for (var p = t.parent; p != null; p = p.parent) path = p.name + "/" + path;
+            return path;
+        }
+
+        static Dictionary<string, object> DescribeRect(RectTransform rt)
+        {
+            var corners = new Vector3[4];
+            rt.GetWorldCorners(corners);
+            var cam = rt.GetComponentInParent<Canvas>().rootCanvas.worldCamera;
+            float minX = float.MaxValue, minY = float.MaxValue, maxX = float.MinValue, maxY = float.MinValue;
+            foreach (var c in corners)
+            {
+                Vector3 s = cam != null ? cam.WorldToScreenPoint(c) : c;
+                minX = Mathf.Min(minX, s.x); maxX = Mathf.Max(maxX, s.x);
+                minY = Mathf.Min(minY, s.y); maxY = Mathf.Max(maxY, s.y);
+            }
+            return new Dictionary<string, object>
+            {
+                ["name"] = rt.name,
+                ["anchorMin"] = rt.anchorMin.x + "," + rt.anchorMin.y,
+                ["anchorMax"] = rt.anchorMax.x + "," + rt.anchorMax.y,
+                ["offsetMin"] = rt.offsetMin.x + "," + rt.offsetMin.y,
+                ["offsetMax"] = rt.offsetMax.x + "," + rt.offsetMax.y,
+                ["sizeDelta"] = rt.sizeDelta.x + "," + rt.sizeDelta.y,
+                ["pivot"] = rt.pivot.x + "," + rt.pivot.y,
+                ["rectPt"] = rt.rect.width + "x" + rt.rect.height,
+                ["screenPx"] = "x " + minX + ".." + maxX + ", y(bottom-left) " + minY + ".." + maxY
+            };
         }
 
         void WriteTrace(string path)
