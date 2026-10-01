@@ -17,10 +17,11 @@ const FONT_SOURCES = [
     dir: 'ofl/fredoka',
     file: 'Fredoka[wdth,wght].ttf',
     license: 'Fredoka-OFL.txt',
-    instances: [400, 600, 700, 800, 900].map((w) => ({
+    // Exactly the faces Google Fonts serves for the styles.css @import (SPEC 5.2): 400, 600, 700.
+    // Weights 800/900 are not faces; CSS font matching resolves them to 700.
+    instances: [400, 600, 700].map((w) => ({
       out: `Fredoka-${w}.ttf`,
       axes: [`wght=${w}`, 'wdth=100'],
-      ...(w > 700 ? { note: 'source wght axis max is 700; instancer clamps to 700 outlines' } : {}),
     })),
   },
   {
@@ -28,7 +29,9 @@ const FONT_SOURCES = [
     dir: 'ofl/nunito',
     file: 'Nunito[wght].ttf',
     license: 'Nunito-OFL.txt',
-    instances: [400, 700, 800, 900].map((w) => ({ out: `Nunito-${w}.ttf`, axes: [`wght=${w}`] })),
+    // Exactly the faces Google Fonts serves for the styles.css @import (SPEC 5.2): 700, 800, 900.
+    // Weight 400 is not a face; CSS font matching resolves it to 700.
+    instances: [700, 800, 900].map((w) => ({ out: `Nunito-${w}.ttf`, axes: [`wght=${w}`] })),
   },
   {
     family: 'Noto Sans Symbols 2',

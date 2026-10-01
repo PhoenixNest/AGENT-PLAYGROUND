@@ -35,7 +35,7 @@ def resolve(base_weight_files, fallbacks):
 
 
 failed = False
-for family, weights in (("Fredoka", [400, 600, 700, 800, 900]), ("Nunito", [400, 700, 800, 900])):
+for family, weights in (("Fredoka", [400, 600, 700]), ("Nunito", [700, 800, 900])):
     for w in weights:
         r = resolve(f"{family}-{w}", chain[1:])
         uncovered = [cp for cp, n in r.items() if n is None]

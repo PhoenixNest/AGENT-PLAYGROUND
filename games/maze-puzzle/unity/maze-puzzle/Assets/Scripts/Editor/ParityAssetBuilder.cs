@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using OrbitalSalvage.Render;
 using TMPro;
 using UnityEditor;
 using UnityEngine;
@@ -11,7 +12,9 @@ namespace OrbitalSalvage.Editor
     public static class ParityAssetBuilder
     {
         private const string FontsDir = "Assets/Fonts";
-        private const string TmpDir = "Assets/Fonts/TMP";
+        // TMP assets live under Resources so OrbitalSalvage.Render.ParityFonts can Resources.Load them.
+        private const string TmpDir = "Assets/Resources/Fonts/TMP";
+        private const string LegacyTmpDir = "Assets/Fonts/TMP";
         private const string EmojiDir = "Assets/Resources/Emojis/3D";
         private const string EmojiIndexPath = "Assets/Resources/Emojis/emoji_index.json";
         private const string LicensesDir = "Assets/Licenses";
@@ -22,11 +25,18 @@ namespace OrbitalSalvage.Editor
 
         private static readonly string[] FallbackFonts = { "NotoSansSymbols2-Regular", "NotoSansSymbols-Regular" };
 
-        private static readonly string[] PrimaryFonts =
+        // Exactly the faces ParityFonts.FaceWeights lists: Fredoka 400/600/700 and Nunito 700/800/900.
+        // These are the faces Google Fonts serves for the web app; other weights resolve by CSS font matching.
+        private static string[] PrimaryFonts
         {
-            "Fredoka-400", "Fredoka-600", "Fredoka-700", "Fredoka-800", "Fredoka-900",
-            "Nunito-400", "Nunito-700", "Nunito-800", "Nunito-900",
-        };
+            get
+            {
+                var names = new List<string>();
+                foreach (var family in ParityFonts.Families)
+                    foreach (int w in ParityFonts.FaceWeights(family)) names.Add(family + "-" + w);
+                return names.ToArray();
+            }
+        }
 
         private static string ProjectRoot => Path.GetFullPath(Path.Combine(Application.dataPath, ".."));
         private static string ParityAssets => Path.GetFullPath(Path.Combine(ProjectRoot, "..", "..", "..", "..", "tools", "parity", "assets"));
@@ -49,6 +59,31 @@ namespace OrbitalSalvage.Editor
                 Debug.LogError($"[ParityAssetBuilder] BuildAll failed: {e}");
                 throw;
             }
+        }
+
+        // Batchmode check (-executeMethod ...VerifyFonts): ParityFonts.Resolve must return the SPEC 5 effective face
+        // for every family/weight pair, and every face asset must load from Resources.
+        public static void VerifyFonts()
+        {
+            var expected = new (string family, int css, int face)[]
+            {
+                ("Fredoka", 400, 400), ("Fredoka", 600, 600), ("Fredoka", 700, 700), ("Fredoka", 800, 700), ("Fredoka", 900, 700),
+                ("Nunito", 400, 700), ("Nunito", 700, 700), ("Nunito", 800, 800), ("Nunito", 900, 900),
+            };
+            int failures = 0;
+            ParityFonts.ClearCache();
+            foreach (var (family, css, face) in expected)
+            {
+                var asset = ParityFonts.Resolve(family, css);
+                string want = ParityFonts.AssetName(family, face);
+                if (asset == null || asset.name != want)
+                {
+                    failures++;
+                    Debug.LogError($"[ParityFonts] {family} {css}: expected '{want}', got '{(asset == null ? "null" : asset.name)}'");
+                }
+                else Debug.Log($"[ParityFonts] {family} {css} -> {asset.name} (fallbacks {asset.fallbackFontAssetTable.Count})");
+            }
+            if (failures > 0) EditorApplication.Exit(1);
         }
 
         private static void CopyIfDifferent(string src, string dst)
@@ -127,11 +162,47 @@ namespace OrbitalSalvage.Editor
 
         private static void BuildTmpFontAssets()
         {
-            Directory.CreateDirectory(Path.Combine(ProjectRoot, TmpDir));
+            RemoveObsoleteFontAssets();
+            EnsureFolder("Assets/Resources");
+            EnsureFolder("Assets/Resources/Fonts");
+            EnsureFolder(TmpDir);
 
             var fallbacks = new List<TMP_FontAsset>();
             foreach (var name in FallbackFonts) fallbacks.Add(CreateTmpFont(name, null));
             foreach (var name in PrimaryFonts) CreateTmpFont(name, fallbacks);
+        }
+
+        private static void EnsureFolder(string assetFolder)
+        {
+            if (AssetDatabase.IsValidFolder(assetFolder)) return;
+            string parent = Path.GetDirectoryName(assetFolder).Replace('\\', '/');
+            AssetDatabase.CreateFolder(parent, Path.GetFileName(assetFolder));
+        }
+
+        // Deletes outputs of earlier layouts: the old Assets/Fonts/TMP folder, static font files for weights
+        // that Google does not serve (Fredoka 800/900, Nunito 400) and TMP assets no longer in the face set.
+        private static void RemoveObsoleteFontAssets()
+        {
+            if (AssetDatabase.IsValidFolder(LegacyTmpDir)) AssetDatabase.DeleteAsset(LegacyTmpDir);
+
+            var wantedTtf = new HashSet<string>(PrimaryFonts);
+            foreach (var guid in AssetDatabase.FindAssets("t:Font", new[] { FontsDir }))
+            {
+                string path = AssetDatabase.GUIDToAssetPath(guid);
+                string name = Path.GetFileNameWithoutExtension(path);
+                bool isParityFamily = name.StartsWith("Fredoka-", StringComparison.Ordinal) || name.StartsWith("Nunito-", StringComparison.Ordinal);
+                if (isParityFamily && !wantedTtf.Contains(name)) AssetDatabase.DeleteAsset(path);
+            }
+
+            if (!AssetDatabase.IsValidFolder(TmpDir)) return;
+            var wantedAssets = new HashSet<string>();
+            foreach (var name in PrimaryFonts) wantedAssets.Add(name + " SDF");
+            foreach (var name in FallbackFonts) wantedAssets.Add(name + " SDF");
+            foreach (var guid in AssetDatabase.FindAssets("t:TMP_FontAsset", new[] { TmpDir }))
+            {
+                string path = AssetDatabase.GUIDToAssetPath(guid);
+                if (!wantedAssets.Contains(Path.GetFileNameWithoutExtension(path))) AssetDatabase.DeleteAsset(path);
+            }
         }
 
         private static TMP_FontAsset CreateTmpFont(string fontName, List<TMP_FontAsset> fallbacks)

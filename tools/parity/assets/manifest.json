@@ -564,24 +564,6 @@
       "from": "fonts/src/Fredoka_wdth-wght.ttf"
     },
     {
-      "path": "fonts/Fredoka-800.ttf",
-      "bytes": 49908,
-      "sha256": "c570243acd47e10bc47913bd1b0b20ba36f53ec8663e093f02195cceaca25297",
-      "kind": "generated",
-      "generator": "fontTools 4.66.1 varLib.instancer wght=800 wdth=100 --update-name-table",
-      "from": "fonts/src/Fredoka_wdth-wght.ttf",
-      "note": "source wght axis max is 700; instancer clamps to 700 outlines"
-    },
-    {
-      "path": "fonts/Fredoka-900.ttf",
-      "bytes": 49908,
-      "sha256": "c570243acd47e10bc47913bd1b0b20ba36f53ec8663e093f02195cceaca25297",
-      "kind": "generated",
-      "generator": "fontTools 4.66.1 varLib.instancer wght=900 wdth=100 --update-name-table",
-      "from": "fonts/src/Fredoka_wdth-wght.ttf",
-      "note": "source wght axis max is 700; instancer clamps to 700 outlines"
-    },
-    {
       "path": "fonts/Fredoka-OFL.txt",
       "bytes": 4388,
       "sha256": "5c9e7eee5c6b25f4b05b8d53b2e470ea4962f9ced742d044a98f7d95d1375bab",
@@ -624,14 +606,6 @@
       "url": "https://raw.githubusercontent.com/google/fonts/9710da1eacb3be272583c3224dcb70f9da6eadbb/ofl/notosanssymbols2/NotoSansSymbols2-Regular.ttf",
       "repo": "google/fonts",
       "commit": "9710da1eacb3be272583c3224dcb70f9da6eadbb"
-    },
-    {
-      "path": "fonts/Nunito-400.ttf",
-      "bytes": 132328,
-      "sha256": "e0ece6c997db47df512b21c010284f2fd25fad7df110f0e0b8978381b55dae51",
-      "kind": "generated",
-      "generator": "fontTools 4.66.1 varLib.instancer wght=400 --update-name-table",
-      "from": "fonts/src/Nunito_wght.ttf"
     },
     {
       "path": "fonts/Nunito-700.ttf",
