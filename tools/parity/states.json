@@ -1,7 +1,7 @@
 [
   {
     "id": "loading_t0000",
-    "description": "Loading screen at boot, no frame run (bar at CSS default, first tip)",
+    "description": "Loading screen at boot, no frame run: #page-loading is at its pageEnter 0 % keyframe (opacity 0), so only the navy body background is visible",
     "profiles": ["zero", "iphone"],
     "steps": [
       {
@@ -759,7 +759,7 @@
   },
   {
     "id": "maps_world_1_all_complete",
-    "description": "Maps page, world 1 fully completed (10/10 banner, all check marks)",
+    "description": "Maps page, world 1 fully completed (10/10 banner); tile 1 is the active sector so it shows PLAY, tiles 2-10 show check marks",
     "profiles": ["zero", "iphone"],
     "steps": [
       {
@@ -780,6 +780,47 @@
           "level_9",
           "level_10"
         ]
+      },
+      {
+        "op": "click",
+        "target": "btn-open-maps-page"
+      },
+      {
+        "op": "advance",
+        "ms": 240
+      },
+      {
+        "op": "capture"
+      }
+    ]
+  },
+  {
+    "id": "maps_world_1_all_complete_other_active",
+    "description": "Maps page, world 1 fully completed while level 11 is the active sector: all ten tiles show check marks",
+    "profiles": ["zero", "iphone"],
+    "steps": [
+      {
+        "op": "boot"
+      },
+      {
+        "op": "setProfile",
+        "path": "completedSectors",
+        "value": [
+          "level_1",
+          "level_2",
+          "level_3",
+          "level_4",
+          "level_5",
+          "level_6",
+          "level_7",
+          "level_8",
+          "level_9",
+          "level_10"
+        ]
+      },
+      {
+        "op": "loadSector",
+        "index": 10
       },
       {
         "op": "click",
@@ -828,8 +869,8 @@
     ]
   },
   {
-    "id": "maps_world_5_scrolled",
-    "description": "Maps page, world 5 scrolled to the bottom of the grid",
+    "id": "maps_world_5_levels_1_44_done",
+    "description": "Maps page, world 5 with levels 1-44 completed and level 44 the active sector",
     "profiles": ["zero", "iphone"],
     "steps": [
       {
@@ -904,10 +945,6 @@
       {
         "op": "advance",
         "ms": 150
-      },
-      {
-        "op": "scroll",
-        "y": 600
       },
       {
         "op": "capture"
@@ -1197,31 +1234,6 @@
       {
         "op": "advance",
         "ms": 400
-      },
-      {
-        "op": "capture"
-      }
-    ]
-  },
-  {
-    "id": "daily_scrolled",
-    "description": "Daily page scrolled to the bottom (gold shift card)",
-    "profiles": ["zero", "iphone"],
-    "steps": [
-      {
-        "op": "boot"
-      },
-      {
-        "op": "click",
-        "target": "btn-open-daily-shift"
-      },
-      {
-        "op": "advance",
-        "ms": 400
-      },
-      {
-        "op": "scroll",
-        "y": 600
       },
       {
         "op": "capture"
@@ -1629,31 +1641,6 @@
     ]
   },
   {
-    "id": "shop_scrolled",
-    "description": "Shop rings tab scrolled to the bottom",
-    "profiles": ["zero", "iphone"],
-    "steps": [
-      {
-        "op": "boot"
-      },
-      {
-        "op": "click",
-        "target": "btn-open-shop-page"
-      },
-      {
-        "op": "advance",
-        "ms": 400
-      },
-      {
-        "op": "scroll",
-        "y": 600
-      },
-      {
-        "op": "capture"
-      }
-    ]
-  },
-  {
     "id": "pressed_shop_buy",
     "description": "Shop, an Unlock button held down",
     "profiles": ["zero", "iphone"],
@@ -1910,8 +1897,37 @@
     ]
   },
   {
-    "id": "settings_toggles_clicked",
-    "description": "Settings, sound and haptics switches clicked off, transition settled",
+    "id": "settings_haptics_clicked_off",
+    "description": "Settings, only the haptics switch clicked off and settled (sound stays on)",
+    "profiles": ["zero", "iphone"],
+    "steps": [
+      {
+        "op": "boot"
+      },
+      {
+        "op": "click",
+        "target": "btn-home-settings"
+      },
+      {
+        "op": "advance",
+        "ms": 240
+      },
+      {
+        "op": "click",
+        "target": "settings-haptics-toggle"
+      },
+      {
+        "op": "advance",
+        "ms": 300
+      },
+      {
+        "op": "capture"
+      }
+    ]
+  },
+  {
+    "id": "settings_sound_toggle_t0100",
+    "description": "Settings, sound switch clicked off and sampled 100 ms into its toggle transition",
     "profiles": ["zero", "iphone"],
     "steps": [
       {
@@ -1930,12 +1946,8 @@
         "target": "settings-sound-toggle"
       },
       {
-        "op": "click",
-        "target": "settings-haptics-toggle"
-      },
-      {
         "op": "advance",
-        "ms": 300
+        "ms": 100
       },
       {
         "op": "capture"
@@ -2002,31 +2014,6 @@
       {
         "op": "advance",
         "ms": 240
-      },
-      {
-        "op": "capture"
-      }
-    ]
-  },
-  {
-    "id": "settings_scrolled",
-    "description": "Settings scrolled to the bottom (version footer)",
-    "profiles": ["zero", "iphone"],
-    "steps": [
-      {
-        "op": "boot"
-      },
-      {
-        "op": "click",
-        "target": "btn-home-settings"
-      },
-      {
-        "op": "advance",
-        "ms": 240
-      },
-      {
-        "op": "scroll",
-        "y": 600
       },
       {
         "op": "capture"
@@ -4338,7 +4325,7 @@
   },
   {
     "id": "game_lvl01_gate_pass",
-    "description": "Level 1 gameplay, 28 drag ticks in: first multiplier gate pass with floating text",
+    "description": "Level 1 gameplay, 28 drag ticks in: two multiplier gate passes, so two ×2! SHRED ⚡ floating texts, one per gate pass",
     "profiles": ["zero", "iphone"],
     "steps": [
       {
@@ -4762,7 +4749,7 @@
   },
   {
     "id": "game_lvl01_pickup",
-    "description": "Level 1 gameplay, 55 drag ticks in: first debris swallowed by Nibbles with NOM text",
+    "description": "Level 1 gameplay, 55 drag ticks in: first debris swallowed by Nibbles; the popup word is a random pick from NOM!/YUM!/GULP!/TASTY! (seeded Math.random gives GULP! 🍩)",
     "profiles": ["zero", "iphone"],
     "steps": [
       {
@@ -5564,7 +5551,107 @@
   },
   {
     "id": "game_lvl01_near_victory",
-    "description": "Level 1 gameplay with 19/20 kg collected (HUD bar at 95 %)",
+    "description": "Level 1 gameplay with 19/20 kg collected, 300 ms after the update so the 0.25 s bar transition has settled (fill 95 %)",
+    "profiles": ["zero", "iphone"],
+    "steps": [
+      {
+        "op": "boot"
+      },
+      {
+        "op": "loadSector",
+        "index": 0
+      },
+      {
+        "op": "showPage",
+        "page": "game"
+      },
+      {
+        "op": "call",
+        "method": "dismissGestureHint",
+        "args": []
+      },
+      {
+        "op": "advance",
+        "ms": 400
+      },
+      {
+        "op": "setApp",
+        "field": "collectedMass",
+        "value": 19
+      },
+      {
+        "op": "call",
+        "method": "updateQuotaDisplay",
+        "args": []
+      },
+      {
+        "op": "advance",
+        "ms": 300
+      },
+      {
+        "op": "capture",
+        "expectFraction": [
+          {
+            "selector": "#hud-quota-bar",
+            "value": 0.95
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "game_lvl01_quota_met_hud",
+    "description": "Level 1 gameplay with 20/20 kg collected, 300 ms after the update so the bar transition has settled (fill 100 %, green gradient, no victory yet)",
+    "profiles": ["zero", "iphone"],
+    "steps": [
+      {
+        "op": "boot"
+      },
+      {
+        "op": "loadSector",
+        "index": 0
+      },
+      {
+        "op": "showPage",
+        "page": "game"
+      },
+      {
+        "op": "call",
+        "method": "dismissGestureHint",
+        "args": []
+      },
+      {
+        "op": "advance",
+        "ms": 400
+      },
+      {
+        "op": "setApp",
+        "field": "collectedMass",
+        "value": 20
+      },
+      {
+        "op": "call",
+        "method": "updateQuotaDisplay",
+        "args": []
+      },
+      {
+        "op": "advance",
+        "ms": 300
+      },
+      {
+        "op": "capture",
+        "expectFraction": [
+          {
+            "selector": "#hud-quota-bar",
+            "value": 1
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "game_lvl01_quota_bar_t0016",
+    "description": "Level 1 gameplay with 19/20 kg set, sampled 16 ms into the 0.25 s bar transition (label already 19 / 20, fill about 26 % wide because the easing curve is already 27 % done after one frame)",
     "profiles": ["zero", "iphone"],
     "steps": [
       {
@@ -5607,8 +5694,52 @@
     ]
   },
   {
-    "id": "game_lvl01_quota_met_hud",
-    "description": "Level 1 gameplay with the quota bar full (green gradient, no victory yet)",
+    "id": "game_lvl01_quota_bar_t0125",
+    "description": "Level 1 gameplay with 19/20 kg set, sampled 125 ms into the 0.25 s bar transition (easing overshoot: the fill wants 98 % of the track and is clipped by the capsule)",
+    "profiles": ["zero", "iphone"],
+    "steps": [
+      {
+        "op": "boot"
+      },
+      {
+        "op": "loadSector",
+        "index": 0
+      },
+      {
+        "op": "showPage",
+        "page": "game"
+      },
+      {
+        "op": "call",
+        "method": "dismissGestureHint",
+        "args": []
+      },
+      {
+        "op": "advance",
+        "ms": 400
+      },
+      {
+        "op": "setApp",
+        "field": "collectedMass",
+        "value": 19
+      },
+      {
+        "op": "call",
+        "method": "updateQuotaDisplay",
+        "args": []
+      },
+      {
+        "op": "advance",
+        "ms": 125
+      },
+      {
+        "op": "capture"
+      }
+    ]
+  },
+  {
+    "id": "game_lvl01_quota_met_t0016",
+    "description": "Level 1 gameplay with 20/20 kg set, sampled 16 ms into the 0.25 s bar transition (label 20 / 20, fill about 27 % wide, green gradient)",
     "profiles": ["zero", "iphone"],
     "steps": [
       {
@@ -5647,6 +5778,667 @@
       },
       {
         "op": "capture"
+      }
+    ]
+  },
+  {
+    "id": "canvas_hub_duckie",
+    "description": "Canvas call site renderer.js:1077 (hub fillText): 🦆 DUCKIE 🦆 / FLOAT RIG drawn with Fluent 3D emoji",
+    "profiles": ["zero", "iphone"],
+    "steps": [
+      {
+        "op": "boot"
+      },
+      {
+        "op": "setProfile",
+        "path": "equipped.ring",
+        "value": "ring_duckie"
+      },
+      {
+        "op": "loadSector",
+        "index": 0
+      },
+      {
+        "op": "showPage",
+        "page": "game"
+      },
+      {
+        "op": "call",
+        "method": "dismissGestureHint",
+        "args": []
+      },
+      {
+        "op": "advance",
+        "ms": 400
+      },
+      {
+        "op": "capture",
+        "expectEmoji": ["🦆"]
+      }
+    ]
+  },
+  {
+    "id": "canvas_hub_candy",
+    "description": "Canvas call site renderer.js:1077 (hub fillText): 🍬 CANDY 🍬 / MINT RIG drawn with Fluent 3D emoji",
+    "profiles": ["zero", "iphone"],
+    "steps": [
+      {
+        "op": "boot"
+      },
+      {
+        "op": "setProfile",
+        "path": "equipped.ring",
+        "value": "ring_candyland"
+      },
+      {
+        "op": "loadSector",
+        "index": 0
+      },
+      {
+        "op": "showPage",
+        "page": "game"
+      },
+      {
+        "op": "call",
+        "method": "dismissGestureHint",
+        "args": []
+      },
+      {
+        "op": "advance",
+        "ms": 400
+      },
+      {
+        "op": "capture",
+        "expectEmoji": ["🍬"]
+      }
+    ]
+  },
+  {
+    "id": "canvas_hub_kitty",
+    "description": "Canvas call site renderer.js:1077 (hub fillText): 🐱 KITTY 🐱 / COSMIC RIG drawn with Fluent 3D emoji",
+    "profiles": ["zero", "iphone"],
+    "steps": [
+      {
+        "op": "boot"
+      },
+      {
+        "op": "setProfile",
+        "path": "equipped.ring",
+        "value": "ring_spacecat"
+      },
+      {
+        "op": "loadSector",
+        "index": 0
+      },
+      {
+        "op": "showPage",
+        "page": "game"
+      },
+      {
+        "op": "call",
+        "method": "dismissGestureHint",
+        "args": []
+      },
+      {
+        "op": "advance",
+        "ms": 400
+      },
+      {
+        "op": "capture",
+        "expectEmoji": ["🐱"]
+      }
+    ]
+  },
+  {
+    "id": "canvas_hub_donut",
+    "description": "Canvas call site renderer.js:1077 (hub fillText): 🍩 DONUT 🍩 / SWEET RIG drawn with Fluent 3D emoji",
+    "profiles": ["zero", "iphone"],
+    "steps": [
+      {
+        "op": "boot"
+      },
+      {
+        "op": "setProfile",
+        "path": "equipped.ring",
+        "value": "ring_donut"
+      },
+      {
+        "op": "loadSector",
+        "index": 0
+      },
+      {
+        "op": "showPage",
+        "page": "game"
+      },
+      {
+        "op": "call",
+        "method": "dismissGestureHint",
+        "args": []
+      },
+      {
+        "op": "advance",
+        "ms": 400
+      },
+      {
+        "op": "capture",
+        "expectEmoji": ["🍩"]
+      }
+    ]
+  },
+  {
+    "id": "canvas_hub_gear",
+    "description": "Canvas call site renderer.js:1077 (hub fillText): ⚙️ GEAR RIG ⚙️ / PLANETARY (concentric sector, level 21) drawn with Fluent 3D emoji",
+    "profiles": ["zero", "iphone"],
+    "steps": [
+      {
+        "op": "boot"
+      },
+      {
+        "op": "loadSector",
+        "index": 20
+      },
+      {
+        "op": "showPage",
+        "page": "game"
+      },
+      {
+        "op": "call",
+        "method": "dismissGestureHint",
+        "args": []
+      },
+      {
+        "op": "advance",
+        "ms": 400
+      },
+      {
+        "op": "capture",
+        "expectEmoji": ["⚙️"]
+      }
+    ]
+  },
+  {
+    "id": "canvas_gate_bolt_x2",
+    "description": "Canvas call site renderer.js:1460 ⚡ multiplier gate (level 1, x2): badge drawn with Fluent 3D emoji",
+    "profiles": ["zero", "iphone"],
+    "steps": [
+      {
+        "op": "boot"
+      },
+      {
+        "op": "loadSector",
+        "index": 0
+      },
+      {
+        "op": "showPage",
+        "page": "game"
+      },
+      {
+        "op": "call",
+        "method": "dismissGestureHint",
+        "args": []
+      },
+      {
+        "op": "advance",
+        "ms": 400
+      },
+      {
+        "op": "capture",
+        "expectEmoji": ["⚡"]
+      }
+    ]
+  },
+  {
+    "id": "canvas_gate_bolt_x3",
+    "description": "Canvas call site renderer.js:1460 ⚡ multiplier gate (level 5, x3): badge drawn with Fluent 3D emoji",
+    "profiles": ["zero", "iphone"],
+    "steps": [
+      {
+        "op": "boot"
+      },
+      {
+        "op": "loadSector",
+        "index": 4
+      },
+      {
+        "op": "showPage",
+        "page": "game"
+      },
+      {
+        "op": "call",
+        "method": "dismissGestureHint",
+        "args": []
+      },
+      {
+        "op": "advance",
+        "ms": 400
+      },
+      {
+        "op": "capture",
+        "expectEmoji": ["⚡"]
+      }
+    ]
+  },
+  {
+    "id": "canvas_gate_magnet_add",
+    "description": "Canvas call site renderer.js:1650 🧲 add gate (level 1, +3): badge drawn with Fluent 3D emoji",
+    "profiles": ["zero", "iphone"],
+    "steps": [
+      {
+        "op": "boot"
+      },
+      {
+        "op": "loadSector",
+        "index": 0
+      },
+      {
+        "op": "showPage",
+        "page": "game"
+      },
+      {
+        "op": "call",
+        "method": "dismissGestureHint",
+        "args": []
+      },
+      {
+        "op": "advance",
+        "ms": 400
+      },
+      {
+        "op": "capture",
+        "expectEmoji": ["🧲"]
+      }
+    ]
+  },
+  {
+    "id": "canvas_gate_blast_x4",
+    "description": "Canvas call site renderer.js:1563 💥 multiplier gate (level 41, x4): badge drawn with Fluent 3D emoji",
+    "profiles": ["zero", "iphone"],
+    "steps": [
+      {
+        "op": "boot"
+      },
+      {
+        "op": "loadSector",
+        "index": 40
+      },
+      {
+        "op": "showPage",
+        "page": "game"
+      },
+      {
+        "op": "call",
+        "method": "dismissGestureHint",
+        "args": []
+      },
+      {
+        "op": "advance",
+        "ms": 400
+      },
+      {
+        "op": "capture",
+        "expectEmoji": ["💥"]
+      }
+    ]
+  },
+  {
+    "id": "canvas_gate_boost",
+    "description": "Canvas call site renderer.js:1723 ⏩ BOOST gate (level 33): badge drawn with Fluent 3D emoji",
+    "profiles": ["zero", "iphone"],
+    "steps": [
+      {
+        "op": "boot"
+      },
+      {
+        "op": "loadSector",
+        "index": 32
+      },
+      {
+        "op": "showPage",
+        "page": "game"
+      },
+      {
+        "op": "call",
+        "method": "dismissGestureHint",
+        "args": []
+      },
+      {
+        "op": "advance",
+        "ms": 400
+      },
+      {
+        "op": "capture",
+        "expectEmoji": ["⏩"]
+      }
+    ]
+  },
+  {
+    "id": "canvas_float_shred",
+    "description": "Canvas call sites renderer.js:1946/1950 (floating text stroke + fill): \"×2! SHRED ⚡\" from main.js:691 gate label, sampled 16 ms after spawn",
+    "profiles": ["zero", "iphone"],
+    "steps": [
+      {
+        "op": "boot"
+      },
+      {
+        "op": "loadSector",
+        "index": 0
+      },
+      {
+        "op": "showPage",
+        "page": "game"
+      },
+      {
+        "op": "call",
+        "method": "dismissGestureHint",
+        "args": []
+      },
+      {
+        "op": "advance",
+        "ms": 400
+      },
+      {
+        "op": "call",
+        "target": "physics",
+        "method": "onGatePassed",
+        "args": [
+          {
+            "r": 100,
+            "angle": -1.5707963267948966,
+            "type": "MULTIPLY",
+            "value": 2
+          }
+        ]
+      },
+      {
+        "op": "advance",
+        "ms": 16
+      },
+      {
+        "op": "capture",
+        "expectFloating": ["×2! SHRED ⚡"]
+      }
+    ]
+  },
+  {
+    "id": "canvas_float_compact",
+    "description": "Canvas call sites renderer.js:1946/1950 (floating text stroke + fill): \"+3! COMPACT ✨\" from main.js:694 gate label, sampled 16 ms after spawn",
+    "profiles": ["zero", "iphone"],
+    "steps": [
+      {
+        "op": "boot"
+      },
+      {
+        "op": "loadSector",
+        "index": 0
+      },
+      {
+        "op": "showPage",
+        "page": "game"
+      },
+      {
+        "op": "call",
+        "method": "dismissGestureHint",
+        "args": []
+      },
+      {
+        "op": "advance",
+        "ms": 400
+      },
+      {
+        "op": "call",
+        "target": "physics",
+        "method": "onGatePassed",
+        "args": [
+          {
+            "r": 100,
+            "angle": -1.5707963267948966,
+            "type": "ADD",
+            "value": 3
+          }
+        ]
+      },
+      {
+        "op": "advance",
+        "ms": 16
+      },
+      {
+        "op": "capture",
+        "expectFloating": ["+3! COMPACT ✨"]
+      }
+    ]
+  },
+  {
+    "id": "canvas_float_boost",
+    "description": "Canvas call sites renderer.js:1946/1950 (floating text stroke + fill): \"BOOST! ⏩\" from main.js:697 gate label, sampled 16 ms after spawn",
+    "profiles": ["zero", "iphone"],
+    "steps": [
+      {
+        "op": "boot"
+      },
+      {
+        "op": "loadSector",
+        "index": 0
+      },
+      {
+        "op": "showPage",
+        "page": "game"
+      },
+      {
+        "op": "call",
+        "method": "dismissGestureHint",
+        "args": []
+      },
+      {
+        "op": "advance",
+        "ms": 400
+      },
+      {
+        "op": "call",
+        "target": "physics",
+        "method": "onGatePassed",
+        "args": [
+          {
+            "r": 100,
+            "angle": -1.5707963267948966,
+            "type": "BOOST"
+          }
+        ]
+      },
+      {
+        "op": "advance",
+        "ms": 16
+      },
+      {
+        "op": "capture",
+        "expectFloating": ["BOOST! ⏩"]
+      }
+    ]
+  },
+  {
+    "id": "canvas_float_poof",
+    "description": "Canvas call sites renderer.js:1946/1950 (floating text stroke + fill): \"POOF! 💨\" from main.js:704 debris explosion, sampled 16 ms after spawn",
+    "profiles": ["zero", "iphone"],
+    "steps": [
+      {
+        "op": "boot"
+      },
+      {
+        "op": "loadSector",
+        "index": 0
+      },
+      {
+        "op": "showPage",
+        "page": "game"
+      },
+      {
+        "op": "call",
+        "method": "dismissGestureHint",
+        "args": []
+      },
+      {
+        "op": "advance",
+        "ms": 400
+      },
+      {
+        "op": "call",
+        "target": "physics",
+        "method": "onDebrisExploded",
+        "args": [
+          {
+            "x": 215,
+            "y": 560
+          }
+        ]
+      },
+      {
+        "op": "advance",
+        "ms": 16
+      },
+      {
+        "op": "capture",
+        "expectFloating": ["POOF! 💨"]
+      }
+    ]
+  },
+  {
+    "id": "canvas_float_turbo",
+    "description": "Canvas call sites renderer.js:1946/1950 (floating text stroke + fill): \"TURBO! ⏩\" from main.js:713 forward boost, sampled 16 ms after spawn",
+    "profiles": ["zero", "iphone"],
+    "steps": [
+      {
+        "op": "boot"
+      },
+      {
+        "op": "loadSector",
+        "index": 0
+      },
+      {
+        "op": "showPage",
+        "page": "game"
+      },
+      {
+        "op": "call",
+        "method": "dismissGestureHint",
+        "args": []
+      },
+      {
+        "op": "advance",
+        "ms": 400
+      },
+      {
+        "op": "call",
+        "target": "physics",
+        "method": "onBoostTriggered",
+        "args": [1]
+      },
+      {
+        "op": "advance",
+        "ms": 16
+      },
+      {
+        "op": "capture",
+        "expectFloating": ["TURBO! ⏩"]
+      }
+    ]
+  },
+  {
+    "id": "canvas_float_turbo_reverse",
+    "description": "Canvas call sites renderer.js:1946/1950 (floating text stroke + fill): \"⏪ TURBO!\" from main.js:713 reverse boost, sampled 16 ms after spawn",
+    "profiles": ["zero", "iphone"],
+    "steps": [
+      {
+        "op": "boot"
+      },
+      {
+        "op": "loadSector",
+        "index": 0
+      },
+      {
+        "op": "showPage",
+        "page": "game"
+      },
+      {
+        "op": "call",
+        "method": "dismissGestureHint",
+        "args": []
+      },
+      {
+        "op": "advance",
+        "ms": 400
+      },
+      {
+        "op": "call",
+        "target": "physics",
+        "method": "onBoostTriggered",
+        "args": [-1]
+      },
+      {
+        "op": "advance",
+        "ms": 16
+      },
+      {
+        "op": "capture",
+        "expectFloating": ["⏪ TURBO!"]
+      }
+    ]
+  },
+  {
+    "id": "canvas_float_nom_words",
+    "description": "Canvas call sites renderer.js:1946/1950: the four NOM words (main.js:650 list \"NOM! 😋\", \"YUM! ✨\", \"GULP! 🍩\", \"TASTY! ⭐\") stacked via renderer.addFloatingText",
+    "profiles": ["zero", "iphone"],
+    "steps": [
+      {
+        "op": "boot"
+      },
+      {
+        "op": "loadSector",
+        "index": 0
+      },
+      {
+        "op": "showPage",
+        "page": "game"
+      },
+      {
+        "op": "call",
+        "method": "dismissGestureHint",
+        "args": []
+      },
+      {
+        "op": "advance",
+        "ms": 400
+      },
+      {
+        "op": "call",
+        "target": "renderer",
+        "method": "addFloatingText",
+        "args": [215, 560, "NOM! 😋", "#fde047"]
+      },
+      {
+        "op": "call",
+        "target": "renderer",
+        "method": "addFloatingText",
+        "args": [215, 608, "YUM! ✨", "#fde047"]
+      },
+      {
+        "op": "call",
+        "target": "renderer",
+        "method": "addFloatingText",
+        "args": [215, 656, "GULP! 🍩", "#fde047"]
+      },
+      {
+        "op": "call",
+        "target": "renderer",
+        "method": "addFloatingText",
+        "args": [215, 704, "TASTY! ⭐", "#fde047"]
+      },
+      {
+        "op": "advance",
+        "ms": 16
+      },
+      {
+        "op": "capture",
+        "expectFloating": ["NOM! 😋", "YUM! ✨", "GULP! 🍩", "TASTY! ⭐"],
+        "expectEmoji": ["😋", "✨", "🍩", "⭐"]
       }
     ]
   },
