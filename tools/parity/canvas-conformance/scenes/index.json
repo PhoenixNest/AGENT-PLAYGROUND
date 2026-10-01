@@ -1,0 +1,94 @@
+[
+ {
+  "name": "circles_small",
+  "desc": "AA discs of radius 0.5..21 at integer and fractional centres"
+ },
+ {
+  "name": "circles_large",
+  "desc": "Discs radius 34, 55, 89, 144 and 200 (large AA edge length)"
+ },
+ {
+  "name": "circle_strokes",
+  "desc": "Stroked circles, widths 0.25..14, radius 3..60"
+ },
+ {
+  "name": "lines_thin",
+  "desc": "Hairline-to-thick strokes: axis aligned at fractional positions, diagonals"
+ },
+ {
+  "name": "caps_joins",
+  "desc": "All 3 caps x 3 joins on sharp, right, obtuse polylines, miter limits, closed paths"
+ },
+ {
+  "name": "zero_length",
+  "desc": "Degenerate subpaths: dot with round/square cap, nothing with butt, zero-length closed"
+ },
+ {
+  "name": "dashes",
+  "desc": "setLineDash patterns and offsets on lines, circles, ellipses, closed rect, caps"
+ },
+ {
+  "name": "ellipses_arcs",
+  "desc": "Rotated ellipses, partial arcs, anticlockwise, sweeps > 2pi, arc after lineTo"
+ },
+ {
+  "name": "curves",
+  "desc": "quadratic star (as in the app), bezier, arcTo, nested closed paths, nonzero winding"
+ },
+ {
+  "name": "roundrects",
+  "desc": "roundRect: radii 0..huge, array radii, negative size, fill/stroke, shadows off"
+ },
+ {
+  "name": "clipping",
+  "desc": "clip rect, circle, nested, evenodd, with transforms, strokes and gradients inside"
+ },
+ {
+  "name": "gradients_linear",
+  "desc": "2-3 stop, alpha stops (transparent black), reversed, equal offsets, padding, degenerate, under CTM"
+ },
+ {
+  "name": "gradients_radial",
+  "desc": "concentric, off-centre inner circle, r0=0, alpha halo ending in transparent black, r0>r1"
+ },
+ {
+  "name": "shadows_fill",
+  "desc": "shadowBlur 0/6/8/18 on fills, coloured and translucent shadows, offsets, gradient fill, alpha"
+ },
+ {
+  "name": "shadows_stroke",
+  "desc": "stroked shadows: round caps, dashed rails with glow, rim glow with blur 18"
+ },
+ {
+  "name": "alpha_stacking",
+  "desc": "globalAlpha steps, nested alpha x colour alpha, overlapping fill+stroke, rgba quantisation"
+ },
+ {
+  "name": "shear_transforms",
+  "desc": "transform(1,0,-0.22,1,0,0), nested rotate/scale/translate on rects, strokes, circles"
+ },
+ {
+  "name": "state_stack",
+  "desc": "save/restore of style, dash, shadow, alpha, transform; rect/clearRect; invalid lineWidth ignored"
+ },
+ {
+  "name": "text_fonts",
+  "desc": "every ctx.font used by the app (and Nunito 800, Fredoka 400): centre aligned, middle and alphabetic"
+ },
+ {
+  "name": "text_align_baseline",
+  "desc": "left/center/right/start/end and alphabetic/middle/top/bottom/ideographic/hanging at fractional positions"
+ },
+ {
+  "name": "text_stroke_scale",
+  "desc": "strokeText + fillText with scale 1.3 as the floating text does, rotated text, thin/wide outlines"
+ },
+ {
+  "name": "text_emoji",
+  "desc": "emoji runs (SPEC 6.2): hub labels, gate labels, floating text, all baselines, strokeText skips emoji"
+ },
+ {
+  "name": "drawimage",
+  "desc": "drawImage 3/5/9-arg forms: upscale, downscale 64->13px (as the emoji), rotation, alpha, smoothing off, emoji sprites"
+ }
+]
