@@ -1,4 +1,5 @@
 using UnityEngine;
+using OrbitalSalvage.Parity;
 
 namespace OrbitalSalvage.UI
 {
@@ -28,7 +29,8 @@ namespace OrbitalSalvage.UI
 
         private void Update()
         {
-            if (lastSafeArea != Screen.safeArea || lastScreenSize.x != Screen.width || lastScreenSize.y != Screen.height)
+            var screenSize = ParityScreen.Size;
+            if (lastSafeArea != SafeAreaProvider.SafeAreaPx || lastScreenSize != screenSize)
             {
                 ApplySafeArea();
             }
@@ -39,18 +41,18 @@ namespace OrbitalSalvage.UI
             if (rectTransform == null) rectTransform = GetComponent<RectTransform>();
             if (rectTransform == null) return;
 
-            lastSafeArea = Screen.safeArea;
-            lastScreenSize = new Vector2Int(Screen.width, Screen.height);
+            lastSafeArea = SafeAreaProvider.SafeAreaPx;
+            lastScreenSize = ParityScreen.Size;
 
-            if (Screen.width <= 0 || Screen.height <= 0) return;
+            if (lastScreenSize.x <= 0 || lastScreenSize.y <= 0) return;
 
             Vector2 anchorMin = lastSafeArea.position;
             Vector2 anchorMax = lastSafeArea.position + lastSafeArea.size;
 
-            anchorMin.x /= Screen.width;
-            anchorMin.y /= Screen.height;
-            anchorMax.x /= Screen.width;
-            anchorMax.y /= Screen.height;
+            anchorMin.x /= lastScreenSize.x;
+            anchorMin.y /= lastScreenSize.y;
+            anchorMax.x /= lastScreenSize.x;
+            anchorMax.y /= lastScreenSize.y;
 
             rectTransform.anchorMin = anchorMin;
             rectTransform.anchorMax = anchorMax;
