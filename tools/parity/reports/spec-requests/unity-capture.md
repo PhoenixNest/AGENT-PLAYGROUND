@@ -1,0 +1,7 @@
+# Spec requests: unity-capture
+
+1. **Section 11, `-batchmode` and hidden window.** The Windows player renders black frames under `-batchmode` and with a hidden window; only a minimised or normal window renders. Request: state that the player is launched windowed (minimised), not `-batchmode`, and drop `-nographics`.
+2. **Section 8, `holdPressed`/pointer hover on Unity.** Unity `Selectable` colour tweens run on unscaled real time, independent of the virtual clock. The runner flushes 0.25 s of real time after pointer ops. Request: allow the Unity side a documented real-time flush after pointer ops.
+3. **Section 11, determinism scope.** In-process subset runs can differ from full runs by Physics2D history (one observed 212 px difference). Request: allow a per-(state, profile) process mode (`-Isolated`) as the reference for byte-identity checks.
+4. **Section 8.1, id mapping on the baseline UI.** The baseline Unity UI names do not equal DOM ids, so the baseline adapter uses a path table; 13 web ids have no Unity element (`home-audio-icon`, `home-diorama-face`, `home-hearts-anchor`, `game-canvas`, `gesture-hint`, `modal-privacy`, `btn-close-privacy`, `btn-dismiss-privacy`, `modal-reset-confirm`, `btn-cancel-reset`, `btn-confirm-reset`, `defeat-backup-container`, `toast-container`). Expected to resolve when the UI port renames objects per 8.1.
+5. **Initial economy.** Unity starts with 150 credits, the web with 250; states that depend on balance need an explicit `setApp`/`call` until the logic port lands.
