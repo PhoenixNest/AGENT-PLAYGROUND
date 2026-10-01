@@ -3,39 +3,40 @@ using System.Collections.Generic;
 
 namespace OrbitalSalvage.AudioDsp
 {
+    internal enum ParamEventType
+    {
+        SetValue,
+        LinearRamp,
+        ExponentialRamp,
+        SetTarget,
+        None,
+    }
+
+    internal sealed class ParamEvent
+    {
+        public ParamEventType Type;
+        public float Value;
+        public double Time;
+        public double TimeConstant;
+
+        public void Set(ParamEventType type, float value, double time, double timeConstant)
+        {
+            Type = type;
+            Value = value;
+            Time = time;
+            TimeConstant = timeConstant;
+        }
+    }
+
     public sealed class AudioParam
     {
-        enum EventType
-        {
-            SetValue,
-            LinearRamp,
-            ExponentialRamp,
-            SetTarget,
-            None,
-        }
-
-        sealed class ParamEvent
-        {
-            public EventType Type;
-            public float Value;
-            public double Time;
-            public double TimeConstant;
-
-            public ParamEvent(EventType type, float value, double time, double timeConstant = 0)
-            {
-                Type = type;
-                Value = value;
-                Time = time;
-                TimeConstant = timeConstant;
-            }
-        }
-
         const float TimeConstantsToConverge = 10.0f;
         const float SetTargetThreshold = 4.539992976248485e-05f;
+        const int InitialEventCapacity = 8;
 
         readonly AudioContextDsp ctx;
-        readonly List<ParamEvent> events = new List<ParamEvent>();
-        readonly List<ParamEvent> newEvents = new List<ParamEvent>();
+        readonly List<ParamEvent> events = new List<ParamEvent>(InitialEventCapacity);
+        readonly List<ParamEvent> newEvents = new List<ParamEvent>(InitialEventCapacity);
         readonly float[] scratch1 = new float[1];
         float intrinsic;
 
@@ -66,12 +67,26 @@ namespace OrbitalSalvage.AudioDsp
             ControlValue = defaultValue;
         }
 
+        internal void ResetForReuse(int nodeId)
+        {
+            for (int i = 0; i < events.Count; i++)
+            {
+                ctx.ReleaseEvent(events[i]);
+            }
+
+            events.Clear();
+            newEvents.Clear();
+            NodeId = nodeId;
+            intrinsic = DefaultValue;
+            ControlValue = DefaultValue;
+        }
+
         public AudioParam SetValueAtTime(double raw, double time)
         {
             ctx.Trace?.Event("param.setValueAtTime", NodeId, Name, raw, time);
             float value = (float)raw;
             ControlValue = value;
-            ctx.Mutate(() => InsertEvent(new ParamEvent(EventType.SetValue, value, ClampedToCurrentTime(time)), 0f));
+            InsertEvent(ctx.AcquireEvent(ParamEventType.SetValue, value, ClampedToCurrentTime(time), 0), 0f);
             return this;
         }
 
@@ -79,8 +94,7 @@ namespace OrbitalSalvage.AudioDsp
         {
             ctx.Trace?.Event("param.linearRampToValueAtTime", NodeId, Name, raw, time);
             float value = (float)raw;
-            float initial = intrinsic;
-            ctx.Mutate(() => InsertEvent(new ParamEvent(EventType.LinearRamp, value, ClampedToCurrentTime(time)), initial));
+            InsertEvent(ctx.AcquireEvent(ParamEventType.LinearRamp, value, ClampedToCurrentTime(time), 0), intrinsic);
             return this;
         }
 
@@ -93,8 +107,7 @@ namespace OrbitalSalvage.AudioDsp
             }
 
             ctx.Trace?.Event("param.exponentialRampToValueAtTime", NodeId, Name, raw, time);
-            float initial = intrinsic;
-            ctx.Mutate(() => InsertEvent(new ParamEvent(EventType.ExponentialRamp, value, ClampedToCurrentTime(time)), initial));
+            InsertEvent(ctx.AcquireEvent(ParamEventType.ExponentialRamp, value, ClampedToCurrentTime(time), 0), intrinsic);
             return this;
         }
 
@@ -102,40 +115,47 @@ namespace OrbitalSalvage.AudioDsp
         {
             ctx.Trace?.Event("param.setTargetAtTime", NodeId, Name, rawTarget, time, timeConstant);
             float target = (float)rawTarget;
-            ctx.Mutate(() =>
+            double t = ClampedToCurrentTime(time);
+            if (timeConstant == 0)
             {
-                double t = ClampedToCurrentTime(time);
-                if (timeConstant == 0)
-                {
-                    InsertEvent(new ParamEvent(EventType.SetValue, target, t), 0f);
-                }
-                else
-                {
-                    InsertEvent(new ParamEvent(EventType.SetTarget, target, t, timeConstant), 0f);
-                }
-            });
+                InsertEvent(ctx.AcquireEvent(ParamEventType.SetValue, target, t, 0), 0f);
+            }
+            else
+            {
+                InsertEvent(ctx.AcquireEvent(ParamEventType.SetTarget, target, t, timeConstant), 0f);
+            }
+
             return this;
         }
 
         public AudioParam CancelScheduledValues(double cancelTime)
         {
             ctx.Trace?.Event("param.cancelScheduledValues", NodeId, Name, cancelTime);
-            ctx.Mutate(() =>
+            double t = ClampedToCurrentTime(cancelTime);
+            for (int i = 0; i < events.Count; i++)
             {
-                double t = ClampedToCurrentTime(cancelTime);
-                for (int i = 0; i < events.Count; i++)
+                if (events[i].Time >= t)
                 {
-                    if (events[i].Time >= t)
+                    for (int j = i; j < events.Count; j++)
                     {
-                        events.RemoveRange(i, events.Count - i);
-                        newEvents.RemoveAll(e => !events.Contains(e));
-                        break;
+                        ctx.ReleaseEvent(events[j]);
                     }
+
+                    events.RemoveRange(i, events.Count - i);
+                    for (int k = newEvents.Count - 1; k >= 0; k--)
+                    {
+                        if (!events.Contains(newEvents[k]))
+                        {
+                            newEvents.RemoveAt(k);
+                        }
+                    }
+
+                    break;
                 }
-            });
+            }
+
             return this;
         }
-
         double ClampedToCurrentTime(double time)
         {
             return Math.Max(time, ctx.CurrentTime);
@@ -174,9 +194,9 @@ namespace OrbitalSalvage.AudioDsp
                 }
             }
 
-            if (events.Count == 0 && (ev.Type == EventType.LinearRamp || ev.Type == EventType.ExponentialRamp))
+            if (events.Count == 0 && (ev.Type == ParamEventType.LinearRamp || ev.Type == ParamEventType.ExponentialRamp))
             {
-                ParamEvent seed = new ParamEvent(EventType.SetValue, initialValue, ctx.CurrentTime);
+                ParamEvent seed = ctx.AcquireEvent(ParamEventType.SetValue, initialValue, ctx.CurrentTime, 0);
                 events.Insert(0, seed);
                 newEvents.Add(seed);
             }
@@ -215,6 +235,12 @@ namespace OrbitalSalvage.AudioDsp
 
         void RemoveOldEvents(int count)
         {
+            for (int i = 0; i < count; i++)
+            {
+                newEvents.Remove(events[i]);
+                ctx.ReleaseEvent(events[i]);
+            }
+
             events.RemoveRange(0, count);
         }
 
@@ -233,8 +259,8 @@ namespace OrbitalSalvage.AudioDsp
             {
                 switch (events[0].Type)
                 {
-                    case EventType.SetTarget:
-                    case EventType.SetValue:
+                    case ParamEventType.SetTarget:
+                    case ParamEventType.SetValue:
                         return false;
                 }
             }
@@ -246,7 +272,7 @@ namespace OrbitalSalvage.AudioDsp
 
             switch (events[0].Type)
             {
-                case EventType.SetTarget:
+                case ParamEventType.SetTarget:
                     return events[0].Time <= (currentFrame + AudioMath.RenderQuantum) / sr;
                 default:
                     return !(events[0].Time < currentFrame / sr);
@@ -368,22 +394,22 @@ namespace OrbitalSalvage.AudioDsp
                     continue;
                 }
 
-                ev = ProcessSetTargetFollowedByRamp(i, ev, nextEvent != null ? nextEvent.Type : EventType.None, currentFrame, sampleRate, controlRate, ref value);
+                ev = ProcessSetTargetFollowedByRamp(i, ev, nextEvent != null ? nextEvent.Type : ParamEventType.None, currentFrame, sampleRate, controlRate, ref value);
 
                 float value1 = ev.Value;
                 double time1 = ev.Time;
                 float value2 = nextEvent != null ? nextEvent.Value : value1;
                 double time2 = nextEvent != null ? nextEvent.Time : endFrame / sampleRate + 1;
-                EventType nextType = nextEvent != null ? nextEvent.Type : EventType.None;
+                ParamEventType nextType = nextEvent != null ? nextEvent.Type : ParamEventType.None;
 
                 long fillToEndFrame = endFrame > time2 * sampleRate ? (long)Math.Ceiling(time2 * sampleRate) : endFrame;
                 int fillToFrame = (int)Math.Min(fillToEndFrame - startFrame, (long)n);
 
-                if (nextType == EventType.LinearRamp)
+                if (nextType == ParamEventType.LinearRamp)
                 {
                     ProcessLinearRamp(fillToFrame, time1, time2, value1, value2, sampleRate, values, ref currentFrame, ref value, ref writeIndex);
                 }
-                else if (nextType == EventType.ExponentialRamp)
+                else if (nextType == ParamEventType.ExponentialRamp)
                 {
                     ProcessExponentialRamp(fillToFrame, time1, time2, value1, value2, sampleRate, values, ref currentFrame, ref value, ref writeIndex);
                 }
@@ -391,15 +417,15 @@ namespace OrbitalSalvage.AudioDsp
                 {
                     switch (ev.Type)
                     {
-                        case EventType.SetValue:
-                        case EventType.LinearRamp:
-                        case EventType.ExponentialRamp:
+                        case ParamEventType.SetValue:
+                        case ParamEventType.LinearRamp:
+                        case ParamEventType.ExponentialRamp:
                             currentFrame = fillToEndFrame;
                             value = ev.Value;
                             Fill(values, writeIndex, fillToFrame, value);
                             writeIndex = fillToFrame;
                             break;
-                        case EventType.SetTarget:
+                        case ParamEventType.SetTarget:
                             ProcessSetTarget(fillToFrame, time1, value1, sampleRate, controlRate, fillToEndFrame, ev, values, ref currentFrame, ref value, ref writeIndex);
                             break;
                     }
@@ -446,7 +472,7 @@ namespace OrbitalSalvage.AudioDsp
             }
 
             double eventFrame = ev.Time * sampleRate;
-            return ev.Type == EventType.SetValue && eventFrame <= currentFrame && currentFrame < eventFrame + 1;
+            return ev.Type == ParamEventType.SetValue && eventFrame <= currentFrame && currentFrame < eventFrame + 1;
         }
 
         void ClampNewEventsToCurrentTime(double currentTime)
@@ -463,22 +489,19 @@ namespace OrbitalSalvage.AudioDsp
 
             if (clamped)
             {
-                List<ParamEvent> sorted = new List<ParamEvent>(events.Count);
-                foreach (ParamEvent e in events)
+                for (int i = 1; i < events.Count; i++)
                 {
-                    int at = sorted.Count;
-                    while (at > 0 && sorted[at - 1].Time > e.Time)
+                    ParamEvent e = events[i];
+                    int at = i;
+                    while (at > 0 && events[at - 1].Time > e.Time)
                     {
+                        events[at] = events[at - 1];
                         at--;
                     }
 
-                    sorted.Insert(at, e);
+                    events[at] = e;
                 }
-
-                events.Clear();
-                events.AddRange(sorted);
             }
-
             newEvents.Clear();
         }
 
@@ -507,7 +530,7 @@ namespace OrbitalSalvage.AudioDsp
             ParamEvent last = events[events.Count - 1];
             if (last.Time + 1.5 * AudioMath.RenderQuantum / sampleRate < currentTime)
             {
-                if (last.Type == EventType.SetTarget)
+                if (last.Type == ParamEventType.SetTarget)
                 {
                     if (HasSetTargetConverged(defaultValue, last.Value, currentTime, last.Time, last.TimeConstant))
                     {
@@ -527,9 +550,9 @@ namespace OrbitalSalvage.AudioDsp
             return false;
         }
 
-        ParamEvent ProcessSetTargetFollowedByRamp(int eventIndex, ParamEvent ev, EventType nextType, long currentFrame, double sampleRate, double controlRate, ref float value)
+        ParamEvent ProcessSetTargetFollowedByRamp(int eventIndex, ParamEvent ev, ParamEventType nextType, long currentFrame, double sampleRate, double controlRate, ref float value)
         {
-            if (ev.Type == EventType.SetTarget && (nextType == EventType.LinearRamp || nextType == EventType.ExponentialRamp))
+            if (ev.Type == ParamEventType.SetTarget && (nextType == ParamEventType.LinearRamp || nextType == ParamEventType.ExponentialRamp))
             {
                 if (Math.Abs(2 * sampleRate * ev.Time - 2 * currentFrame + 1) <= 1)
                 {
@@ -541,9 +564,8 @@ namespace OrbitalSalvage.AudioDsp
                     value += (ev.Value - value) * discrete;
                 }
 
-                ParamEvent replacement = new ParamEvent(EventType.SetValue, value, currentFrame / sampleRate);
-                events[eventIndex] = replacement;
-                return replacement;
+                ev.Set(ParamEventType.SetValue, value, currentFrame / sampleRate, 0);
+                return ev;
             }
 
             return ev;

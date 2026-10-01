@@ -237,6 +237,18 @@ namespace OrbitalSalvage.AudioDsp
         {
             x1 = x2 = y1 = y2 = 0;
         }
+
+        public void ResetToPassthrough()
+        {
+            x1 = x2 = y1 = y2 = 0;
+            HasSampleAccurateValues = false;
+            Array.Clear(B0, 0, B0.Length);
+            Array.Clear(B1, 0, B1.Length);
+            Array.Clear(B2, 0, B2.Length);
+            Array.Clear(A1, 0, A1.Length);
+            Array.Clear(A2, 0, A2.Length);
+            SetNormalizedCoefficients(0, 1, 0, 0, 1, 0, 0);
+        }
     }
 
     public sealed class BiquadFilterNode : AudioNodeDsp
@@ -247,7 +259,8 @@ namespace OrbitalSalvage.AudioDsp
         readonly float[] qValues = new float[AudioMath.RenderQuantum];
         readonly float[] gainValues = new float[AudioMath.RenderQuantum];
         readonly float[] detuneValues = new float[AudioMath.RenderQuantum];
-        readonly List<Biquad> biquads = new List<Biquad>();
+        readonly List<Biquad> biquads = new List<Biquad>(2);
+        readonly List<Biquad> spareBiquads = new List<Biquad>(2);
         readonly double nyquist;
         BiquadFilterType type = BiquadFilterType.Lowpass;
         bool hasJustReset = true;
@@ -269,7 +282,6 @@ namespace OrbitalSalvage.AudioDsp
             {
                 Ctx.Trace?.Event("node.set", Id, "type", TypeName(value));
                 type = value;
-                Ctx.Mutate(() => type = value);
             }
         }
 
@@ -292,6 +304,36 @@ namespace OrbitalSalvage.AudioDsp
             Q = new AudioParam(ctx, id, "Q", 1f, -float.MaxValue, float.MaxValue, true);
             Gain = new AudioParam(ctx, id, "gain", 0f, -float.MaxValue, 1541.2736f, true);
             Detune = new AudioParam(ctx, id, "detune", 0f, -153600f, 153600f, true);
+            spareBiquads.Add(new Biquad());
+        }
+
+        internal void ResetForReuse(int id)
+        {
+            ResetBase(id);
+            type = BiquadFilterType.Lowpass;
+            biquads.Clear();
+            hasJustReset = true;
+            prevCutoff = float.NaN;
+            prevQ = float.NaN;
+            prevGain = float.NaN;
+            prevDetune = float.NaN;
+            tailTime = 0;
+            Frequency.ResetForReuse(id);
+            Q.ResetForReuse(id);
+            Gain.ResetForReuse(id);
+            Detune.ResetForReuse(id);
+        }
+
+        Biquad TakeBiquad(int index)
+        {
+            while (spareBiquads.Count <= index)
+            {
+                spareBiquads.Add(new Biquad());
+            }
+
+            Biquad b = spareBiquads[index];
+            b.ResetToPassthrough();
+            return b;
         }
 
         static string TypeName(BiquadFilterType t)
@@ -359,7 +401,7 @@ namespace OrbitalSalvage.AudioDsp
                 biquads.Clear();
                 for (int i = 0; i < channels; i++)
                 {
-                    biquads.Add(new Biquad());
+                    biquads.Add(TakeBiquad(i));
                 }
 
                 hasJustReset = true;

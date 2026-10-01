@@ -26,7 +26,7 @@ namespace OrbitalSalvage.AudioDsp
             {
                 Ctx.Trace?.Event("node.set", Id, "type", TypeName(value));
                 type = value;
-                Ctx.Mutate(() => wave = PeriodicWave.Get(Ctx.SampleRate, value));
+                wave = PeriodicWave.Get(Ctx.SampleRate, value);
             }
         }
 
@@ -37,6 +37,17 @@ namespace OrbitalSalvage.AudioDsp
             Frequency = new AudioParam(ctx, id, "frequency", 440f, -nyquist, nyquist, true);
             Detune = new AudioParam(ctx, id, "detune", 0f, -153600f, 153600f, true);
             wave = PeriodicWave.Get(ctx.SampleRate, OscillatorType.Sine);
+        }
+
+        internal void ResetForReuse(int id)
+        {
+            ResetBase(id);
+            ResetSource();
+            type = OscillatorType.Sine;
+            wave = PeriodicWave.Get(Ctx.SampleRate, OscillatorType.Sine);
+            virtualReadIndex = 0;
+            Frequency.ResetForReuse(id);
+            Detune.ResetForReuse(id);
         }
 
         public static string TypeName(OscillatorType t)

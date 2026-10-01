@@ -8,12 +8,30 @@ namespace OrbitalSalvage.AudioDsp.Tests
 {
     public static class AudioTestEnvironment
     {
+        public const string AllowMissingVariable = "PARITY_ALLOW_MISSING_REFS";
+
         public const string RegenerateHint =
             "Reference data missing. Regenerate with: cd tools/parity; npm ci; cd audio; node render-ref.mjs; node rng-counts.mjs";
+
+        public static bool AllowMissing
+        {
+            get { return Environment.GetEnvironmentVariable(AllowMissingVariable) == "1"; }
+        }
 
         public static string AudioDir
         {
             get { return ParityChecks.FindAudioDir(Application.dataPath); }
+        }
+
+        public static void ReportMissing(string detail)
+        {
+            string message = detail + ". " + RegenerateHint + " (set " + AllowMissingVariable + "=1 to skip instead of fail)";
+            if (AllowMissing)
+            {
+                Assert.Ignore(message);
+            }
+
+            Assert.Fail(message);
         }
 
         public static string RequireAudioDir()
@@ -21,7 +39,7 @@ namespace OrbitalSalvage.AudioDsp.Tests
             string dir = AudioDir;
             if (dir == null)
             {
-                Assert.Ignore(RegenerateHint);
+                ReportMissing("tools/parity/audio/ref-manifest.json not found");
             }
 
             return dir;
@@ -32,12 +50,11 @@ namespace OrbitalSalvage.AudioDsp.Tests
             string dir = RequireAudioDir();
             if (!Directory.Exists(Path.Combine(dir, "out", "ref")))
             {
-                Assert.Ignore(RegenerateHint + " (out/ref is gitignored)");
+                ReportMissing("tools/parity/audio/out/ref is missing");
             }
 
             return dir;
         }
-
         public static IEnumerable<string> ManifestIds()
         {
             string dir = AudioDir;
@@ -87,14 +104,13 @@ namespace OrbitalSalvage.AudioDsp.Tests
             ComparisonRow row = rows.Find(r => r.Id == id);
             Assert.IsNotNull(row, "no manifest entry " + id);
             TestContext.WriteLine(string.Format(
-                "{0}: corr={1:F6} maxAbs={2:E2} rms={3:E2} stft={4:E2}",
+                "{0}: corr={1:F12} maxAbs={2:E2} rms={3:E2} stft={4:E2}",
                 id,
                 row.Metrics.Correlation,
                 row.Metrics.MaxAbsError,
                 row.Metrics.RmsError,
                 row.Metrics.StftDistance));
-            Assert.IsTrue(row.Pass, id + " failed: corr=" + row.Metrics.Correlation + " " + row.Note);
-            Assert.GreaterOrEqual(row.Metrics.Correlation, ParityChecks.MinCorrelation);
+            Assert.IsTrue(row.Pass, id + " failed: " + row.Note);
         }
 
         [Test]
@@ -105,10 +121,124 @@ namespace OrbitalSalvage.AudioDsp.Tests
             string table = ParityChecks.FormatTable(rows);
             File.WriteAllText(Path.Combine(dir, "out", "compare", "comparison.md"), table);
             TestContext.WriteLine(table);
-            Assert.IsEmpty(rows.FindAll(r => !r.Pass), "some cues fell below the correlation threshold");
+            List<string> failed = rows.FindAll(r => !r.Pass).ConvertAll(r => r.Id + ": " + r.Note);
+            Assert.IsEmpty(failed, string.Join("\n", failed.ToArray()));
         }
     }
 
+    public class ReferenceGateTests
+    {
+        const string CueId = "playBumperBounce__none";
+
+        string sourceDir;
+        string tempDir;
+        string manifestText;
+        string originalSha;
+
+        [SetUp]
+        public void SetUp()
+        {
+            sourceDir = AudioTestEnvironment.RequireReferences();
+            tempDir = Path.Combine(Path.GetTempPath(), "audio-gate-" + Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(Path.Combine(tempDir, "out", "ref"));
+            manifestText = File.ReadAllText(Path.Combine(sourceDir, "ref-manifest.json"));
+            originalSha = ScenarioRunner.LoadManifest(Path.Combine(sourceDir, "ref-manifest.json")).Find(s => s.Id == CueId).Sha256;
+            File.WriteAllText(Path.Combine(tempDir, "ref-manifest.json"), manifestText);
+        }
+
+        [TearDown]
+        public void TearDown()
+        {
+            if (tempDir != null && Directory.Exists(tempDir))
+            {
+                Directory.Delete(tempDir, true);
+            }
+        }
+
+        ComparisonRow Compare()
+        {
+            List<ComparisonRow> rows = ParityChecks.CompareAgainstReferences(tempDir, "=" + CueId, null);
+            Assert.AreEqual(1, rows.Count);
+            return rows[0];
+        }
+
+        string RefPath(string dir)
+        {
+            return Path.Combine(dir, "out", "ref", CueId + ".wav");
+        }
+
+        [Test]
+        public void CopiedReferencePassesAllGates()
+        {
+            File.Copy(RefPath(sourceDir), RefPath(tempDir));
+            ComparisonRow row = Compare();
+            Assert.IsTrue(row.Pass, row.Note);
+        }
+
+        [Test]
+        public void MissingReferenceFileFailsInsteadOfPassing()
+        {
+            ComparisonRow row = Compare();
+            Assert.IsFalse(row.Pass);
+            StringAssert.Contains("missing reference", row.Note);
+            StringAssert.Contains("node render-ref.mjs", row.Note);
+        }
+
+        [Test]
+        public void StaleReferenceIsRejectedBySha256()
+        {
+            int rate;
+            float[][] data = WavIo.ReadFloat32(RefPath(sourceDir), out rate);
+            data[0][data[0].Length / 2] += 1e-3f;
+            WavIo.WriteFloat32(RefPath(tempDir), data, rate);
+            ComparisonRow row = Compare();
+            Assert.IsFalse(row.Pass);
+            StringAssert.Contains("stale reference", row.Note);
+        }
+
+        [Test]
+        public void MaxAbsErrorGateRejectsLocalizedDeviationWithPerfectCorrelation()
+        {
+            int rate;
+            float[][] data = WavIo.ReadFloat32(RefPath(sourceDir), out rate);
+            int at = data[0].Length / 3;
+            data[0][at] += 2e-5f;
+            WavIo.WriteFloat32(RefPath(tempDir), data, rate);
+            string patched = manifestText.Replace(originalSha, ParityChecks.Sha256Hex(data));
+            File.WriteAllText(Path.Combine(tempDir, "ref-manifest.json"), patched);
+            ComparisonRow row = Compare();
+            Assert.GreaterOrEqual(row.Metrics.Correlation, ParityChecks.MinCorrelation);
+            Assert.IsFalse(row.Pass, "a 2e-5 deviation must fail the 1e-5 max abs gate");
+            StringAssert.Contains("max abs err", row.Note);
+        }
+
+        [Test]
+        public void StrictGatesAreConfigured()
+        {
+            Assert.AreEqual(0.99, ParityChecks.MinCorrelation);
+            Assert.LessOrEqual(ParityChecks.MaxAbsErrorLimit, 1e-5);
+            Assert.LessOrEqual(ParityChecks.StftDistanceLimit, 1e-5);
+        }
+
+        [Test]
+        public void MissingReferencesFailUnlessExplicitlyAllowed()
+        {
+            string previous = Environment.GetEnvironmentVariable(AudioTestEnvironment.AllowMissingVariable);
+            try
+            {
+                Environment.SetEnvironmentVariable(AudioTestEnvironment.AllowMissingVariable, null);
+                AssertionException failure = Assert.Throws<AssertionException>(() => AudioTestEnvironment.ReportMissing("out/ref is missing"));
+                StringAssert.Contains("node render-ref.mjs", failure.Message);
+
+                Environment.SetEnvironmentVariable(AudioTestEnvironment.AllowMissingVariable, "1");
+                Assert.Throws<IgnoreException>(() => AudioTestEnvironment.ReportMissing("out/ref is missing"));
+            }
+            finally
+            {
+                Environment.SetEnvironmentVariable(AudioTestEnvironment.AllowMissingVariable, previous);
+            }
+        }
+    }
     public class RngConsumptionTests
     {
         [Test, TestCaseSource(typeof(AudioTestEnvironment), nameof(AudioTestEnvironment.RngScenarioIds))]
@@ -162,7 +292,7 @@ namespace OrbitalSalvage.AudioDsp.Tests
             string dir = AudioTestEnvironment.RequireAudioDir();
             if (!File.Exists(Path.Combine(dir, "trace-golden.json")))
             {
-                Assert.Ignore(AudioTestEnvironment.RegenerateHint);
+                AudioTestEnvironment.ReportMissing("tools/parity/audio/trace-golden.json not found");
             }
 
             List<string> failures = ParityChecks.TraceFailures(dir);

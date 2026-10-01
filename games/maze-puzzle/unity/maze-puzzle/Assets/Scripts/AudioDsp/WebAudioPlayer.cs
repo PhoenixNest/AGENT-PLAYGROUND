@@ -1,5 +1,5 @@
 using System;
-using System.Collections.Concurrent;
+using System.Threading;
 using UnityEngine;
 
 namespace OrbitalSalvage.AudioDsp
@@ -24,11 +24,47 @@ namespace OrbitalSalvage.AudioDsp
         }
     }
 
+    public enum PlayerCommandKind : byte
+    {
+        None,
+        Custom,
+        PublicInit,
+        ToggleMute,
+        SetSfxVolume,
+        SetAmbienceVolume,
+        PlaySpinRatchet,
+        PlayDebrisCollision,
+        PlayGatePass,
+        PlayShredderPass,
+        PlayCompactorPass,
+        PlaySuperShredderPass,
+        PlayBoosterPass,
+        PlayRcsThrust,
+        PlayBumperBounce,
+        PlayDebrisSwallowed,
+        PlayHazardExplosion,
+        PlayVictoryFanfare,
+        SetThrusterActive,
+        PlayDefeatSound,
+        PlayBackupPodSound,
+    }
+
+    public struct PlayerCommand
+    {
+        public PlayerCommandKind Kind;
+        public double A;
+        public double B;
+        public string Text;
+        public bool Flag;
+        public Action<AudioEngineDsp> Custom;
+    }
+
     /// <summary>
     /// Plays an AudioEngineDsp through an AudioSource. The graph always runs at 44100 Hz (so noise buffers consume
     /// the same RNG draws as the web build and filter/oscillator tables match the references) and is resampled with
-    /// Catmull-Rom interpolation to AudioSettings.outputSampleRate. Every engine call is queued and executed on the
-    /// audio thread at the start of a buffer, which keeps graph state and RNG single-threaded.
+    /// Catmull-Rom interpolation to AudioSettings.outputSampleRate. Every engine call is written into a preallocated
+    /// command ring and executed on the audio thread at the start of a buffer, which keeps graph state and RNG
+    /// single-threaded and keeps the render path free of allocations.
     /// </summary>
     [RequireComponent(typeof(AudioSource))]
     public sealed class WebAudioPlayer : MonoBehaviour
@@ -37,7 +73,14 @@ namespace OrbitalSalvage.AudioDsp
         const int RingSize = 4096;
         const int RingMask = RingSize - 1;
 
-        readonly ConcurrentQueue<Action<AudioEngineDsp>> commands = new ConcurrentQueue<Action<AudioEngineDsp>>();
+        public const int CommandCapacity = 512;
+        const int CommandMask = CommandCapacity - 1;
+
+        readonly PlayerCommand[] commandRing = new PlayerCommand[CommandCapacity];
+        readonly object producerLock = new object();
+        int commandHead;
+        int commandTail;
+        int droppedCommands;
         readonly float[] ringLeft = new float[RingSize];
         readonly float[] ringRight = new float[RingSize];
         readonly float[] quantumLeft = new float[AudioMath.RenderQuantum];
@@ -64,29 +107,207 @@ namespace OrbitalSalvage.AudioDsp
             engine = null;
         }
 
+        public int DroppedCommands
+        {
+            get { return Volatile.Read(ref droppedCommands); }
+        }
+
+        public bool Enqueue(PlayerCommand command)
+        {
+            lock (producerLock)
+            {
+                int tail = commandTail;
+                if (tail - Volatile.Read(ref commandHead) >= CommandCapacity)
+                {
+                    Interlocked.Increment(ref droppedCommands);
+                    return false;
+                }
+
+                commandRing[tail & CommandMask] = command;
+                Volatile.Write(ref commandTail, tail + 1);
+                return true;
+            }
+        }
+
+        bool Send(PlayerCommandKind kind, double a = 0, double b = 0, string text = null, bool flag = false)
+        {
+            PlayerCommand command = default(PlayerCommand);
+            command.Kind = kind;
+            command.A = a;
+            command.B = b;
+            command.Text = text;
+            command.Flag = flag;
+            return Enqueue(command);
+        }
+
         public void Post(Action<AudioEngineDsp> command)
         {
-            commands.Enqueue(command);
+            PlayerCommand c = default(PlayerCommand);
+            c.Kind = PlayerCommandKind.Custom;
+            c.Custom = command;
+            Enqueue(c);
         }
 
         public void PublicInit()
         {
-            Post(e => e.PublicInit());
+            Send(PlayerCommandKind.PublicInit);
         }
 
         public void ToggleMute()
         {
-            Post(e => e.ToggleMute());
+            Send(PlayerCommandKind.ToggleMute);
         }
 
         public void SetSfxVolume(double percent)
         {
-            Post(e => e.SetSfxVolume(percent));
+            Send(PlayerCommandKind.SetSfxVolume, percent);
         }
 
         public void SetAmbienceVolume(double percent)
         {
-            Post(e => e.SetAmbienceVolume(percent));
+            Send(PlayerCommandKind.SetAmbienceVolume, percent);
+        }
+
+        public void PlaySpinRatchet(double pitchMultiplier = 1.0)
+        {
+            Send(PlayerCommandKind.PlaySpinRatchet, pitchMultiplier);
+        }
+
+        public void PlayDebrisCollision(double intensity = 1.0, string debrisType = "titanium")
+        {
+            Send(PlayerCommandKind.PlayDebrisCollision, intensity, 0, debrisType);
+        }
+
+        public void PlayGatePass(string gateType = "MULTIPLY", double value = 2)
+        {
+            Send(PlayerCommandKind.PlayGatePass, value, 0, gateType);
+        }
+
+        public void PlayShredderPass(double value = 0)
+        {
+            Send(PlayerCommandKind.PlayShredderPass, value);
+        }
+
+        public void PlayCompactorPass(double value = 0)
+        {
+            Send(PlayerCommandKind.PlayCompactorPass, value);
+        }
+
+        public void PlaySuperShredderPass(double value = 0)
+        {
+            Send(PlayerCommandKind.PlaySuperShredderPass, value);
+        }
+
+        public void PlayBoosterPass()
+        {
+            Send(PlayerCommandKind.PlayBoosterPass);
+        }
+
+        public void PlayRcsThrust()
+        {
+            Send(PlayerCommandKind.PlayRcsThrust);
+        }
+
+        public void PlayBumperBounce()
+        {
+            Send(PlayerCommandKind.PlayBumperBounce);
+        }
+
+        public void PlayDebrisSwallowed()
+        {
+            Send(PlayerCommandKind.PlayDebrisSwallowed);
+        }
+
+        public void PlayHazardExplosion()
+        {
+            Send(PlayerCommandKind.PlayHazardExplosion);
+        }
+
+        public void PlayVictoryFanfare()
+        {
+            Send(PlayerCommandKind.PlayVictoryFanfare);
+        }
+
+        public void SetThrusterActive(bool isActive)
+        {
+            Send(PlayerCommandKind.SetThrusterActive, 0, 0, null, isActive);
+        }
+
+        public void PlayDefeatSound()
+        {
+            Send(PlayerCommandKind.PlayDefeatSound);
+        }
+
+        public void PlayBackupPodSound()
+        {
+            Send(PlayerCommandKind.PlayBackupPodSound);
+        }
+
+        static void Execute(AudioEngineDsp e, ref PlayerCommand c)
+        {
+            switch (c.Kind)
+            {
+                case PlayerCommandKind.Custom:
+                    c.Custom(e);
+                    break;
+                case PlayerCommandKind.PublicInit:
+                    e.PublicInit();
+                    break;
+                case PlayerCommandKind.ToggleMute:
+                    e.ToggleMute();
+                    break;
+                case PlayerCommandKind.SetSfxVolume:
+                    e.SetSfxVolume(c.A);
+                    break;
+                case PlayerCommandKind.SetAmbienceVolume:
+                    e.SetAmbienceVolume(c.A);
+                    break;
+                case PlayerCommandKind.PlaySpinRatchet:
+                    e.PlaySpinRatchet(c.A);
+                    break;
+                case PlayerCommandKind.PlayDebrisCollision:
+                    e.PlayDebrisCollision(c.A, c.Text);
+                    break;
+                case PlayerCommandKind.PlayGatePass:
+                    e.PlayGatePass(c.Text, c.A);
+                    break;
+                case PlayerCommandKind.PlayShredderPass:
+                    e.PlayShredderPass(null, c.A);
+                    break;
+                case PlayerCommandKind.PlayCompactorPass:
+                    e.PlayCompactorPass(null, c.A);
+                    break;
+                case PlayerCommandKind.PlaySuperShredderPass:
+                    e.PlaySuperShredderPass(null, c.A);
+                    break;
+                case PlayerCommandKind.PlayBoosterPass:
+                    e.PlayBoosterPass();
+                    break;
+                case PlayerCommandKind.PlayRcsThrust:
+                    e.PlayRcsThrust();
+                    break;
+                case PlayerCommandKind.PlayBumperBounce:
+                    e.PlayBumperBounce();
+                    break;
+                case PlayerCommandKind.PlayDebrisSwallowed:
+                    e.PlayDebrisSwallowed();
+                    break;
+                case PlayerCommandKind.PlayHazardExplosion:
+                    e.PlayHazardExplosion();
+                    break;
+                case PlayerCommandKind.PlayVictoryFanfare:
+                    e.PlayVictoryFanfare();
+                    break;
+                case PlayerCommandKind.SetThrusterActive:
+                    e.SetThrusterActive(c.Flag);
+                    break;
+                case PlayerCommandKind.PlayDefeatSound:
+                    e.PlayDefeatSound();
+                    break;
+                case PlayerCommandKind.PlayBackupPodSound:
+                    e.PlayBackupPodSound();
+                    break;
+            }
         }
 
         void Awake()
@@ -159,18 +380,23 @@ namespace OrbitalSalvage.AudioDsp
 
         public void FillBuffer(float[] data, int channels, int outputSampleRate)
         {
-            Action<AudioEngineDsp> command;
-            while (commands.TryDequeue(out command))
+            int head = commandHead;
+            while (head != Volatile.Read(ref commandTail))
             {
+                int slot = head & CommandMask;
                 try
                 {
-                    command(EnsureEngine());
+                    Execute(EnsureEngine(), ref commandRing[slot]);
                     muted = engine.IsMuted;
                 }
                 catch (Exception e)
                 {
                     lastError = e.ToString();
                 }
+
+                commandRing[slot] = default(PlayerCommand);
+                head++;
+                Volatile.Write(ref commandHead, head);
             }
 
             if (engine == null || engine.Context == null)

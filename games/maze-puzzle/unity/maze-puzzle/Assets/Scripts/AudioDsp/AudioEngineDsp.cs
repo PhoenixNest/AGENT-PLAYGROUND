@@ -21,6 +21,14 @@ namespace OrbitalSalvage.AudioDsp
             261.63, 293.66, 329.63, 392.0, 440.0, 523.25, 587.33, 659.25, 783.99, 880.0, 1046.5,
         };
 
+        const int PrewarmOscillators = 128;
+        const int PrewarmGains = 128;
+        const int PrewarmBiquads = 32;
+        const int PrewarmBufferSources = 16;
+        const int PrewarmEvents = 2048;
+
+        static readonly double[] SuperShredderFreqs = { 523.25, 783.99, 1046.5 };
+
         readonly IRandomSource rng;
         readonly Func<AudioContextDsp> contextFactory;
         readonly Func<double> clockOverride;
@@ -99,6 +107,9 @@ namespace OrbitalSalvage.AudioDsp
             sfxGain.Connect(masterGain);
             ambienceGain.Connect(masterGain);
             masterGain.Connect(ctx.Destination);
+
+            ctx.Prewarm(PrewarmOscillators, PrewarmGains, PrewarmBiquads, PrewarmBufferSources, PrewarmEvents, (int)Math.Floor(ctx.SampleRate * 0.22));
+            ctx.ReuseNodes = true;
 
             IsInitialized = true;
             EnsureRunning();
@@ -368,7 +379,7 @@ namespace OrbitalSalvage.AudioDsp
             }
 
             double t = ResolveNow(now);
-            double[] freqs = { 523.25, 783.99, 1046.5 };
+            double[] freqs = SuperShredderFreqs;
             for (int idx = 0; idx < freqs.Length; idx++)
             {
                 OscillatorNode osc = ctx.CreateOscillator();
@@ -444,7 +455,7 @@ namespace OrbitalSalvage.AudioDsp
 
             double sampleRate = ctx.SampleRate;
             int bufferSize = (int)Math.Floor(sampleRate * 0.22);
-            AudioBufferDsp buffer = ctx.CreateBuffer(1, bufferSize, ctx.SampleRate);
+            AudioBufferDsp buffer = ctx.AcquireBuffer(1, bufferSize, ctx.SampleRate);
             float[] data = buffer.GetChannelData(0);
             for (int i = 0; i < bufferSize; i++)
             {
@@ -606,6 +617,30 @@ namespace OrbitalSalvage.AudioDsp
             }
         }
 
+        static readonly Note[] VictoryMelody =
+        {
+            new Note(523.25, 0.11),
+            new Note(659.25, 0.11),
+            new Note(783.99, 0.14),
+            new Note(1046.5, 0.42),
+        };
+
+        static readonly Note[] DefeatMelody =
+        {
+            new Note(392.0, 0.16),
+            new Note(329.63, 0.16),
+            new Note(293.66, 0.18),
+            new Note(261.63, 0.38, 220.0),
+        };
+
+        static readonly Note[] BackupPodMelody =
+        {
+            new Note(261.63, 0.08),
+            new Note(392.0, 0.08),
+            new Note(523.25, 0.1),
+            new Note(659.25, 0.28),
+        };
+
         public void PlayVictoryFanfare()
         {
             if (ctx == null || IsMuted)
@@ -615,13 +650,7 @@ namespace OrbitalSalvage.AudioDsp
 
             EnsureRunning();
             double now = Now;
-            Note[] melody =
-            {
-                new Note(523.25, 0.11),
-                new Note(659.25, 0.11),
-                new Note(783.99, 0.14),
-                new Note(1046.5, 0.42),
-            };
+            Note[] melody = VictoryMelody;
 
             double t = now;
             foreach (Note note in melody)
@@ -663,13 +692,7 @@ namespace OrbitalSalvage.AudioDsp
 
             EnsureRunning();
             double now = Now;
-            Note[] melody =
-            {
-                new Note(392.0, 0.16),
-                new Note(329.63, 0.16),
-                new Note(293.66, 0.18),
-                new Note(261.63, 0.38, 220.0),
-            };
+            Note[] melody = DefeatMelody;
 
             double t = now;
             foreach (Note note in melody)
@@ -707,13 +730,7 @@ namespace OrbitalSalvage.AudioDsp
 
             EnsureRunning();
             double now = Now;
-            Note[] melody =
-            {
-                new Note(261.63, 0.08),
-                new Note(392.0, 0.08),
-                new Note(523.25, 0.1),
-                new Note(659.25, 0.28),
-            };
+            Note[] melody = BackupPodMelody;
 
             double t = now;
             foreach (Note note in melody)

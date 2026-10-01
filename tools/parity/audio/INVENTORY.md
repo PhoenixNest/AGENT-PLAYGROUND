@@ -95,6 +95,6 @@ All oscillators have `detune = 0`; every oscillator frequency uses `setValueAtTi
 
 ## 6. Reference scenario set (`cues.mjs`)
 
-`render-ref.mjs` renders 72 scenarios (single cues with argument sweeps, cooldown/arpeggio/overlap sequences, two 3-second random mixes, volume and mute cases, sub-sample start offsets). `ref-manifest.json` records every call list. Three further scenarios (`pre_init_calls`, `init_late_cooldown`, `init_twice_then_cues`) are RNG/trace only (`rngOnly`).
+`render-ref.mjs` renders 72 scenarios (single cues with argument sweeps, cooldown/arpeggio/overlap sequences, two 3-second random mixes, volume and mute cases, sub-sample start offsets). `ref-manifest.json` records every call list. `init_twice_then_cues` is one of the 72 rendered WAV scenarios. Three further scenarios are RNG/trace only (`rngOnly`): `pre_init_calls`, `init_late_cooldown` and `setThrusterActive__false`; they have no WAV and are covered by `rng-counts.json` and `trace-golden.json`.
 
 Chromium renders are not bit-reproducible when several sources are summed (the order in which a node's connections are summed is not stable between runs); the manifest records `bitExactRepeat` and `repeatMaxAbsDiff` per entry (largest observed 1.8e-7).

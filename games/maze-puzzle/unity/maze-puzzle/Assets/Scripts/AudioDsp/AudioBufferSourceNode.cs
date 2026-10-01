@@ -7,6 +7,7 @@ namespace OrbitalSalvage.AudioDsp
         public readonly float[][] Data;
         public readonly float SampleRate;
         public readonly int Length;
+        internal readonly bool Pooled;
 
         public int NumberOfChannels
         {
@@ -19,7 +20,13 @@ namespace OrbitalSalvage.AudioDsp
         }
 
         public AudioBufferDsp(int channels, int length, float sampleRate)
+            : this(channels, length, sampleRate, false)
         {
+        }
+
+        internal AudioBufferDsp(int channels, int length, float sampleRate, bool pooled)
+        {
+            Pooled = pooled;
             Data = new float[channels][];
             for (int c = 0; c < channels; c++)
             {
@@ -68,22 +75,19 @@ namespace OrbitalSalvage.AudioDsp
                     Ctx.Trace?.Event("node.set", Id, "buffer", value.Length, (double)value.SampleRate, value.NumberOfChannels);
                 }
 
-                Ctx.Mutate(() =>
+                buffer = value;
+                if (value != null)
                 {
-                    buffer = value;
-                    if (value != null)
-                    {
-                        Out.SetChannelCount(value.NumberOfChannels);
-                    }
+                    Out.SetChannelCount(value.NumberOfChannels);
+                }
 
-                    virtualReadIndex = 0;
-                    bufferPlayedFrames = 0;
-                    UpdateEffectiveLoopPoints();
-                    if (State != PlaybackState.Unscheduled && value != null)
-                    {
-                        ClampGrainParameters();
-                    }
-                });
+                virtualReadIndex = 0;
+                bufferPlayedFrames = 0;
+                UpdateEffectiveLoopPoints();
+                if (State != PlaybackState.Unscheduled && value != null)
+                {
+                    ClampGrainParameters();
+                }
             }
         }
 
@@ -93,11 +97,8 @@ namespace OrbitalSalvage.AudioDsp
             set
             {
                 Ctx.Trace?.Event("node.set", Id, "loop", value ? 1 : 0);
-                Ctx.Mutate(() =>
-                {
-                    isLooping = value;
-                    UpdateEffectiveLoopPoints();
-                });
+                isLooping = value;
+                UpdateEffectiveLoopPoints();
             }
         }
 
@@ -106,11 +107,8 @@ namespace OrbitalSalvage.AudioDsp
             get { return loopStart; }
             set
             {
-                Ctx.Mutate(() =>
-                {
-                    loopStart = value;
-                    UpdateEffectiveLoopPoints();
-                });
+                loopStart = value;
+                UpdateEffectiveLoopPoints();
             }
         }
 
@@ -119,11 +117,8 @@ namespace OrbitalSalvage.AudioDsp
             get { return loopEnd; }
             set
             {
-                Ctx.Mutate(() =>
-                {
-                    loopEnd = value;
-                    UpdateEffectiveLoopPoints();
-                });
+                loopEnd = value;
+                UpdateEffectiveLoopPoints();
             }
         }
 
@@ -134,6 +129,34 @@ namespace OrbitalSalvage.AudioDsp
             Detune = new AudioParam(ctx, id, "detune", 0f, -float.MaxValue, float.MaxValue, false);
         }
 
+        internal void ResetForReuse(int id)
+        {
+            ResetBase(id);
+            ResetSource();
+            buffer = null;
+            virtualReadIndex = 0;
+            bufferPlayedFrames = 0;
+            virtualLoopStartFrame = 0;
+            virtualLoopEndFrame = 0;
+            isLooping = false;
+            loopStart = 0;
+            loopEnd = 0;
+            grainOffset = 0;
+            grainDuration = double.PositiveInfinity;
+            isDurationGiven = false;
+            PlaybackRate.ResetForReuse(id);
+            Detune.ResetForReuse(id);
+        }
+
+        internal override void ReleaseResources()
+        {
+            if (buffer != null)
+            {
+                Ctx.ReleaseBuffer(buffer);
+                buffer = null;
+            }
+        }
+
         protected override bool PropagatesSilence()
         {
             return !IsPlayingOrScheduled;
@@ -142,24 +165,21 @@ namespace OrbitalSalvage.AudioDsp
         public void Start(double when, double offset, double duration)
         {
             Ctx.Trace?.Event("node.start", Id, when, offset, duration);
-            Ctx.Mutate(() =>
+            if (State != PlaybackState.Unscheduled)
             {
-                if (State != PlaybackState.Unscheduled)
-                {
-                    throw new InvalidOperationException("cannot call start more than once");
-                }
+                throw new InvalidOperationException("cannot call start more than once");
+            }
 
-                isDurationGiven = true;
-                grainOffset = offset;
-                grainDuration = duration;
-                StartTime = Math.Max(when, Ctx.CurrentTime);
-                if (buffer != null)
-                {
-                    ClampGrainParameters();
-                }
+            isDurationGiven = true;
+            grainOffset = offset;
+            grainDuration = duration;
+            StartTime = Math.Max(when, Ctx.CurrentTime);
+            if (buffer != null)
+            {
+                ClampGrainParameters();
+            }
 
-                State = PlaybackState.Scheduled;
-            });
+            State = PlaybackState.Scheduled;
         }
 
         protected override void OnStart()
