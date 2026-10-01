@@ -133,6 +133,7 @@ namespace OrbitalSalvage.AudioDsp.Tests
         string sourceDir;
         string tempDir;
         string manifestText;
+        string localText;
         string originalSha;
 
         [SetUp]
@@ -142,8 +143,19 @@ namespace OrbitalSalvage.AudioDsp.Tests
             tempDir = Path.Combine(Path.GetTempPath(), "audio-gate-" + Guid.NewGuid().ToString("N"));
             Directory.CreateDirectory(Path.Combine(tempDir, "out", "ref"));
             manifestText = File.ReadAllText(Path.Combine(sourceDir, "ref-manifest.json"));
-            originalSha = ScenarioRunner.LoadManifest(Path.Combine(sourceDir, "ref-manifest.json")).Find(s => s.Id == CueId).Sha256;
+            string localPath = Path.Combine(sourceDir, "out", "ref", ParityChecks.LocalManifestName);
+            Assert.IsTrue(File.Exists(localPath), "missing " + localPath + " (" + AudioTestEnvironment.RegenerateHint + ")");
+            localText = File.ReadAllText(localPath);
+            originalSha = ParityChecks.LoadLocalHashes(Path.Combine(sourceDir, "out", "ref"))[CueId + ".wav"];
             File.WriteAllText(Path.Combine(tempDir, "ref-manifest.json"), manifestText);
+            File.WriteAllText(Path.Combine(tempDir, "out", "ref", ParityChecks.LocalManifestName), localText);
+        }
+
+        // Records the hash of the (modified) temp WAV in the temp manifest.local.json, as a fresh render would.
+        void RehashTempReference()
+        {
+            string patched = localText.Replace(originalSha, ParityChecks.Sha256FileHex(RefPath(tempDir)));
+            File.WriteAllText(Path.Combine(tempDir, "out", "ref", ParityChecks.LocalManifestName), patched);
         }
 
         [TearDown]
@@ -171,6 +183,7 @@ namespace OrbitalSalvage.AudioDsp.Tests
         public void CopiedReferencePassesAllGates()
         {
             File.Copy(RefPath(sourceDir), RefPath(tempDir));
+            // temp manifest.local.json was copied in SetUp
             ComparisonRow row = Compare();
             Assert.IsTrue(row.Pass, row.Note);
         }
@@ -185,7 +198,7 @@ namespace OrbitalSalvage.AudioDsp.Tests
         }
 
         [Test]
-        public void StaleReferenceIsRejectedBySha256()
+        public void CorruptedReferenceIsRejectedBySha256()
         {
             int rate;
             float[][] data = WavIo.ReadFloat32(RefPath(sourceDir), out rate);
@@ -193,7 +206,57 @@ namespace OrbitalSalvage.AudioDsp.Tests
             WavIo.WriteFloat32(RefPath(tempDir), data, rate);
             ComparisonRow row = Compare();
             Assert.IsFalse(row.Pass);
+            StringAssert.Contains("corrupt reference", row.Note);
+        }
+
+        [Test]
+        public void MissingLocalManifestFails()
+        {
+            File.Copy(RefPath(sourceDir), RefPath(tempDir));
+            File.Delete(Path.Combine(tempDir, "out", "ref", ParityChecks.LocalManifestName));
+            ComparisonRow row = Compare();
+            Assert.IsFalse(row.Pass);
+            StringAssert.Contains(ParityChecks.LocalManifestName, row.Note);
+        }
+
+        [Test]
+        public void ReferenceThatNoLongerMatchesCommittedStatsIsStale()
+        {
+            // A different render (audio.js or the scenarios changed), correctly hashed: not corrupt, but stale.
+            int rate;
+            float[][] data = WavIo.ReadFloat32(RefPath(sourceDir), out rate);
+            int from = data[0].Length / 4;
+            for (int i = from; i < from + 2000 && i < data[0].Length; i++)
+            {
+                data[0][i] += 0.01f;
+            }
+
+            WavIo.WriteFloat32(RefPath(tempDir), data, rate);
+            RehashTempReference();
+            ComparisonRow row = Compare();
+            Assert.IsFalse(row.Pass);
             StringAssert.Contains("stale reference", row.Note);
+            StringAssert.Contains("node render-ref.mjs", row.Note);
+        }
+
+        [Test]
+        public void ChromiumRerenderNoiseIsAccepted()
+        {
+            // Chromium re-renders differ by ~3e-8 per sample: new file bytes and hash, same statistics.
+            int rate;
+            float[][] data = WavIo.ReadFloat32(RefPath(sourceDir), out rate);
+            for (int c = 0; c < data.Length; c++)
+            {
+                for (int i = 0; i < data[c].Length; i++)
+                {
+                    data[c][i] += (i & 1) == 0 ? 3e-8f : -3e-8f;
+                }
+            }
+
+            WavIo.WriteFloat32(RefPath(tempDir), data, rate);
+            RehashTempReference();
+            ComparisonRow row = Compare();
+            Assert.IsTrue(row.Pass, row.Note);
         }
 
         [Test]
@@ -204,8 +267,7 @@ namespace OrbitalSalvage.AudioDsp.Tests
             int at = data[0].Length / 3;
             data[0][at] += 2e-5f;
             WavIo.WriteFloat32(RefPath(tempDir), data, rate);
-            string patched = manifestText.Replace(originalSha, ParityChecks.Sha256Hex(data));
-            File.WriteAllText(Path.Combine(tempDir, "ref-manifest.json"), patched);
+            RehashTempReference();
             ComparisonRow row = Compare();
             Assert.GreaterOrEqual(row.Metrics.Correlation, ParityChecks.MinCorrelation);
             Assert.IsFalse(row.Pass, "a 2e-5 deviation must fail the 1e-5 max abs gate");

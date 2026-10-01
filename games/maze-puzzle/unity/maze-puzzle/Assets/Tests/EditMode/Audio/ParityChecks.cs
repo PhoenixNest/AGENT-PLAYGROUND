@@ -58,6 +58,7 @@ namespace OrbitalSalvage.AudioDsp.Tests
         public static List<ComparisonRow> CompareAgainstReferences(string audioDir, string filter, string compareDir)
         {
             List<ParityScenario> manifest = ScenarioRunner.LoadManifest(Path.Combine(audioDir, "ref-manifest.json"));
+            Dictionary<string, string> localHashes = LoadLocalHashes(Path.Combine(audioDir, "out", "ref"));
             List<ComparisonRow> rows = new List<ComparisonRow>();
             foreach (ParityScenario sc in manifest)
             {
@@ -78,14 +79,27 @@ namespace OrbitalSalvage.AudioDsp.Tests
                     continue;
                 }
 
-                int rate;
-                float[][] reference = WavIo.ReadFloat32(refPath, out rate);
-                string actualSha = Sha256Hex(reference);
-                if (!string.Equals(actualSha, sc.Sha256, StringComparison.OrdinalIgnoreCase))
+                // 1. Corruption: the file must hash to what render-ref.mjs (or hash-ref.mjs) recorded locally.
+                string localHash;
+                string corruption = CheckLocalHash(refPath, sc.Id, localHashes, out localHash);
+                if (corruption != null)
                 {
                     row.Metrics = new AudioComparison();
                     row.Pass = false;
-                    row.Note = "stale reference: sha256 " + actualSha + " != manifest " + sc.Sha256 + " (" + AudioTestEnvironment.RegenerateHint + ")";
+                    row.Note = corruption;
+                    rows.Add(row);
+                    continue;
+                }
+
+                // 2. Staleness: the committed statistics and fingerprint describe the current audio.js and scenarios.
+                int rate;
+                float[][] reference = WavIo.ReadFloat32(refPath, out rate);
+                string stale = CheckCommittedStats(sc, reference);
+                if (stale != null)
+                {
+                    row.Metrics = new AudioComparison();
+                    row.Pass = false;
+                    row.Note = "stale reference: " + stale + " (" + AudioTestEnvironment.RegenerateHint + ")";
                     rows.Add(row);
                     continue;
                 }
@@ -145,6 +159,157 @@ namespace OrbitalSalvage.AudioDsp.Tests
             return rows;
         }
 
+        // Committed statistics tolerance (absolute). Chromium re-renders differ by ~3e-8; the manifest is rounded to 1e-7.
+        public const double StatsTolerance = 1e-6;
+        public const int FingerprintSegments = 32;
+        public const string LocalManifestName = "manifest.local.json";
+
+        // File name -> sha256 of the WAV bytes; null when out/ref/manifest.local.json does not exist.
+        public static Dictionary<string, string> LoadLocalHashes(string refDir)
+        {
+            string path = Path.Combine(refDir, LocalManifestName);
+            if (!File.Exists(path))
+            {
+                return null;
+            }
+
+            Dictionary<string, object> root = (Dictionary<string, object>)MiniJson.Parse(File.ReadAllText(path));
+            Dictionary<string, string> hashes = new Dictionary<string, string>();
+            foreach (KeyValuePair<string, object> kv in (Dictionary<string, object>)root["files"])
+            {
+                hashes[kv.Key] = (string)((Dictionary<string, object>)kv.Value)["sha256"];
+            }
+
+            return hashes;
+        }
+
+        public static string Sha256FileHex(string path)
+        {
+            using (SHA256 sha = SHA256.Create())
+            using (FileStream fs = File.OpenRead(path))
+            {
+                StringBuilder hex = new StringBuilder();
+                foreach (byte b in sha.ComputeHash(fs))
+                {
+                    hex.Append(b.ToString("x2", CultureInfo.InvariantCulture));
+                }
+
+                return hex.ToString();
+            }
+        }
+
+        // Returns null when the file matches manifest.local.json, otherwise a failure note.
+        static string CheckLocalHash(string refPath, string id, Dictionary<string, string> localHashes, out string actual)
+        {
+            actual = null;
+            if (localHashes == null)
+            {
+                return "missing " + LocalManifestName + " next to the reference WAVs (" + AudioTestEnvironment.RegenerateHint + "; for WAVs copied from elsewhere: node hash-ref.mjs)";
+            }
+
+            string expected;
+            if (!localHashes.TryGetValue(id + ".wav", out expected))
+            {
+                return "reference " + id + ".wav is not listed in " + LocalManifestName + " (" + AudioTestEnvironment.RegenerateHint + ")";
+            }
+
+            actual = Sha256FileHex(refPath);
+            if (!string.Equals(actual, expected, StringComparison.OrdinalIgnoreCase))
+            {
+                return "corrupt reference: sha256 " + actual + " != " + LocalManifestName + " " + expected + " (" + AudioTestEnvironment.RegenerateHint + ")";
+            }
+
+            return null;
+        }
+
+        public static double[][] Fingerprint(float[][] channels)
+        {
+            double[][] result = new double[channels.Length][];
+            for (int c = 0; c < channels.Length; c++)
+            {
+                float[] ch = channels[c];
+                result[c] = new double[FingerprintSegments];
+                for (int s = 0; s < FingerprintSegments; s++)
+                {
+                    int from = (int)((long)s * ch.Length / FingerprintSegments);
+                    int to = (int)((long)(s + 1) * ch.Length / FingerprintSegments);
+                    double sum = 0;
+                    for (int i = from; i < to; i++)
+                    {
+                        sum += (double)ch[i] * ch[i];
+                    }
+
+                    result[c][s] = to > from ? Math.Sqrt(sum / (to - from)) : 0;
+                }
+            }
+
+            return result;
+        }
+
+        // Returns null when length, rms, peak and the fingerprint match the committed manifest within StatsTolerance.
+        public static string CheckCommittedStats(ParityScenario sc, float[][] reference)
+        {
+            if (sc.Fingerprint == null)
+            {
+                return "ref-manifest.json entry " + sc.Id + " has no fingerprint";
+            }
+
+            if (reference.Length != sc.Fingerprint.Length)
+            {
+                return "channels " + reference.Length + " != manifest " + sc.Fingerprint.Length;
+            }
+
+            if (sc.Frames > 0 && reference[0].Length != sc.Frames)
+            {
+                return "frames " + reference[0].Length + " != manifest " + sc.Frames;
+            }
+
+            double sum = 0;
+            double peak = 0;
+            long count = 0;
+            foreach (float[] ch in reference)
+            {
+                for (int i = 0; i < ch.Length; i++)
+                {
+                    double v = ch[i];
+                    sum += v * v;
+                    peak = Math.Max(peak, Math.Abs(v));
+                    count++;
+                }
+            }
+
+            double rms = count > 0 ? Math.Sqrt(sum / count) : 0;
+            if (Math.Abs(rms - sc.Rms) > StatsTolerance)
+            {
+                return "rms " + rms.ToString("R", CultureInfo.InvariantCulture) + " != manifest " + sc.Rms.ToString("R", CultureInfo.InvariantCulture);
+            }
+
+            if (Math.Abs(peak - sc.Peak) > StatsTolerance)
+            {
+                return "peak " + peak.ToString("R", CultureInfo.InvariantCulture) + " != manifest " + sc.Peak.ToString("R", CultureInfo.InvariantCulture);
+            }
+
+            double[][] fp = Fingerprint(reference);
+            for (int c = 0; c < fp.Length; c++)
+            {
+                if (fp[c].Length != sc.Fingerprint[c].Length)
+                {
+                    return "fingerprint length " + fp[c].Length + " != manifest " + sc.Fingerprint[c].Length;
+                }
+
+                for (int s = 0; s < fp[c].Length; s++)
+                {
+                    if (Math.Abs(fp[c][s] - sc.Fingerprint[c][s]) > StatsTolerance)
+                    {
+                        return "fingerprint channel " + c + " segment " + s + " " + fp[c][s].ToString("R", CultureInfo.InvariantCulture)
+                            + " != manifest " + sc.Fingerprint[c][s].ToString("R", CultureInfo.InvariantCulture);
+                    }
+                }
+            }
+
+            return null;
+        }
+
         public static string Sha256Hex(float[][] channels)
         {
             using (SHA256 sha = SHA256.Create())
@@ -172,7 +337,7 @@ namespace OrbitalSalvage.AudioDsp.Tests
             StringBuilder sb = new StringBuilder();
             sb.AppendLine("Gates: correlation >= " + MinCorrelation.ToString(CultureInfo.InvariantCulture)
                 + ", max abs err <= " + MaxAbsErrorLimit.ToString("E0", CultureInfo.InvariantCulture)
-                + ", stft dist <= " + StftDistanceLimit.ToString("E0", CultureInfo.InvariantCulture) + ", sha256 matches ref-manifest.json.");
+                + ", stft dist <= " + StftDistanceLimit.ToString("E0", CultureInfo.InvariantCulture) + ", file sha256 matches manifest.local.json, rms/peak/fingerprint match ref-manifest.json within 1e-6.");
             sb.AppendLine();
             sb.AppendLine("| cue/args | correlation | 1 - corr | max abs err | rms err | stft dist | pass |");
             sb.AppendLine("| --- | --- | --- | --- | --- | --- | --- |");
