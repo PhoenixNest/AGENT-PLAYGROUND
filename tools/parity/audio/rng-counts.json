@@ -1,0 +1,2800 @@
+{
+ "seed": 1592594996,
+ "scenarios": {
+  "playSpinRatchet__0p6": {
+   "draws": 0,
+   "calls": 1,
+   "scenario": {
+    "id": "playSpinRatchet__0p6",
+    "cue": "playSpinRatchet",
+    "args": [
+     0.6
+    ],
+    "calls": [
+     {
+      "t": 0.07256235827664399,
+      "m": "playSpinRatchet",
+      "a": [
+       0.6
+      ]
+     }
+    ],
+    "seconds": 0.19256235827664397
+   }
+  },
+  "playSpinRatchet__0p8": {
+   "draws": 0,
+   "calls": 1,
+   "scenario": {
+    "id": "playSpinRatchet__0p8",
+    "cue": "playSpinRatchet",
+    "args": [
+     0.8
+    ],
+    "calls": [
+     {
+      "t": 0.07256235827664399,
+      "m": "playSpinRatchet",
+      "a": [
+       0.8
+      ]
+     }
+    ],
+    "seconds": 0.19256235827664397
+   }
+  },
+  "playSpinRatchet__1": {
+   "draws": 0,
+   "calls": 1,
+   "scenario": {
+    "id": "playSpinRatchet__1",
+    "cue": "playSpinRatchet",
+    "args": [
+     1
+    ],
+    "calls": [
+     {
+      "t": 0.07256235827664399,
+      "m": "playSpinRatchet",
+      "a": [
+       1
+      ]
+     }
+    ],
+    "seconds": 0.19256235827664397
+   }
+  },
+  "playSpinRatchet__1p2": {
+   "draws": 0,
+   "calls": 1,
+   "scenario": {
+    "id": "playSpinRatchet__1p2",
+    "cue": "playSpinRatchet",
+    "args": [
+     1.2
+    ],
+    "calls": [
+     {
+      "t": 0.07256235827664399,
+      "m": "playSpinRatchet",
+      "a": [
+       1.2
+      ]
+     }
+    ],
+    "seconds": 0.19256235827664397
+   }
+  },
+  "playSpinRatchet__1p5": {
+   "draws": 0,
+   "calls": 1,
+   "scenario": {
+    "id": "playSpinRatchet__1p5",
+    "cue": "playSpinRatchet",
+    "args": [
+     1.5
+    ],
+    "calls": [
+     {
+      "t": 0.07256235827664399,
+      "m": "playSpinRatchet",
+      "a": [
+       1.5
+      ]
+     }
+    ],
+    "seconds": 0.19256235827664397
+   }
+  },
+  "playSpinRatchet__1p6": {
+   "draws": 0,
+   "calls": 1,
+   "scenario": {
+    "id": "playSpinRatchet__1p6",
+    "cue": "playSpinRatchet",
+    "args": [
+     1.6
+    ],
+    "calls": [
+     {
+      "t": 0.07256235827664399,
+      "m": "playSpinRatchet",
+      "a": [
+       1.6
+      ]
+     }
+    ],
+    "seconds": 0.19256235827664397
+   }
+  },
+  "playSpinRatchet__2p5": {
+   "draws": 0,
+   "calls": 1,
+   "scenario": {
+    "id": "playSpinRatchet__2p5",
+    "cue": "playSpinRatchet",
+    "args": [
+     2.5
+    ],
+    "calls": [
+     {
+      "t": 0.07256235827664399,
+      "m": "playSpinRatchet",
+      "a": [
+       2.5
+      ]
+     }
+    ],
+    "seconds": 0.19256235827664397
+   }
+  },
+  "playSpinRatchet__none": {
+   "draws": 0,
+   "calls": 1,
+   "scenario": {
+    "id": "playSpinRatchet__none",
+    "cue": "playSpinRatchet",
+    "args": [],
+    "calls": [
+     {
+      "t": 0.07256235827664399,
+      "m": "playSpinRatchet",
+      "a": []
+     }
+    ],
+    "seconds": 0.19256235827664397
+   }
+  },
+  "playDebrisCollision__0p2_titanium": {
+   "draws": 1,
+   "calls": 1,
+   "scenario": {
+    "id": "playDebrisCollision__0p2_titanium",
+    "cue": "playDebrisCollision",
+    "args": [
+     0.2,
+     "titanium"
+    ],
+    "calls": [
+     {
+      "t": 0.07256235827664399,
+      "m": "playDebrisCollision",
+      "a": [
+       0.2,
+       "titanium"
+      ]
+     }
+    ],
+    "seconds": 0.222562358276644
+   }
+  },
+  "playDebrisCollision__0p6_titanium": {
+   "draws": 1,
+   "calls": 1,
+   "scenario": {
+    "id": "playDebrisCollision__0p6_titanium",
+    "cue": "playDebrisCollision",
+    "args": [
+     0.6,
+     "titanium"
+    ],
+    "calls": [
+     {
+      "t": 0.07256235827664399,
+      "m": "playDebrisCollision",
+      "a": [
+       0.6,
+       "titanium"
+      ]
+     }
+    ],
+    "seconds": 0.222562358276644
+   }
+  },
+  "playDebrisCollision__1_titanium": {
+   "draws": 1,
+   "calls": 1,
+   "scenario": {
+    "id": "playDebrisCollision__1_titanium",
+    "cue": "playDebrisCollision",
+    "args": [
+     1,
+     "titanium"
+    ],
+    "calls": [
+     {
+      "t": 0.07256235827664399,
+      "m": "playDebrisCollision",
+      "a": [
+       1,
+       "titanium"
+      ]
+     }
+    ],
+    "seconds": 0.222562358276644
+   }
+  },
+  "playDebrisCollision__1p25_titanium": {
+   "draws": 1,
+   "calls": 1,
+   "scenario": {
+    "id": "playDebrisCollision__1p25_titanium",
+    "cue": "playDebrisCollision",
+    "args": [
+     1.25,
+     "titanium"
+    ],
+    "calls": [
+     {
+      "t": 0.07256235827664399,
+      "m": "playDebrisCollision",
+      "a": [
+       1.25,
+       "titanium"
+      ]
+     }
+    ],
+    "seconds": 0.222562358276644
+   }
+  },
+  "playDebrisCollision__0p2_solar": {
+   "draws": 1,
+   "calls": 1,
+   "scenario": {
+    "id": "playDebrisCollision__0p2_solar",
+    "cue": "playDebrisCollision",
+    "args": [
+     0.2,
+     "solar"
+    ],
+    "calls": [
+     {
+      "t": 0.07256235827664399,
+      "m": "playDebrisCollision",
+      "a": [
+       0.2,
+       "solar"
+      ]
+     }
+    ],
+    "seconds": 0.222562358276644
+   }
+  },
+  "playDebrisCollision__0p6_solar": {
+   "draws": 1,
+   "calls": 1,
+   "scenario": {
+    "id": "playDebrisCollision__0p6_solar",
+    "cue": "playDebrisCollision",
+    "args": [
+     0.6,
+     "solar"
+    ],
+    "calls": [
+     {
+      "t": 0.07256235827664399,
+      "m": "playDebrisCollision",
+      "a": [
+       0.6,
+       "solar"
+      ]
+     }
+    ],
+    "seconds": 0.222562358276644
+   }
+  },
+  "playDebrisCollision__1_solar": {
+   "draws": 1,
+   "calls": 1,
+   "scenario": {
+    "id": "playDebrisCollision__1_solar",
+    "cue": "playDebrisCollision",
+    "args": [
+     1,
+     "solar"
+    ],
+    "calls": [
+     {
+      "t": 0.07256235827664399,
+      "m": "playDebrisCollision",
+      "a": [
+       1,
+       "solar"
+      ]
+     }
+    ],
+    "seconds": 0.222562358276644
+   }
+  },
+  "playDebrisCollision__1p25_solar": {
+   "draws": 1,
+   "calls": 1,
+   "scenario": {
+    "id": "playDebrisCollision__1p25_solar",
+    "cue": "playDebrisCollision",
+    "args": [
+     1.25,
+     "solar"
+    ],
+    "calls": [
+     {
+      "t": 0.07256235827664399,
+      "m": "playDebrisCollision",
+      "a": [
+       1.25,
+       "solar"
+      ]
+     }
+    ],
+    "seconds": 0.222562358276644
+   }
+  },
+  "playDebrisCollision__0p2_volatile": {
+   "draws": 1,
+   "calls": 1,
+   "scenario": {
+    "id": "playDebrisCollision__0p2_volatile",
+    "cue": "playDebrisCollision",
+    "args": [
+     0.2,
+     "volatile"
+    ],
+    "calls": [
+     {
+      "t": 0.07256235827664399,
+      "m": "playDebrisCollision",
+      "a": [
+       0.2,
+       "volatile"
+      ]
+     }
+    ],
+    "seconds": 0.222562358276644
+   }
+  },
+  "playDebrisCollision__0p6_volatile": {
+   "draws": 1,
+   "calls": 1,
+   "scenario": {
+    "id": "playDebrisCollision__0p6_volatile",
+    "cue": "playDebrisCollision",
+    "args": [
+     0.6,
+     "volatile"
+    ],
+    "calls": [
+     {
+      "t": 0.07256235827664399,
+      "m": "playDebrisCollision",
+      "a": [
+       0.6,
+       "volatile"
+      ]
+     }
+    ],
+    "seconds": 0.222562358276644
+   }
+  },
+  "playDebrisCollision__1_volatile": {
+   "draws": 1,
+   "calls": 1,
+   "scenario": {
+    "id": "playDebrisCollision__1_volatile",
+    "cue": "playDebrisCollision",
+    "args": [
+     1,
+     "volatile"
+    ],
+    "calls": [
+     {
+      "t": 0.07256235827664399,
+      "m": "playDebrisCollision",
+      "a": [
+       1,
+       "volatile"
+      ]
+     }
+    ],
+    "seconds": 0.222562358276644
+   }
+  },
+  "playDebrisCollision__1p25_volatile": {
+   "draws": 1,
+   "calls": 1,
+   "scenario": {
+    "id": "playDebrisCollision__1p25_volatile",
+    "cue": "playDebrisCollision",
+    "args": [
+     1.25,
+     "volatile"
+    ],
+    "calls": [
+     {
+      "t": 0.07256235827664399,
+      "m": "playDebrisCollision",
+      "a": [
+       1.25,
+       "volatile"
+      ]
+     }
+    ],
+    "seconds": 0.222562358276644
+   }
+  },
+  "playDebrisCollision__0p2_magnetic": {
+   "draws": 1,
+   "calls": 1,
+   "scenario": {
+    "id": "playDebrisCollision__0p2_magnetic",
+    "cue": "playDebrisCollision",
+    "args": [
+     0.2,
+     "magnetic"
+    ],
+    "calls": [
+     {
+      "t": 0.07256235827664399,
+      "m": "playDebrisCollision",
+      "a": [
+       0.2,
+       "magnetic"
+      ]
+     }
+    ],
+    "seconds": 0.222562358276644
+   }
+  },
+  "playDebrisCollision__0p6_magnetic": {
+   "draws": 1,
+   "calls": 1,
+   "scenario": {
+    "id": "playDebrisCollision__0p6_magnetic",
+    "cue": "playDebrisCollision",
+    "args": [
+     0.6,
+     "magnetic"
+    ],
+    "calls": [
+     {
+      "t": 0.07256235827664399,
+      "m": "playDebrisCollision",
+      "a": [
+       0.6,
+       "magnetic"
+      ]
+     }
+    ],
+    "seconds": 0.222562358276644
+   }
+  },
+  "playDebrisCollision__1_magnetic": {
+   "draws": 1,
+   "calls": 1,
+   "scenario": {
+    "id": "playDebrisCollision__1_magnetic",
+    "cue": "playDebrisCollision",
+    "args": [
+     1,
+     "magnetic"
+    ],
+    "calls": [
+     {
+      "t": 0.07256235827664399,
+      "m": "playDebrisCollision",
+      "a": [
+       1,
+       "magnetic"
+      ]
+     }
+    ],
+    "seconds": 0.222562358276644
+   }
+  },
+  "playDebrisCollision__1p25_magnetic": {
+   "draws": 1,
+   "calls": 1,
+   "scenario": {
+    "id": "playDebrisCollision__1p25_magnetic",
+    "cue": "playDebrisCollision",
+    "args": [
+     1.25,
+     "magnetic"
+    ],
+    "calls": [
+     {
+      "t": 0.07256235827664399,
+      "m": "playDebrisCollision",
+      "a": [
+       1.25,
+       "magnetic"
+      ]
+     }
+    ],
+    "seconds": 0.222562358276644
+   }
+  },
+  "playDebrisCollision__none": {
+   "draws": 1,
+   "calls": 1,
+   "scenario": {
+    "id": "playDebrisCollision__none",
+    "cue": "playDebrisCollision",
+    "args": [],
+    "calls": [
+     {
+      "t": 0.07256235827664399,
+      "m": "playDebrisCollision",
+      "a": []
+     }
+    ],
+    "seconds": 0.222562358276644
+   }
+  },
+  "playGatePass__MULTIPLY_2": {
+   "draws": 0,
+   "calls": 1,
+   "scenario": {
+    "id": "playGatePass__MULTIPLY_2",
+    "cue": "playGatePass",
+    "args": [
+     "MULTIPLY",
+     2
+    ],
+    "calls": [
+     {
+      "t": 0.07256235827664399,
+      "m": "playGatePass",
+      "a": [
+       "MULTIPLY",
+       2
+      ]
+     }
+    ],
+    "seconds": 0.472562358276644
+   }
+  },
+  "playGatePass__MULTIPLY_3": {
+   "draws": 0,
+   "calls": 1,
+   "scenario": {
+    "id": "playGatePass__MULTIPLY_3",
+    "cue": "playGatePass",
+    "args": [
+     "MULTIPLY",
+     3
+    ],
+    "calls": [
+     {
+      "t": 0.07256235827664399,
+      "m": "playGatePass",
+      "a": [
+       "MULTIPLY",
+       3
+      ]
+     }
+    ],
+    "seconds": 0.472562358276644
+   }
+  },
+  "playGatePass__MULTIPLY_4": {
+   "draws": 0,
+   "calls": 1,
+   "scenario": {
+    "id": "playGatePass__MULTIPLY_4",
+    "cue": "playGatePass",
+    "args": [
+     "MULTIPLY",
+     4
+    ],
+    "calls": [
+     {
+      "t": 0.07256235827664399,
+      "m": "playGatePass",
+      "a": [
+       "MULTIPLY",
+       4
+      ]
+     }
+    ],
+    "seconds": 0.472562358276644
+   }
+  },
+  "playGatePass__MULTIPLY_5": {
+   "draws": 0,
+   "calls": 1,
+   "scenario": {
+    "id": "playGatePass__MULTIPLY_5",
+    "cue": "playGatePass",
+    "args": [
+     "MULTIPLY",
+     5
+    ],
+    "calls": [
+     {
+      "t": 0.07256235827664399,
+      "m": "playGatePass",
+      "a": [
+       "MULTIPLY",
+       5
+      ]
+     }
+    ],
+    "seconds": 0.472562358276644
+   }
+  },
+  "playGatePass__ADD_3": {
+   "draws": 0,
+   "calls": 1,
+   "scenario": {
+    "id": "playGatePass__ADD_3",
+    "cue": "playGatePass",
+    "args": [
+     "ADD",
+     3
+    ],
+    "calls": [
+     {
+      "t": 0.07256235827664399,
+      "m": "playGatePass",
+      "a": [
+       "ADD",
+       3
+      ]
+     }
+    ],
+    "seconds": 0.472562358276644
+   }
+  },
+  "playGatePass__ADD_8": {
+   "draws": 0,
+   "calls": 1,
+   "scenario": {
+    "id": "playGatePass__ADD_8",
+    "cue": "playGatePass",
+    "args": [
+     "ADD",
+     8
+    ],
+    "calls": [
+     {
+      "t": 0.07256235827664399,
+      "m": "playGatePass",
+      "a": [
+       "ADD",
+       8
+      ]
+     }
+    ],
+    "seconds": 0.472562358276644
+   }
+  },
+  "playGatePass__ADD_15": {
+   "draws": 0,
+   "calls": 1,
+   "scenario": {
+    "id": "playGatePass__ADD_15",
+    "cue": "playGatePass",
+    "args": [
+     "ADD",
+     15
+    ],
+    "calls": [
+     {
+      "t": 0.07256235827664399,
+      "m": "playGatePass",
+      "a": [
+       "ADD",
+       15
+      ]
+     }
+    ],
+    "seconds": 0.472562358276644
+   }
+  },
+  "playGatePass__BOOST_160": {
+   "draws": 0,
+   "calls": 1,
+   "scenario": {
+    "id": "playGatePass__BOOST_160",
+    "cue": "playGatePass",
+    "args": [
+     "BOOST",
+     160
+    ],
+    "calls": [
+     {
+      "t": 0.07256235827664399,
+      "m": "playGatePass",
+      "a": [
+       "BOOST",
+       160
+      ]
+     }
+    ],
+    "seconds": 0.472562358276644
+   }
+  },
+  "playGatePass__BOOST_180": {
+   "draws": 0,
+   "calls": 1,
+   "scenario": {
+    "id": "playGatePass__BOOST_180",
+    "cue": "playGatePass",
+    "args": [
+     "BOOST",
+     180
+    ],
+    "calls": [
+     {
+      "t": 0.07256235827664399,
+      "m": "playGatePass",
+      "a": [
+       "BOOST",
+       180
+      ]
+     }
+    ],
+    "seconds": 0.472562358276644
+   }
+  },
+  "playGatePass__none": {
+   "draws": 0,
+   "calls": 1,
+   "scenario": {
+    "id": "playGatePass__none",
+    "cue": "playGatePass",
+    "args": [],
+    "calls": [
+     {
+      "t": 0.07256235827664399,
+      "m": "playGatePass",
+      "a": []
+     }
+    ],
+    "seconds": 0.472562358276644
+   }
+  },
+  "playShredderPass__null_2": {
+   "draws": 0,
+   "calls": 1,
+   "scenario": {
+    "id": "playShredderPass__null_2",
+    "cue": "playShredderPass",
+    "args": [
+     null,
+     2
+    ],
+    "calls": [
+     {
+      "t": 0.07256235827664399,
+      "m": "playShredderPass",
+      "a": [
+       null,
+       2
+      ]
+     }
+    ],
+    "seconds": 0.472562358276644
+   }
+  },
+  "playCompactorPass__null_3": {
+   "draws": 0,
+   "calls": 1,
+   "scenario": {
+    "id": "playCompactorPass__null_3",
+    "cue": "playCompactorPass",
+    "args": [
+     null,
+     3
+    ],
+    "calls": [
+     {
+      "t": 0.07256235827664399,
+      "m": "playCompactorPass",
+      "a": [
+       null,
+       3
+      ]
+     }
+    ],
+    "seconds": 0.472562358276644
+   }
+  },
+  "playSuperShredderPass__null_4": {
+   "draws": 0,
+   "calls": 1,
+   "scenario": {
+    "id": "playSuperShredderPass__null_4",
+    "cue": "playSuperShredderPass",
+    "args": [
+     null,
+     4
+    ],
+    "calls": [
+     {
+      "t": 0.07256235827664399,
+      "m": "playSuperShredderPass",
+      "a": [
+       null,
+       4
+      ]
+     }
+    ],
+    "seconds": 0.472562358276644
+   }
+  },
+  "playBoosterPass__none": {
+   "draws": 0,
+   "calls": 1,
+   "scenario": {
+    "id": "playBoosterPass__none",
+    "cue": "playBoosterPass",
+    "args": [],
+    "calls": [
+     {
+      "t": 0.07256235827664399,
+      "m": "playBoosterPass",
+      "a": []
+     }
+    ],
+    "seconds": 0.472562358276644
+   }
+  },
+  "playBoosterPass___now": {
+   "draws": 0,
+   "calls": 1,
+   "scenario": {
+    "id": "playBoosterPass___now",
+    "cue": "playBoosterPass",
+    "args": [
+     "@now"
+    ],
+    "calls": [
+     {
+      "t": 0.07256235827664399,
+      "m": "playBoosterPass",
+      "a": [
+       "@now"
+      ]
+     }
+    ],
+    "seconds": 0.472562358276644
+   }
+  },
+  "playRcsThrust__none": {
+   "draws": 9702,
+   "calls": 1,
+   "scenario": {
+    "id": "playRcsThrust__none",
+    "cue": "playRcsThrust",
+    "args": [],
+    "calls": [
+     {
+      "t": 0.07256235827664399,
+      "m": "playRcsThrust",
+      "a": []
+     }
+    ],
+    "seconds": 0.472562358276644
+   }
+  },
+  "playBumperBounce__none": {
+   "draws": 1,
+   "calls": 1,
+   "scenario": {
+    "id": "playBumperBounce__none",
+    "cue": "playBumperBounce",
+    "args": [],
+    "calls": [
+     {
+      "t": 0.07256235827664399,
+      "m": "playBumperBounce",
+      "a": []
+     }
+    ],
+    "seconds": 0.272562358276644
+   }
+  },
+  "playDebrisSwallowed__none": {
+   "draws": 0,
+   "calls": 1,
+   "scenario": {
+    "id": "playDebrisSwallowed__none",
+    "cue": "playDebrisSwallowed",
+    "args": [],
+    "calls": [
+     {
+      "t": 0.07256235827664399,
+      "m": "playDebrisSwallowed",
+      "a": []
+     }
+    ],
+    "seconds": 0.672562358276644
+   }
+  },
+  "playHazardExplosion__none": {
+   "draws": 0,
+   "calls": 1,
+   "scenario": {
+    "id": "playHazardExplosion__none",
+    "cue": "playHazardExplosion",
+    "args": [],
+    "calls": [
+     {
+      "t": 0.07256235827664399,
+      "m": "playHazardExplosion",
+      "a": []
+     }
+    ],
+    "seconds": 0.472562358276644
+   }
+  },
+  "playVictoryFanfare__none": {
+   "draws": 0,
+   "calls": 1,
+   "scenario": {
+    "id": "playVictoryFanfare__none",
+    "cue": "playVictoryFanfare",
+    "args": [],
+    "calls": [
+     {
+      "t": 0.07256235827664399,
+      "m": "playVictoryFanfare",
+      "a": []
+     }
+    ],
+    "seconds": 1.2725623582766439
+   }
+  },
+  "playDefeatSound__none": {
+   "draws": 0,
+   "calls": 1,
+   "scenario": {
+    "id": "playDefeatSound__none",
+    "cue": "playDefeatSound",
+    "args": [],
+    "calls": [
+     {
+      "t": 0.07256235827664399,
+      "m": "playDefeatSound",
+      "a": []
+     }
+    ],
+    "seconds": 1.2725623582766439
+   }
+  },
+  "playBackupPodSound__none": {
+   "draws": 0,
+   "calls": 1,
+   "scenario": {
+    "id": "playBackupPodSound__none",
+    "cue": "playBackupPodSound",
+    "args": [],
+    "calls": [
+     {
+      "t": 0.07256235827664399,
+      "m": "playBackupPodSound",
+      "a": []
+     }
+    ],
+    "seconds": 0.8725623582766441
+   }
+  },
+  "setThrusterActive__true": {
+   "draws": 0,
+   "calls": 1,
+   "scenario": {
+    "id": "setThrusterActive__true",
+    "cue": "setThrusterActive",
+    "args": [
+     true
+    ],
+    "calls": [
+     {
+      "t": 0.07256235827664399,
+      "m": "setThrusterActive",
+      "a": [
+       true
+      ]
+     }
+    ],
+    "seconds": 0.19256235827664397
+   }
+  },
+  "setThrusterActive__false": {
+   "draws": 0,
+   "calls": 1,
+   "scenario": {
+    "id": "setThrusterActive__false",
+    "cue": "setThrusterActive",
+    "args": [
+     false
+    ],
+    "calls": [
+     {
+      "t": 0.07256235827664399,
+      "m": "setThrusterActive",
+      "a": [
+       false
+      ]
+     }
+    ],
+    "seconds": 0.19256235827664397,
+    "rngOnly": true
+   }
+  },
+  "seq_swallow_4": {
+   "draws": 0,
+   "calls": 4,
+   "scenario": {
+    "id": "seq_swallow_4",
+    "cue": "sequence",
+    "args": [],
+    "calls": [
+     {
+      "t": 0.07256235827664399,
+      "m": "playDebrisSwallowed",
+      "a": []
+     },
+     {
+      "t": 0.11256235827664399,
+      "m": "playDebrisSwallowed",
+      "a": []
+     },
+     {
+      "t": 0.152562358276644,
+      "m": "playDebrisSwallowed",
+      "a": []
+     },
+     {
+      "t": 0.19256235827664397,
+      "m": "playDebrisSwallowed",
+      "a": []
+     }
+    ],
+    "seconds": 0.932562358276644
+   }
+  },
+  "seq_swallow_12": {
+   "draws": 0,
+   "calls": 12,
+   "scenario": {
+    "id": "seq_swallow_12",
+    "cue": "sequence",
+    "args": [],
+    "calls": [
+     {
+      "t": 0.07256235827664399,
+      "m": "playDebrisSwallowed",
+      "a": []
+     },
+     {
+      "t": 0.122562358276644,
+      "m": "playDebrisSwallowed",
+      "a": []
+     },
+     {
+      "t": 0.172562358276644,
+      "m": "playDebrisSwallowed",
+      "a": []
+     },
+     {
+      "t": 0.222562358276644,
+      "m": "playDebrisSwallowed",
+      "a": []
+     },
+     {
+      "t": 0.272562358276644,
+      "m": "playDebrisSwallowed",
+      "a": []
+     },
+     {
+      "t": 0.322562358276644,
+      "m": "playDebrisSwallowed",
+      "a": []
+     },
+     {
+      "t": 0.372562358276644,
+      "m": "playDebrisSwallowed",
+      "a": []
+     },
+     {
+      "t": 0.422562358276644,
+      "m": "playDebrisSwallowed",
+      "a": []
+     },
+     {
+      "t": 0.472562358276644,
+      "m": "playDebrisSwallowed",
+      "a": []
+     },
+     {
+      "t": 0.522562358276644,
+      "m": "playDebrisSwallowed",
+      "a": []
+     },
+     {
+      "t": 0.572562358276644,
+      "m": "playDebrisSwallowed",
+      "a": []
+     },
+     {
+      "t": 0.6225623582766441,
+      "m": "playDebrisSwallowed",
+      "a": []
+     }
+    ],
+    "seconds": 1.3725623582766442
+   }
+  },
+  "seq_swallow_restart": {
+   "draws": 0,
+   "calls": 5,
+   "scenario": {
+    "id": "seq_swallow_restart",
+    "cue": "sequence",
+    "args": [],
+    "calls": [
+     {
+      "t": 0.07256235827664399,
+      "m": "playDebrisSwallowed",
+      "a": []
+     },
+     {
+      "t": 0.122562358276644,
+      "m": "playDebrisSwallowed",
+      "a": []
+     },
+     {
+      "t": 0.172562358276644,
+      "m": "playDebrisSwallowed",
+      "a": []
+     },
+     {
+      "t": 0.9725623582766441,
+      "m": "playDebrisSwallowed",
+      "a": []
+     },
+     {
+      "t": 1.022562358276644,
+      "m": "playDebrisSwallowed",
+      "a": []
+     }
+    ],
+    "seconds": 1.672562358276644
+   }
+  },
+  "seq_ratchet_cooldown": {
+   "draws": 0,
+   "calls": 10,
+   "scenario": {
+    "id": "seq_ratchet_cooldown",
+    "cue": "sequence",
+    "args": [],
+    "calls": [
+     {
+      "t": 0.07256235827664399,
+      "m": "playSpinRatchet",
+      "a": [
+       0.8
+      ]
+     },
+     {
+      "t": 0.10256235827664399,
+      "m": "playSpinRatchet",
+      "a": [
+       0.9
+      ]
+     },
+     {
+      "t": 0.13256235827664398,
+      "m": "playSpinRatchet",
+      "a": [
+       1
+      ]
+     },
+     {
+      "t": 0.162562358276644,
+      "m": "playSpinRatchet",
+      "a": [
+       1.1
+      ]
+     },
+     {
+      "t": 0.19256235827664397,
+      "m": "playSpinRatchet",
+      "a": [
+       1.2000000000000002
+      ]
+     },
+     {
+      "t": 0.222562358276644,
+      "m": "playSpinRatchet",
+      "a": [
+       1.3
+      ]
+     },
+     {
+      "t": 0.252562358276644,
+      "m": "playSpinRatchet",
+      "a": [
+       1.4000000000000001
+      ]
+     },
+     {
+      "t": 0.282562358276644,
+      "m": "playSpinRatchet",
+      "a": [
+       1.5
+      ]
+     },
+     {
+      "t": 0.31256235827664397,
+      "m": "playSpinRatchet",
+      "a": [
+       1.6
+      ]
+     },
+     {
+      "t": 0.342562358276644,
+      "m": "playSpinRatchet",
+      "a": [
+       1.7000000000000002
+      ]
+     }
+    ],
+    "seconds": 0.522562358276644
+   }
+  },
+  "seq_collision_storm": {
+   "draws": 8,
+   "calls": 24,
+   "scenario": {
+    "id": "seq_collision_storm",
+    "cue": "sequence",
+    "args": [],
+    "calls": [
+     {
+      "t": 0.07256235827664399,
+      "m": "playDebrisCollision",
+      "a": [
+       0.3,
+       "titanium"
+      ]
+     },
+     {
+      "t": 0.092562358276644,
+      "m": "playDebrisCollision",
+      "a": [
+       0.5,
+       "solar"
+      ]
+     },
+     {
+      "t": 0.11256235827664399,
+      "m": "playDebrisCollision",
+      "a": [
+       0.7,
+       "volatile"
+      ]
+     },
+     {
+      "t": 0.13256235827664398,
+      "m": "playDebrisCollision",
+      "a": [
+       0.9000000000000001,
+       "titanium"
+      ]
+     },
+     {
+      "t": 0.152562358276644,
+      "m": "playDebrisCollision",
+      "a": [
+       1,
+       "solar"
+      ]
+     },
+     {
+      "t": 0.172562358276644,
+      "m": "playDebrisCollision",
+      "a": [
+       0.3,
+       "volatile"
+      ]
+     },
+     {
+      "t": 0.19256235827664397,
+      "m": "playDebrisCollision",
+      "a": [
+       0.5,
+       "titanium"
+      ]
+     },
+     {
+      "t": 0.212562358276644,
+      "m": "playDebrisCollision",
+      "a": [
+       0.7,
+       "solar"
+      ]
+     },
+     {
+      "t": 0.232562358276644,
+      "m": "playDebrisCollision",
+      "a": [
+       0.9000000000000001,
+       "volatile"
+      ]
+     },
+     {
+      "t": 0.252562358276644,
+      "m": "playDebrisCollision",
+      "a": [
+       1,
+       "titanium"
+      ]
+     },
+     {
+      "t": 0.272562358276644,
+      "m": "playDebrisCollision",
+      "a": [
+       0.3,
+       "solar"
+      ]
+     },
+     {
+      "t": 0.292562358276644,
+      "m": "playDebrisCollision",
+      "a": [
+       0.5,
+       "volatile"
+      ]
+     },
+     {
+      "t": 0.31256235827664397,
+      "m": "playDebrisCollision",
+      "a": [
+       0.7,
+       "titanium"
+      ]
+     },
+     {
+      "t": 0.332562358276644,
+      "m": "playDebrisCollision",
+      "a": [
+       0.9000000000000001,
+       "solar"
+      ]
+     },
+     {
+      "t": 0.352562358276644,
+      "m": "playDebrisCollision",
+      "a": [
+       1,
+       "volatile"
+      ]
+     },
+     {
+      "t": 0.37256235827664397,
+      "m": "playDebrisCollision",
+      "a": [
+       0.3,
+       "titanium"
+      ]
+     },
+     {
+      "t": 0.392562358276644,
+      "m": "playDebrisCollision",
+      "a": [
+       0.5,
+       "solar"
+      ]
+     },
+     {
+      "t": 0.412562358276644,
+      "m": "playDebrisCollision",
+      "a": [
+       0.7,
+       "volatile"
+      ]
+     },
+     {
+      "t": 0.43256235827664397,
+      "m": "playDebrisCollision",
+      "a": [
+       0.9000000000000001,
+       "titanium"
+      ]
+     },
+     {
+      "t": 0.452562358276644,
+      "m": "playDebrisCollision",
+      "a": [
+       1,
+       "solar"
+      ]
+     },
+     {
+      "t": 0.472562358276644,
+      "m": "playDebrisCollision",
+      "a": [
+       0.3,
+       "volatile"
+      ]
+     },
+     {
+      "t": 0.49256235827664396,
+      "m": "playDebrisCollision",
+      "a": [
+       0.5,
+       "titanium"
+      ]
+     },
+     {
+      "t": 0.512562358276644,
+      "m": "playDebrisCollision",
+      "a": [
+       0.7,
+       "solar"
+      ]
+     },
+     {
+      "t": 0.532562358276644,
+      "m": "playDebrisCollision",
+      "a": [
+       0.9000000000000001,
+       "volatile"
+      ]
+     }
+    ],
+    "seconds": 0.8725623582766441
+   }
+  },
+  "seq_gate_cascade": {
+   "draws": 0,
+   "calls": 14,
+   "scenario": {
+    "id": "seq_gate_cascade",
+    "cue": "sequence",
+    "args": [],
+    "calls": [
+     {
+      "t": 0.07256235827664399,
+      "m": "playGatePass",
+      "a": [
+       "MULTIPLY",
+       2
+      ]
+     },
+     {
+      "t": 0.122562358276644,
+      "m": "playGatePass",
+      "a": [
+       "ADD",
+       5
+      ]
+     },
+     {
+      "t": 0.172562358276644,
+      "m": "playGatePass",
+      "a": [
+       "BOOST",
+       160
+      ]
+     },
+     {
+      "t": 0.222562358276644,
+      "m": "playGatePass",
+      "a": [
+       "MULTIPLY",
+       4
+      ]
+     },
+     {
+      "t": 0.272562358276644,
+      "m": "playGatePass",
+      "a": [
+       "MULTIPLY",
+       2
+      ]
+     },
+     {
+      "t": 0.322562358276644,
+      "m": "playGatePass",
+      "a": [
+       "ADD",
+       5
+      ]
+     },
+     {
+      "t": 0.372562358276644,
+      "m": "playGatePass",
+      "a": [
+       "BOOST",
+       160
+      ]
+     },
+     {
+      "t": 0.422562358276644,
+      "m": "playGatePass",
+      "a": [
+       "MULTIPLY",
+       4
+      ]
+     },
+     {
+      "t": 0.472562358276644,
+      "m": "playGatePass",
+      "a": [
+       "MULTIPLY",
+       2
+      ]
+     },
+     {
+      "t": 0.522562358276644,
+      "m": "playGatePass",
+      "a": [
+       "ADD",
+       5
+      ]
+     },
+     {
+      "t": 0.572562358276644,
+      "m": "playGatePass",
+      "a": [
+       "BOOST",
+       160
+      ]
+     },
+     {
+      "t": 0.6225623582766441,
+      "m": "playGatePass",
+      "a": [
+       "MULTIPLY",
+       4
+      ]
+     },
+     {
+      "t": 0.6725623582766441,
+      "m": "playGatePass",
+      "a": [
+       "MULTIPLY",
+       2
+      ]
+     },
+     {
+      "t": 0.7225623582766441,
+      "m": "playGatePass",
+      "a": [
+       "ADD",
+       5
+      ]
+     }
+    ],
+    "seconds": 1.2725623582766439
+   }
+  },
+  "seq_rcs_overlap": {
+   "draws": 38808,
+   "calls": 4,
+   "scenario": {
+    "id": "seq_rcs_overlap",
+    "cue": "sequence",
+    "args": [],
+    "calls": [
+     {
+      "t": 0.07256235827664399,
+      "m": "playRcsThrust",
+      "a": []
+     },
+     {
+      "t": 0.13256235827664398,
+      "m": "playRcsThrust",
+      "a": []
+     },
+     {
+      "t": 0.19256235827664397,
+      "m": "playRcsThrust",
+      "a": []
+     },
+     {
+      "t": 0.272562358276644,
+      "m": "playRcsThrust",
+      "a": []
+     }
+    ],
+    "seconds": 0.772562358276644
+   }
+  },
+  "mix_chaos_c0ffee": {
+   "draws": 58226,
+   "calls": 60,
+   "scenario": {
+    "id": "mix_chaos_c0ffee",
+    "cue": "sequence",
+    "args": [],
+    "calls": [
+     {
+      "t": 0.072562,
+      "m": "playSpinRatchet",
+      "a": [
+       1.3328879972919823
+      ]
+     },
+     {
+      "t": 0.15276,
+      "m": "playHazardExplosion",
+      "a": []
+     },
+     {
+      "t": 0.172395,
+      "m": "playBumperBounce",
+      "a": []
+     },
+     {
+      "t": 0.195531,
+      "m": "playRcsThrust",
+      "a": []
+     },
+     {
+      "t": 0.275445,
+      "m": "playGatePass",
+      "a": [
+       "ADD",
+       5
+      ]
+     },
+     {
+      "t": 0.289979,
+      "m": "playVictoryFanfare",
+      "a": []
+     },
+     {
+      "t": 0.349348,
+      "m": "playGatePass",
+      "a": [
+       "ADD",
+       5
+      ]
+     },
+     {
+      "t": 0.405562,
+      "m": "playHazardExplosion",
+      "a": []
+     },
+     {
+      "t": 0.439404,
+      "m": "playRcsThrust",
+      "a": []
+     },
+     {
+      "t": 0.49814,
+      "m": "playVictoryFanfare",
+      "a": []
+     },
+     {
+      "t": 0.546485,
+      "m": "playDebrisSwallowed",
+      "a": []
+     },
+     {
+      "t": 0.642234,
+      "m": "playSpinRatchet",
+      "a": [
+       1.3306233450770377
+      ]
+     },
+     {
+      "t": 0.677411,
+      "m": "playGatePass",
+      "a": [
+       "BOOST",
+       160
+      ]
+     },
+     {
+      "t": 0.697044,
+      "m": "playDebrisCollision",
+      "a": [
+       0.2813947796821594,
+       "solar"
+      ]
+     },
+     {
+      "t": 0.765087,
+      "m": "playBumperBounce",
+      "a": []
+     },
+     {
+      "t": 0.830168,
+      "m": "playSpinRatchet",
+      "a": [
+       1.3310079647228124
+      ]
+     },
+     {
+      "t": 0.888531,
+      "m": "playGatePass",
+      "a": [
+       "ADD",
+       5
+      ]
+     },
+     {
+      "t": 0.951411,
+      "m": "playGatePass",
+      "a": [
+       "ADD",
+       5
+      ]
+     },
+     {
+      "t": 0.999361,
+      "m": "playBackupPodSound",
+      "a": []
+     },
+     {
+      "t": 1.0764,
+      "m": "playBackupPodSound",
+      "a": []
+     },
+     {
+      "t": 1.158394,
+      "m": "playBumperBounce",
+      "a": []
+     },
+     {
+      "t": 1.192477,
+      "m": "playBackupPodSound",
+      "a": []
+     },
+     {
+      "t": 1.236696,
+      "m": "playRcsThrust",
+      "a": []
+     },
+     {
+      "t": 1.261379,
+      "m": "playDebrisCollision",
+      "a": [
+       0.44366661040112376,
+       "titanium"
+      ]
+     },
+     {
+      "t": 1.330465,
+      "m": "playGatePass",
+      "a": [
+       "BOOST",
+       160
+      ]
+     },
+     {
+      "t": 1.364239,
+      "m": "playBumperBounce",
+      "a": []
+     },
+     {
+      "t": 1.397619,
+      "m": "playDebrisCollision",
+      "a": [
+       0.40626788488589227,
+       "solar"
+      ]
+     },
+     {
+      "t": 1.494184,
+      "m": "playVictoryFanfare",
+      "a": []
+     },
+     {
+      "t": 1.580932,
+      "m": "playDebrisCollision",
+      "a": [
+       0.5131913982331753,
+       "titanium"
+      ]
+     },
+     {
+      "t": 1.619712,
+      "m": "playSpinRatchet",
+      "a": [
+       1.0048069689422847
+      ]
+     },
+     {
+      "t": 1.707056,
+      "m": "playBumperBounce",
+      "a": []
+     },
+     {
+      "t": 1.805579,
+      "m": "playVictoryFanfare",
+      "a": []
+     },
+     {
+      "t": 1.858704,
+      "m": "playVictoryFanfare",
+      "a": []
+     },
+     {
+      "t": 1.955763,
+      "m": "playVictoryFanfare",
+      "a": []
+     },
+     {
+      "t": 1.988567,
+      "m": "playGatePass",
+      "a": [
+       "MULTIPLY",
+       4
+      ]
+     },
+     {
+      "t": 2.083409,
+      "m": "playRcsThrust",
+      "a": []
+     },
+     {
+      "t": 2.108628,
+      "m": "playBumperBounce",
+      "a": []
+     },
+     {
+      "t": 2.121904,
+      "m": "playVictoryFanfare",
+      "a": []
+     },
+     {
+      "t": 2.139816,
+      "m": "playDebrisCollision",
+      "a": [
+       0.30037438590079546,
+       "volatile"
+      ]
+     },
+     {
+      "t": 2.173177,
+      "m": "playVictoryFanfare",
+      "a": []
+     },
+     {
+      "t": 2.199659,
+      "m": "playGatePass",
+      "a": [
+       "MULTIPLY",
+       4
+      ]
+     },
+     {
+      "t": 2.241603,
+      "m": "playVictoryFanfare",
+      "a": []
+     },
+     {
+      "t": 2.252436,
+      "m": "playVictoryFanfare",
+      "a": []
+     },
+     {
+      "t": 2.263949,
+      "m": "playBumperBounce",
+      "a": []
+     },
+     {
+      "t": 2.284015,
+      "m": "playSpinRatchet",
+      "a": [
+       1.3203505272045732
+      ]
+     },
+     {
+      "t": 2.35011,
+      "m": "playBackupPodSound",
+      "a": []
+     },
+     {
+      "t": 2.40916,
+      "m": "playRcsThrust",
+      "a": []
+     },
+     {
+      "t": 2.443297,
+      "m": "playBackupPodSound",
+      "a": []
+     },
+     {
+      "t": 2.455237,
+      "m": "playRcsThrust",
+      "a": []
+     },
+     {
+      "t": 2.519386,
+      "m": "playBackupPodSound",
+      "a": []
+     },
+     {
+      "t": 2.548704,
+      "m": "playGatePass",
+      "a": [
+       "ADD",
+       5
+      ]
+     },
+     {
+      "t": 2.623776,
+      "m": "playSpinRatchet",
+      "a": [
+       1.5486297702416778
+      ]
+     },
+     {
+      "t": 2.661617,
+      "m": "playRcsThrust",
+      "a": []
+     },
+     {
+      "t": 2.757241,
+      "m": "playSpinRatchet",
+      "a": [
+       1.2211716262623669
+      ]
+     },
+     {
+      "t": 2.818207,
+      "m": "playDebrisCollision",
+      "a": [
+       0.19025915767997503,
+       "solar"
+      ]
+     },
+     {
+      "t": 2.895092,
+      "m": "playDebrisCollision",
+      "a": [
+       0.39755229093134403,
+       "volatile"
+      ]
+     },
+     {
+      "t": 2.953689,
+      "m": "playHazardExplosion",
+      "a": []
+     },
+     {
+      "t": 2.980628,
+      "m": "playSpinRatchet",
+      "a": [
+       1.3062108663842082
+      ]
+     },
+     {
+      "t": 3.019777,
+      "m": "playGatePass",
+      "a": [
+       "MULTIPLY",
+       4
+      ]
+     },
+     {
+      "t": 3.039055,
+      "m": "playGatePass",
+      "a": [
+       "ADD",
+       5
+      ]
+     }
+    ],
+    "seconds": 4.2725623582766445
+   }
+  },
+  "mix_chaos_beef01": {
+   "draws": 29122,
+   "calls": 53,
+   "scenario": {
+    "id": "mix_chaos_beef01",
+    "cue": "sequence",
+    "args": [],
+    "calls": [
+     {
+      "t": 0.072562,
+      "m": "playDebrisSwallowed",
+      "a": []
+     },
+     {
+      "t": 0.137717,
+      "m": "playGatePass",
+      "a": [
+       "ADD",
+       5
+      ]
+     },
+     {
+      "t": 0.233391,
+      "m": "playBumperBounce",
+      "a": []
+     },
+     {
+      "t": 0.259104,
+      "m": "playGatePass",
+      "a": [
+       "BOOST",
+       160
+      ]
+     },
+     {
+      "t": 0.302261,
+      "m": "playSpinRatchet",
+      "a": [
+       1.1504591779783369
+      ]
+     },
+     {
+      "t": 0.319323,
+      "m": "playHazardExplosion",
+      "a": []
+     },
+     {
+      "t": 0.366537,
+      "m": "playSpinRatchet",
+      "a": [
+       1.3178887777030468
+      ]
+     },
+     {
+      "t": 0.385351,
+      "m": "playVictoryFanfare",
+      "a": []
+     },
+     {
+      "t": 0.416099,
+      "m": "playHazardExplosion",
+      "a": []
+     },
+     {
+      "t": 0.461002,
+      "m": "playVictoryFanfare",
+      "a": []
+     },
+     {
+      "t": 0.515059,
+      "m": "playSpinRatchet",
+      "a": [
+       1.3056552724912764
+      ]
+     },
+     {
+      "t": 0.572709,
+      "m": "playBumperBounce",
+      "a": []
+     },
+     {
+      "t": 0.659179,
+      "m": "playBumperBounce",
+      "a": []
+     },
+     {
+      "t": 0.710424,
+      "m": "playHazardExplosion",
+      "a": []
+     },
+     {
+      "t": 0.793981,
+      "m": "playBumperBounce",
+      "a": []
+     },
+     {
+      "t": 0.832771,
+      "m": "playDebrisSwallowed",
+      "a": []
+     },
+     {
+      "t": 0.844644,
+      "m": "playBumperBounce",
+      "a": []
+     },
+     {
+      "t": 0.904696,
+      "m": "playHazardExplosion",
+      "a": []
+     },
+     {
+      "t": 0.989297,
+      "m": "playGatePass",
+      "a": [
+       "BOOST",
+       160
+      ]
+     },
+     {
+      "t": 1.046111,
+      "m": "playVictoryFanfare",
+      "a": []
+     },
+     {
+      "t": 1.067543,
+      "m": "playHazardExplosion",
+      "a": []
+     },
+     {
+      "t": 1.105158,
+      "m": "playDebrisSwallowed",
+      "a": []
+     },
+     {
+      "t": 1.115294,
+      "m": "playRcsThrust",
+      "a": []
+     },
+     {
+      "t": 1.145586,
+      "m": "playVictoryFanfare",
+      "a": []
+     },
+     {
+      "t": 1.229448,
+      "m": "playDebrisCollision",
+      "a": [
+       0.2614809633232653,
+       "solar"
+      ]
+     },
+     {
+      "t": 1.306009,
+      "m": "playBumperBounce",
+      "a": []
+     },
+     {
+      "t": 1.333719,
+      "m": "playDebrisSwallowed",
+      "a": []
+     },
+     {
+      "t": 1.420148,
+      "m": "playBumperBounce",
+      "a": []
+     },
+     {
+      "t": 1.496022,
+      "m": "playVictoryFanfare",
+      "a": []
+     },
+     {
+      "t": 1.549824,
+      "m": "playDebrisCollision",
+      "a": [
+       0.24257600586861372,
+       "titanium"
+      ]
+     },
+     {
+      "t": 1.612496,
+      "m": "playBumperBounce",
+      "a": []
+     },
+     {
+      "t": 1.689557,
+      "m": "playVictoryFanfare",
+      "a": []
+     },
+     {
+      "t": 1.728488,
+      "m": "playDebrisCollision",
+      "a": [
+       0.0658098787534982,
+       "volatile"
+      ]
+     },
+     {
+      "t": 1.792433,
+      "m": "playDebrisCollision",
+      "a": [
+       0.9831174574792385,
+       "volatile"
+      ]
+     },
+     {
+      "t": 1.870941,
+      "m": "playSpinRatchet",
+      "a": [
+       1.1461987817659975
+      ]
+     },
+     {
+      "t": 1.883083,
+      "m": "playBackupPodSound",
+      "a": []
+     },
+     {
+      "t": 1.960715,
+      "m": "playGatePass",
+      "a": [
+       "MULTIPLY",
+       4
+      ]
+     },
+     {
+      "t": 2.01603,
+      "m": "playDebrisCollision",
+      "a": [
+       0.41135964496061206,
+       "volatile"
+      ]
+     },
+     {
+      "t": 2.084791,
+      "m": "playBumperBounce",
+      "a": []
+     },
+     {
+      "t": 2.144709,
+      "m": "playVictoryFanfare",
+      "a": []
+     },
+     {
+      "t": 2.201493,
+      "m": "playBackupPodSound",
+      "a": []
+     },
+     {
+      "t": 2.264391,
+      "m": "playRcsThrust",
+      "a": []
+     },
+     {
+      "t": 2.352306,
+      "m": "playDebrisSwallowed",
+      "a": []
+     },
+     {
+      "t": 2.428275,
+      "m": "playRcsThrust",
+      "a": []
+     },
+     {
+      "t": 2.527358,
+      "m": "playDebrisSwallowed",
+      "a": []
+     },
+     {
+      "t": 2.538946,
+      "m": "playDebrisSwallowed",
+      "a": []
+     },
+     {
+      "t": 2.617659,
+      "m": "playBumperBounce",
+      "a": []
+     },
+     {
+      "t": 2.702632,
+      "m": "playVictoryFanfare",
+      "a": []
+     },
+     {
+      "t": 2.745436,
+      "m": "playGatePass",
+      "a": [
+       "MULTIPLY",
+       4
+      ]
+     },
+     {
+      "t": 2.840749,
+      "m": "playVictoryFanfare",
+      "a": []
+     },
+     {
+      "t": 2.920094,
+      "m": "playDebrisSwallowed",
+      "a": []
+     },
+     {
+      "t": 3.003578,
+      "m": "playBackupPodSound",
+      "a": []
+     },
+     {
+      "t": 3.016169,
+      "m": "playBumperBounce",
+      "a": []
+     }
+    ],
+    "seconds": 4.2725623582766445
+   }
+  },
+  "playGatePass__MULTIPLY_4__sfx20": {
+   "draws": 0,
+   "calls": 1,
+   "scenario": {
+    "id": "playGatePass__MULTIPLY_4__sfx20",
+    "cue": "playGatePass",
+    "args": [
+     "MULTIPLY",
+     4
+    ],
+    "calls": [
+     {
+      "t": 0.07256235827664399,
+      "m": "playGatePass",
+      "a": [
+       "MULTIPLY",
+       4
+      ]
+     }
+    ],
+    "seconds": 0.472562358276644,
+    "setup": [
+     {
+      "m": "setSfxVolume",
+      "a": [
+       20
+      ]
+     }
+    ]
+   }
+  },
+  "playSuperShredderPass__null_4__sfx100": {
+   "draws": 0,
+   "calls": 1,
+   "scenario": {
+    "id": "playSuperShredderPass__null_4__sfx100",
+    "cue": "playSuperShredderPass",
+    "args": [
+     null,
+     4
+    ],
+    "calls": [
+     {
+      "t": 0.07256235827664399,
+      "m": "playSuperShredderPass",
+      "a": [
+       null,
+       4
+      ]
+     }
+    ],
+    "seconds": 0.472562358276644,
+    "setup": [
+     {
+      "m": "setSfxVolume",
+      "a": [
+       100
+      ]
+     }
+    ]
+   }
+  },
+  "playBumperBounce__none__sfx0": {
+   "draws": 1,
+   "calls": 1,
+   "scenario": {
+    "id": "playBumperBounce__none__sfx0",
+    "cue": "playBumperBounce",
+    "args": [],
+    "calls": [
+     {
+      "t": 0.07256235827664399,
+      "m": "playBumperBounce",
+      "a": []
+     }
+    ],
+    "seconds": 0.272562358276644,
+    "setup": [
+     {
+      "m": "setSfxVolume",
+      "a": [
+       0
+      ]
+     }
+    ]
+   }
+  },
+  "playBackupPodSound__none__amb0": {
+   "draws": 0,
+   "calls": 1,
+   "scenario": {
+    "id": "playBackupPodSound__none__amb0",
+    "cue": "playBackupPodSound",
+    "args": [],
+    "calls": [
+     {
+      "t": 0.07256235827664399,
+      "m": "playBackupPodSound",
+      "a": []
+     }
+    ],
+    "seconds": 0.8725623582766441,
+    "setup": [
+     {
+      "m": "setAmbienceVolume",
+      "a": [
+       0
+      ]
+     }
+    ]
+   }
+  },
+  "playHazardExplosion__none__sfx150": {
+   "draws": 0,
+   "calls": 1,
+   "scenario": {
+    "id": "playHazardExplosion__none__sfx150",
+    "cue": "playHazardExplosion",
+    "args": [],
+    "calls": [
+     {
+      "t": 0.07256235827664399,
+      "m": "playHazardExplosion",
+      "a": []
+     }
+    ],
+    "seconds": 0.472562358276644,
+    "setup": [
+     {
+      "m": "setSfxVolume",
+      "a": [
+       150
+      ]
+     },
+     {
+      "m": "setAmbienceVolume",
+      "a": [
+       "abc"
+      ]
+     }
+    ]
+   }
+  },
+  "mute_before_cue": {
+   "draws": 0,
+   "calls": 3,
+   "scenario": {
+    "id": "mute_before_cue",
+    "cue": "sequence",
+    "args": [],
+    "calls": [
+     {
+      "t": 0.02,
+      "m": "toggleMute",
+      "a": []
+     },
+     {
+      "t": 0.07256235827664399,
+      "m": "playGatePass",
+      "a": [
+       "MULTIPLY",
+       2
+      ]
+     },
+     {
+      "t": 0.172562358276644,
+      "m": "playDebrisCollision",
+      "a": [
+       1,
+       "solar"
+      ]
+     }
+    ],
+    "seconds": 0.572562358276644
+   }
+  },
+  "mute_cycle": {
+   "draws": 0,
+   "calls": 4,
+   "scenario": {
+    "id": "mute_cycle",
+    "cue": "sequence",
+    "args": [],
+    "calls": [
+     {
+      "t": 0.07256235827664399,
+      "m": "playVictoryFanfare",
+      "a": []
+     }
+    ],
+    "seconds": 1.8,
+    "suspends": [
+     {
+      "at": 0.36281179138321995,
+      "calls": [
+       {
+        "m": "toggleMute",
+        "a": []
+       }
+      ]
+     },
+     {
+      "at": 0.7256235827664399,
+      "calls": [
+       {
+        "m": "toggleMute",
+        "a": []
+       },
+       {
+        "m": "playBoosterPass",
+        "a": []
+       }
+      ]
+     }
+    ]
+   }
+  },
+  "playSpinRatchet__1__unaligned": {
+   "draws": 0,
+   "calls": 1,
+   "scenario": {
+    "id": "playSpinRatchet__1__unaligned",
+    "cue": "playSpinRatchet",
+    "args": [
+     1
+    ],
+    "calls": [
+     {
+      "t": 0.07386167800453515,
+      "m": "playSpinRatchet",
+      "a": [
+       1
+      ]
+     }
+    ],
+    "seconds": 0.19386167800453513
+   }
+  },
+  "playShredderPass__null_2__unaligned": {
+   "draws": 0,
+   "calls": 1,
+   "scenario": {
+    "id": "playShredderPass__null_2__unaligned",
+    "cue": "playShredderPass",
+    "args": [
+     null,
+     2
+    ],
+    "calls": [
+     {
+      "t": 0.07386167800453515,
+      "m": "playShredderPass",
+      "a": [
+       null,
+       2
+      ]
+     }
+    ],
+    "seconds": 0.47386167800453516
+   }
+  },
+  "playRcsThrust__none__unaligned": {
+   "draws": 9702,
+   "calls": 1,
+   "scenario": {
+    "id": "playRcsThrust__none__unaligned",
+    "cue": "playRcsThrust",
+    "args": [],
+    "calls": [
+     {
+      "t": 0.07386167800453515,
+      "m": "playRcsThrust",
+      "a": []
+     }
+    ],
+    "seconds": 0.47386167800453516
+   }
+  },
+  "playDebrisSwallowed__none__unaligned": {
+   "draws": 0,
+   "calls": 1,
+   "scenario": {
+    "id": "playDebrisSwallowed__none__unaligned",
+    "cue": "playDebrisSwallowed",
+    "args": [],
+    "calls": [
+     {
+      "t": 0.07386167800453515,
+      "m": "playDebrisSwallowed",
+      "a": []
+     }
+    ],
+    "seconds": 0.6738616780045351
+   }
+  },
+  "playVictoryFanfare__none__unaligned": {
+   "draws": 0,
+   "calls": 1,
+   "scenario": {
+    "id": "playVictoryFanfare__none__unaligned",
+    "cue": "playVictoryFanfare",
+    "args": [],
+    "calls": [
+     {
+      "t": 0.07386167800453515,
+      "m": "playVictoryFanfare",
+      "a": []
+     }
+    ],
+    "seconds": 1.273861678004535
+   }
+  },
+  "playDebrisCollision__0p8_solar__unaligned": {
+   "draws": 1,
+   "calls": 1,
+   "scenario": {
+    "id": "playDebrisCollision__0p8_solar__unaligned",
+    "cue": "playDebrisCollision",
+    "args": [
+     0.8,
+     "solar"
+    ],
+    "calls": [
+     {
+      "t": 0.07386167800453515,
+      "m": "playDebrisCollision",
+      "a": [
+       0.8,
+       "solar"
+      ]
+     }
+    ],
+    "seconds": 0.22386167800453516
+   }
+  },
+  "playBumperBounce__none__unaligned": {
+   "draws": 1,
+   "calls": 1,
+   "scenario": {
+    "id": "playBumperBounce__none__unaligned",
+    "cue": "playBumperBounce",
+    "args": [],
+    "calls": [
+     {
+      "t": 0.07386167800453515,
+      "m": "playBumperBounce",
+      "a": []
+     }
+    ],
+    "seconds": 0.27386167800453515
+   }
+  },
+  "pre_init_calls": {
+   "draws": 0,
+   "calls": 5,
+   "scenario": {
+    "id": "pre_init_calls",
+    "cue": "sequence",
+    "args": [],
+    "calls": [
+     {
+      "t": 0.2,
+      "m": "playBoosterPass",
+      "a": []
+     },
+     {
+      "t": 0.3,
+      "m": "playDebrisCollision",
+      "a": [
+       1,
+       "solar"
+      ]
+     },
+     {
+      "t": 0.4,
+      "m": "playRcsThrust",
+      "a": []
+     },
+     {
+      "t": 0.5,
+      "m": "toggleMute",
+      "a": []
+     },
+     {
+      "t": 0.6,
+      "m": "toggleMute",
+      "a": []
+     }
+    ],
+    "seconds": 0.8,
+    "rngOnly": true,
+    "noInit": true
+   }
+  },
+  "init_twice_then_cues": {
+   "draws": 9704,
+   "calls": 5,
+   "scenario": {
+    "id": "init_twice_then_cues",
+    "cue": "sequence",
+    "args": [],
+    "calls": [
+     {
+      "t": 0,
+      "m": "publicInit",
+      "a": []
+     },
+     {
+      "t": 0.07256235827664399,
+      "m": "playDebrisCollision",
+      "a": [
+       1,
+       "solar"
+      ]
+     },
+     {
+      "t": 0.08256235827664399,
+      "m": "playDebrisCollision",
+      "a": [
+       1,
+       "solar"
+      ]
+     },
+     {
+      "t": 0.172562358276644,
+      "m": "playBumperBounce",
+      "a": []
+     },
+     {
+      "t": 0.272562358276644,
+      "m": "playRcsThrust",
+      "a": []
+     }
+    ],
+    "seconds": 0.772562358276644
+   }
+  },
+  "init_late_cooldown": {
+   "draws": 0,
+   "calls": 4,
+   "scenario": {
+    "id": "init_late_cooldown",
+    "cue": "sequence",
+    "args": [],
+    "calls": [
+     {
+      "t": 0.01,
+      "m": "publicInit",
+      "a": []
+     },
+     {
+      "t": 0.02,
+      "m": "playRcsThrust",
+      "a": []
+     },
+     {
+      "t": 0.03,
+      "m": "playBumperBounce",
+      "a": []
+     },
+     {
+      "t": 0.04,
+      "m": "playSpinRatchet",
+      "a": [
+       1
+      ]
+     }
+    ],
+    "seconds": 0.5,
+    "rngOnly": true,
+    "noInit": true
+   }
+  }
+ }
+}
