@@ -151,6 +151,17 @@ namespace OrbitalSalvage.Parity
                 storeTab = Convert.ToString(value);
                 return OpResult.Ok("remembered until next showPage(shop)");
             }
+            if (field == "collectedMass" || field == "spilledMass")
+            {
+                var gm = Gm;
+                if (gm == null) return OpResult.Failed("GameManager missing");
+                string unityField = field == "collectedMass" ? "swallowedDebrisCount" : "massLost";
+                var fi = typeof(GameManager).GetField(unityField, BindingFlags.Instance | BindingFlags.NonPublic);
+                if (fi == null) return OpResult.Unsupported($"GameManager.{unityField} not found");
+                int amount = Convert.ToInt32(value, System.Globalization.CultureInfo.InvariantCulture);
+                fi.SetValue(gm, amount);
+                return OpResult.Ok($"GameManager.{unityField} = {amount} via reflection");
+            }
             return OpResult.Unsupported($"app field '{field}' has no equivalent");
         }
 
