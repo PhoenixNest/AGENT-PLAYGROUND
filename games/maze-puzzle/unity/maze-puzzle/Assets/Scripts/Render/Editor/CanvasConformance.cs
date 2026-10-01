@@ -117,11 +117,17 @@ namespace OrbitalSalvage.Render.Editor
                         WritePng(canvas.Target, Path.Combine(outDir, name + combo.Key + ".png"));
                     }
 
-                    double avgRecord = 0, avgSubmit = 0, avgTotal = 0;
+                    double avgRecord = 0, avgSubmit = 0, avgTotal = 0, avgReplay = 0;
                     if (perfN > 0)
                     {
-                        double rec = 0, sub = 0;
-                        var total = Stopwatch.StartNew();
+                        for (int i = 0; i < 3; i++)
+                        {
+                            canvas.BeginFrame();
+                            player.Play(canvas);
+                            canvas.EndFrame();
+                        }
+                        Sync(canvas.Target);
+                        var recs = new List<double>(); var subs = new List<double>(); var tots = new List<double>();
                         for (int i = 0; i < perfN; i++)
                         {
                             var t0 = Stopwatch.StartNew();
@@ -129,17 +135,21 @@ namespace OrbitalSalvage.Render.Editor
                             player.Play(canvas);
                             double r = t0.Elapsed.TotalMilliseconds;
                             canvas.EndFrame();
-                            rec += r;
-                            sub += t0.Elapsed.TotalMilliseconds - r;
+                            double s2 = t0.Elapsed.TotalMilliseconds - r;
+                            Sync(canvas.Target);
+                            recs.Add(r); subs.Add(s2); tots.Add(t0.Elapsed.TotalMilliseconds);
                         }
+                        avgTotal = Median(tots);
+                        avgRecord = Median(recs);
+                        avgSubmit = Median(subs);
+                        var rp = Stopwatch.StartNew();
+                        for (int i = 0; i < perfN; i++) canvas.Replay();
                         Sync(canvas.Target);
-                        avgTotal = total.Elapsed.TotalMilliseconds / perfN;
-                        avgRecord = rec / perfN;
-                        avgSubmit = sub / perfN;
+                        avgReplay = rp.Elapsed.TotalMilliseconds / perfN;
                     }
-                    perf.Append(string.Format(CultureInfo.InvariantCulture,
-                        "  {{\"name\":\"{0}\",\"width\":{1},\"height\":{2},\"ops\":{3},\"edges\":{4},\"draws\":{5},\"firstRecordMs\":{6:F3},\"firstSubmitMs\":{7:F3},\"avgRecordMs\":{8:F3},\"avgSubmitMs\":{9:F3},\"avgFrameMs\":{10:F3}}},\n",
-                        name, player.Width, player.Height, player.Ops.Count, canvas.EdgeCount, canvas.DrawCount, recordMs, submitMs, avgRecord, avgSubmit, avgTotal));
+                    perf.Append("  {\"name\":\"" + name + "\",\"width\":" + player.Width + ",\"height\":" + player.Height + ",\"ops\":" + player.Ops.Count +
+                        ",\"edges\":" + canvas.EdgeCount + ",\"draws\":" + canvas.DrawCount + ",\"avgRecordMs\":" + F(avgRecord) + ",\"avgSubmitMs\":" + F(avgSubmit) +
+                        ",\"avgReplayMs\":" + F(avgReplay) + ",\"avgFrameMs\":" + F(avgTotal) + "},\n");
                     Debug.Log("[CanvasConformance] rendered " + name + " ops=" + player.Ops.Count + " edges=" + canvas.EdgeCount + " draws=" + canvas.DrawCount);
                     player.Dispose();
                 }
@@ -155,6 +165,15 @@ namespace OrbitalSalvage.Render.Editor
             File.WriteAllText(Path.Combine(outDir, "perf.json"), perf.ToString());
             return failures == 0 ? 0 : 2;
         }
+
+        static double Median(List<double> v)
+        {
+            var a = v.ToArray();
+            Array.Sort(a);
+            return a.Length == 0 ? 0 : a[a.Length / 2];
+        }
+
+        static string F(double v) => v.ToString("F3", CultureInfo.InvariantCulture);
 
         static void Sync(RenderTexture rt)
         {
