@@ -53,6 +53,7 @@ namespace OrbitalSalvage.Render
             public string font = "10px sans-serif";
             public string textAlign = "start";
             public string textBaseline = "alphabetic";
+            public double letterSpacing;
             public bool imageSmoothing = true;
             public RenderTexture clip;
 
@@ -166,6 +167,7 @@ namespace OrbitalSalvage.Render
         public double ShadowBlur { set { if (value >= 0 && !double.IsInfinity(value)) state.shadowBlur = value; } }
         public double ShadowOffsetX { set { if (Finite(value)) state.shadowOffsetX = value; } }
         public double ShadowOffsetY { set { if (Finite(value)) state.shadowOffsetY = value; } }
+        public double LetterSpacing { set { if (Finite(value)) state.letterSpacing = value; } }
         public bool ImageSmoothingEnabled { set { state.imageSmoothing = value; } }
 
         public void SetLineDash(double[] segments)

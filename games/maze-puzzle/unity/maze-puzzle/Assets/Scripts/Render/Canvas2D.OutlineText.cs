@@ -75,7 +75,7 @@ namespace OrbitalSalvage.Render
                     segOut.Clear();
                     for (int i = s; i < e; i++) segOut.Add(cpGids[i]);
                     // Blink shapes word by word; the GSUB lookups never see a space.
-                    font.Substitute(segOut);
+                    if (state.letterSpacing == 0) font.Substitute(segOut); // Blink disables ligatures when letter-spacing is set
                     double fk = px / font.unitsPerEm;
                     int spaceGid = font.GlyphIndex(0x20);
                     for (int i = 0; i < segOut.Count; i++)
@@ -84,12 +84,20 @@ namespace OrbitalSalvage.Render
                         double adv = font.Advance(segOut[i]);
                         // Blink shapes word by word: no kerning pair involving a space applies (measured against Chromium).
                         if (i + 1 < segOut.Count && segOut[i] != spaceGid && segOut[i + 1] != spaceGid) adv += font.Kerning(segOut[i], segOut[i + 1]);
-                        pen += adv * fk;
+                        pen += adv * fk + state.letterSpacing;
                     }
                     s = e;
                 }
             }
             return pen;
+        }
+
+        /// <summary>Rounded hhea ascent in CSS px of the current font (Blink's text-fragment ascent): baseline = top of the line box's text rect + this.</summary>
+        public double FontAscent()
+        {
+            var spec = ParseFont(state.font);
+            var primary = OutlineFonts.Primary(spec.family, spec.weight);
+            return RoundHalfUp(primary.ascender * spec.px / primary.unitsPerEm);
         }
 
         static double RoundHalfUp(double v) => Math.Floor(v + 0.5);

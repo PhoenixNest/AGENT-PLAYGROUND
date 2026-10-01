@@ -69,6 +69,12 @@ namespace OrbitalSalvage.Render
         static Material MakeMaterial(string shaderName)
         {
             var sh = Shader.Find(shaderName);
+            if (sh == null)
+            {
+                // Player builds: the shader is only present through the material in Resources/Canvas2D (ParityAssetBuilder.BuildCanvasMaterials).
+                var res = Resources.Load<Material>("Canvas2D/" + shaderName.Substring(shaderName.LastIndexOf('/') + 1));
+                if (res != null) sh = res.shader;
+            }
             if (sh == null) throw new InvalidOperationException("Shader not found: " + shaderName);
             return new Material(sh) { hideFlags = HideFlags.HideAndDontSave };
         }
