@@ -91,6 +91,10 @@
     const delay = 16 - (performance.now() % 16);
     const handle = origSetTimeout(() => {
       frames.delete(id);
+      if (P.canvas) {
+        P.canvas.last = P.canvas.cur;
+        P.canvas.cur = [];
+      }
       try {
         cb(performance.now());
       } finally {
@@ -575,11 +579,38 @@
     const m = /(\d+(?:\.\d+)?)px/.exec(font);
     return m ? parseFloat(m[1]) : 16;
   };
+  const EXPECT_EMOJI =
+    /\p{Emoji_Presentation}|\p{Extended_Pictographic}\uFE0F/gu;
+  const C = (P.canvas = { cur: [], last: [] });
+  const logDraw = (ctx, isFill, s, images, flat) => {
+    const m = s.match(EXPECT_EMOJI);
+    C.cur.push({
+      kind: isFill ? "fill" : "stroke",
+      text: s,
+      font: ctx.font,
+      align: ctx.textAlign,
+      baseline: ctx.textBaseline,
+      expected: m ? m.length : 0,
+      images,
+      flat,
+    });
+  };
   const drawRuns = function (orig, isFill, text, x, y, rest) {
     const s = String(text);
-    if (!PICTO.test(s)) return orig.call(this, s, x, y, ...rest);
+    if (!PICTO.test(s)) {
+      logDraw(this, isFill, s, [], []);
+      return orig.call(this, s, x, y, ...rest);
+    }
     const runs = splitRuns(s);
-    if (!runs.some((r) => r.emoji)) return orig.call(this, s, x, y, ...rest);
+    const flat = runs
+      .filter((r) => !r.emoji)
+      .flatMap((r) => [...r.s].filter((c) => PICTO.test(c)));
+    if (!runs.some((r) => r.emoji)) {
+      logDraw(this, isFill, s, [], flat);
+      return orig.call(this, s, x, y, ...rest);
+    }
+    const drawn = [];
+    logDraw(this, isFill, s, drawn, flat);
     const fontPx = parseFontPx(this.font);
     let total = 0;
     for (const r of runs)
@@ -608,6 +639,15 @@
             else if (baseline === "middle") top = y - fontPx / 2;
             else top = y + 0.125 * fontPx - fontPx;
             origDrawImage.call(this, img, cursor, top, fontPx, fontPx);
+            const t = this.getTransform();
+            drawn.push({
+              grapheme: r.s,
+              file,
+              x: cursor,
+              y: top,
+              size: fontPx,
+              m: [t.a, t.b, t.c, t.d, t.e, t.f],
+            });
           }
         }
         cursor += fontPx;
@@ -788,6 +828,51 @@
       });
     }
     return elements;
+  };
+
+  P.canvasCheck = () => {
+    const frame = P.canvas.cur;
+    const bad = [];
+    let emojiExpected = 0;
+    let emojiDrawn = 0;
+    for (const c of frame) {
+      const drawn = c.kind === "fill" ? c.images.length : 0;
+      emojiExpected += c.kind === "fill" ? c.expected : 0;
+      emojiDrawn += drawn;
+      if (c.kind === "stroke" && c.images.length)
+        bad.push(`strokeText drew an emoji image: ${c.text}`);
+      if (c.kind === "fill" && drawn !== c.expected) {
+        bad.push(
+          `fillText ${JSON.stringify(c.text)}: ${c.expected} emoji in string, ${drawn} images drawn`,
+        );
+      }
+      if (c.flat.length)
+        bad.push(
+          `${c.kind}Text ${JSON.stringify(c.text)} left pictographs to the font: ${c.flat.join("")}`,
+        );
+    }
+    if (emojiExpected > 0 && emojiDrawn === 0)
+      bad.push("frame has emoji strings but no emoji image was drawn");
+    const graphemes = [
+      ...new Set(
+        frame.flatMap((c) =>
+          c.kind === "fill" ? c.images.map((i) => i.grapheme) : [],
+        ),
+      ),
+    ];
+    const floating =
+      window.app && window.app.renderer && window.app.renderer.floatingTexts
+        ? window.app.renderer.floatingTexts.map((f) => f.text)
+        : [];
+    return {
+      page: window.app && window.app.currentPage,
+      calls: frame.length,
+      emojiExpected,
+      emojiDrawn,
+      graphemes,
+      floating,
+      bad,
+    };
   };
 
   P.assertBooted = () => ({
