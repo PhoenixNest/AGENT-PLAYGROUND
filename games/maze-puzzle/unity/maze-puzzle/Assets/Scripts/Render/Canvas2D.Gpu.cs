@@ -113,6 +113,8 @@ namespace OrbitalSalvage.Render
             Graphics.ExecuteCommandBuffer(cmd);
         }
 
+        public void Replay() { Graphics.ExecuteCommandBuffer(cmd); }
+
         static void EnsureBuffer(ref GraphicsBuffer buf, int count, int stride)
         {
             if (buf != null && buf.count >= Math.Max(count, 1)) return;

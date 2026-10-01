@@ -172,12 +172,15 @@ def main():
         lines += ["## Errors", ""] + [f"- {r['name']}: {r['error']}" for r in errs] + [""]
     if perf:
         lines += ["## Performance (Unity Editor, RTX 4060 Laptop, D3D11)", "",
-                  "| stream | ops | edges | draws | record ms | submit ms | frame ms (CPU+GPU, synced) |", "|---|---:|---:|---:|---:|---:|---:|"]
+                  "| stream | ops | edges | draws | record ms (CPU) | submit ms (CPU) | replay ms (GPU-bound) | frame ms (CPU+GPU, synced) |", "|---|---:|---:|---:|---:|---:|---:|---:|"]
         for name, p in perf.items():
             if name in scene_names:
                 continue
-            lines.append(f"| {name} | {p['ops']} | {p['edges']} | {p['draws']} | {p['avgRecordMs']:.2f} | {p['avgSubmitMs']:.2f} | {p['avgFrameMs']:.2f} |")
+            lines.append(f"| {name} | {p['ops']} | {p['edges']} | {p['draws']} | {p['avgRecordMs']:.2f} | {p['avgSubmitMs']:.2f} | {p.get('avgReplayMs', 0):.2f} | {p['avgFrameMs']:.2f} |")
         lines.append("")
+    notes = os.path.join(os.path.dirname(os.path.abspath(__file__)), "report-notes.md")
+    if os.path.exists(notes):
+        lines += [open(notes, encoding="utf-8").read()]
     with open(args.report, "w") as fh:
         fh.write("\n".join(lines) + "\n")
     print("wrote", args.report)

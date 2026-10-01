@@ -140,10 +140,17 @@ namespace OrbitalSalvage.Render
             return false;
         }
 
+        static readonly HashSet<long> missingGlyphs = new HashSet<long>();
+        static readonly uint[] oneChar = new uint[1];
+
         static bool TryGet(TMP_FontAsset font, uint cp, out TMP_Character ch)
         {
             if (font.characterLookupTable.TryGetValue(cp, out ch)) return true;
-            if (font.TryAddCharacters(new[] { cp }, true) && font.characterLookupTable.TryGetValue(cp, out ch)) return true;
+            long key = ((long)font.GetInstanceID() << 32) | cp;
+            if (missingGlyphs.Contains(key)) { ch = null; return false; }
+            oneChar[0] = cp;
+            if (font.TryAddCharacters(oneChar, true) && font.characterLookupTable.TryGetValue(cp, out ch)) return true;
+            missingGlyphs.Add(key);
             ch = null;
             return false;
         }

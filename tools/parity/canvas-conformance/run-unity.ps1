@@ -22,5 +22,6 @@ foreach ($s in $Set) { $argList += @("-set", $s) }
 foreach ($s in ($Sweep -join ";").Split(";", [StringSplitOptions]::RemoveEmptyEntries)) { $argList += @("-sweep", $s) }
 if ($Perf -gt 0) { $argList += @("-perf", "$Perf") }
 $p = Start-Process -FilePath $Unity -ArgumentList $argList -Wait -PassThru
+git -C $root checkout -- "games/maze-puzzle/unity/maze-puzzle/Assets/Resources/Fonts" 2>$null
 Write-Host "unity exit code $($p.ExitCode); log: $log"
 exit $p.ExitCode
