@@ -236,6 +236,42 @@ namespace OrbitalSalvage.Utils
             return spr;
         }
 
+        private static readonly Dictionary<string, string> EmojiCodepointAlias = new Dictionary<string, string>
+        {
+            { "emoji_3d_booster", "23e9" },
+            { "emoji_3d_bowl", "1f963" },
+            { "emoji_3d_broom", "1f9f9" },
+            { "emoji_3d_calendar", "1f4c5" },
+            { "emoji_3d_candy", "1f36c" },
+            { "emoji_3d_cheese", "1f9c0" },
+            { "emoji_3d_coin", "1fa99" },
+            { "emoji_3d_crown", "1f451" },
+            { "emoji_3d_donut", "1f369" },
+            { "emoji_3d_duck", "1f986" },
+            { "emoji_3d_explosion", "1f4a5" },
+            { "emoji_3d_gear", "2699" },
+            { "emoji_3d_gift", "1f381" },
+            { "emoji_3d_hole", "1f573" },
+            { "emoji_3d_home", "1f3e0" },
+            { "emoji_3d_kitty", "1f431" },
+            { "emoji_3d_lightning", "26a1" },
+            { "emoji_3d_locked", "1f512" },
+            { "emoji_3d_magnet", "1f9f2" },
+            { "emoji_3d_map", "1f5fa" },
+            { "emoji_3d_milky_way", "1f30c" },
+            { "emoji_3d_nom_nom", "1f60b" },
+            { "emoji_3d_party_popper", "1f389" },
+            { "emoji_3d_pause", "23f8" },
+            { "emoji_3d_pleading_face", "1f97a" },
+            { "emoji_3d_retry", "1f501" },
+            { "emoji_3d_rocket", "1f680" },
+            { "emoji_3d_sound_off", "1f507" },
+            { "emoji_3d_sound_on", "1f50a" },
+            { "emoji_3d_sparkles", "2728" },
+            { "emoji_3d_star", "2b50" },
+            { "emoji_3d_trophy", "1f3c6" },
+        };
+
         public static Sprite GetEmojiSprite(string emojiName)
         {
             if (string.IsNullOrEmpty(emojiName)) return GetCircleSprite();
@@ -247,7 +283,8 @@ namespace OrbitalSalvage.Utils
                 return cached;
             }
 
-            var resourceSprite = Resources.Load<Sprite>($"Emojis/3D/{key}");
+            string resourceName = EmojiCodepointAlias.TryGetValue(key, out var codepoint) ? codepoint : key;
+            var resourceSprite = Resources.Load<Sprite>($"Emojis/3D/{resourceName}");
             if (resourceSprite != null)
             {
                 cachedSprites[key] = resourceSprite;
