@@ -6,12 +6,19 @@ namespace OrbitalSalvage.UI
     /// Anchors Canvas UI elements strictly within the Apple iPhone Safe Area,
     /// avoiding overlap with the Dynamic Island, camera notch, and Home indicator.
     /// </summary>
+    [ExecuteAlways]
     [RequireComponent(typeof(RectTransform))]
     public class SafeAreaFitter : MonoBehaviour
     {
         private RectTransform rectTransform;
         private Rect lastSafeArea = Rect.zero;
         private Vector2Int lastScreenSize = Vector2Int.zero;
+
+        private void OnEnable()
+        {
+            rectTransform = GetComponent<RectTransform>();
+            ApplySafeArea();
+        }
 
         private void Awake()
         {
@@ -29,6 +36,9 @@ namespace OrbitalSalvage.UI
 
         private void ApplySafeArea()
         {
+            if (rectTransform == null) rectTransform = GetComponent<RectTransform>();
+            if (rectTransform == null) return;
+
             lastSafeArea = Screen.safeArea;
             lastScreenSize = new Vector2Int(Screen.width, Screen.height);
 
@@ -44,6 +54,8 @@ namespace OrbitalSalvage.UI
 
             rectTransform.anchorMin = anchorMin;
             rectTransform.anchorMax = anchorMax;
+            rectTransform.offsetMin = Vector2.zero;
+            rectTransform.offsetMax = Vector2.zero;
         }
     }
 }

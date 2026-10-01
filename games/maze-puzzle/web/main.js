@@ -53,6 +53,7 @@ class OrbitalApp {
     this.bindEvents();
     this.setupMascotInteractions();
     this.setupSettingsPage();
+    this.applyAudioVolumesFromProfile();
     this.loadSector(this.sectors[0], false);
 
     // Start Boot Sequence
@@ -347,6 +348,33 @@ class OrbitalApp {
     }
   }
 
+  resetGameplaySessionUi() {
+    this.isPaused = false;
+    this.isLevelCleared = false;
+    this.isLevelFailed = false;
+    this.failureCheckTimer = 0;
+    this.usedBackupPod = false;
+    ["modal-pause", "modal-debrief", "modal-defeat"].forEach((id) => {
+      const el = document.getElementById(id);
+      if (el) el.classList.remove("active");
+    });
+  }
+
+  exitGameToHome() {
+    this.resetGameplaySessionUi();
+    this.showPage("home");
+  }
+
+  applyAudioVolumesFromProfile() {
+    const s = (this.economy.profile && this.economy.profile.settings) || {};
+    if (this.audio) {
+      this.audio.setSfxVolume(s.sfxVolume !== undefined ? s.sfxVolume : 80);
+      this.audio.setAmbienceVolume(
+        s.ambientVolume !== undefined ? s.ambientVolume : 70,
+      );
+    }
+  }
+
   /* =========================================================
      Event Listeners & Input Binding
      ========================================================= */
@@ -404,7 +432,7 @@ class OrbitalApp {
         this.restartSector();
       } else if (e.key === "Escape") {
         if (this.currentPage === "game") {
-          this.showPage("home");
+          this.exitGameToHome();
         }
       }
     });
@@ -553,8 +581,7 @@ class OrbitalApp {
     const btnPauseHome = document.getElementById("btn-pause-home");
     if (btnPauseHome) {
       btnPauseHome.addEventListener("click", () => {
-        closePause();
-        this.showPage("home");
+        this.exitGameToHome();
       });
     }
 
@@ -591,7 +618,7 @@ class OrbitalApp {
     const btnDefeatHome = document.getElementById("btn-defeat-home");
     if (btnDefeatHome) {
       btnDefeatHome.addEventListener("click", () => {
-        if (modalDefeat) modalDefeat.classList.remove("active");
+        this.resetGameplaySessionUi();
         this.showPage("maps");
       });
     }
@@ -726,6 +753,8 @@ class OrbitalApp {
     if (sfxSlider) {
       sfxSlider.addEventListener("input", (e) => {
         this.economy.profile.settings.sfxVolume = parseInt(e.target.value, 10);
+        this.audio.publicInit();
+        this.audio.setSfxVolume(this.economy.profile.settings.sfxVolume);
         this.economy.saveProfile();
       });
     }
@@ -733,6 +762,8 @@ class OrbitalApp {
     if (ambienceSlider) {
       ambienceSlider.addEventListener("input", (e) => {
         this.economy.profile.settings.ambientVolume = parseInt(e.target.value, 10);
+        this.audio.publicInit();
+        this.audio.setAmbienceVolume(this.economy.profile.settings.ambientVolume);
         this.economy.saveProfile();
       });
     }
@@ -792,6 +823,7 @@ class OrbitalApp {
     if (sfxSlider) sfxSlider.value = s.sfxVolume !== undefined ? s.sfxVolume : 80;
     if (ambienceSlider) ambienceSlider.value = s.ambientVolume !== undefined ? s.ambientVolume : 70;
     if (hapticsToggle) hapticsToggle.checked = !!s.hapticsEnabled;
+    this.applyAudioVolumesFromProfile();
   }
 
   /* =========================================================
@@ -801,17 +833,8 @@ class OrbitalApp {
     this.activeSector = sectorConfig;
     this.collectedMass = 0;
     this.spilledMass = 0;
-    this.isLevelCleared = false;
-    this.isLevelFailed = false;
-    this.failureCheckTimer = 0;
-    this.usedBackupPod = false;
+    this.resetGameplaySessionUi();
     this.renderer.resetNibblesScale();
-
-    // Ensure modals are dismissed
-    const modalDebrief = document.getElementById("modal-debrief");
-    if (modalDebrief) modalDebrief.classList.remove("active");
-    const modalDefeat = document.getElementById("modal-defeat");
-    if (modalDefeat) modalDefeat.classList.remove("active");
 
     if (sectorConfig.worldIndex) {
       this.selectedWorldIndex = sectorConfig.worldIndex;

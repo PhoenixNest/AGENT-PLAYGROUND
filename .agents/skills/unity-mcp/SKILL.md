@@ -11,8 +11,8 @@ This skill documents how to interact with the Unity Editor using the **Model Con
 
 The Unity MCP server acts as an intelligent bridge between the AI coding assistant and the active Unity Editor session via `stdio` transport.
 
-- **MCP Runner Command**: `uvx --from mcpforunityserver mcp-for-unity --transport stdio`
-- **Unity Package**: `https://github.com/CoplayDev/unity-mcp.git?path=/MCPForUnity#main`
+- **MCP Runner Command**: `uvx --from mcpforunityserver==10.2.0 mcp-for-unity --transport stdio`
+- **Unity Package**: `https://github.com/CoplayDev/unity-mcp.git?path=/MCPForUnity#v10.2.0`
 - **Startup Grace Period**: Configured with `UNITY_MCP_SKIP_STARTUP_CONNECT: "true"`, allowing the MCP server to start reliably even when Unity Editor is not currently open, automatically reconnecting once the project opens in Unity.
 
 ---
@@ -26,7 +26,7 @@ When creating or opening the Unity project in Unity 6:
 3. Select **Add package from git URL...**.
 4. Paste:
    ```text
-   https://github.com/CoplayDev/unity-mcp.git?path=/MCPForUnity#main
+   https://github.com/CoplayDev/unity-mcp.git?path=/MCPForUnity#v10.2.0
    ```
 5. Click **Add**. The Unity Editor bridge starts automatically and listens for MCP commands.
 

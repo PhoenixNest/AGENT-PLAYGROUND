@@ -14,11 +14,16 @@ export class AudioEngine {
     // Master Audio Chain
     this.masterGain = null;
     this.masterCompressor = null;
+    this.sfxGain = null;
+    this.ambienceGain = null;
+    this.sfxVolume = 0.8;
+    this.ambienceVolume = 0.7;
 
     // Concurrency & Rate Limiting State
     this.lastCollisionTime = 0;
     this.lastRatchetTime = 0;
     this.lastGatePassTime = 0;
+    this.lastRcsThrustTime = 0;
     this.lastSwallowTime = 0;
     this.swallowQueueCount = 0;
 
@@ -40,7 +45,10 @@ export class AudioEngine {
   }
 
   publicInit() {
-    if (this.isInitialized) return;
+    if (this.isInitialized) {
+      this.ensureRunning();
+      return;
+    }
     try {
       const AudioContext = window.AudioContext || window.webkitAudioContext;
       this.ctx = new AudioContext();
@@ -53,28 +61,61 @@ export class AudioEngine {
       this.masterCompressor.attack.setValueAtTime(0.003, this.ctx.currentTime);
       this.masterCompressor.release.setValueAtTime(0.12, this.ctx.currentTime);
 
-      this.masterGain = this.ctx.createGain();
-      this.masterGain.gain.setValueAtTime(0.85, this.ctx.currentTime);
+      this.sfxGain = this.ctx.createGain();
+      this.sfxGain.gain.setValueAtTime(this.sfxVolume, this.ctx.currentTime);
 
-      this.masterCompressor.connect(this.masterGain);
+      this.ambienceGain = this.ctx.createGain();
+      this.ambienceGain.gain.setValueAtTime(this.ambienceVolume, this.ctx.currentTime);
+
+      this.masterGain = this.ctx.createGain();
+      this.masterGain.gain.setValueAtTime(this.isMuted ? 0 : 0.85, this.ctx.currentTime);
+
+      this.masterCompressor.connect(this.sfxGain);
+      this.sfxGain.connect(this.masterGain);
+      this.ambienceGain.connect(this.masterGain);
       this.masterGain.connect(this.ctx.destination);
 
       this.isInitialized = true;
+      this.ensureRunning();
     } catch (e) {
       console.warn("Web Audio API not supported or blocked", e);
+    }
+  }
+
+  ensureRunning() {
+    if (!this.ctx) return;
+    if (this.ctx.state === "suspended") {
+      this.ctx.resume().catch(() => {});
+    }
+  }
+
+  setSfxVolume(percent) {
+    const v = Math.max(0, Math.min(100, Number(percent) || 0)) / 100;
+    this.sfxVolume = v;
+    if (this.sfxGain && this.ctx) {
+      this.sfxGain.gain.setValueAtTime(v, this.ctx.currentTime);
+    }
+  }
+
+  setAmbienceVolume(percent) {
+    const v = Math.max(0, Math.min(100, Number(percent) || 0)) / 100;
+    this.ambienceVolume = v;
+    if (this.ambienceGain && this.ctx) {
+      this.ambienceGain.gain.setValueAtTime(v, this.ctx.currentTime);
     }
   }
 
   toggleMute() {
     this.isMuted = !this.isMuted;
     if (this.ctx) {
-      if (this.ctx.state === "suspended" && !this.isMuted) {
-        this.ctx.resume();
-      }
+      this.ensureRunning();
       if (this.masterGain) {
-        this.masterGain.gain.setValueAtTime(
+        const t = this.ctx.currentTime;
+        this.masterGain.gain.cancelScheduledValues(t);
+        this.masterGain.gain.setValueAtTime(this.masterGain.gain.value, t);
+        this.masterGain.gain.linearRampToValueAtTime(
           this.isMuted ? 0 : 0.85,
-          this.ctx.currentTime,
+          t + 0.02,
         );
       }
     }
@@ -87,6 +128,7 @@ export class AudioEngine {
    */
   playSpinRatchet(pitchMultiplier = 1.0) {
     if (!this.ctx || this.isMuted) return;
+    this.ensureRunning();
     const now = this.ctx.currentTime;
     if (now - this.lastRatchetTime < 0.045) return; // Rate-limit ratchet clicks
     this.lastRatchetTime = now;
@@ -121,6 +163,7 @@ export class AudioEngine {
    */
   playDebrisCollision(intensity = 1.0, debrisType = "titanium") {
     if (!this.ctx || this.isMuted) return;
+    this.ensureRunning();
     const now = this.ctx.currentTime;
     if (now - this.lastCollisionTime < 0.048) return; // Strict cooldown to prevent machine-gun clatter
     this.lastCollisionTime = now;
@@ -173,6 +216,7 @@ export class AudioEngine {
    */
   playGatePass(gateType = "MULTIPLY", value = 2) {
     if (!this.ctx || this.isMuted) return;
+    this.ensureRunning();
     const now = this.ctx.currentTime;
     if (now - this.lastGatePassTime < 0.07) return; // Debounce multi-ball cascades
     this.lastGatePassTime = now;
@@ -260,6 +304,7 @@ export class AudioEngine {
 
   playBoosterPass(now) {
     if (!this.ctx || this.isMuted) return;
+    this.ensureRunning();
     const t = (isFinite(now) && now > 0) ? now : (this.ctx.currentTime || 0.001);
     // Comic jet whistle whoosh
     const osc = this.ctx.createOscillator();
@@ -280,10 +325,49 @@ export class AudioEngine {
   }
 
   /**
+   * High-pressure RCS / BOOST gate thruster hiss (pneumatic whoosh).
+   */
+  playRcsThrust() {
+    if (!this.ctx || this.isMuted) return;
+    this.ensureRunning();
+    const now = this.ctx.currentTime;
+    if (now - this.lastRcsThrustTime < 0.05) return;
+    this.lastRcsThrustTime = now;
+
+    const bufferSize = Math.floor(this.ctx.sampleRate * 0.22);
+    const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+    const data = buffer.getChannelData(0);
+    for (let i = 0; i < bufferSize; i++) {
+      data[i] = (Math.random() * 2 - 1) * (1 - i / bufferSize);
+    }
+
+    const noise = this.ctx.createBufferSource();
+    noise.buffer = buffer;
+
+    const filter = this.ctx.createBiquadFilter();
+    filter.type = "bandpass";
+    filter.frequency.setValueAtTime(1800, now);
+    filter.frequency.exponentialRampToValueAtTime(420, now + 0.18);
+    filter.Q.setValueAtTime(1.2, now);
+
+    const gain = this.ctx.createGain();
+    gain.gain.setValueAtTime(0.14, now);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.2);
+
+    noise.connect(filter);
+    filter.connect(gain);
+    gain.connect(this.masterCompressor);
+
+    noise.start(now);
+    noise.stop(now + 0.22);
+  }
+
+  /**
    * Bouncy pinball bumper bell / rubber boing for deflector pins.
    */
   playBumperBounce() {
     if (!this.ctx || this.isMuted) return;
+    this.ensureRunning();
     const now = this.ctx.currentTime;
     if (now - (this.lastBumperTime || 0) < 0.045) return;
     this.lastBumperTime = now;
@@ -315,6 +399,7 @@ export class AudioEngine {
    */
   playDebrisSwallowed() {
     if (!this.ctx || this.isMuted) return;
+    this.ensureRunning();
     const now = this.ctx.currentTime;
 
     // Stagger rapidly arriving debris to form a pleasing ascending arpeggio
@@ -370,6 +455,7 @@ export class AudioEngine {
    */
   playHazardExplosion() {
     if (!this.ctx || this.isMuted) return;
+    this.ensureRunning();
     const now = this.ctx.currentTime;
 
     const osc = this.ctx.createOscillator();
@@ -394,6 +480,7 @@ export class AudioEngine {
    */
   playVictoryFanfare() {
     if (!this.ctx || this.isMuted) return;
+    this.ensureRunning();
     const now = this.ctx.currentTime;
 
     // Cheerful cartoon fanfare (C5 - E5 - G5 - C6)
@@ -438,6 +525,7 @@ export class AudioEngine {
    */
   playDefeatSound() {
     if (!this.ctx || this.isMuted) return;
+    this.ensureRunning();
     const now = this.ctx.currentTime;
 
     // Sweet cartoon descending notes (G4 -> E4 -> D4 -> C4)
@@ -478,6 +566,7 @@ export class AudioEngine {
    */
   playBackupPodSound() {
     if (!this.ctx || this.isMuted) return;
+    this.ensureRunning();
     const now = this.ctx.currentTime;
 
     // Upbeat energetic ascending chime (C4 -> G4 -> C5 -> E5)

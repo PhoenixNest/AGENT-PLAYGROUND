@@ -16,7 +16,22 @@
   - [`05_GAME_UI_UX_DESIGN_SPECIFICATION.md`](./05_GAME_UI_UX_DESIGN_SPECIFICATION.md) — UI/UX Design System & Touch Wireframes
   - [`06_GAMEPLAY_SYSTEMS_AND_LEVEL_DESIGN.md`](./06_GAMEPLAY_SYSTEMS_AND_LEVEL_DESIGN.md) — Gameplay Systems & 50-Level Matrix
   - [`07_AUDIO_DESIGN_SPECIFICATION.md`](./07_AUDIO_DESIGN_SPECIFICATION.md) — Audio Design & Procedural Sound Synthesis
+  - [`09_VISUAL_PARITY_AND_SCREENSHOT_COMPARISON.md`](./09_VISUAL_PARITY_AND_SCREENSHOT_COMPARISON.md) — Visual parity review & screenshot archive
   - [`CHANGELOG.md`](./CHANGELOG.md) — Milestone Version History
+
+### Current status (2026-09-30)
+
+Verified against `unity/maze-puzzle/` ProjectSettings, `Packages/manifest.json`, scripts, and assets:
+
+| Phase | Plan intent | Actual status |
+| :---- | :---------- | :------------ |
+| **1 Foundation** | URP 2D, Linear color, DOTween, UniTask, Input System | **Partial.** Project exists at `unity/maze-puzzle/`. URP, DOTween, UniTask, and Input System are **not** installed (`manifest.json` has built-in modules + `com.unity.ugui` + MCP). Color space is **Gamma** (`m_ActiveColorSpace: 0`) though the plan called for Linear. |
+| **2 Data & assets** | 15 WAVs, 34 Fluent emojis, 50 levels, sanitizer, TMP sprite atlas | **Mostly complete.** 15 WAVs in `Assets/Audio/` (+ Resources mirror); 34 emojis in `Assets/Resources/Emojis/3D/`; `sectors_50.json` + `MazeSanitizer.cs` / `LevelImporter.cs`. TMP sprite asset and master atlas **not** created. Sanitizer runs in the **editor importer only**. |
+| **3 Physics** | 1:1 port / Physics2D kinematics, debris prefabs, worlds 3–5 mechanics | **Partial.** Physics2D **reimplementation**, not a port of `physics.js`. Only `Debris_Titanium` prefab. Concentric rings / `gearRatio`, track walls, deflector pins, and one-way flaps from worlds 3–5 are **not** built at runtime. Magnetic debris maps to titanium. No debris cap / pooling. |
+| **4 Animation** | DOTween juice, VFX, flappers | **Not started** (no DOTween package). |
+| **5 UI & meta** | All screens, win/lose, Backup Pod, shop/economy handlers | **Partial.** Procedural uGUI for all 13 reviewed screens; runtime win/lose wiring and defeat / Backup Pod path implemented. Shop purchase / sound / settings handlers still stubs. |
+| **6 Audio & MCP** | AudioMixer, CoreHaptics, Unity MCP | **Partial.** `AudioManager` + WAVs. No AudioMixer / CoreHaptics. MCP for Unity package `com.coplaydev.unity-mcp` pinned to **v10.2.0** in `Packages/manifest.json`; server `mcpforunityserver==10.2.0` in `.cursor/mcp.json`. |
+| **7 iOS** | Bundle id, signing, Xcode export | **Not started.** `applicationIdentifier` empty; `iOSTargetOSVersionString` empty; `productName: maze-puzzle`; `companyName: GalacticSanitation`; `appleDeveloperTeamID` empty. |
 
 ---
 
@@ -101,7 +116,7 @@ classDiagram
 
     class UnityCSharp {
         +SectorData.cs (ScriptableObjects)
-        +SectorSanitizer.cs (Pure C# Utility)
+        +MazeSanitizer.cs (Pure C# Utility)
         +EconomyManager.cs (JSON Persistence)
         +CentrifugeController.cs (Physics2D / Kinematics)
         +GameManager.cs (State Machine & InputSystem)
@@ -169,7 +184,7 @@ classDiagram
 - **Ease of Migration:** **8.0 / 10 (Easy)**
 - **Web Implementation:** Real-time Web Audio API oscillators, biquad filters, and compressor limiters synthesizing 12 acoustic cues.
 - **Unity Translation:**
-  - Render or record all synthesized cues into crisp, 24-bit uncompressed `.wav` assets matching the Web Audio DSP specifications (see Section 4.1).
+  - Render or record all synthesized cues into uncompressed `.wav` assets matching the Web Audio DSP specifications (see Section 4.1). On disk today: **16-bit PCM mono @ 44.1 kHz** (not 24-bit / 48 kHz).
   - Trigger them via an `AudioManager` component using an `AudioMixer` with dynamic ducking.
   - Integrate native iOS CoreHaptics (`UnityEngine.iOS.HapticFeedback` or a lightweight native iOS plugin) to deliver tactile ratchet clicks and swallowing feedback.
 
@@ -181,25 +196,27 @@ To achieve a **strict 1:1 replica** between the web prototype and the native Uni
 
 ### 4.1 Comprehensive Sound Asset Catalog (1:1 Acoustic Parity)
 
-In the web prototype (`web/engine/audio.js`), all sound effects are synthesized mathematically in real-time. For Unity, each recipe is rendered into an uncompressed 24-bit 48kHz PCM `.wav` file matching the exact oscillator waveform, frequency ramps, envelopes, and filter poles:
+In the web prototype (`web/engine/audio.js`), all sound effects are synthesized mathematically in real-time. Unity ships **15** baked PCM `.wav` files under `unity/maze-puzzle/Assets/Audio/` (mirrored in `Assets/Resources/Audio/` for `Resources.Load`). WAV headers verified on disk: **16-bit**, mono, **44100 Hz** (not the planned 24-bit / 48 kHz). Filenames below are the on-disk names; legacy planned names (`sfx_spin_ratchet.wav`, `sfx_collision_*.wav`, etc.) were never produced.
 
-| Asset Filename                                      | Source Recipe (`audio.js`)       | Waveform & DSP Synthesis Parameters                                                                                                                                      | Duration            | Master Bus & Concurrency Rules                                             | iOS Haptic Pairing                                      |
-| :-------------------------------------------------- | :------------------------------- | :----------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :------------------ | :------------------------------------------------------------------------- | :------------------------------------------------------ |
-| `sfx_spin_ratchet.wav`                              | `playSpinRatchet`                | Triangle wave, $800\text{Hz} \to 140\text{Hz}$ exponential drop ($22\text{ms}$), bandpass filter ($1200\text{Hz}, Q=1.5$), gain $0.06 \to 0.0001$.                       | $26\text{ms}$       | SFX/Rotational; rate-limited to $45\text{ms}$ intervals.                   | Soft impact (`.light`)                                  |
-| `sfx_collision_titanium.wav`                        | `playDebrisCollision` (titanium) | Triangle wave, $460\text{Hz} \pm 60\text{Hz} \to 160\text{Hz}$ exponential drop ($38\text{ms}$), gain $0.12$. Wooden block tap.                                          | $42\text{ms}$       | SFX/Collisions; rate-limited to $48\text{ms}$; max 4 voices.               | Soft impact (`.light`)                                  |
-| `sfx_collision_solar.wav`                           | `playDebrisCollision` (solar)    | Triangle wave, $620\text{Hz} \pm 80\text{Hz} \to 340\text{Hz}$ exponential drop ($38\text{ms}$), gain $0.12$. Crystalline chime tap.                                     | $42\text{ms}$       | SFX/Collisions; rate-limited to $48\text{ms}$; max 4 voices.               | Soft impact (`.light`)                                  |
-| `sfx_collision_volatile.wav`                        | `playDebrisCollision` (volatile) | Sine wave, $260\text{Hz} \pm 40\text{Hz} \to 90\text{Hz}$ exponential drop ($38\text{ms}$), gain $0.14$. Rubber thud.                                                    | $42\text{ms}$       | SFX/Collisions; rate-limited to $48\text{ms}$; max 4 voices.               | Medium impact (`.medium`)                               |
-| `sfx_gate_shredder.wav`                             | `playShredderPass`               | Sawtooth wave, $450\text{Hz} \to 880\text{Hz}$ ($80\text{ms}$), lowpass filter ($1600\text{Hz}$), gain $0.14 \to 0.0001$. Electric "Zzzt-Boing!".                        | $140\text{ms}$      | SFX/Gates; debounced to $70\text{ms}$.                                     | Rigid impact (`.rigid`)                                 |
-| `sfx_gate_compactor.wav`                            | `playCompactorPass`              | Sine wave, $140\text{Hz} \to 320\text{Hz}$ ($140\text{ms}$), gain $0.22 \to 0.0001$. Resonant sub-bass magnetic pulse.                                                   | $240\text{ms}$      | SFX/Gates; debounced to $70\text{ms}$.                                     | Heavy impact (`.heavy`)                                 |
-| `sfx_gate_super_shredder.wav`                       | `playSuperShredderPass`          | Dual triangle triad: $523.25\text{Hz} (C_5), 783.99\text{Hz} (G_5), 1046.5\text{Hz} (C_6)$, staggered $20\text{ms}$, gain $0.12$. Neon chord.                            | $200\text{ms}$      | SFX/Gates; debounced to $70\text{ms}$.                                     | Rigid impact (`.rigid`)                                 |
-| `sfx_gate_booster.wav`                              | `playBoosterPass`                | Sine wave, $350\text{Hz} \to 1100\text{Hz}$ ($120\text{ms}$), gain $0.16 \to 0.0001$. Comic jet whistle whoosh.                                                          | $170\text{ms}$      | SFX/Gates; debounced to $70\text{ms}$.                                     | Medium impact (`.medium`)                               |
-| `sfx_bumper_bounce.wav`                             | `playBumperBounce`               | Sine wave, $720\text{Hz} \pm 120\text{Hz} \to 1080\text{Hz} (30\text{ms}) \to 576\text{Hz} (40\text{ms})$, gain $0.16$. Pinball bell boing.                              | $85\text{ms}$       | SFX/Collisions; rate-limited to $45\text{ms}$.                             | Medium impact (`.medium`)                               |
-| `sfx_debris_swallowed_bubble.wav`                   | `playDebrisSwallowed` (pop)      | Sine wave, $200\text{Hz} \to 560\text{Hz}$ exponential sweep ($50\text{ms}$), gain $0.12$. Cartoon gulp / bubble pop.                                                    | $70\text{ms}$       | SFX/Mascot; max 8 staggered instances.                                     | Soft impact (`.light`)                                  |
-| `sfx_chime_c4.wav` to `sfx_chime_c6.wav` (11 notes) | `playDebrisSwallowed` (scale)    | Sine wave, Major Pentatonic scale ($C_4, D_4, E_4, G_4, A_4, C_5, D_5, E_5, G_5, A_5, C_6$), linear attack $15\text{ms}$, exponential decay $280\text{ms}$, gain $0.18$. | $300\text{ms}$ each | SFX/Mascot; clean ascending arpeggiation queue with $25\text{ms}$ offsets. | Success feedback (`UINotificationFeedbackType.success`) |
-| `sfx_hazard_explosion.wav`                          | `playHazardExplosion`            | Triangle wave, $280\text{Hz} \to 55\text{Hz}$ exponential drop ($160\text{ms}$), gain $0.18$. Silly cartoon "Poof!".                                                     | $200\text{ms}$      | SFX/Explosions; priority ducking on debris audio.                          | Heavy impact (`.heavy`)                                 |
-| `sfx_victory_fanfare.wav`                           | `playVictoryFanfare`             | Triangle wave 4-note ascending melody: $C_5 (110\text{ms}) \to E_5 (110\text{ms}) \to G_5 (140\text{ms}) \to C_6 (420\text{ms})$, gain $0.20$.                           | $680\text{ms}$      | Music/Stinger; ducks all ongoing gameplay SFX.                             | Notification success                                    |
-| `sfx_defeat_jingle.wav`                             | `playDefeatSound`                | Triangle wave 4-note descending melody: $G_4 (160\text{ms}) \to E_4 (160\text{ms}) \to D_4 (180\text{ms}) \to C_4 \text{ bending to } A_3 (380\text{ms})$, gain $0.18$.  | $760\text{ms}$      | Music/Stinger; ducks all ongoing gameplay SFX.                             | Notification warning                                    |
-| `sfx_backup_pod_launch.wav`                         | `playBackupPodSound`             | Sine wave 4-note ascending launch chime: $C_4 (80\text{ms}) \to G_4 (80\text{ms}) \to C_5 (100\text{ms}) \to E_5 (280\text{ms})$, gain $0.20$.                           | $460\text{ms}$      | SFX/Stinger; accompanies pod drop.                                         | Notification success                                    |
+| Asset Filename (on disk)           | Cue / Source Recipe (`audio.js` or UI)                         | Waveform & DSP Synthesis Parameters (web recipe intent)                                                                                                                  | Status / Notes                                                                 | Master Bus & Concurrency Rules                               | iOS Haptic Pairing                                      |
+| :--------------------------------- | :------------------------------------------------------------- | :----------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :----------------------------------------------------------------------------- | :----------------------------------------------------------- | :------------------------------------------------------ |
+| `sfx_centrifuge_ratchet.wav`       | Centrifuge spin ratchet — `playSpinRatchet`                    | Triangle wave, $800\text{Hz} \to 140\text{Hz}$ exponential drop ($22\text{ms}$), bandpass ($1200\text{Hz}, Q=1.5$), gain $0.06 \to 0.0001$.                              | Produced (was planned as `sfx_spin_ratchet.wav`)                               | SFX/Rotational; rate-limited to $45\text{ms}$ intervals.     | Soft impact (`.light`)                                  |
+| `sfx_debris_wall_bounce.wav`       | Debris–wall bounce — `playDebrisCollision` (shared)            | Triangle/sine material taps (web varies titanium / solar / volatile).                                                                                                    | Produced as **one** shared bounce; per-material variants **not produced**      | SFX/Collisions; rate-limited to $48\text{ms}$; max 4 voices. | Soft / medium by material                               |
+| `sfx_multiplier_pass.wav`          | Multiplier / shredder gate — `playGatePass` (`MULTIPLY`)       | Sawtooth / neon shredder pass (covers standard ×N; super-shredder triad **not** a separate file).                                                                        | Produced (was planned as `sfx_gate_shredder.wav`)                              | SFX/Gates; debounced to $70\text{ms}$.                       | Rigid impact (`.rigid`)                                 |
+| `sfx_adder_pass.wav`               | Adder / magnetic compactor — `playGatePass` (`ADD`)            | Sine wave, $140\text{Hz} \to 320\text{Hz}$ ($140\text{ms}$), gain $0.22 \to 0.0001$. Resonant sub-bass magnetic pulse.                                                   | Produced (was planned as `sfx_gate_compactor.wav`)                             | SFX/Gates; debounced to $70\text{ms}$.                       | Heavy impact (`.heavy`)                                 |
+| `sfx_booster_pass.wav`             | Accelerator booster — `playBoosterPass` / `playGatePass` BOOST | Sine wave, $350\text{Hz} \to 1100\text{Hz}$ ($120\text{ms}$), gain $0.16 \to 0.0001$. Comic jet whistle whoosh.                                                          | Produced (was planned as `sfx_gate_booster.wav`)                               | SFX/Gates; debounced to $70\text{ms}$.                       | Medium impact (`.medium`)                               |
+| `sfx_debris_pinball_bumper.wav`    | Deflector pinball bumper — `playBumperBounce`                  | Sine wave, $720\text{Hz} \pm 120\text{Hz} \to 1080\text{Hz} (30\text{ms}) \to 576\text{Hz} (40\text{ms})$, gain $0.16$. Pinball bell boing.                              | Produced (was planned as `sfx_bumper_bounce.wav`)                              | SFX/Collisions; rate-limited to $45\text{ms}$.               | Medium impact (`.medium`)                               |
+| `sfx_singularity_swallow.wav`      | Nibbles swallow — `playDebrisSwallowed`                        | Cartoon gulp / bubble pop + pentatonic chime stack (web).                                                                                                                | Produced as **one** clip; discrete `sfx_chime_c4`…`c6` notes **not produced**  | SFX/Mascot; max 8 staggered instances.                       | Soft impact / success                                   |
+| `sfx_flapper_clack.wav`            | One-way gravity flapper valve clack                            | Short mechanical clack when a flapper deflects.                                                                                                                          | Produced (web flapper cue; no legacy planned filename in older catalog)        | SFX/Gates; short one-shot.                                   | Soft impact (`.light`)                                  |
+| `sfx_quota_growth.wav`             | Quota / growth celebration when Nibbles scales up              | Celebratory organ / chord swell as collected mass crosses growth thresholds.                                                                                             | Produced                                                                       | SFX/Mascot; low concurrency.                                 | Success feedback                                        |
+| `sfx_thruster_burst.wav`           | RCS / BOOST thruster hiss — `playRcsThrust`                    | High-pressure gas burst / pneumatic whoosh.                                                                                                                              | Produced                                                                       | SFX/Rotational; rate-limited ~$50\text{ms}$.                 | Medium impact (`.medium`)                               |
+| `sfx_victory_fanfare.wav`          | Victory debrief — `playVictoryFanfare`                         | Triangle wave 4-note ascending melody: $C_5 \to E_5 \to G_5 \to C_6$, gain $0.20$.                                                                                        | Produced                                                                       | Music/Stinger; ducks gameplay SFX.                           | Notification success                                    |
+| `sfx_defeat_whimper.wav`           | Defeat debrief — `playDefeatSound`                             | Triangle wave descending whimper / sad jingle.                                                                                                                           | Produced (was planned as `sfx_defeat_jingle.wav`)                              | Music/Stinger; ducks gameplay SFX.                           | Notification warning                                    |
+| `sfx_recovery_pod_launch.wav`      | Backup Pod launch — `playBackupPodSound`                       | Sine wave 4-note ascending launch chime: $C_4 \to G_4 \to C_5 \to E_5$, gain $0.20$.                                                                                      | Produced (was planned as `sfx_backup_pod_launch.wav`)                          | SFX/Stinger; accompanies pod drop.                           | Notification success                                    |
+| `sfx_ui_button_click.wav`          | UI primary button press                                        | Tactile modern button click.                                                                                                                                             | Produced                                                                       | UI; high priority, short.                                    | Soft impact (`.light`)                                  |
+| `sfx_ui_tab_switch.wav`            | UI tab / dock switch                                           | Soft glass UI slide.                                                                                                                                                     | Produced                                                                       | UI; high priority, short.                                    | Soft impact (`.light`)                                  |
+
+**Planned cues with no on-disk file (not produced):** separate `sfx_collision_solar.wav` / `sfx_collision_volatile.wav`; `sfx_gate_super_shredder.wav`; discrete pentatonic `sfx_chime_c4.wav`…`sfx_chime_c6.wav` (11 notes); `sfx_hazard_explosion.wav`.
 
 #### Unity AudioMixer & Master Dynamics Limiting Setup
 
@@ -351,8 +368,8 @@ To achieve a true **1:1 visual replica** of the Windows prototype while ensuring
 - **Official Repository:** [`microsoft/fluentui-emoji`](https://github.com/microsoft/fluentui-emoji)
 - **License:** **MIT License** (permits royalty-free commercial game asset bundling, modification, and worldwide distribution).
 - **Asset Format:** High-resolution transparent 3D-rendered PNG files ($256 \times 256$ to $1024 \times 1024$ RGBA) featuring physical gradient lighting, soft ambient occlusion, and cartoon toybox texturing.
-- **Storage Location in Unity:** `unity/Assets/Sprites/Emojis/3D/`
-- **Atlas Integration:** Packed into `TMP_SpriteAsset_Emojis.asset` and the master `Atlas_OrbitalSalvage.spriteatlas`.
+- **Storage Location in Unity:** `unity/maze-puzzle/Assets/Resources/Emojis/3D/` (loaded at runtime via `Resources.Load`)
+- **Atlas Integration (planned):** Packed into `TMP_SpriteAsset_Emojis.asset` and the master `Atlas_OrbitalSalvage.spriteatlas` (not yet created).
 
 #### C. Comprehensive 3D Emoji Asset Download Manifest (34 Required Assets)
 
@@ -409,7 +426,7 @@ import path from "path";
 import https from "https";
 
 const TARGET_DIR = path.resolve(
-  "games/maze-puzzle/unity/Assets/Sprites/Emojis/3D",
+  "games/maze-puzzle/unity/maze-puzzle/Assets/Resources/Emojis/3D",
 );
 const BASE_URL =
   "https://raw.githubusercontent.com/microsoft/fluentui-emoji/main/assets";
@@ -550,7 +567,7 @@ async function downloadAsset(item) {
 
 Once downloaded into Unity:
 
-1. In the Project window, select all downloaded PNGs in `Assets/Sprites/Emojis/3D/`.
+1. In the Project window, select all downloaded PNGs in `Assets/Resources/Emojis/3D/`.
 2. Right-click $\to$ **Create $\to$ TextMeshPro $\to$ Sprite Asset** $\to$ name it `TMP_SpriteAsset_Emojis`.
 3. Set `TMP_SpriteAsset_Emojis` as the **Default Sprite Asset** in `TextMesh Pro/Resources/TMP Settings.asset`.
 4. In any UI TextMeshPro component, display the exact 3D emoji using inline tags:
@@ -569,7 +586,7 @@ To ensure that Unity visual and audio assets are genuine 1:1 replicas rather tha
 flowchart LR
     subgraph Audio 1:1 Pipeline
         A1[web/engine/audio.js Math Formulas] --> A2[Automated Audio Renderer Script]
-        A2 --> A3[15 Uncompressed 24-bit 48kHz WAVs]
+        A2 --> A3[15 Uncompressed 16-bit 44.1kHz WAVs]
         A3 --> A4[Unity AudioMixer with Compressor Spec]
     end
 
@@ -588,7 +605,7 @@ flowchart LR
 
 1. **Automated Audio Extraction:** An automated Node.js/Python script executes the exact oscillator/filter mathematics from `audio.js` into `.wav` audio files. Every envelope time constant, filter Q, and harmonic ratio matches the web prototype to the millisecond.
 2. **Lossless High-DPI Sprite Rasterization:** The procedural canvas rendering functions from `renderer.js` are executed at $4\times$ Retina resolution onto transparent off-screen canvases, generating crisp PNG sprites for every ring skin, debris variant, and mascot facial element.
-3. **Fluent 3D Emoji Ingestion:** The Node.js fetcher script retrieves all 34 open-source Microsoft Fluent 3D Emojis into `unity/Assets/Sprites/Emojis/3D/`, generating `TMP_SpriteAsset_Emojis.asset`.
+3. **Fluent 3D Emoji Ingestion:** The Node.js fetcher script retrieves all 34 open-source Microsoft Fluent 3D Emojis into `unity/maze-puzzle/Assets/Resources/Emojis/3D/` (TMP sprite asset still pending).
 4. **Unity Sprite Atlas Packaging:** All visual sprites and 3D emojis are packed into a single 2048×2048 Sprite Atlas (`Atlas_OrbitalSalvage`) using Unity's Sprite Packer with Metal Bilinear filtering, ensuring that the entire game renders in **a single draw call batch** on iOS.
 
 ---
@@ -632,7 +649,7 @@ graph TD
 | Animation Name                         | Web Prototype Math & Logic (`physics.js`, `renderer.js`)                                                                            | Unity Migration Implementation                                                                                                                             | Parameters & Parity Rules                                                     |
 | :------------------------------------- | :---------------------------------------------------------------------------------------------------------------------------------- | :--------------------------------------------------------------------------------------------------------------------------------------------------------- | :---------------------------------------------------------------------------- |
 | **Touch Drag Swipe & Inertia**         | Pointer delta $dx$ applies angular velocity $\omega = dx \times 0.005$. In loop: $\theta += \omega \cdot dt$, $\omega *= 0.94$.     | `CentrifugeController.cs` in `FixedUpdate()`. Touch delta drives `Rigidbody2D.angularVelocity` or kinematic transform rotation with damping factor $0.94$. | 1:1 input feel, zero lag, smooth flick continuation.                          |
-| **Attitude RCS Thruster Burst**        | Double-tap fires impulse burst ($\omega += \pm 7.5\text{ rad/s}$), dislodging stubborn scrap.                                       | Double-tap input gesture triggers instant angular impulse on the centrifuge `Rigidbody2D`.                                                                 | Fires left/right thruster impulse with instant audio click.                   |
+| **Attitude RCS Thruster Burst**        | Double-tap fires impulse burst: doc 06 / web (`physics.js`) use $\omega += \pm 3.8\text{ rad/s}$; Unity `CentrifugeController` currently uses $4.0\text{ rad/s}$ (known divergence). | Double-tap input gesture triggers instant angular impulse on the centrifuge controller.                                                                    | Match or consciously document fidelity vs doc 06 canonical $3.8$.             |
 | **Concentric Dual-Ring Gearing**       | Outer ring rotates at $\theta$; inner staging ring rotates at $\theta \times \text{gearRatio}$ (e.g. $-1.0\times$ or $-1.5\times$). | Child/Parent GameObject setup in Unity where `InnerRingController` samples `outerAngle * gearRatio` each frame.                                            | Reverse counter-rotation for concentric orbital mazes.                        |
 | **RCS Nozzle Smoke & Ignition Sparks** | `addThrusterPuff()` spawns expanding white smoke circles; `addRimSpark()` spawns golden sparks.                                     | Two child Particle Systems on the centrifuge outer rim (`Particle_RCS_Smoke`, `Particle_RCS_Sparks`) triggered on touch/burst.                             | Smoke expands and fades over $0.28\text{s}$; directional sparks with gravity. |
 
@@ -747,12 +764,12 @@ flowchart LR
 
 The Unity MCP server is pre-configured at the workspace root:
 
-- **Workspace Config:** [`.agents/mcp_config.json`](file:///c:/Users/ASUS/Documents/Code/Local/AGENT-PLAYGROUND/.agents/mcp_config.json) & [`.agents/plugins/unity-mcp/mcp_config.json`](file:///c:/Users/ASUS/Documents/Code/Local/AGENT-PLAYGROUND/.agents/plugins/unity-mcp/mcp_config.json)
-- **Plugin Manifest:** [`.agents/plugins/unity-mcp/plugin.json`](file:///c:/Users/ASUS/Documents/Code/Local/AGENT-PLAYGROUND/.agents/plugins/unity-mcp/plugin.json)
-- **Agent Skill Guide:** [`.agents/skills/unity-mcp/SKILL.md`](file:///c:/Users/ASUS/Documents/Code/Local/AGENT-PLAYGROUND/.agents/skills/unity-mcp/SKILL.md)
-- **Runner:** `uvx --from mcpforunityserver mcp-for-unity --transport stdio`
+- **Workspace Config:** [`.agents/mcp_config.json`](../../.agents/mcp_config.json) & [`.agents/plugins/unity-mcp/mcp_config.json`](../../.agents/plugins/unity-mcp/mcp_config.json)
+- **Plugin Manifest:** [`.agents/plugins/unity-mcp/plugin.json`](../../.agents/plugins/unity-mcp/plugin.json)
+- **Agent Skill Guide:** [`.agents/skills/unity-mcp/SKILL.md`](../../.agents/skills/unity-mcp/SKILL.md)
+- **Runner:** `uvx --from mcpforunityserver==10.2.0 mcp-for-unity --transport stdio`
 - **Environment Flags:** `UNITY_MCP_SKIP_STARTUP_CONNECT: "true"` (allows seamless startup and automatic reconnection when Unity Editor opens).
-- **Editor Bridge Package:** `https://github.com/CoplayDev/unity-mcp.git?path=/MCPForUnity#main`
+- **Editor Bridge Package:** `https://github.com/CoplayDev/unity-mcp.git?path=/MCPForUnity#v10.2.0` (pinned in `Packages/manifest.json`)
 
 ### 6.3 Unity Batchmode CLI (Headless Automation)
 
@@ -765,7 +782,7 @@ Initialize the project structure without touching the GUI:
 ```powershell
 & "C:\Program Files\Unity\Hub\Editor\6000.4.6f1\Editor\Unity.exe" `
   -batchmode -nographics `
-  -createProject "c:\Users\ASUS\Documents\Code\Local\AGENT-PLAYGROUND\games\maze-puzzle\unity" `
+  -createProject "c:\Users\ASUS\Documents\Code\Local\AGENT-PLAYGROUND\games\maze-puzzle\unity\maze-puzzle" `
   -quit -logFile "unity_scaffold.log"
 ```
 
@@ -776,7 +793,7 @@ Execute custom C# Editor utilities to batch-import all 50 level definitions from
 ```powershell
 & "C:\Program Files\Unity\Hub\Editor\6000.4.6f1\Editor\Unity.exe" `
   -batchmode -nographics `
-  -projectPath "c:\Users\ASUS\Documents\Code\Local\AGENT-PLAYGROUND\games\maze-puzzle\unity" `
+  -projectPath "c:\Users\ASUS\Documents\Code\Local\AGENT-PLAYGROUND\games\maze-puzzle\unity\maze-puzzle" `
   -executeMethod LevelImporter.BatchImportAll50Levels `
   -quit -logFile "level_import.log"
 ```
@@ -788,7 +805,7 @@ Generate the native Xcode project directly from the command line:
 ```powershell
 & "C:\Program Files\Unity\Hub\Editor\6000.4.6f1\Editor\Unity.exe" `
   -batchmode -nographics `
-  -projectPath "c:\Users\ASUS\Documents\Code\Local\AGENT-PLAYGROUND\games\maze-puzzle\unity" `
+  -projectPath "c:\Users\ASUS\Documents\Code\Local\AGENT-PLAYGROUND\games\maze-puzzle\unity\maze-puzzle" `
   -buildTarget iOS `
   -executeMethod BuildScript.ExportXcodeProject `
   -quit -logFile "build_ios.log"
@@ -808,7 +825,7 @@ To install the required **iOS Build Support** module headlessly for Unity 6:
    - `npx openupm-cli add com.demigiant.dotween` (for juicy cartoon tweens and punches).
    - `npx openupm-cli add com.cysharp.unitask` (for high-performance async/await).
 2. **Pre-baked Asset Pipelines:**
-   - **Microsoft Fluent 3D Emojis:** All 34 required Microsoft Fluent 3D Emojis were downloaded and archived directly into [`unity/Assets/Sprites/Emojis/3D/`](file:///c:/Users/ASUS/Documents/Code/Local/AGENT-PLAYGROUND/games/maze-puzzle/unity/Assets/Sprites/Emojis/3D/); the temporary download script was cleaned up.
+   - **Microsoft Fluent 3D Emojis:** All 34 required Microsoft Fluent 3D Emojis were downloaded and archived directly into [`unity/maze-puzzle/Assets/Resources/Emojis/3D/`](./unity/maze-puzzle/Assets/Resources/Emojis/3D/); the temporary download script was cleaned up.
    - **Audio DSP Synthesizer:** Direct synthesis of all 15 uncompressed `.wav` audio files matching the Web Audio DSP specifications.
 
 ### 6.6 Recommended Hybrid Strategy for Maximum Velocity
@@ -868,16 +885,16 @@ gantt
 
 #### Phase 1: Project Setup & Headless CLI Scaffolding
 
-1. Initialize the Unity 6 (6000.4.6f1) project in [`unity/`](./unity/) via Unity Batchmode CLI targeting Universal Render Pipeline (2D).
+1. Initialize the Unity 6 (6000.4.6f1) project in [`unity/maze-puzzle/`](./unity/maze-puzzle/) via Unity Batchmode CLI targeting Universal Render Pipeline (2D).
 2. Install **DOTween** and **UniTask** via OpenUPM CLI.
-3. Configure iOS Player Settings: Portrait orientation, ARM64 Metal API, Linear color space, and safe area canvas scaling ($430 \times 932$).
+3. Configure iOS Player Settings: Portrait orientation, ARM64 Metal API, Linear color space (currently still Gamma), and safe area canvas scaling ($430 \times 932$).
 
 #### Phase 2: 1:1 Asset Generation, Fluent 3D Emojis & Level Architecture
 
-1. Verify the 34 downloaded Microsoft Fluent 3D Emojis in `unity/Assets/Sprites/Emojis/3D/` and generate `TMP_SpriteAsset_Emojis.asset`.
+1. Verify the 34 downloaded Microsoft Fluent 3D Emojis in `unity/maze-puzzle/Assets/Resources/Emojis/3D/` and generate `TMP_SpriteAsset_Emojis.asset`.
 2. Run `scripts/bake_web_audio_to_wav.js` to produce all 15 `.wav` audio files matching the Web Audio DSP specification.
-3. Create C# data structures representing the 50 campaign sectors in `unity/Assets/Scripts/Data/`.
-4. Convert `MazeLevelBuilder.sanitizeSector()` from `web/engine/maze.js` into C# to ensure zero gate-wall overlaps.
+3. Create C# data structures representing the 50 campaign sectors in `unity/maze-puzzle/Assets/Scripts/Data/`.
+4. Convert `MazeLevelBuilder.sanitizeSector()` from `web/engine/maze.js` into C# (`MazeSanitizer.cs`) to ensure zero gate-wall overlaps.
 5. Execute headless level import via `-executeMethod LevelImporter.BatchImportAll50Levels`.
 
 #### Phase 3: Physics & Pure Gesture Kinematics
@@ -929,8 +946,13 @@ gantt
 
 ## 9. Next Steps & Recommended Actions
 
-1. **Review and Approve:** The user reviews this comprehensive 1:1 animation, tooling, and migration specification.
-2. **Execute Headless Project Scaffold:** Initialize the Unity 6 project in [`unity/`](./unity/) via Unity CLI.
-3. **Execute 1:1 Audio Extraction:** Run `scripts/bake_web_audio_to_wav.js` to export all 15 audio `.wav` files directly into `unity/Assets/Audio/`.
-4. **Migrate Level Assets:** Batch-convert the 50 level definitions from [`web/engine/maze.js`](./web/engine/maze.js) into native Unity ScriptableObjects.
-5. **Connect Unity MCP:** Open the project in Unity 6 and enable `CoplayDev/unity-mcp` for live agent pairing.
+Scaffolding and core architecture are already in place (`unity/maze-puzzle/`). Real remaining work:
+
+1. **iOS PlayerSettings:** Set bundle identifier (`applicationIdentifier`), iOS target OS version, signing team (`appleDeveloperTeamID`), and confirm `productName` / `companyName` for App Store Connect.
+2. **Worlds 3–5 mechanics or explicit scope-out:** Implement concentric rings / `gearRatio`, track walls, deflector pins, and one-way flaps at runtime — or document that campaign levels using those fields are unsupported.
+3. **Physics fidelity decision:** Align Unity thruster ($4.0$) and max $\omega$ ($25$) with doc 06 / web ($3.8$, clamp $12$), or update specs to accept Physics2D divergence.
+4. **Debris cap / pooling:** Add active-debris limits and object pooling (magnetic currently aliases to titanium; only `Debris_Titanium` prefab exists).
+5. **TMP Examples & Extras removal:** Strip unused TextMesh Pro Examples & Extras from the project once emoji/UI fonts are finalized.
+6. **URP / Linear decision:** Either install URP 2D and switch to Linear color space as originally planned, or revise the plan to keep Built-in + Gamma.
+7. **Finish Phase 5 stubs:** Wire shop purchase, sound, and settings handlers; create TMP emoji sprite asset / atlas if inline TMP sprites are still desired.
+8. **Phase 6 polish:** AudioMixer compressor bus and CoreHaptics (MCP v10.2.0 is already pinned).
