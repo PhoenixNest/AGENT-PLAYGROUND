@@ -160,7 +160,10 @@ namespace OrbitalSalvage.Render
         public void FillText(string text, double x, double y, double maxWidth = double.NaN) { DrawText(text, x, y, false); }
         public void StrokeText(string text, double x, double y, double maxWidth = double.NaN) { DrawText(text, x, y, true); }
 
-        void DrawText(string text, double x, double y, bool stroke)
+        /// <summary>Legacy TMP SDF atlas path (SPEC 6.4 v1.6: not the parity path). Default off.</summary>
+        public static bool UseSdfText = false;
+
+        void DrawTextSdf(string text, double x, double y, bool stroke)
         {
             if (string.IsNullOrEmpty(text) || !Finite(x, y)) return;
             var st = state;

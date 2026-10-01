@@ -38,6 +38,16 @@ Shader "Hidden/Canvas2D/Fill"
             {
                 float2 pc = C2D_FragToCanvas(svpos);
                 float cov = Coverage(pc);
+                float4 tg = C2D_P(IDX_TEXT);
+                if (tg.x > 0.5)
+                {
+                    // Skia glyph-mask preblend (SkMaskGamma, sRGB luminance): contrast, then blend in linear light.
+                    float4 tl = C2D_P(IDX_IMGC);
+                    float srca = cov + (1.0 - cov) * tg.y * cov;
+                    float linOut = tl.x * srca + (1.0 - srca) * tl.y;
+                    float o = linOut <= 0.0031308 ? linOut * 12.92 : 1.055 * pow(max(linOut, 0.0), 1.0 / 2.4) - 0.055;
+                    cov = saturate((o - tg.w) / (tg.z - tg.w));
+                }
                 float4 paint = C2D_EvalPaint(pc);
                 float4 fl = C2D_P(IDX_FLAGS);
                 if (fl.w > 0.5)

@@ -31,6 +31,51 @@ namespace OrbitalSalvage.Render.Editor
             EditorApplication.Exit(code);
         }
 
+        /// <summary>
+        /// Batchmode: writes <c>-out DIR/unity-metrics.json</c> with Canvas2D.MeasureText widths for the fonts and strings of
+        /// <c>probe-metrics.mjs</c> so they can be compared with Chromium's <c>measureText</c> (out/metrics.json).
+        /// </summary>
+        public static void TextMetrics()
+        {
+            int code = 0;
+            try
+            {
+                string outDir = Arg(Environment.GetCommandLineArgs(), "-out");
+                Directory.CreateDirectory(outDir);
+                string[] fonts =
+                {
+                    "bold 13px Fredoka, sans-serif", "900 10.5px Fredoka, sans-serif", "bold 10px Fredoka, sans-serif", "bold 9.5px Fredoka, sans-serif",
+                    "900 16px Fredoka, sans-serif", "400 14px Fredoka, sans-serif", "11px Nunito, sans-serif", "800 14px Nunito, sans-serif", "bold 40px Fredoka, sans-serif",
+                };
+                string[] strings = { "Hxg", "SORT RIG 0123456789 \u00D7\u2022", "To Wa", "AVATAR", "fi fl", "ORBITAL x2 +3 \u2713 \u25B6 \u2190",
+                    "Hamburgefonstiv AVATAR To Wa", "SPARKLE PLANETARY COSMIC RIG fi fl", "AV AV", "A V" };
+                string wordsFile = Arg(Environment.GetCommandLineArgs(), "-words");
+                if (wordsFile != null)
+                {
+                    var list = (List<object>)MiniJson.Parse(File.ReadAllText(wordsFile));
+                    strings = new string[list.Count];
+                    for (int i = 0; i < list.Count; i++) strings[i] = (string)list[i];
+                    fonts = new[] { "bold 13px Fredoka, sans-serif", "400 14px Fredoka, sans-serif", "11px Nunito, sans-serif" };
+                }
+                var sb = new StringBuilder("{\n");
+                using (var canvas = new Canvas2D(16, 16))
+                {
+                    for (int i = 0; i < fonts.Length; i++)
+                    {
+                        canvas.Font = fonts[i];
+                        sb.Append("  \"" + fonts[i] + "\": {");
+                        for (int j = 0; j < strings.Length; j++)
+                            sb.Append((j == 0 ? "" : ", ") + "\"" + strings[j] + "\": " + canvas.MeasureText(strings[j]).ToString("R", CultureInfo.InvariantCulture));
+                        sb.Append("}" + (i + 1 < fonts.Length ? "," : "") + "\n");
+                    }
+                }
+                sb.Append("}\n");
+                File.WriteAllText(Path.Combine(outDir, "unity-metrics.json"), sb.ToString(), new UTF8Encoding(false));
+            }
+            catch (Exception e) { Debug.LogError("[CanvasConformance] " + e); code = 1; }
+            EditorApplication.Exit(code);
+        }
+
         static int RunImpl()
         {
             var args = Environment.GetCommandLineArgs();
