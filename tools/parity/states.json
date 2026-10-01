@@ -1,0 +1,5937 @@
+[
+  {
+    "id": "loading_t0000",
+    "description": "Loading screen at boot, no frame run (bar at CSS default, first tip)",
+    "profiles": ["zero", "iphone"],
+    "steps": [
+      {
+        "op": "boot",
+        "completeLoading": false
+      },
+      {
+        "op": "capture"
+      }
+    ]
+  },
+  {
+    "id": "loading_t0500",
+    "description": "Loading screen 500 ms in (two interval ticks, bar transitions running)",
+    "profiles": ["zero", "iphone"],
+    "steps": [
+      {
+        "op": "boot",
+        "completeLoading": false
+      },
+      {
+        "op": "advance",
+        "ms": 500
+      },
+      {
+        "op": "capture"
+      }
+    ]
+  },
+  {
+    "id": "loading_t1100",
+    "description": "Loading screen 1100 ms in (bar at 100 %, home shows at 1310)",
+    "profiles": ["zero", "iphone"],
+    "steps": [
+      {
+        "op": "boot",
+        "completeLoading": false
+      },
+      {
+        "op": "advance",
+        "ms": 1100
+      },
+      {
+        "op": "capture"
+      }
+    ]
+  },
+  {
+    "id": "home_default",
+    "description": "Home after loading, settled (boot + 240 ms)",
+    "profiles": ["zero", "iphone"],
+    "steps": [
+      {
+        "op": "boot"
+      },
+      {
+        "op": "capture"
+      }
+    ]
+  },
+  {
+    "id": "home_anim_t00400",
+    "description": "Home 400 ms after settle: samples mascotFloat, debris, sunburstRotate, shineSweep, tagPulse",
+    "profiles": ["zero", "iphone"],
+    "steps": [
+      {
+        "op": "boot"
+      },
+      {
+        "op": "advance",
+        "ms": 400
+      },
+      {
+        "op": "capture"
+      }
+    ]
+  },
+  {
+    "id": "home_anim_t00900",
+    "description": "Home 900 ms after settle: samples mascotFloat, debris, sunburstRotate, shineSweep, tagPulse",
+    "profiles": ["zero", "iphone"],
+    "steps": [
+      {
+        "op": "boot"
+      },
+      {
+        "op": "advance",
+        "ms": 900
+      },
+      {
+        "op": "capture"
+      }
+    ]
+  },
+  {
+    "id": "home_anim_t02500",
+    "description": "Home 2500 ms after settle: samples mascotFloat, debris, sunburstRotate, shineSweep, tagPulse",
+    "profiles": ["zero", "iphone"],
+    "steps": [
+      {
+        "op": "boot"
+      },
+      {
+        "op": "advance",
+        "ms": 2500
+      },
+      {
+        "op": "capture"
+      }
+    ]
+  },
+  {
+    "id": "home_anim_t06000",
+    "description": "Home 6000 ms after settle: samples mascotFloat, debris, sunburstRotate, shineSweep, tagPulse",
+    "profiles": ["zero", "iphone"],
+    "steps": [
+      {
+        "op": "boot"
+      },
+      {
+        "op": "advance",
+        "ms": 6000
+      },
+      {
+        "op": "capture"
+      }
+    ]
+  },
+  {
+    "id": "home_anim_t12000",
+    "description": "Home 12000 ms after settle: samples mascotFloat, debris, sunburstRotate, shineSweep, tagPulse",
+    "profiles": ["zero", "iphone"],
+    "steps": [
+      {
+        "op": "boot"
+      },
+      {
+        "op": "advance",
+        "ms": 12000
+      },
+      {
+        "op": "capture"
+      }
+    ]
+  },
+  {
+    "id": "home_mascot_click_t0016",
+    "description": "Home, Nibbles tapped, captured 16 ms later (squash, heart particle, face swap)",
+    "profiles": ["zero", "iphone"],
+    "steps": [
+      {
+        "op": "boot"
+      },
+      {
+        "op": "click",
+        "target": "home-mascot-stage"
+      },
+      {
+        "op": "advance",
+        "ms": 16
+      },
+      {
+        "op": "capture"
+      }
+    ]
+  },
+  {
+    "id": "home_mascot_click_t0300",
+    "description": "Home, Nibbles tapped, captured 300 ms later (squash, heart particle, face swap)",
+    "profiles": ["zero", "iphone"],
+    "steps": [
+      {
+        "op": "boot"
+      },
+      {
+        "op": "click",
+        "target": "home-mascot-stage"
+      },
+      {
+        "op": "advance",
+        "ms": 300
+      },
+      {
+        "op": "capture"
+      }
+    ]
+  },
+  {
+    "id": "home_mascot_click_t0700",
+    "description": "Home, Nibbles tapped, captured 700 ms later (squash, heart particle, face swap)",
+    "profiles": ["zero", "iphone"],
+    "steps": [
+      {
+        "op": "boot"
+      },
+      {
+        "op": "click",
+        "target": "home-mascot-stage"
+      },
+      {
+        "op": "advance",
+        "ms": 700
+      },
+      {
+        "op": "capture"
+      }
+    ]
+  },
+  {
+    "id": "home_badges_two_new",
+    "description": "Home, bronze shift cleared: dock daily badge shows 2 NEW",
+    "profiles": ["zero", "iphone"],
+    "steps": [
+      {
+        "op": "boot"
+      },
+      {
+        "op": "setProfile",
+        "path": "lastDailyShiftDate",
+        "value": "2026-10-01"
+      },
+      {
+        "op": "setProfile",
+        "path": "completedDailyTiers",
+        "value": ["bronze"]
+      },
+      {
+        "op": "call",
+        "method": "updateHomeView",
+        "args": []
+      },
+      {
+        "op": "capture"
+      }
+    ]
+  },
+  {
+    "id": "home_badges_master_ready",
+    "description": "Home, all 3 daily shifts cleared and master bonus unclaimed: daily badge GIFT",
+    "profiles": ["zero", "iphone"],
+    "steps": [
+      {
+        "op": "boot"
+      },
+      {
+        "op": "setProfile",
+        "path": "lastDailyShiftDate",
+        "value": "2026-10-01"
+      },
+      {
+        "op": "setProfile",
+        "path": "completedDailyTiers",
+        "value": ["bronze", "silver", "gold"]
+      },
+      {
+        "op": "call",
+        "method": "updateHomeView",
+        "args": []
+      },
+      {
+        "op": "capture"
+      }
+    ]
+  },
+  {
+    "id": "home_badges_all_claimed",
+    "description": "Home, shifts cleared, master bonus and stipend claimed: green check badge, shop badge hidden",
+    "profiles": ["zero", "iphone"],
+    "steps": [
+      {
+        "op": "boot"
+      },
+      {
+        "op": "setProfile",
+        "path": "lastDailyShiftDate",
+        "value": "2026-10-01"
+      },
+      {
+        "op": "setProfile",
+        "path": "completedDailyTiers",
+        "value": ["bronze", "silver", "gold"]
+      },
+      {
+        "op": "setProfile",
+        "path": "dailyMasterClaimedDate",
+        "value": "2026-10-01"
+      },
+      {
+        "op": "setProfile",
+        "path": "lastDailyGiftDate",
+        "value": "2026-10-01"
+      },
+      {
+        "op": "call",
+        "method": "updateHomeView",
+        "args": []
+      },
+      {
+        "op": "capture"
+      }
+    ]
+  },
+  {
+    "id": "home_equipped_duckie_berry",
+    "description": "Home with Rubber Duckie ring and Berry Swirl singularity equipped",
+    "profiles": ["zero", "iphone"],
+    "steps": [
+      {
+        "op": "boot"
+      },
+      {
+        "op": "setProfile",
+        "path": "equipped.ring",
+        "value": "ring_duckie"
+      },
+      {
+        "op": "setProfile",
+        "path": "equipped.singularity",
+        "value": "singularity_strawberry"
+      },
+      {
+        "op": "call",
+        "method": "updateHomeView",
+        "args": []
+      },
+      {
+        "op": "advance",
+        "ms": 300
+      },
+      {
+        "op": "capture"
+      }
+    ]
+  },
+  {
+    "id": "home_equipped_candy_sleepy",
+    "description": "Home with Peppermint ring and Sleepy Star singularity equipped",
+    "profiles": ["zero", "iphone"],
+    "steps": [
+      {
+        "op": "boot"
+      },
+      {
+        "op": "setProfile",
+        "path": "equipped.ring",
+        "value": "ring_candyland"
+      },
+      {
+        "op": "setProfile",
+        "path": "equipped.singularity",
+        "value": "singularity_sleepy"
+      },
+      {
+        "op": "call",
+        "method": "updateHomeView",
+        "args": []
+      },
+      {
+        "op": "advance",
+        "ms": 300
+      },
+      {
+        "op": "capture"
+      }
+    ]
+  },
+  {
+    "id": "home_equipped_kitty_confetti",
+    "description": "Home with Kitty Saucer ring and Party Popper singularity equipped",
+    "profiles": ["zero", "iphone"],
+    "steps": [
+      {
+        "op": "boot"
+      },
+      {
+        "op": "setProfile",
+        "path": "equipped.ring",
+        "value": "ring_spacecat"
+      },
+      {
+        "op": "setProfile",
+        "path": "equipped.singularity",
+        "value": "singularity_confetti"
+      },
+      {
+        "op": "call",
+        "method": "updateHomeView",
+        "args": []
+      },
+      {
+        "op": "advance",
+        "ms": 300
+      },
+      {
+        "op": "capture"
+      }
+    ]
+  },
+  {
+    "id": "home_sector_21_big_credits",
+    "description": "Home after selecting level 21 with 123456 credits (mission pill and coin pill widths)",
+    "profiles": ["zero", "iphone"],
+    "steps": [
+      {
+        "op": "boot"
+      },
+      {
+        "op": "setProfile",
+        "path": "credits",
+        "value": 123456
+      },
+      {
+        "op": "loadSector",
+        "index": 20
+      },
+      {
+        "op": "call",
+        "method": "updateHomeView",
+        "args": []
+      },
+      {
+        "op": "capture"
+      }
+    ]
+  },
+  {
+    "id": "home_sound_toggle_toast",
+    "description": "Home, speaker button clicked: muted icon and Sound Off toast on plateau",
+    "profiles": ["zero", "iphone"],
+    "steps": [
+      {
+        "op": "boot"
+      },
+      {
+        "op": "click",
+        "target": "btn-home-audio"
+      },
+      {
+        "op": "advance",
+        "ms": 1000
+      },
+      {
+        "op": "capture"
+      }
+    ]
+  },
+  {
+    "id": "pressed_play_mission",
+    "description": "Home, PLAY MISSION held down (:active settled after 150 ms)",
+    "profiles": ["zero", "iphone"],
+    "steps": [
+      {
+        "op": "boot"
+      },
+      {
+        "op": "holdPressed",
+        "target": "btn-home-play"
+      },
+      {
+        "op": "capture"
+      }
+    ]
+  },
+  {
+    "id": "pressed_dock_maps",
+    "description": "Home, MAPS dock tab held down (:active settled after 150 ms)",
+    "profiles": ["zero", "iphone"],
+    "steps": [
+      {
+        "op": "boot"
+      },
+      {
+        "op": "holdPressed",
+        "target": "btn-open-maps-page"
+      },
+      {
+        "op": "capture"
+      }
+    ]
+  },
+  {
+    "id": "pressed_dock_daily",
+    "description": "Home, DAILY dock tab held down (:active settled after 150 ms)",
+    "profiles": ["zero", "iphone"],
+    "steps": [
+      {
+        "op": "boot"
+      },
+      {
+        "op": "holdPressed",
+        "target": "btn-open-daily-shift"
+      },
+      {
+        "op": "capture"
+      }
+    ]
+  },
+  {
+    "id": "pressed_dock_shop",
+    "description": "Home, SHOP dock tab held down (:active settled after 150 ms)",
+    "profiles": ["zero", "iphone"],
+    "steps": [
+      {
+        "op": "boot"
+      },
+      {
+        "op": "holdPressed",
+        "target": "btn-open-shop-page"
+      },
+      {
+        "op": "capture"
+      }
+    ]
+  },
+  {
+    "id": "pressed_dock_trophies",
+    "description": "Home, TROPHIES dock tab held down (:active settled after 150 ms)",
+    "profiles": ["zero", "iphone"],
+    "steps": [
+      {
+        "op": "boot"
+      },
+      {
+        "op": "holdPressed",
+        "target": "btn-open-trophies-page"
+      },
+      {
+        "op": "capture"
+      }
+    ]
+  },
+  {
+    "id": "pressed_home_audio",
+    "description": "Home, home speaker button held down (:active settled after 150 ms)",
+    "profiles": ["zero", "iphone"],
+    "steps": [
+      {
+        "op": "boot"
+      },
+      {
+        "op": "holdPressed",
+        "target": "btn-home-audio"
+      },
+      {
+        "op": "capture"
+      }
+    ]
+  },
+  {
+    "id": "pressed_home_settings",
+    "description": "Home, home gear button held down (:active settled after 150 ms)",
+    "profiles": ["zero", "iphone"],
+    "steps": [
+      {
+        "op": "boot"
+      },
+      {
+        "op": "holdPressed",
+        "target": "btn-home-settings"
+      },
+      {
+        "op": "capture"
+      }
+    ]
+  },
+  {
+    "id": "maps_world_1",
+    "description": "Maps page, world tab 1: 3 completed tiles, level 4 current",
+    "profiles": ["zero", "iphone"],
+    "steps": [
+      {
+        "op": "boot"
+      },
+      {
+        "op": "setProfile",
+        "path": "completedSectors",
+        "value": ["level_1", "level_2", "level_3"]
+      },
+      {
+        "op": "loadSector",
+        "index": 3
+      },
+      {
+        "op": "click",
+        "target": "btn-open-maps-page"
+      },
+      {
+        "op": "advance",
+        "ms": 240
+      },
+      {
+        "op": "clickSelector",
+        "selector": ".world-tab-btn:nth-child(1)"
+      },
+      {
+        "op": "advance",
+        "ms": 150
+      },
+      {
+        "op": "capture"
+      }
+    ]
+  },
+  {
+    "id": "maps_world_2",
+    "description": "Maps page, world tab 2: 4 completed tiles, level 14 current",
+    "profiles": ["zero", "iphone"],
+    "steps": [
+      {
+        "op": "boot"
+      },
+      {
+        "op": "setProfile",
+        "path": "completedSectors",
+        "value": ["level_11", "level_12", "level_13", "level_15"]
+      },
+      {
+        "op": "loadSector",
+        "index": 13
+      },
+      {
+        "op": "click",
+        "target": "btn-open-maps-page"
+      },
+      {
+        "op": "advance",
+        "ms": 240
+      },
+      {
+        "op": "clickSelector",
+        "selector": ".world-tab-btn:nth-child(2)"
+      },
+      {
+        "op": "advance",
+        "ms": 150
+      },
+      {
+        "op": "capture"
+      }
+    ]
+  },
+  {
+    "id": "maps_world_3",
+    "description": "Maps page, world tab 3: 5 completed tiles, level 24 current",
+    "profiles": ["zero", "iphone"],
+    "steps": [
+      {
+        "op": "boot"
+      },
+      {
+        "op": "setProfile",
+        "path": "completedSectors",
+        "value": ["level_21", "level_22", "level_23", "level_25", "level_27"]
+      },
+      {
+        "op": "loadSector",
+        "index": 23
+      },
+      {
+        "op": "click",
+        "target": "btn-open-maps-page"
+      },
+      {
+        "op": "advance",
+        "ms": 240
+      },
+      {
+        "op": "clickSelector",
+        "selector": ".world-tab-btn:nth-child(3)"
+      },
+      {
+        "op": "advance",
+        "ms": 150
+      },
+      {
+        "op": "capture"
+      }
+    ]
+  },
+  {
+    "id": "maps_world_4",
+    "description": "Maps page, world tab 4: 5 completed tiles, level 34 current",
+    "profiles": ["zero", "iphone"],
+    "steps": [
+      {
+        "op": "boot"
+      },
+      {
+        "op": "setProfile",
+        "path": "completedSectors",
+        "value": ["level_31", "level_32", "level_33", "level_35", "level_37"]
+      },
+      {
+        "op": "loadSector",
+        "index": 33
+      },
+      {
+        "op": "click",
+        "target": "btn-open-maps-page"
+      },
+      {
+        "op": "advance",
+        "ms": 240
+      },
+      {
+        "op": "clickSelector",
+        "selector": ".world-tab-btn:nth-child(4)"
+      },
+      {
+        "op": "advance",
+        "ms": 150
+      },
+      {
+        "op": "capture"
+      }
+    ]
+  },
+  {
+    "id": "maps_world_5",
+    "description": "Maps page, world tab 5: 5 completed tiles, level 44 current",
+    "profiles": ["zero", "iphone"],
+    "steps": [
+      {
+        "op": "boot"
+      },
+      {
+        "op": "setProfile",
+        "path": "completedSectors",
+        "value": ["level_41", "level_42", "level_43", "level_45", "level_47"]
+      },
+      {
+        "op": "loadSector",
+        "index": 43
+      },
+      {
+        "op": "click",
+        "target": "btn-open-maps-page"
+      },
+      {
+        "op": "advance",
+        "ms": 240
+      },
+      {
+        "op": "clickSelector",
+        "selector": ".world-tab-btn:nth-child(5)"
+      },
+      {
+        "op": "advance",
+        "ms": 150
+      },
+      {
+        "op": "capture"
+      }
+    ]
+  },
+  {
+    "id": "maps_world_1_all_complete",
+    "description": "Maps page, world 1 fully completed (10/10 banner, all check marks)",
+    "profiles": ["zero", "iphone"],
+    "steps": [
+      {
+        "op": "boot"
+      },
+      {
+        "op": "setProfile",
+        "path": "completedSectors",
+        "value": [
+          "level_1",
+          "level_2",
+          "level_3",
+          "level_4",
+          "level_5",
+          "level_6",
+          "level_7",
+          "level_8",
+          "level_9",
+          "level_10"
+        ]
+      },
+      {
+        "op": "click",
+        "target": "btn-open-maps-page"
+      },
+      {
+        "op": "advance",
+        "ms": 240
+      },
+      {
+        "op": "capture"
+      }
+    ]
+  },
+  {
+    "id": "maps_world_3_none_complete",
+    "description": "Maps page, world 3 with nothing completed, level 21 current",
+    "profiles": ["zero", "iphone"],
+    "steps": [
+      {
+        "op": "boot"
+      },
+      {
+        "op": "loadSector",
+        "index": 20
+      },
+      {
+        "op": "click",
+        "target": "btn-open-maps-page"
+      },
+      {
+        "op": "advance",
+        "ms": 240
+      },
+      {
+        "op": "clickSelector",
+        "selector": ".world-tab-btn:nth-child(3)"
+      },
+      {
+        "op": "advance",
+        "ms": 150
+      },
+      {
+        "op": "capture"
+      }
+    ]
+  },
+  {
+    "id": "maps_world_5_scrolled",
+    "description": "Maps page, world 5 scrolled to the bottom of the grid",
+    "profiles": ["zero", "iphone"],
+    "steps": [
+      {
+        "op": "boot"
+      },
+      {
+        "op": "setProfile",
+        "path": "completedSectors",
+        "value": [
+          "level_1",
+          "level_2",
+          "level_3",
+          "level_4",
+          "level_5",
+          "level_6",
+          "level_7",
+          "level_8",
+          "level_9",
+          "level_10",
+          "level_11",
+          "level_12",
+          "level_13",
+          "level_14",
+          "level_15",
+          "level_16",
+          "level_17",
+          "level_18",
+          "level_19",
+          "level_20",
+          "level_21",
+          "level_22",
+          "level_23",
+          "level_24",
+          "level_25",
+          "level_26",
+          "level_27",
+          "level_28",
+          "level_29",
+          "level_30",
+          "level_31",
+          "level_32",
+          "level_33",
+          "level_34",
+          "level_35",
+          "level_36",
+          "level_37",
+          "level_38",
+          "level_39",
+          "level_40",
+          "level_41",
+          "level_42",
+          "level_43",
+          "level_44"
+        ]
+      },
+      {
+        "op": "loadSector",
+        "index": 43
+      },
+      {
+        "op": "click",
+        "target": "btn-open-maps-page"
+      },
+      {
+        "op": "advance",
+        "ms": 240
+      },
+      {
+        "op": "clickSelector",
+        "selector": ".world-tab-btn:nth-child(5)"
+      },
+      {
+        "op": "advance",
+        "ms": 150
+      },
+      {
+        "op": "scroll",
+        "y": 600
+      },
+      {
+        "op": "capture"
+      }
+    ]
+  },
+  {
+    "id": "pressed_back_maps",
+    "description": "Maps page, back button held down",
+    "profiles": ["zero", "iphone"],
+    "steps": [
+      {
+        "op": "boot"
+      },
+      {
+        "op": "click",
+        "target": "btn-open-maps-page"
+      },
+      {
+        "op": "advance",
+        "ms": 240
+      },
+      {
+        "op": "holdPressed",
+        "target": "btn-back-maps"
+      },
+      {
+        "op": "capture"
+      }
+    ]
+  },
+  {
+    "id": "pressed_world_tab",
+    "description": "Maps page, world tab 3 held down",
+    "profiles": ["zero", "iphone"],
+    "steps": [
+      {
+        "op": "boot"
+      },
+      {
+        "op": "click",
+        "target": "btn-open-maps-page"
+      },
+      {
+        "op": "advance",
+        "ms": 240
+      },
+      {
+        "op": "holdPressed",
+        "selector": ".world-tab-btn:nth-child(3)"
+      },
+      {
+        "op": "capture"
+      }
+    ]
+  },
+  {
+    "id": "pressed_level_tile",
+    "description": "Maps page, level tile 2 held down (:active and :hover)",
+    "profiles": ["zero", "iphone"],
+    "steps": [
+      {
+        "op": "boot"
+      },
+      {
+        "op": "click",
+        "target": "btn-open-maps-page"
+      },
+      {
+        "op": "advance",
+        "ms": 240
+      },
+      {
+        "op": "holdPressed",
+        "selector": ".level-tile:nth-child(2)"
+      },
+      {
+        "op": "capture"
+      }
+    ]
+  },
+  {
+    "id": "daily_default",
+    "description": "Daily page, no shifts cleared, master box locked, countdown 14h 59m",
+    "profiles": ["zero", "iphone"],
+    "steps": [
+      {
+        "op": "boot"
+      },
+      {
+        "op": "click",
+        "target": "btn-open-daily-shift"
+      },
+      {
+        "op": "advance",
+        "ms": 400
+      },
+      {
+        "op": "capture"
+      }
+    ]
+  },
+  {
+    "id": "daily_bronze_cleared",
+    "description": "Daily page, bronze cleared (progress 1/3)",
+    "profiles": ["zero", "iphone"],
+    "steps": [
+      {
+        "op": "boot"
+      },
+      {
+        "op": "setProfile",
+        "path": "lastDailyShiftDate",
+        "value": "2026-10-01"
+      },
+      {
+        "op": "setProfile",
+        "path": "completedDailyTiers",
+        "value": ["bronze"]
+      },
+      {
+        "op": "click",
+        "target": "btn-open-daily-shift"
+      },
+      {
+        "op": "advance",
+        "ms": 400
+      },
+      {
+        "op": "capture"
+      }
+    ]
+  },
+  {
+    "id": "daily_two_cleared",
+    "description": "Daily page, bronze and silver cleared (progress 2/3)",
+    "profiles": ["zero", "iphone"],
+    "steps": [
+      {
+        "op": "boot"
+      },
+      {
+        "op": "setProfile",
+        "path": "lastDailyShiftDate",
+        "value": "2026-10-01"
+      },
+      {
+        "op": "setProfile",
+        "path": "completedDailyTiers",
+        "value": ["bronze", "silver"]
+      },
+      {
+        "op": "click",
+        "target": "btn-open-daily-shift"
+      },
+      {
+        "op": "advance",
+        "ms": 400
+      },
+      {
+        "op": "capture"
+      }
+    ]
+  },
+  {
+    "id": "daily_master_ready",
+    "description": "Daily page, all cleared, master bonus claimable (unlocked glow, claim button)",
+    "profiles": ["zero", "iphone"],
+    "steps": [
+      {
+        "op": "boot"
+      },
+      {
+        "op": "setProfile",
+        "path": "lastDailyShiftDate",
+        "value": "2026-10-01"
+      },
+      {
+        "op": "setProfile",
+        "path": "completedDailyTiers",
+        "value": ["bronze", "silver", "gold"]
+      },
+      {
+        "op": "click",
+        "target": "btn-open-daily-shift"
+      },
+      {
+        "op": "advance",
+        "ms": 400
+      },
+      {
+        "op": "capture"
+      }
+    ]
+  },
+  {
+    "id": "daily_master_claimed",
+    "description": "Daily page, all cleared and master bonus already claimed",
+    "profiles": ["zero", "iphone"],
+    "steps": [
+      {
+        "op": "boot"
+      },
+      {
+        "op": "setProfile",
+        "path": "lastDailyShiftDate",
+        "value": "2026-10-01"
+      },
+      {
+        "op": "setProfile",
+        "path": "completedDailyTiers",
+        "value": ["bronze", "silver", "gold"]
+      },
+      {
+        "op": "setProfile",
+        "path": "dailyMasterClaimedDate",
+        "value": "2026-10-01"
+      },
+      {
+        "op": "click",
+        "target": "btn-open-daily-shift"
+      },
+      {
+        "op": "advance",
+        "ms": 400
+      },
+      {
+        "op": "capture"
+      }
+    ]
+  },
+  {
+    "id": "daily_master_claim_toast",
+    "description": "Daily page right after claiming the master bonus: toast on plateau, 550 credits",
+    "profiles": ["zero", "iphone"],
+    "steps": [
+      {
+        "op": "boot"
+      },
+      {
+        "op": "setProfile",
+        "path": "lastDailyShiftDate",
+        "value": "2026-10-01"
+      },
+      {
+        "op": "setProfile",
+        "path": "completedDailyTiers",
+        "value": ["bronze", "silver", "gold"]
+      },
+      {
+        "op": "click",
+        "target": "btn-open-daily-shift"
+      },
+      {
+        "op": "advance",
+        "ms": 400
+      },
+      {
+        "op": "click",
+        "target": "btn-claim-master-bonus"
+      },
+      {
+        "op": "advance",
+        "ms": 1000
+      },
+      {
+        "op": "capture"
+      }
+    ]
+  },
+  {
+    "id": "daily_after_two_minutes",
+    "description": "Daily page opened after 120 s of fake time (countdown 14h 57m)",
+    "profiles": ["zero", "iphone"],
+    "steps": [
+      {
+        "op": "boot"
+      },
+      {
+        "op": "advance",
+        "ms": 120000
+      },
+      {
+        "op": "click",
+        "target": "btn-open-daily-shift"
+      },
+      {
+        "op": "advance",
+        "ms": 400
+      },
+      {
+        "op": "capture"
+      }
+    ]
+  },
+  {
+    "id": "daily_scrolled",
+    "description": "Daily page scrolled to the bottom (gold shift card)",
+    "profiles": ["zero", "iphone"],
+    "steps": [
+      {
+        "op": "boot"
+      },
+      {
+        "op": "click",
+        "target": "btn-open-daily-shift"
+      },
+      {
+        "op": "advance",
+        "ms": 400
+      },
+      {
+        "op": "scroll",
+        "y": 600
+      },
+      {
+        "op": "capture"
+      }
+    ]
+  },
+  {
+    "id": "pressed_back_daily",
+    "description": "Daily page, back button held down",
+    "profiles": ["zero", "iphone"],
+    "steps": [
+      {
+        "op": "boot"
+      },
+      {
+        "op": "click",
+        "target": "btn-open-daily-shift"
+      },
+      {
+        "op": "advance",
+        "ms": 400
+      },
+      {
+        "op": "holdPressed",
+        "target": "btn-back-daily"
+      },
+      {
+        "op": "capture"
+      }
+    ]
+  },
+  {
+    "id": "pressed_daily_start_shift",
+    "description": "Daily page, first Start Shift button held down",
+    "profiles": ["zero", "iphone"],
+    "steps": [
+      {
+        "op": "boot"
+      },
+      {
+        "op": "click",
+        "target": "btn-open-daily-shift"
+      },
+      {
+        "op": "advance",
+        "ms": 400
+      },
+      {
+        "op": "holdPressed",
+        "selector": ".btn-play-daily-tier:nth-child(2)"
+      },
+      {
+        "op": "capture"
+      }
+    ]
+  },
+  {
+    "id": "shop_rings_default",
+    "description": "Shop, rings tab, default profile (stipend claimable, starter equipped, others locked)",
+    "profiles": ["zero", "iphone"],
+    "steps": [
+      {
+        "op": "boot"
+      },
+      {
+        "op": "click",
+        "target": "btn-open-shop-page"
+      },
+      {
+        "op": "advance",
+        "ms": 400
+      },
+      {
+        "op": "capture"
+      }
+    ]
+  },
+  {
+    "id": "shop_singularities_default",
+    "description": "Shop, singularities tab, default profile",
+    "profiles": ["zero", "iphone"],
+    "steps": [
+      {
+        "op": "boot"
+      },
+      {
+        "op": "click",
+        "target": "btn-open-shop-page"
+      },
+      {
+        "op": "advance",
+        "ms": 400
+      },
+      {
+        "op": "clickSelector",
+        "selector": ".tab-btn[data-tab=singularities]"
+      },
+      {
+        "op": "advance",
+        "ms": 150
+      },
+      {
+        "op": "capture"
+      }
+    ]
+  },
+  {
+    "id": "shop_skyboxes_default",
+    "description": "Shop, skyboxes tab, default profile",
+    "profiles": ["zero", "iphone"],
+    "steps": [
+      {
+        "op": "boot"
+      },
+      {
+        "op": "click",
+        "target": "btn-open-shop-page"
+      },
+      {
+        "op": "advance",
+        "ms": 400
+      },
+      {
+        "op": "clickSelector",
+        "selector": ".tab-btn[data-tab=skyboxes]"
+      },
+      {
+        "op": "advance",
+        "ms": 150
+      },
+      {
+        "op": "capture"
+      }
+    ]
+  },
+  {
+    "id": "shop_rings_mixed",
+    "description": "Shop, rings tab with duckie and candy unlocked, candy equipped, 5000 credits",
+    "profiles": ["zero", "iphone"],
+    "steps": [
+      {
+        "op": "boot"
+      },
+      {
+        "op": "setProfile",
+        "path": "credits",
+        "value": 5000
+      },
+      {
+        "op": "setProfile",
+        "path": "unlocked.rings",
+        "value": ["ring_donut", "ring_duckie", "ring_candyland"]
+      },
+      {
+        "op": "setProfile",
+        "path": "equipped.ring",
+        "value": "ring_candyland"
+      },
+      {
+        "op": "click",
+        "target": "btn-open-shop-page"
+      },
+      {
+        "op": "advance",
+        "ms": 400
+      },
+      {
+        "op": "capture"
+      }
+    ]
+  },
+  {
+    "id": "shop_singularities_mixed",
+    "description": "Shop, singularities tab with berry unlocked and equipped",
+    "profiles": ["zero", "iphone"],
+    "steps": [
+      {
+        "op": "boot"
+      },
+      {
+        "op": "setProfile",
+        "path": "credits",
+        "value": 900
+      },
+      {
+        "op": "setProfile",
+        "path": "unlocked.singularities",
+        "value": ["singularity_nibbles", "singularity_strawberry"]
+      },
+      {
+        "op": "setProfile",
+        "path": "equipped.singularity",
+        "value": "singularity_strawberry"
+      },
+      {
+        "op": "click",
+        "target": "btn-open-shop-page"
+      },
+      {
+        "op": "advance",
+        "ms": 400
+      },
+      {
+        "op": "clickSelector",
+        "selector": ".tab-btn[data-tab=singularities]"
+      },
+      {
+        "op": "advance",
+        "ms": 150
+      },
+      {
+        "op": "capture"
+      }
+    ]
+  },
+  {
+    "id": "shop_skyboxes_mixed",
+    "description": "Shop, skyboxes tab with cheese moon unlocked and equipped",
+    "profiles": ["zero", "iphone"],
+    "steps": [
+      {
+        "op": "boot"
+      },
+      {
+        "op": "setProfile",
+        "path": "unlocked.skyboxes",
+        "value": ["skybox_cotton_candy", "skybox_cheese_moon"]
+      },
+      {
+        "op": "setProfile",
+        "path": "equipped.skybox",
+        "value": "skybox_cheese_moon"
+      },
+      {
+        "op": "click",
+        "target": "btn-open-shop-page"
+      },
+      {
+        "op": "advance",
+        "ms": 400
+      },
+      {
+        "op": "clickSelector",
+        "selector": ".tab-btn[data-tab=skyboxes]"
+      },
+      {
+        "op": "advance",
+        "ms": 150
+      },
+      {
+        "op": "capture"
+      }
+    ]
+  },
+  {
+    "id": "shop_gift_claimed",
+    "description": "Shop with the daily stipend already claimed (banner claimed state)",
+    "profiles": ["zero", "iphone"],
+    "steps": [
+      {
+        "op": "boot"
+      },
+      {
+        "op": "setProfile",
+        "path": "lastDailyGiftDate",
+        "value": "2026-10-01"
+      },
+      {
+        "op": "click",
+        "target": "btn-open-shop-page"
+      },
+      {
+        "op": "advance",
+        "ms": 400
+      },
+      {
+        "op": "capture"
+      }
+    ]
+  },
+  {
+    "id": "shop_claim_gift_toast",
+    "description": "Shop right after claiming the stipend: banner transitions to claimed, toast on plateau, 350 credits",
+    "profiles": ["zero", "iphone"],
+    "steps": [
+      {
+        "op": "boot"
+      },
+      {
+        "op": "click",
+        "target": "btn-open-shop-page"
+      },
+      {
+        "op": "advance",
+        "ms": 400
+      },
+      {
+        "op": "click",
+        "target": "btn-claim-daily-gift"
+      },
+      {
+        "op": "advance",
+        "ms": 1000
+      },
+      {
+        "op": "capture"
+      }
+    ]
+  },
+  {
+    "id": "shop_buy_insufficient_toast",
+    "description": "Shop, tried to buy a 500-coin ring with 250 credits: need-more-coins toast",
+    "profiles": ["zero", "iphone"],
+    "steps": [
+      {
+        "op": "boot"
+      },
+      {
+        "op": "click",
+        "target": "btn-open-shop-page"
+      },
+      {
+        "op": "advance",
+        "ms": 400
+      },
+      {
+        "op": "clickSelector",
+        "selector": ".btn-buy-item[data-id=ring_duckie]"
+      },
+      {
+        "op": "advance",
+        "ms": 1000
+      },
+      {
+        "op": "capture"
+      }
+    ]
+  },
+  {
+    "id": "shop_buy_success_toast",
+    "description": "Shop, bought and equipped the duckie ring with 1000 credits: unlocked toast, 500 credits left",
+    "profiles": ["zero", "iphone"],
+    "steps": [
+      {
+        "op": "boot"
+      },
+      {
+        "op": "setProfile",
+        "path": "credits",
+        "value": 1000
+      },
+      {
+        "op": "click",
+        "target": "btn-open-shop-page"
+      },
+      {
+        "op": "advance",
+        "ms": 400
+      },
+      {
+        "op": "clickSelector",
+        "selector": ".btn-buy-item[data-id=ring_duckie]"
+      },
+      {
+        "op": "advance",
+        "ms": 1000
+      },
+      {
+        "op": "capture"
+      }
+    ]
+  },
+  {
+    "id": "shop_equip_toast",
+    "description": "Shop, wore an owned ring: equipped toast on plateau",
+    "profiles": ["zero", "iphone"],
+    "steps": [
+      {
+        "op": "boot"
+      },
+      {
+        "op": "setProfile",
+        "path": "unlocked.rings",
+        "value": ["ring_donut", "ring_duckie"]
+      },
+      {
+        "op": "click",
+        "target": "btn-open-shop-page"
+      },
+      {
+        "op": "advance",
+        "ms": 400
+      },
+      {
+        "op": "clickSelector",
+        "selector": ".btn-equip-item[data-id=ring_duckie]"
+      },
+      {
+        "op": "advance",
+        "ms": 1000
+      },
+      {
+        "op": "capture"
+      }
+    ]
+  },
+  {
+    "id": "shop_scrolled",
+    "description": "Shop rings tab scrolled to the bottom",
+    "profiles": ["zero", "iphone"],
+    "steps": [
+      {
+        "op": "boot"
+      },
+      {
+        "op": "click",
+        "target": "btn-open-shop-page"
+      },
+      {
+        "op": "advance",
+        "ms": 400
+      },
+      {
+        "op": "scroll",
+        "y": 600
+      },
+      {
+        "op": "capture"
+      }
+    ]
+  },
+  {
+    "id": "pressed_shop_buy",
+    "description": "Shop, an Unlock button held down",
+    "profiles": ["zero", "iphone"],
+    "steps": [
+      {
+        "op": "boot"
+      },
+      {
+        "op": "click",
+        "target": "btn-open-shop-page"
+      },
+      {
+        "op": "advance",
+        "ms": 400
+      },
+      {
+        "op": "holdPressed",
+        "selector": ".btn-buy-item[data-id=ring_candyland]"
+      },
+      {
+        "op": "capture"
+      }
+    ]
+  },
+  {
+    "id": "pressed_shop_tab",
+    "description": "Shop, Nibbles Hats tab held down",
+    "profiles": ["zero", "iphone"],
+    "steps": [
+      {
+        "op": "boot"
+      },
+      {
+        "op": "click",
+        "target": "btn-open-shop-page"
+      },
+      {
+        "op": "advance",
+        "ms": 400
+      },
+      {
+        "op": "holdPressed",
+        "selector": ".tab-btn[data-tab=singularities]"
+      },
+      {
+        "op": "capture"
+      }
+    ]
+  },
+  {
+    "id": "pressed_claim_gift",
+    "description": "Shop, stipend claim button held down",
+    "profiles": ["zero", "iphone"],
+    "steps": [
+      {
+        "op": "boot"
+      },
+      {
+        "op": "click",
+        "target": "btn-open-shop-page"
+      },
+      {
+        "op": "advance",
+        "ms": 400
+      },
+      {
+        "op": "holdPressed",
+        "target": "btn-claim-daily-gift"
+      },
+      {
+        "op": "capture"
+      }
+    ]
+  },
+  {
+    "id": "pressed_back_shop",
+    "description": "Shop, back button held down",
+    "profiles": ["zero", "iphone"],
+    "steps": [
+      {
+        "op": "boot"
+      },
+      {
+        "op": "click",
+        "target": "btn-open-shop-page"
+      },
+      {
+        "op": "advance",
+        "ms": 400
+      },
+      {
+        "op": "holdPressed",
+        "target": "btn-back-shop"
+      },
+      {
+        "op": "capture"
+      }
+    ]
+  },
+  {
+    "id": "achievements_none",
+    "description": "Trophy room, nothing unlocked",
+    "profiles": ["zero", "iphone"],
+    "steps": [
+      {
+        "op": "boot"
+      },
+      {
+        "op": "click",
+        "target": "btn-open-trophies-page"
+      },
+      {
+        "op": "advance",
+        "ms": 240
+      },
+      {
+        "op": "capture"
+      }
+    ]
+  },
+  {
+    "id": "achievements_some",
+    "description": "Trophy room, first nom and tidy cadet unlocked",
+    "profiles": ["zero", "iphone"],
+    "steps": [
+      {
+        "op": "boot"
+      },
+      {
+        "op": "setProfile",
+        "path": "achievements",
+        "value": ["ach_first_drop", "ach_cleaner_50"]
+      },
+      {
+        "op": "click",
+        "target": "btn-open-trophies-page"
+      },
+      {
+        "op": "advance",
+        "ms": 240
+      },
+      {
+        "op": "capture"
+      }
+    ]
+  },
+  {
+    "id": "achievements_all",
+    "description": "Trophy room, all five unlocked",
+    "profiles": ["zero", "iphone"],
+    "steps": [
+      {
+        "op": "boot"
+      },
+      {
+        "op": "setProfile",
+        "path": "achievements",
+        "value": [
+          "ach_first_drop",
+          "ach_cleaner_50",
+          "ach_cleaner_250",
+          "ach_cleaner_1000",
+          "ach_daily_shift"
+        ]
+      },
+      {
+        "op": "click",
+        "target": "btn-open-trophies-page"
+      },
+      {
+        "op": "advance",
+        "ms": 240
+      },
+      {
+        "op": "capture"
+      }
+    ]
+  },
+  {
+    "id": "pressed_back_achievements",
+    "description": "Trophy room, back button held down",
+    "profiles": ["zero", "iphone"],
+    "steps": [
+      {
+        "op": "boot"
+      },
+      {
+        "op": "click",
+        "target": "btn-open-trophies-page"
+      },
+      {
+        "op": "advance",
+        "ms": 240
+      },
+      {
+        "op": "holdPressed",
+        "target": "btn-back-achievements"
+      },
+      {
+        "op": "capture"
+      }
+    ]
+  },
+  {
+    "id": "settings_default",
+    "description": "Settings, default profile",
+    "profiles": ["zero", "iphone"],
+    "steps": [
+      {
+        "op": "boot"
+      },
+      {
+        "op": "click",
+        "target": "btn-home-settings"
+      },
+      {
+        "op": "advance",
+        "ms": 240
+      },
+      {
+        "op": "capture"
+      }
+    ]
+  },
+  {
+    "id": "settings_toggles_off",
+    "description": "Settings with sound and haptics switched off via profile",
+    "profiles": ["zero", "iphone"],
+    "steps": [
+      {
+        "op": "boot"
+      },
+      {
+        "op": "setProfile",
+        "path": "settings.soundEnabled",
+        "value": false
+      },
+      {
+        "op": "setProfile",
+        "path": "settings.hapticsEnabled",
+        "value": false
+      },
+      {
+        "op": "click",
+        "target": "btn-home-settings"
+      },
+      {
+        "op": "advance",
+        "ms": 240
+      },
+      {
+        "op": "capture"
+      }
+    ]
+  },
+  {
+    "id": "settings_toggles_clicked",
+    "description": "Settings, sound and haptics switches clicked off, transition settled",
+    "profiles": ["zero", "iphone"],
+    "steps": [
+      {
+        "op": "boot"
+      },
+      {
+        "op": "click",
+        "target": "btn-home-settings"
+      },
+      {
+        "op": "advance",
+        "ms": 240
+      },
+      {
+        "op": "click",
+        "target": "settings-sound-toggle"
+      },
+      {
+        "op": "click",
+        "target": "settings-haptics-toggle"
+      },
+      {
+        "op": "advance",
+        "ms": 300
+      },
+      {
+        "op": "capture"
+      }
+    ]
+  },
+  {
+    "id": "settings_sliders_moved",
+    "description": "Settings, sound FX slider clicked at 20 % and ambience slider at 90 %",
+    "profiles": ["zero", "iphone"],
+    "steps": [
+      {
+        "op": "boot"
+      },
+      {
+        "op": "click",
+        "target": "btn-home-settings"
+      },
+      {
+        "op": "advance",
+        "ms": 240
+      },
+      {
+        "op": "click",
+        "target": "settings-sfx-slider",
+        "fx": 0.2
+      },
+      {
+        "op": "click",
+        "target": "settings-ambience-slider",
+        "fx": 0.9
+      },
+      {
+        "op": "advance",
+        "ms": 16
+      },
+      {
+        "op": "capture"
+      }
+    ]
+  },
+  {
+    "id": "settings_sliders_profile",
+    "description": "Settings, sliders at 10 and 100 via profile",
+    "profiles": ["zero", "iphone"],
+    "steps": [
+      {
+        "op": "boot"
+      },
+      {
+        "op": "setProfile",
+        "path": "settings.sfxVolume",
+        "value": 10
+      },
+      {
+        "op": "setProfile",
+        "path": "settings.ambientVolume",
+        "value": 100
+      },
+      {
+        "op": "click",
+        "target": "btn-home-settings"
+      },
+      {
+        "op": "advance",
+        "ms": 240
+      },
+      {
+        "op": "capture"
+      }
+    ]
+  },
+  {
+    "id": "settings_scrolled",
+    "description": "Settings scrolled to the bottom (version footer)",
+    "profiles": ["zero", "iphone"],
+    "steps": [
+      {
+        "op": "boot"
+      },
+      {
+        "op": "click",
+        "target": "btn-home-settings"
+      },
+      {
+        "op": "advance",
+        "ms": 240
+      },
+      {
+        "op": "scroll",
+        "y": 600
+      },
+      {
+        "op": "capture"
+      }
+    ]
+  },
+  {
+    "id": "settings_modal_privacy",
+    "description": "Settings with the privacy policy modal open",
+    "profiles": ["zero", "iphone"],
+    "steps": [
+      {
+        "op": "boot"
+      },
+      {
+        "op": "click",
+        "target": "btn-home-settings"
+      },
+      {
+        "op": "advance",
+        "ms": 240
+      },
+      {
+        "op": "click",
+        "target": "btn-open-privacy"
+      },
+      {
+        "op": "advance",
+        "ms": 300
+      },
+      {
+        "op": "capture"
+      }
+    ]
+  },
+  {
+    "id": "settings_modal_privacy_t0150",
+    "description": "Privacy modal 150 ms into its open transition",
+    "profiles": ["zero", "iphone"],
+    "steps": [
+      {
+        "op": "boot"
+      },
+      {
+        "op": "click",
+        "target": "btn-home-settings"
+      },
+      {
+        "op": "advance",
+        "ms": 240
+      },
+      {
+        "op": "click",
+        "target": "btn-open-privacy"
+      },
+      {
+        "op": "advance",
+        "ms": 150
+      },
+      {
+        "op": "capture"
+      }
+    ]
+  },
+  {
+    "id": "settings_modal_reset_confirm",
+    "description": "Settings with the reset-progress confirm modal open",
+    "profiles": ["zero", "iphone"],
+    "steps": [
+      {
+        "op": "boot"
+      },
+      {
+        "op": "click",
+        "target": "btn-home-settings"
+      },
+      {
+        "op": "advance",
+        "ms": 240
+      },
+      {
+        "op": "click",
+        "target": "btn-reset-game-data"
+      },
+      {
+        "op": "advance",
+        "ms": 300
+      },
+      {
+        "op": "capture"
+      }
+    ]
+  },
+  {
+    "id": "settings_reset_confirmed_toast",
+    "description": "Reset confirmed after spending: home with Progress Reset toast on plateau, 250 credits",
+    "profiles": ["zero", "iphone"],
+    "steps": [
+      {
+        "op": "boot"
+      },
+      {
+        "op": "setProfile",
+        "path": "credits",
+        "value": 4000
+      },
+      {
+        "op": "click",
+        "target": "btn-home-settings"
+      },
+      {
+        "op": "advance",
+        "ms": 240
+      },
+      {
+        "op": "click",
+        "target": "btn-reset-game-data"
+      },
+      {
+        "op": "advance",
+        "ms": 300
+      },
+      {
+        "op": "click",
+        "target": "btn-confirm-reset"
+      },
+      {
+        "op": "advance",
+        "ms": 1000
+      },
+      {
+        "op": "capture"
+      }
+    ]
+  },
+  {
+    "id": "pressed_back_settings",
+    "description": "Settings, back button held down",
+    "profiles": ["zero", "iphone"],
+    "steps": [
+      {
+        "op": "boot"
+      },
+      {
+        "op": "click",
+        "target": "btn-home-settings"
+      },
+      {
+        "op": "advance",
+        "ms": 240
+      },
+      {
+        "op": "holdPressed",
+        "target": "btn-back-settings"
+      },
+      {
+        "op": "capture"
+      }
+    ]
+  },
+  {
+    "id": "pressed_privacy_dismiss",
+    "description": "Privacy modal, dismiss button held down",
+    "profiles": ["zero", "iphone"],
+    "steps": [
+      {
+        "op": "boot"
+      },
+      {
+        "op": "click",
+        "target": "btn-home-settings"
+      },
+      {
+        "op": "advance",
+        "ms": 240
+      },
+      {
+        "op": "click",
+        "target": "btn-open-privacy"
+      },
+      {
+        "op": "advance",
+        "ms": 300
+      },
+      {
+        "op": "holdPressed",
+        "target": "btn-dismiss-privacy"
+      },
+      {
+        "op": "capture"
+      }
+    ]
+  },
+  {
+    "id": "toast_t0200",
+    "description": "Toast 200 ms after showToast (rising)",
+    "profiles": ["zero", "iphone"],
+    "steps": [
+      {
+        "op": "boot"
+      },
+      {
+        "op": "call",
+        "method": "showToast",
+        "args": ["Item Equipped! ✨"]
+      },
+      {
+        "op": "advance",
+        "ms": 200
+      },
+      {
+        "op": "capture"
+      }
+    ]
+  },
+  {
+    "id": "toast_t1000",
+    "description": "Toast 1000 ms after showToast (plateau)",
+    "profiles": ["zero", "iphone"],
+    "steps": [
+      {
+        "op": "boot"
+      },
+      {
+        "op": "call",
+        "method": "showToast",
+        "args": ["Item Equipped! ✨"]
+      },
+      {
+        "op": "advance",
+        "ms": 1000
+      },
+      {
+        "op": "capture"
+      }
+    ]
+  },
+  {
+    "id": "toast_t2300",
+    "description": "Toast 2300 ms after showToast (fading)",
+    "profiles": ["zero", "iphone"],
+    "steps": [
+      {
+        "op": "boot"
+      },
+      {
+        "op": "call",
+        "method": "showToast",
+        "args": ["Item Equipped! ✨"]
+      },
+      {
+        "op": "advance",
+        "ms": 2300
+      },
+      {
+        "op": "capture"
+      }
+    ]
+  },
+  {
+    "id": "toast_long",
+    "description": "Long toast text on plateau (wrapping and width limit)",
+    "profiles": ["zero", "iphone"],
+    "steps": [
+      {
+        "op": "boot"
+      },
+      {
+        "op": "call",
+        "method": "showToast",
+        "args": [
+          "🎉 All 3 Daily Shifts Cleared! Claim Master Bonus in Daily Tab! 🏆"
+        ]
+      },
+      {
+        "op": "advance",
+        "ms": 1000
+      },
+      {
+        "op": "capture"
+      }
+    ]
+  },
+  {
+    "id": "toast_stacked",
+    "description": "Two toasts, the second 600 ms after the first",
+    "profiles": ["zero", "iphone"],
+    "steps": [
+      {
+        "op": "boot"
+      },
+      {
+        "op": "call",
+        "method": "showToast",
+        "args": ["Sound On 🔊"]
+      },
+      {
+        "op": "advance",
+        "ms": 600
+      },
+      {
+        "op": "call",
+        "method": "showToast",
+        "args": ["🏆 Trophy: First Nom Nom! (+100 🪙)"]
+      },
+      {
+        "op": "advance",
+        "ms": 900
+      },
+      {
+        "op": "capture"
+      }
+    ]
+  },
+  {
+    "id": "modal_pause",
+    "description": "Pause modal over level 1, settled",
+    "profiles": ["zero", "iphone"],
+    "steps": [
+      {
+        "op": "boot"
+      },
+      {
+        "op": "loadSector",
+        "index": 0
+      },
+      {
+        "op": "showPage",
+        "page": "game"
+      },
+      {
+        "op": "call",
+        "method": "dismissGestureHint",
+        "args": []
+      },
+      {
+        "op": "advance",
+        "ms": 400
+      },
+      {
+        "op": "click",
+        "target": "btn-game-pause"
+      },
+      {
+        "op": "advance",
+        "ms": 300
+      },
+      {
+        "op": "capture"
+      }
+    ]
+  },
+  {
+    "id": "modal_pause_t0150",
+    "description": "Pause modal 150 ms into its open transition",
+    "profiles": ["zero", "iphone"],
+    "steps": [
+      {
+        "op": "boot"
+      },
+      {
+        "op": "loadSector",
+        "index": 0
+      },
+      {
+        "op": "showPage",
+        "page": "game"
+      },
+      {
+        "op": "call",
+        "method": "dismissGestureHint",
+        "args": []
+      },
+      {
+        "op": "advance",
+        "ms": 400
+      },
+      {
+        "op": "click",
+        "target": "btn-game-pause"
+      },
+      {
+        "op": "advance",
+        "ms": 150
+      },
+      {
+        "op": "capture"
+      }
+    ]
+  },
+  {
+    "id": "modal_pause_muted",
+    "description": "Pause modal after toggling sound off (OFF label, muted icon, toast)",
+    "profiles": ["zero", "iphone"],
+    "steps": [
+      {
+        "op": "boot"
+      },
+      {
+        "op": "loadSector",
+        "index": 0
+      },
+      {
+        "op": "showPage",
+        "page": "game"
+      },
+      {
+        "op": "call",
+        "method": "dismissGestureHint",
+        "args": []
+      },
+      {
+        "op": "advance",
+        "ms": 400
+      },
+      {
+        "op": "click",
+        "target": "btn-game-pause"
+      },
+      {
+        "op": "advance",
+        "ms": 300
+      },
+      {
+        "op": "click",
+        "target": "btn-pause-sound"
+      },
+      {
+        "op": "advance",
+        "ms": 500
+      },
+      {
+        "op": "capture"
+      }
+    ]
+  },
+  {
+    "id": "modal_pause_level_21",
+    "description": "Pause modal over level 21 with partial progress text",
+    "profiles": ["zero", "iphone"],
+    "steps": [
+      {
+        "op": "boot"
+      },
+      {
+        "op": "loadSector",
+        "index": 20
+      },
+      {
+        "op": "showPage",
+        "page": "game"
+      },
+      {
+        "op": "call",
+        "method": "dismissGestureHint",
+        "args": []
+      },
+      {
+        "op": "advance",
+        "ms": 400
+      },
+      {
+        "op": "setApp",
+        "field": "collectedMass",
+        "value": 40
+      },
+      {
+        "op": "click",
+        "target": "btn-game-pause"
+      },
+      {
+        "op": "advance",
+        "ms": 300
+      },
+      {
+        "op": "capture"
+      }
+    ]
+  },
+  {
+    "id": "modal_pause_closing_t0150",
+    "description": "Pause modal 150 ms into its close transition",
+    "profiles": ["zero", "iphone"],
+    "steps": [
+      {
+        "op": "boot"
+      },
+      {
+        "op": "loadSector",
+        "index": 0
+      },
+      {
+        "op": "showPage",
+        "page": "game"
+      },
+      {
+        "op": "call",
+        "method": "dismissGestureHint",
+        "args": []
+      },
+      {
+        "op": "advance",
+        "ms": 400
+      },
+      {
+        "op": "click",
+        "target": "btn-game-pause"
+      },
+      {
+        "op": "advance",
+        "ms": 300
+      },
+      {
+        "op": "click",
+        "target": "btn-pause-resume"
+      },
+      {
+        "op": "advance",
+        "ms": 150
+      },
+      {
+        "op": "capture"
+      }
+    ]
+  },
+  {
+    "id": "pressed_modal_resume",
+    "description": "Pause modal, RESUME PLAY held down",
+    "profiles": ["zero", "iphone"],
+    "steps": [
+      {
+        "op": "boot"
+      },
+      {
+        "op": "loadSector",
+        "index": 0
+      },
+      {
+        "op": "showPage",
+        "page": "game"
+      },
+      {
+        "op": "call",
+        "method": "dismissGestureHint",
+        "args": []
+      },
+      {
+        "op": "advance",
+        "ms": 400
+      },
+      {
+        "op": "click",
+        "target": "btn-game-pause"
+      },
+      {
+        "op": "advance",
+        "ms": 300
+      },
+      {
+        "op": "holdPressed",
+        "target": "btn-pause-resume"
+      },
+      {
+        "op": "capture"
+      }
+    ]
+  },
+  {
+    "id": "pressed_modal_close",
+    "description": "Pause modal, close X held down",
+    "profiles": ["zero", "iphone"],
+    "steps": [
+      {
+        "op": "boot"
+      },
+      {
+        "op": "loadSector",
+        "index": 0
+      },
+      {
+        "op": "showPage",
+        "page": "game"
+      },
+      {
+        "op": "call",
+        "method": "dismissGestureHint",
+        "args": []
+      },
+      {
+        "op": "advance",
+        "ms": 400
+      },
+      {
+        "op": "click",
+        "target": "btn-game-pause"
+      },
+      {
+        "op": "advance",
+        "ms": 300
+      },
+      {
+        "op": "holdPressed",
+        "target": "btn-close-pause"
+      },
+      {
+        "op": "capture"
+      }
+    ]
+  },
+  {
+    "id": "pressed_modal_pause_home",
+    "description": "Pause modal, Return to Home held down",
+    "profiles": ["zero", "iphone"],
+    "steps": [
+      {
+        "op": "boot"
+      },
+      {
+        "op": "loadSector",
+        "index": 0
+      },
+      {
+        "op": "showPage",
+        "page": "game"
+      },
+      {
+        "op": "call",
+        "method": "dismissGestureHint",
+        "args": []
+      },
+      {
+        "op": "advance",
+        "ms": 400
+      },
+      {
+        "op": "click",
+        "target": "btn-game-pause"
+      },
+      {
+        "op": "advance",
+        "ms": 300
+      },
+      {
+        "op": "holdPressed",
+        "target": "btn-pause-home"
+      },
+      {
+        "op": "capture"
+      }
+    ]
+  },
+  {
+    "id": "modal_debrief_exact",
+    "description": "Debrief after clearing level 1 at exactly the quota (no surplus), settled",
+    "profiles": ["zero", "iphone"],
+    "steps": [
+      {
+        "op": "boot"
+      },
+      {
+        "op": "loadSector",
+        "index": 0
+      },
+      {
+        "op": "showPage",
+        "page": "game"
+      },
+      {
+        "op": "call",
+        "method": "dismissGestureHint",
+        "args": []
+      },
+      {
+        "op": "advance",
+        "ms": 400
+      },
+      {
+        "op": "setApp",
+        "field": "collectedMass",
+        "value": 20
+      },
+      {
+        "op": "call",
+        "method": "handleLevelVictory",
+        "args": []
+      },
+      {
+        "op": "advance",
+        "ms": 900
+      },
+      {
+        "op": "capture"
+      }
+    ]
+  },
+  {
+    "id": "modal_debrief_surplus",
+    "description": "Debrief at level 1 with 13 kg surplus (payout 302 coins)",
+    "profiles": ["zero", "iphone"],
+    "steps": [
+      {
+        "op": "boot"
+      },
+      {
+        "op": "loadSector",
+        "index": 0
+      },
+      {
+        "op": "showPage",
+        "page": "game"
+      },
+      {
+        "op": "call",
+        "method": "dismissGestureHint",
+        "args": []
+      },
+      {
+        "op": "advance",
+        "ms": 400
+      },
+      {
+        "op": "setApp",
+        "field": "collectedMass",
+        "value": 33
+      },
+      {
+        "op": "call",
+        "method": "handleLevelVictory",
+        "args": []
+      },
+      {
+        "op": "advance",
+        "ms": 900
+      },
+      {
+        "op": "capture"
+      }
+    ]
+  },
+  {
+    "id": "modal_debrief_world3",
+    "description": "Debrief after clearing level 21 (quota 105, payout 350)",
+    "profiles": ["zero", "iphone"],
+    "steps": [
+      {
+        "op": "boot"
+      },
+      {
+        "op": "loadSector",
+        "index": 20
+      },
+      {
+        "op": "showPage",
+        "page": "game"
+      },
+      {
+        "op": "call",
+        "method": "dismissGestureHint",
+        "args": []
+      },
+      {
+        "op": "advance",
+        "ms": 400
+      },
+      {
+        "op": "setApp",
+        "field": "collectedMass",
+        "value": 105
+      },
+      {
+        "op": "call",
+        "method": "handleLevelVictory",
+        "args": []
+      },
+      {
+        "op": "advance",
+        "ms": 900
+      },
+      {
+        "op": "capture"
+      }
+    ]
+  },
+  {
+    "id": "modal_debrief_world5",
+    "description": "Debrief after clearing level 41 with 40 kg surplus",
+    "profiles": ["zero", "iphone"],
+    "steps": [
+      {
+        "op": "boot"
+      },
+      {
+        "op": "loadSector",
+        "index": 40
+      },
+      {
+        "op": "showPage",
+        "page": "game"
+      },
+      {
+        "op": "call",
+        "method": "dismissGestureHint",
+        "args": []
+      },
+      {
+        "op": "advance",
+        "ms": 400
+      },
+      {
+        "op": "setApp",
+        "field": "collectedMass",
+        "value": 250
+      },
+      {
+        "op": "call",
+        "method": "handleLevelVictory",
+        "args": []
+      },
+      {
+        "op": "advance",
+        "ms": 900
+      },
+      {
+        "op": "capture"
+      }
+    ]
+  },
+  {
+    "id": "modal_debrief_t0150",
+    "description": "Debrief 150 ms into its open transition",
+    "profiles": ["zero", "iphone"],
+    "steps": [
+      {
+        "op": "boot"
+      },
+      {
+        "op": "loadSector",
+        "index": 0
+      },
+      {
+        "op": "showPage",
+        "page": "game"
+      },
+      {
+        "op": "call",
+        "method": "dismissGestureHint",
+        "args": []
+      },
+      {
+        "op": "advance",
+        "ms": 400
+      },
+      {
+        "op": "setApp",
+        "field": "collectedMass",
+        "value": 20
+      },
+      {
+        "op": "call",
+        "method": "handleLevelVictory",
+        "args": []
+      },
+      {
+        "op": "advance",
+        "ms": 750
+      },
+      {
+        "op": "capture"
+      }
+    ]
+  },
+  {
+    "id": "modal_debrief_daily_trophy",
+    "description": "Debrief after a daily shift: Daily Duty Star trophy toast over the modal",
+    "profiles": ["zero", "iphone"],
+    "steps": [
+      {
+        "op": "boot"
+      },
+      {
+        "op": "click",
+        "target": "btn-open-daily-shift"
+      },
+      {
+        "op": "advance",
+        "ms": 400
+      },
+      {
+        "op": "clickSelector",
+        "selector": ".btn-play-daily-tier:nth-child(2)"
+      },
+      {
+        "op": "advance",
+        "ms": 16
+      },
+      {
+        "op": "call",
+        "method": "dismissGestureHint",
+        "args": []
+      },
+      {
+        "op": "advance",
+        "ms": 400
+      },
+      {
+        "op": "setApp",
+        "field": "collectedMass",
+        "value": 40
+      },
+      {
+        "op": "call",
+        "method": "handleLevelVictory",
+        "args": []
+      },
+      {
+        "op": "advance",
+        "ms": 900
+      },
+      {
+        "op": "capture"
+      }
+    ]
+  },
+  {
+    "id": "pressed_debrief_next",
+    "description": "Debrief, Next Map held down",
+    "profiles": ["zero", "iphone"],
+    "steps": [
+      {
+        "op": "boot"
+      },
+      {
+        "op": "loadSector",
+        "index": 0
+      },
+      {
+        "op": "showPage",
+        "page": "game"
+      },
+      {
+        "op": "call",
+        "method": "dismissGestureHint",
+        "args": []
+      },
+      {
+        "op": "advance",
+        "ms": 400
+      },
+      {
+        "op": "setApp",
+        "field": "collectedMass",
+        "value": 20
+      },
+      {
+        "op": "call",
+        "method": "handleLevelVictory",
+        "args": []
+      },
+      {
+        "op": "advance",
+        "ms": 900
+      },
+      {
+        "op": "holdPressed",
+        "target": "btn-debrief-next"
+      },
+      {
+        "op": "capture"
+      }
+    ]
+  },
+  {
+    "id": "pressed_debrief_replay",
+    "description": "Debrief, Play Again held down",
+    "profiles": ["zero", "iphone"],
+    "steps": [
+      {
+        "op": "boot"
+      },
+      {
+        "op": "loadSector",
+        "index": 0
+      },
+      {
+        "op": "showPage",
+        "page": "game"
+      },
+      {
+        "op": "call",
+        "method": "dismissGestureHint",
+        "args": []
+      },
+      {
+        "op": "advance",
+        "ms": 400
+      },
+      {
+        "op": "setApp",
+        "field": "collectedMass",
+        "value": 20
+      },
+      {
+        "op": "call",
+        "method": "handleLevelVictory",
+        "args": []
+      },
+      {
+        "op": "advance",
+        "ms": 900
+      },
+      {
+        "op": "holdPressed",
+        "target": "btn-debrief-replay"
+      },
+      {
+        "op": "capture"
+      }
+    ]
+  },
+  {
+    "id": "modal_defeat_backup",
+    "description": "Defeat at level 1 with 15/20 kg (75 %): Backup Pod offered",
+    "profiles": ["zero", "iphone"],
+    "steps": [
+      {
+        "op": "boot"
+      },
+      {
+        "op": "loadSector",
+        "index": 0
+      },
+      {
+        "op": "showPage",
+        "page": "game"
+      },
+      {
+        "op": "call",
+        "method": "dismissGestureHint",
+        "args": []
+      },
+      {
+        "op": "advance",
+        "ms": 400
+      },
+      {
+        "op": "setApp",
+        "field": "collectedMass",
+        "value": 15
+      },
+      {
+        "op": "setApp",
+        "field": "spilledMass",
+        "value": 4
+      },
+      {
+        "op": "call",
+        "method": "handleLevelFailure",
+        "args": []
+      },
+      {
+        "op": "advance",
+        "ms": 700
+      },
+      {
+        "op": "capture"
+      }
+    ]
+  },
+  {
+    "id": "modal_defeat_no_backup_low",
+    "description": "Defeat at level 1 with 5/20 kg: no Backup Pod (below 70 %)",
+    "profiles": ["zero", "iphone"],
+    "steps": [
+      {
+        "op": "boot"
+      },
+      {
+        "op": "loadSector",
+        "index": 0
+      },
+      {
+        "op": "showPage",
+        "page": "game"
+      },
+      {
+        "op": "call",
+        "method": "dismissGestureHint",
+        "args": []
+      },
+      {
+        "op": "advance",
+        "ms": 400
+      },
+      {
+        "op": "setApp",
+        "field": "collectedMass",
+        "value": 5
+      },
+      {
+        "op": "setApp",
+        "field": "spilledMass",
+        "value": 9
+      },
+      {
+        "op": "call",
+        "method": "handleLevelFailure",
+        "args": []
+      },
+      {
+        "op": "advance",
+        "ms": 700
+      },
+      {
+        "op": "capture"
+      }
+    ]
+  },
+  {
+    "id": "modal_defeat_no_backup_used",
+    "description": "Defeat at level 1 with 15/20 kg after the Backup Pod was already used",
+    "profiles": ["zero", "iphone"],
+    "steps": [
+      {
+        "op": "boot"
+      },
+      {
+        "op": "loadSector",
+        "index": 0
+      },
+      {
+        "op": "showPage",
+        "page": "game"
+      },
+      {
+        "op": "call",
+        "method": "dismissGestureHint",
+        "args": []
+      },
+      {
+        "op": "advance",
+        "ms": 400
+      },
+      {
+        "op": "setApp",
+        "field": "collectedMass",
+        "value": 15
+      },
+      {
+        "op": "setApp",
+        "field": "spilledMass",
+        "value": 4
+      },
+      {
+        "op": "setApp",
+        "field": "usedBackupPod",
+        "value": true
+      },
+      {
+        "op": "call",
+        "method": "handleLevelFailure",
+        "args": []
+      },
+      {
+        "op": "advance",
+        "ms": 700
+      },
+      {
+        "op": "capture"
+      }
+    ]
+  },
+  {
+    "id": "modal_defeat_t0150",
+    "description": "Defeat modal 150 ms into its open transition (Backup Pod offered)",
+    "profiles": ["zero", "iphone"],
+    "steps": [
+      {
+        "op": "boot"
+      },
+      {
+        "op": "loadSector",
+        "index": 0
+      },
+      {
+        "op": "showPage",
+        "page": "game"
+      },
+      {
+        "op": "call",
+        "method": "dismissGestureHint",
+        "args": []
+      },
+      {
+        "op": "advance",
+        "ms": 400
+      },
+      {
+        "op": "setApp",
+        "field": "collectedMass",
+        "value": 15
+      },
+      {
+        "op": "setApp",
+        "field": "spilledMass",
+        "value": 4
+      },
+      {
+        "op": "call",
+        "method": "handleLevelFailure",
+        "args": []
+      },
+      {
+        "op": "advance",
+        "ms": 550
+      },
+      {
+        "op": "capture"
+      }
+    ]
+  },
+  {
+    "id": "modal_defeat_backup_used_toast",
+    "description": "After launching the Backup Pod: scrap deployed toast on plateau, modal closed",
+    "profiles": ["zero", "iphone"],
+    "steps": [
+      {
+        "op": "boot"
+      },
+      {
+        "op": "loadSector",
+        "index": 0
+      },
+      {
+        "op": "showPage",
+        "page": "game"
+      },
+      {
+        "op": "call",
+        "method": "dismissGestureHint",
+        "args": []
+      },
+      {
+        "op": "advance",
+        "ms": 400
+      },
+      {
+        "op": "setApp",
+        "field": "collectedMass",
+        "value": 15
+      },
+      {
+        "op": "setApp",
+        "field": "spilledMass",
+        "value": 4
+      },
+      {
+        "op": "call",
+        "method": "handleLevelFailure",
+        "args": []
+      },
+      {
+        "op": "advance",
+        "ms": 700
+      },
+      {
+        "op": "click",
+        "target": "btn-defeat-backup"
+      },
+      {
+        "op": "advance",
+        "ms": 1000
+      },
+      {
+        "op": "capture"
+      }
+    ]
+  },
+  {
+    "id": "pressed_defeat_retry",
+    "description": "Defeat modal, Try Again held down",
+    "profiles": ["zero", "iphone"],
+    "steps": [
+      {
+        "op": "boot"
+      },
+      {
+        "op": "loadSector",
+        "index": 0
+      },
+      {
+        "op": "showPage",
+        "page": "game"
+      },
+      {
+        "op": "call",
+        "method": "dismissGestureHint",
+        "args": []
+      },
+      {
+        "op": "advance",
+        "ms": 400
+      },
+      {
+        "op": "setApp",
+        "field": "collectedMass",
+        "value": 15
+      },
+      {
+        "op": "setApp",
+        "field": "spilledMass",
+        "value": 4
+      },
+      {
+        "op": "call",
+        "method": "handleLevelFailure",
+        "args": []
+      },
+      {
+        "op": "advance",
+        "ms": 700
+      },
+      {
+        "op": "holdPressed",
+        "target": "btn-defeat-retry"
+      },
+      {
+        "op": "capture"
+      }
+    ]
+  },
+  {
+    "id": "pressed_defeat_backup",
+    "description": "Defeat modal, Backup Pod button held down",
+    "profiles": ["zero", "iphone"],
+    "steps": [
+      {
+        "op": "boot"
+      },
+      {
+        "op": "loadSector",
+        "index": 0
+      },
+      {
+        "op": "showPage",
+        "page": "game"
+      },
+      {
+        "op": "call",
+        "method": "dismissGestureHint",
+        "args": []
+      },
+      {
+        "op": "advance",
+        "ms": 400
+      },
+      {
+        "op": "setApp",
+        "field": "collectedMass",
+        "value": 15
+      },
+      {
+        "op": "setApp",
+        "field": "spilledMass",
+        "value": 4
+      },
+      {
+        "op": "call",
+        "method": "handleLevelFailure",
+        "args": []
+      },
+      {
+        "op": "advance",
+        "ms": 700
+      },
+      {
+        "op": "holdPressed",
+        "target": "btn-defeat-backup"
+      },
+      {
+        "op": "capture"
+      }
+    ]
+  },
+  {
+    "id": "pressed_defeat_home",
+    "description": "Defeat modal, Hangar held down",
+    "profiles": ["zero", "iphone"],
+    "steps": [
+      {
+        "op": "boot"
+      },
+      {
+        "op": "loadSector",
+        "index": 0
+      },
+      {
+        "op": "showPage",
+        "page": "game"
+      },
+      {
+        "op": "call",
+        "method": "dismissGestureHint",
+        "args": []
+      },
+      {
+        "op": "advance",
+        "ms": 400
+      },
+      {
+        "op": "setApp",
+        "field": "collectedMass",
+        "value": 15
+      },
+      {
+        "op": "setApp",
+        "field": "spilledMass",
+        "value": 4
+      },
+      {
+        "op": "call",
+        "method": "handleLevelFailure",
+        "args": []
+      },
+      {
+        "op": "advance",
+        "ms": 700
+      },
+      {
+        "op": "holdPressed",
+        "target": "btn-defeat-home"
+      },
+      {
+        "op": "capture"
+      }
+    ]
+  },
+  {
+    "id": "game_lvl01_t0016ms",
+    "description": "Level 01 gameplay 16 ms after the hint settled (hint dismissed, no input)",
+    "profiles": ["zero", "iphone"],
+    "steps": [
+      {
+        "op": "boot"
+      },
+      {
+        "op": "loadSector",
+        "index": 0
+      },
+      {
+        "op": "showPage",
+        "page": "game"
+      },
+      {
+        "op": "call",
+        "method": "dismissGestureHint",
+        "args": []
+      },
+      {
+        "op": "advance",
+        "ms": 400
+      },
+      {
+        "op": "advance",
+        "ms": 16
+      },
+      {
+        "op": "capture"
+      }
+    ]
+  },
+  {
+    "id": "game_lvl01_t1000ms",
+    "description": "Level 01 gameplay 1000 ms after the hint settled (hint dismissed, no input)",
+    "profiles": ["zero", "iphone"],
+    "steps": [
+      {
+        "op": "boot"
+      },
+      {
+        "op": "loadSector",
+        "index": 0
+      },
+      {
+        "op": "showPage",
+        "page": "game"
+      },
+      {
+        "op": "call",
+        "method": "dismissGestureHint",
+        "args": []
+      },
+      {
+        "op": "advance",
+        "ms": 400
+      },
+      {
+        "op": "advance",
+        "ms": 1000
+      },
+      {
+        "op": "capture"
+      }
+    ]
+  },
+  {
+    "id": "game_lvl01_t3000ms",
+    "description": "Level 01 gameplay 3000 ms after the hint settled (hint dismissed, no input)",
+    "profiles": ["zero", "iphone"],
+    "steps": [
+      {
+        "op": "boot"
+      },
+      {
+        "op": "loadSector",
+        "index": 0
+      },
+      {
+        "op": "showPage",
+        "page": "game"
+      },
+      {
+        "op": "call",
+        "method": "dismissGestureHint",
+        "args": []
+      },
+      {
+        "op": "advance",
+        "ms": 400
+      },
+      {
+        "op": "advance",
+        "ms": 3000
+      },
+      {
+        "op": "capture"
+      }
+    ]
+  },
+  {
+    "id": "game_lvl11_t0016ms",
+    "description": "Level 11 gameplay 16 ms after the hint settled (hint dismissed, no input)",
+    "profiles": ["zero", "iphone"],
+    "steps": [
+      {
+        "op": "boot"
+      },
+      {
+        "op": "loadSector",
+        "index": 10
+      },
+      {
+        "op": "showPage",
+        "page": "game"
+      },
+      {
+        "op": "call",
+        "method": "dismissGestureHint",
+        "args": []
+      },
+      {
+        "op": "advance",
+        "ms": 400
+      },
+      {
+        "op": "advance",
+        "ms": 16
+      },
+      {
+        "op": "capture"
+      }
+    ]
+  },
+  {
+    "id": "game_lvl11_t1000ms",
+    "description": "Level 11 gameplay 1000 ms after the hint settled (hint dismissed, no input)",
+    "profiles": ["zero", "iphone"],
+    "steps": [
+      {
+        "op": "boot"
+      },
+      {
+        "op": "loadSector",
+        "index": 10
+      },
+      {
+        "op": "showPage",
+        "page": "game"
+      },
+      {
+        "op": "call",
+        "method": "dismissGestureHint",
+        "args": []
+      },
+      {
+        "op": "advance",
+        "ms": 400
+      },
+      {
+        "op": "advance",
+        "ms": 1000
+      },
+      {
+        "op": "capture"
+      }
+    ]
+  },
+  {
+    "id": "game_lvl11_t3000ms",
+    "description": "Level 11 gameplay 3000 ms after the hint settled (hint dismissed, no input)",
+    "profiles": ["zero", "iphone"],
+    "steps": [
+      {
+        "op": "boot"
+      },
+      {
+        "op": "loadSector",
+        "index": 10
+      },
+      {
+        "op": "showPage",
+        "page": "game"
+      },
+      {
+        "op": "call",
+        "method": "dismissGestureHint",
+        "args": []
+      },
+      {
+        "op": "advance",
+        "ms": 400
+      },
+      {
+        "op": "advance",
+        "ms": 3000
+      },
+      {
+        "op": "capture"
+      }
+    ]
+  },
+  {
+    "id": "game_lvl21_t0016ms",
+    "description": "Level 21 gameplay 16 ms after the hint settled (hint dismissed, no input)",
+    "profiles": ["zero", "iphone"],
+    "steps": [
+      {
+        "op": "boot"
+      },
+      {
+        "op": "loadSector",
+        "index": 20
+      },
+      {
+        "op": "showPage",
+        "page": "game"
+      },
+      {
+        "op": "call",
+        "method": "dismissGestureHint",
+        "args": []
+      },
+      {
+        "op": "advance",
+        "ms": 400
+      },
+      {
+        "op": "advance",
+        "ms": 16
+      },
+      {
+        "op": "capture"
+      }
+    ]
+  },
+  {
+    "id": "game_lvl21_t1000ms",
+    "description": "Level 21 gameplay 1000 ms after the hint settled (hint dismissed, no input)",
+    "profiles": ["zero", "iphone"],
+    "steps": [
+      {
+        "op": "boot"
+      },
+      {
+        "op": "loadSector",
+        "index": 20
+      },
+      {
+        "op": "showPage",
+        "page": "game"
+      },
+      {
+        "op": "call",
+        "method": "dismissGestureHint",
+        "args": []
+      },
+      {
+        "op": "advance",
+        "ms": 400
+      },
+      {
+        "op": "advance",
+        "ms": 1000
+      },
+      {
+        "op": "capture"
+      }
+    ]
+  },
+  {
+    "id": "game_lvl21_t3000ms",
+    "description": "Level 21 gameplay 3000 ms after the hint settled (hint dismissed, no input)",
+    "profiles": ["zero", "iphone"],
+    "steps": [
+      {
+        "op": "boot"
+      },
+      {
+        "op": "loadSector",
+        "index": 20
+      },
+      {
+        "op": "showPage",
+        "page": "game"
+      },
+      {
+        "op": "call",
+        "method": "dismissGestureHint",
+        "args": []
+      },
+      {
+        "op": "advance",
+        "ms": 400
+      },
+      {
+        "op": "advance",
+        "ms": 3000
+      },
+      {
+        "op": "capture"
+      }
+    ]
+  },
+  {
+    "id": "game_lvl31_t0016ms",
+    "description": "Level 31 gameplay 16 ms after the hint settled (hint dismissed, no input)",
+    "profiles": ["zero", "iphone"],
+    "steps": [
+      {
+        "op": "boot"
+      },
+      {
+        "op": "loadSector",
+        "index": 30
+      },
+      {
+        "op": "showPage",
+        "page": "game"
+      },
+      {
+        "op": "call",
+        "method": "dismissGestureHint",
+        "args": []
+      },
+      {
+        "op": "advance",
+        "ms": 400
+      },
+      {
+        "op": "advance",
+        "ms": 16
+      },
+      {
+        "op": "capture"
+      }
+    ]
+  },
+  {
+    "id": "game_lvl31_t1000ms",
+    "description": "Level 31 gameplay 1000 ms after the hint settled (hint dismissed, no input)",
+    "profiles": ["zero", "iphone"],
+    "steps": [
+      {
+        "op": "boot"
+      },
+      {
+        "op": "loadSector",
+        "index": 30
+      },
+      {
+        "op": "showPage",
+        "page": "game"
+      },
+      {
+        "op": "call",
+        "method": "dismissGestureHint",
+        "args": []
+      },
+      {
+        "op": "advance",
+        "ms": 400
+      },
+      {
+        "op": "advance",
+        "ms": 1000
+      },
+      {
+        "op": "capture"
+      }
+    ]
+  },
+  {
+    "id": "game_lvl31_t3000ms",
+    "description": "Level 31 gameplay 3000 ms after the hint settled (hint dismissed, no input)",
+    "profiles": ["zero", "iphone"],
+    "steps": [
+      {
+        "op": "boot"
+      },
+      {
+        "op": "loadSector",
+        "index": 30
+      },
+      {
+        "op": "showPage",
+        "page": "game"
+      },
+      {
+        "op": "call",
+        "method": "dismissGestureHint",
+        "args": []
+      },
+      {
+        "op": "advance",
+        "ms": 400
+      },
+      {
+        "op": "advance",
+        "ms": 3000
+      },
+      {
+        "op": "capture"
+      }
+    ]
+  },
+  {
+    "id": "game_lvl41_t0016ms",
+    "description": "Level 41 gameplay 16 ms after the hint settled (hint dismissed, no input)",
+    "profiles": ["zero", "iphone"],
+    "steps": [
+      {
+        "op": "boot"
+      },
+      {
+        "op": "loadSector",
+        "index": 40
+      },
+      {
+        "op": "showPage",
+        "page": "game"
+      },
+      {
+        "op": "call",
+        "method": "dismissGestureHint",
+        "args": []
+      },
+      {
+        "op": "advance",
+        "ms": 400
+      },
+      {
+        "op": "advance",
+        "ms": 16
+      },
+      {
+        "op": "capture"
+      }
+    ]
+  },
+  {
+    "id": "game_lvl41_t1000ms",
+    "description": "Level 41 gameplay 1000 ms after the hint settled (hint dismissed, no input)",
+    "profiles": ["zero", "iphone"],
+    "steps": [
+      {
+        "op": "boot"
+      },
+      {
+        "op": "loadSector",
+        "index": 40
+      },
+      {
+        "op": "showPage",
+        "page": "game"
+      },
+      {
+        "op": "call",
+        "method": "dismissGestureHint",
+        "args": []
+      },
+      {
+        "op": "advance",
+        "ms": 400
+      },
+      {
+        "op": "advance",
+        "ms": 1000
+      },
+      {
+        "op": "capture"
+      }
+    ]
+  },
+  {
+    "id": "game_lvl41_t3000ms",
+    "description": "Level 41 gameplay 3000 ms after the hint settled (hint dismissed, no input)",
+    "profiles": ["zero", "iphone"],
+    "steps": [
+      {
+        "op": "boot"
+      },
+      {
+        "op": "loadSector",
+        "index": 40
+      },
+      {
+        "op": "showPage",
+        "page": "game"
+      },
+      {
+        "op": "call",
+        "method": "dismissGestureHint",
+        "args": []
+      },
+      {
+        "op": "advance",
+        "ms": 400
+      },
+      {
+        "op": "advance",
+        "ms": 3000
+      },
+      {
+        "op": "capture"
+      }
+    ]
+  },
+  {
+    "id": "game_lvl01_hint_visible",
+    "description": "Level 1 gameplay, gesture hint visible 16 ms after entering the game page",
+    "profiles": ["zero", "iphone"],
+    "steps": [
+      {
+        "op": "boot"
+      },
+      {
+        "op": "loadSector",
+        "index": 0
+      },
+      {
+        "op": "showPage",
+        "page": "game"
+      },
+      {
+        "op": "advance",
+        "ms": 16
+      },
+      {
+        "op": "capture"
+      }
+    ]
+  },
+  {
+    "id": "game_lvl01_hint_dismissing_t0200",
+    "description": "Level 1 gameplay, gesture hint 200 ms into its fade-out",
+    "profiles": ["zero", "iphone"],
+    "steps": [
+      {
+        "op": "boot"
+      },
+      {
+        "op": "loadSector",
+        "index": 0
+      },
+      {
+        "op": "showPage",
+        "page": "game"
+      },
+      {
+        "op": "call",
+        "method": "dismissGestureHint",
+        "args": []
+      },
+      {
+        "op": "advance",
+        "ms": 200
+      },
+      {
+        "op": "capture"
+      }
+    ]
+  },
+  {
+    "id": "game_lvl01_mid_drag",
+    "description": "Level 1 gameplay, 20 drag ticks into a spin gesture, pointer still down",
+    "profiles": ["zero", "iphone"],
+    "steps": [
+      {
+        "op": "boot"
+      },
+      {
+        "op": "loadSector",
+        "index": 0
+      },
+      {
+        "op": "showPage",
+        "page": "game"
+      },
+      {
+        "op": "call",
+        "method": "dismissGestureHint",
+        "args": []
+      },
+      {
+        "op": "advance",
+        "ms": 400
+      },
+      {
+        "op": "pointer",
+        "kind": "down",
+        "x": 40,
+        "y": 500
+      },
+      {
+        "op": "pointer",
+        "kind": "move",
+        "x": 128,
+        "y": 500
+      },
+      {
+        "op": "advance",
+        "ms": 64
+      },
+      {
+        "op": "pointer",
+        "kind": "move",
+        "x": 216,
+        "y": 500
+      },
+      {
+        "op": "advance",
+        "ms": 64
+      },
+      {
+        "op": "pointer",
+        "kind": "move",
+        "x": 304,
+        "y": 500
+      },
+      {
+        "op": "advance",
+        "ms": 64
+      },
+      {
+        "op": "pointer",
+        "kind": "up",
+        "x": 304,
+        "y": 500
+      },
+      {
+        "op": "pointer",
+        "kind": "down",
+        "x": 120,
+        "y": 500
+      },
+      {
+        "op": "pointer",
+        "kind": "move",
+        "x": 208,
+        "y": 500
+      },
+      {
+        "op": "advance",
+        "ms": 64
+      },
+      {
+        "op": "pointer",
+        "kind": "move",
+        "x": 296,
+        "y": 500
+      },
+      {
+        "op": "advance",
+        "ms": 64
+      },
+      {
+        "op": "pointer",
+        "kind": "move",
+        "x": 384,
+        "y": 500
+      },
+      {
+        "op": "advance",
+        "ms": 64
+      },
+      {
+        "op": "pointer",
+        "kind": "up",
+        "x": 384,
+        "y": 500
+      },
+      {
+        "op": "pointer",
+        "kind": "down",
+        "x": 40,
+        "y": 500
+      },
+      {
+        "op": "pointer",
+        "kind": "move",
+        "x": 128,
+        "y": 500
+      },
+      {
+        "op": "advance",
+        "ms": 64
+      },
+      {
+        "op": "pointer",
+        "kind": "move",
+        "x": 216,
+        "y": 500
+      },
+      {
+        "op": "advance",
+        "ms": 64
+      },
+      {
+        "op": "pointer",
+        "kind": "move",
+        "x": 304,
+        "y": 500
+      },
+      {
+        "op": "advance",
+        "ms": 64
+      },
+      {
+        "op": "pointer",
+        "kind": "up",
+        "x": 304,
+        "y": 500
+      },
+      {
+        "op": "pointer",
+        "kind": "down",
+        "x": 120,
+        "y": 500
+      },
+      {
+        "op": "pointer",
+        "kind": "move",
+        "x": 208,
+        "y": 500
+      },
+      {
+        "op": "advance",
+        "ms": 64
+      },
+      {
+        "op": "pointer",
+        "kind": "move",
+        "x": 296,
+        "y": 500
+      },
+      {
+        "op": "advance",
+        "ms": 64
+      },
+      {
+        "op": "pointer",
+        "kind": "move",
+        "x": 384,
+        "y": 500
+      },
+      {
+        "op": "advance",
+        "ms": 64
+      },
+      {
+        "op": "pointer",
+        "kind": "up",
+        "x": 384,
+        "y": 500
+      },
+      {
+        "op": "pointer",
+        "kind": "down",
+        "x": 40,
+        "y": 500
+      },
+      {
+        "op": "pointer",
+        "kind": "move",
+        "x": 128,
+        "y": 500
+      },
+      {
+        "op": "advance",
+        "ms": 64
+      },
+      {
+        "op": "pointer",
+        "kind": "move",
+        "x": 216,
+        "y": 500
+      },
+      {
+        "op": "advance",
+        "ms": 64
+      },
+      {
+        "op": "pointer",
+        "kind": "move",
+        "x": 304,
+        "y": 500
+      },
+      {
+        "op": "advance",
+        "ms": 64
+      },
+      {
+        "op": "pointer",
+        "kind": "up",
+        "x": 304,
+        "y": 500
+      },
+      {
+        "op": "pointer",
+        "kind": "down",
+        "x": 120,
+        "y": 500
+      },
+      {
+        "op": "pointer",
+        "kind": "move",
+        "x": 208,
+        "y": 500
+      },
+      {
+        "op": "advance",
+        "ms": 64
+      },
+      {
+        "op": "pointer",
+        "kind": "move",
+        "x": 296,
+        "y": 500
+      },
+      {
+        "op": "advance",
+        "ms": 64
+      },
+      {
+        "op": "pointer",
+        "kind": "move",
+        "x": 384,
+        "y": 500
+      },
+      {
+        "op": "advance",
+        "ms": 64
+      },
+      {
+        "op": "pointer",
+        "kind": "up",
+        "x": 384,
+        "y": 500
+      },
+      {
+        "op": "pointer",
+        "kind": "down",
+        "x": 40,
+        "y": 500
+      },
+      {
+        "op": "pointer",
+        "kind": "move",
+        "x": 128,
+        "y": 500
+      },
+      {
+        "op": "advance",
+        "ms": 64
+      },
+      {
+        "op": "pointer",
+        "kind": "move",
+        "x": 216,
+        "y": 500
+      },
+      {
+        "op": "advance",
+        "ms": 64
+      },
+      {
+        "op": "capture"
+      }
+    ]
+  },
+  {
+    "id": "game_lvl01_gate_pass",
+    "description": "Level 1 gameplay, 28 drag ticks in: first multiplier gate pass with floating text",
+    "profiles": ["zero", "iphone"],
+    "steps": [
+      {
+        "op": "boot"
+      },
+      {
+        "op": "loadSector",
+        "index": 0
+      },
+      {
+        "op": "showPage",
+        "page": "game"
+      },
+      {
+        "op": "call",
+        "method": "dismissGestureHint",
+        "args": []
+      },
+      {
+        "op": "advance",
+        "ms": 400
+      },
+      {
+        "op": "pointer",
+        "kind": "down",
+        "x": 40,
+        "y": 500
+      },
+      {
+        "op": "pointer",
+        "kind": "move",
+        "x": 128,
+        "y": 500
+      },
+      {
+        "op": "advance",
+        "ms": 64
+      },
+      {
+        "op": "pointer",
+        "kind": "move",
+        "x": 216,
+        "y": 500
+      },
+      {
+        "op": "advance",
+        "ms": 64
+      },
+      {
+        "op": "pointer",
+        "kind": "move",
+        "x": 304,
+        "y": 500
+      },
+      {
+        "op": "advance",
+        "ms": 64
+      },
+      {
+        "op": "pointer",
+        "kind": "up",
+        "x": 304,
+        "y": 500
+      },
+      {
+        "op": "pointer",
+        "kind": "down",
+        "x": 120,
+        "y": 500
+      },
+      {
+        "op": "pointer",
+        "kind": "move",
+        "x": 208,
+        "y": 500
+      },
+      {
+        "op": "advance",
+        "ms": 64
+      },
+      {
+        "op": "pointer",
+        "kind": "move",
+        "x": 296,
+        "y": 500
+      },
+      {
+        "op": "advance",
+        "ms": 64
+      },
+      {
+        "op": "pointer",
+        "kind": "move",
+        "x": 384,
+        "y": 500
+      },
+      {
+        "op": "advance",
+        "ms": 64
+      },
+      {
+        "op": "pointer",
+        "kind": "up",
+        "x": 384,
+        "y": 500
+      },
+      {
+        "op": "pointer",
+        "kind": "down",
+        "x": 40,
+        "y": 500
+      },
+      {
+        "op": "pointer",
+        "kind": "move",
+        "x": 128,
+        "y": 500
+      },
+      {
+        "op": "advance",
+        "ms": 64
+      },
+      {
+        "op": "pointer",
+        "kind": "move",
+        "x": 216,
+        "y": 500
+      },
+      {
+        "op": "advance",
+        "ms": 64
+      },
+      {
+        "op": "pointer",
+        "kind": "move",
+        "x": 304,
+        "y": 500
+      },
+      {
+        "op": "advance",
+        "ms": 64
+      },
+      {
+        "op": "pointer",
+        "kind": "up",
+        "x": 304,
+        "y": 500
+      },
+      {
+        "op": "pointer",
+        "kind": "down",
+        "x": 120,
+        "y": 500
+      },
+      {
+        "op": "pointer",
+        "kind": "move",
+        "x": 208,
+        "y": 500
+      },
+      {
+        "op": "advance",
+        "ms": 64
+      },
+      {
+        "op": "pointer",
+        "kind": "move",
+        "x": 296,
+        "y": 500
+      },
+      {
+        "op": "advance",
+        "ms": 64
+      },
+      {
+        "op": "pointer",
+        "kind": "move",
+        "x": 384,
+        "y": 500
+      },
+      {
+        "op": "advance",
+        "ms": 64
+      },
+      {
+        "op": "pointer",
+        "kind": "up",
+        "x": 384,
+        "y": 500
+      },
+      {
+        "op": "pointer",
+        "kind": "down",
+        "x": 40,
+        "y": 500
+      },
+      {
+        "op": "pointer",
+        "kind": "move",
+        "x": 128,
+        "y": 500
+      },
+      {
+        "op": "advance",
+        "ms": 64
+      },
+      {
+        "op": "pointer",
+        "kind": "move",
+        "x": 216,
+        "y": 500
+      },
+      {
+        "op": "advance",
+        "ms": 64
+      },
+      {
+        "op": "pointer",
+        "kind": "move",
+        "x": 304,
+        "y": 500
+      },
+      {
+        "op": "advance",
+        "ms": 64
+      },
+      {
+        "op": "pointer",
+        "kind": "up",
+        "x": 304,
+        "y": 500
+      },
+      {
+        "op": "pointer",
+        "kind": "down",
+        "x": 120,
+        "y": 500
+      },
+      {
+        "op": "pointer",
+        "kind": "move",
+        "x": 208,
+        "y": 500
+      },
+      {
+        "op": "advance",
+        "ms": 64
+      },
+      {
+        "op": "pointer",
+        "kind": "move",
+        "x": 296,
+        "y": 500
+      },
+      {
+        "op": "advance",
+        "ms": 64
+      },
+      {
+        "op": "pointer",
+        "kind": "move",
+        "x": 384,
+        "y": 500
+      },
+      {
+        "op": "advance",
+        "ms": 64
+      },
+      {
+        "op": "pointer",
+        "kind": "up",
+        "x": 384,
+        "y": 500
+      },
+      {
+        "op": "pointer",
+        "kind": "down",
+        "x": 40,
+        "y": 500
+      },
+      {
+        "op": "pointer",
+        "kind": "move",
+        "x": 128,
+        "y": 500
+      },
+      {
+        "op": "advance",
+        "ms": 64
+      },
+      {
+        "op": "pointer",
+        "kind": "move",
+        "x": 216,
+        "y": 500
+      },
+      {
+        "op": "advance",
+        "ms": 64
+      },
+      {
+        "op": "pointer",
+        "kind": "move",
+        "x": 304,
+        "y": 500
+      },
+      {
+        "op": "advance",
+        "ms": 64
+      },
+      {
+        "op": "pointer",
+        "kind": "up",
+        "x": 304,
+        "y": 500
+      },
+      {
+        "op": "pointer",
+        "kind": "down",
+        "x": 120,
+        "y": 500
+      },
+      {
+        "op": "pointer",
+        "kind": "move",
+        "x": 208,
+        "y": 500
+      },
+      {
+        "op": "advance",
+        "ms": 64
+      },
+      {
+        "op": "pointer",
+        "kind": "move",
+        "x": 296,
+        "y": 500
+      },
+      {
+        "op": "advance",
+        "ms": 64
+      },
+      {
+        "op": "pointer",
+        "kind": "move",
+        "x": 384,
+        "y": 500
+      },
+      {
+        "op": "advance",
+        "ms": 64
+      },
+      {
+        "op": "pointer",
+        "kind": "up",
+        "x": 384,
+        "y": 500
+      },
+      {
+        "op": "pointer",
+        "kind": "down",
+        "x": 40,
+        "y": 500
+      },
+      {
+        "op": "pointer",
+        "kind": "move",
+        "x": 128,
+        "y": 500
+      },
+      {
+        "op": "advance",
+        "ms": 64
+      },
+      {
+        "op": "pointer",
+        "kind": "move",
+        "x": 216,
+        "y": 500
+      },
+      {
+        "op": "advance",
+        "ms": 64
+      },
+      {
+        "op": "pointer",
+        "kind": "move",
+        "x": 304,
+        "y": 500
+      },
+      {
+        "op": "advance",
+        "ms": 64
+      },
+      {
+        "op": "pointer",
+        "kind": "up",
+        "x": 304,
+        "y": 500
+      },
+      {
+        "op": "pointer",
+        "kind": "down",
+        "x": 120,
+        "y": 500
+      },
+      {
+        "op": "pointer",
+        "kind": "move",
+        "x": 208,
+        "y": 500
+      },
+      {
+        "op": "advance",
+        "ms": 64
+      },
+      {
+        "op": "capture"
+      }
+    ]
+  },
+  {
+    "id": "game_lvl01_pickup",
+    "description": "Level 1 gameplay, 55 drag ticks in: first debris swallowed by Nibbles with NOM text",
+    "profiles": ["zero", "iphone"],
+    "steps": [
+      {
+        "op": "boot"
+      },
+      {
+        "op": "loadSector",
+        "index": 0
+      },
+      {
+        "op": "showPage",
+        "page": "game"
+      },
+      {
+        "op": "call",
+        "method": "dismissGestureHint",
+        "args": []
+      },
+      {
+        "op": "advance",
+        "ms": 400
+      },
+      {
+        "op": "pointer",
+        "kind": "down",
+        "x": 40,
+        "y": 500
+      },
+      {
+        "op": "pointer",
+        "kind": "move",
+        "x": 128,
+        "y": 500
+      },
+      {
+        "op": "advance",
+        "ms": 64
+      },
+      {
+        "op": "pointer",
+        "kind": "move",
+        "x": 216,
+        "y": 500
+      },
+      {
+        "op": "advance",
+        "ms": 64
+      },
+      {
+        "op": "pointer",
+        "kind": "move",
+        "x": 304,
+        "y": 500
+      },
+      {
+        "op": "advance",
+        "ms": 64
+      },
+      {
+        "op": "pointer",
+        "kind": "up",
+        "x": 304,
+        "y": 500
+      },
+      {
+        "op": "pointer",
+        "kind": "down",
+        "x": 120,
+        "y": 500
+      },
+      {
+        "op": "pointer",
+        "kind": "move",
+        "x": 208,
+        "y": 500
+      },
+      {
+        "op": "advance",
+        "ms": 64
+      },
+      {
+        "op": "pointer",
+        "kind": "move",
+        "x": 296,
+        "y": 500
+      },
+      {
+        "op": "advance",
+        "ms": 64
+      },
+      {
+        "op": "pointer",
+        "kind": "move",
+        "x": 384,
+        "y": 500
+      },
+      {
+        "op": "advance",
+        "ms": 64
+      },
+      {
+        "op": "pointer",
+        "kind": "up",
+        "x": 384,
+        "y": 500
+      },
+      {
+        "op": "pointer",
+        "kind": "down",
+        "x": 40,
+        "y": 500
+      },
+      {
+        "op": "pointer",
+        "kind": "move",
+        "x": 128,
+        "y": 500
+      },
+      {
+        "op": "advance",
+        "ms": 64
+      },
+      {
+        "op": "pointer",
+        "kind": "move",
+        "x": 216,
+        "y": 500
+      },
+      {
+        "op": "advance",
+        "ms": 64
+      },
+      {
+        "op": "pointer",
+        "kind": "move",
+        "x": 304,
+        "y": 500
+      },
+      {
+        "op": "advance",
+        "ms": 64
+      },
+      {
+        "op": "pointer",
+        "kind": "up",
+        "x": 304,
+        "y": 500
+      },
+      {
+        "op": "pointer",
+        "kind": "down",
+        "x": 120,
+        "y": 500
+      },
+      {
+        "op": "pointer",
+        "kind": "move",
+        "x": 208,
+        "y": 500
+      },
+      {
+        "op": "advance",
+        "ms": 64
+      },
+      {
+        "op": "pointer",
+        "kind": "move",
+        "x": 296,
+        "y": 500
+      },
+      {
+        "op": "advance",
+        "ms": 64
+      },
+      {
+        "op": "pointer",
+        "kind": "move",
+        "x": 384,
+        "y": 500
+      },
+      {
+        "op": "advance",
+        "ms": 64
+      },
+      {
+        "op": "pointer",
+        "kind": "up",
+        "x": 384,
+        "y": 500
+      },
+      {
+        "op": "pointer",
+        "kind": "down",
+        "x": 40,
+        "y": 500
+      },
+      {
+        "op": "pointer",
+        "kind": "move",
+        "x": 128,
+        "y": 500
+      },
+      {
+        "op": "advance",
+        "ms": 64
+      },
+      {
+        "op": "pointer",
+        "kind": "move",
+        "x": 216,
+        "y": 500
+      },
+      {
+        "op": "advance",
+        "ms": 64
+      },
+      {
+        "op": "pointer",
+        "kind": "move",
+        "x": 304,
+        "y": 500
+      },
+      {
+        "op": "advance",
+        "ms": 64
+      },
+      {
+        "op": "pointer",
+        "kind": "up",
+        "x": 304,
+        "y": 500
+      },
+      {
+        "op": "pointer",
+        "kind": "down",
+        "x": 120,
+        "y": 500
+      },
+      {
+        "op": "pointer",
+        "kind": "move",
+        "x": 208,
+        "y": 500
+      },
+      {
+        "op": "advance",
+        "ms": 64
+      },
+      {
+        "op": "pointer",
+        "kind": "move",
+        "x": 296,
+        "y": 500
+      },
+      {
+        "op": "advance",
+        "ms": 64
+      },
+      {
+        "op": "pointer",
+        "kind": "move",
+        "x": 384,
+        "y": 500
+      },
+      {
+        "op": "advance",
+        "ms": 64
+      },
+      {
+        "op": "pointer",
+        "kind": "up",
+        "x": 384,
+        "y": 500
+      },
+      {
+        "op": "pointer",
+        "kind": "down",
+        "x": 40,
+        "y": 500
+      },
+      {
+        "op": "pointer",
+        "kind": "move",
+        "x": 128,
+        "y": 500
+      },
+      {
+        "op": "advance",
+        "ms": 64
+      },
+      {
+        "op": "pointer",
+        "kind": "move",
+        "x": 216,
+        "y": 500
+      },
+      {
+        "op": "advance",
+        "ms": 64
+      },
+      {
+        "op": "pointer",
+        "kind": "move",
+        "x": 304,
+        "y": 500
+      },
+      {
+        "op": "advance",
+        "ms": 64
+      },
+      {
+        "op": "pointer",
+        "kind": "up",
+        "x": 304,
+        "y": 500
+      },
+      {
+        "op": "pointer",
+        "kind": "down",
+        "x": 120,
+        "y": 500
+      },
+      {
+        "op": "pointer",
+        "kind": "move",
+        "x": 208,
+        "y": 500
+      },
+      {
+        "op": "advance",
+        "ms": 64
+      },
+      {
+        "op": "pointer",
+        "kind": "move",
+        "x": 296,
+        "y": 500
+      },
+      {
+        "op": "advance",
+        "ms": 64
+      },
+      {
+        "op": "pointer",
+        "kind": "move",
+        "x": 384,
+        "y": 500
+      },
+      {
+        "op": "advance",
+        "ms": 64
+      },
+      {
+        "op": "pointer",
+        "kind": "up",
+        "x": 384,
+        "y": 500
+      },
+      {
+        "op": "pointer",
+        "kind": "down",
+        "x": 40,
+        "y": 500
+      },
+      {
+        "op": "pointer",
+        "kind": "move",
+        "x": 128,
+        "y": 500
+      },
+      {
+        "op": "advance",
+        "ms": 64
+      },
+      {
+        "op": "pointer",
+        "kind": "move",
+        "x": 216,
+        "y": 500
+      },
+      {
+        "op": "advance",
+        "ms": 64
+      },
+      {
+        "op": "pointer",
+        "kind": "move",
+        "x": 304,
+        "y": 500
+      },
+      {
+        "op": "advance",
+        "ms": 64
+      },
+      {
+        "op": "pointer",
+        "kind": "up",
+        "x": 304,
+        "y": 500
+      },
+      {
+        "op": "pointer",
+        "kind": "down",
+        "x": 120,
+        "y": 500
+      },
+      {
+        "op": "pointer",
+        "kind": "move",
+        "x": 208,
+        "y": 500
+      },
+      {
+        "op": "advance",
+        "ms": 64
+      },
+      {
+        "op": "pointer",
+        "kind": "move",
+        "x": 296,
+        "y": 500
+      },
+      {
+        "op": "advance",
+        "ms": 64
+      },
+      {
+        "op": "pointer",
+        "kind": "move",
+        "x": 384,
+        "y": 500
+      },
+      {
+        "op": "advance",
+        "ms": 64
+      },
+      {
+        "op": "pointer",
+        "kind": "up",
+        "x": 384,
+        "y": 500
+      },
+      {
+        "op": "pointer",
+        "kind": "down",
+        "x": 40,
+        "y": 500
+      },
+      {
+        "op": "pointer",
+        "kind": "move",
+        "x": 128,
+        "y": 500
+      },
+      {
+        "op": "advance",
+        "ms": 64
+      },
+      {
+        "op": "pointer",
+        "kind": "move",
+        "x": 216,
+        "y": 500
+      },
+      {
+        "op": "advance",
+        "ms": 64
+      },
+      {
+        "op": "pointer",
+        "kind": "move",
+        "x": 304,
+        "y": 500
+      },
+      {
+        "op": "advance",
+        "ms": 64
+      },
+      {
+        "op": "pointer",
+        "kind": "up",
+        "x": 304,
+        "y": 500
+      },
+      {
+        "op": "pointer",
+        "kind": "down",
+        "x": 120,
+        "y": 500
+      },
+      {
+        "op": "pointer",
+        "kind": "move",
+        "x": 208,
+        "y": 500
+      },
+      {
+        "op": "advance",
+        "ms": 64
+      },
+      {
+        "op": "pointer",
+        "kind": "move",
+        "x": 296,
+        "y": 500
+      },
+      {
+        "op": "advance",
+        "ms": 64
+      },
+      {
+        "op": "pointer",
+        "kind": "move",
+        "x": 384,
+        "y": 500
+      },
+      {
+        "op": "advance",
+        "ms": 64
+      },
+      {
+        "op": "pointer",
+        "kind": "up",
+        "x": 384,
+        "y": 500
+      },
+      {
+        "op": "pointer",
+        "kind": "down",
+        "x": 40,
+        "y": 500
+      },
+      {
+        "op": "pointer",
+        "kind": "move",
+        "x": 128,
+        "y": 500
+      },
+      {
+        "op": "advance",
+        "ms": 64
+      },
+      {
+        "op": "pointer",
+        "kind": "move",
+        "x": 216,
+        "y": 500
+      },
+      {
+        "op": "advance",
+        "ms": 64
+      },
+      {
+        "op": "pointer",
+        "kind": "move",
+        "x": 304,
+        "y": 500
+      },
+      {
+        "op": "advance",
+        "ms": 64
+      },
+      {
+        "op": "pointer",
+        "kind": "up",
+        "x": 304,
+        "y": 500
+      },
+      {
+        "op": "pointer",
+        "kind": "down",
+        "x": 120,
+        "y": 500
+      },
+      {
+        "op": "pointer",
+        "kind": "move",
+        "x": 208,
+        "y": 500
+      },
+      {
+        "op": "advance",
+        "ms": 64
+      },
+      {
+        "op": "pointer",
+        "kind": "move",
+        "x": 296,
+        "y": 500
+      },
+      {
+        "op": "advance",
+        "ms": 64
+      },
+      {
+        "op": "pointer",
+        "kind": "move",
+        "x": 384,
+        "y": 500
+      },
+      {
+        "op": "advance",
+        "ms": 64
+      },
+      {
+        "op": "pointer",
+        "kind": "up",
+        "x": 384,
+        "y": 500
+      },
+      {
+        "op": "pointer",
+        "kind": "down",
+        "x": 40,
+        "y": 500
+      },
+      {
+        "op": "pointer",
+        "kind": "move",
+        "x": 128,
+        "y": 500
+      },
+      {
+        "op": "advance",
+        "ms": 64
+      },
+      {
+        "op": "pointer",
+        "kind": "move",
+        "x": 216,
+        "y": 500
+      },
+      {
+        "op": "advance",
+        "ms": 64
+      },
+      {
+        "op": "pointer",
+        "kind": "move",
+        "x": 304,
+        "y": 500
+      },
+      {
+        "op": "advance",
+        "ms": 64
+      },
+      {
+        "op": "pointer",
+        "kind": "up",
+        "x": 304,
+        "y": 500
+      },
+      {
+        "op": "pointer",
+        "kind": "down",
+        "x": 120,
+        "y": 500
+      },
+      {
+        "op": "pointer",
+        "kind": "move",
+        "x": 208,
+        "y": 500
+      },
+      {
+        "op": "advance",
+        "ms": 64
+      },
+      {
+        "op": "pointer",
+        "kind": "move",
+        "x": 296,
+        "y": 500
+      },
+      {
+        "op": "advance",
+        "ms": 64
+      },
+      {
+        "op": "pointer",
+        "kind": "move",
+        "x": 384,
+        "y": 500
+      },
+      {
+        "op": "advance",
+        "ms": 64
+      },
+      {
+        "op": "pointer",
+        "kind": "up",
+        "x": 384,
+        "y": 500
+      },
+      {
+        "op": "pointer",
+        "kind": "down",
+        "x": 40,
+        "y": 500
+      },
+      {
+        "op": "pointer",
+        "kind": "move",
+        "x": 128,
+        "y": 500
+      },
+      {
+        "op": "advance",
+        "ms": 64
+      },
+      {
+        "op": "pointer",
+        "kind": "move",
+        "x": 216,
+        "y": 500
+      },
+      {
+        "op": "advance",
+        "ms": 64
+      },
+      {
+        "op": "pointer",
+        "kind": "move",
+        "x": 304,
+        "y": 500
+      },
+      {
+        "op": "advance",
+        "ms": 64
+      },
+      {
+        "op": "pointer",
+        "kind": "up",
+        "x": 304,
+        "y": 500
+      },
+      {
+        "op": "pointer",
+        "kind": "down",
+        "x": 120,
+        "y": 500
+      },
+      {
+        "op": "pointer",
+        "kind": "move",
+        "x": 208,
+        "y": 500
+      },
+      {
+        "op": "advance",
+        "ms": 64
+      },
+      {
+        "op": "pointer",
+        "kind": "move",
+        "x": 296,
+        "y": 500
+      },
+      {
+        "op": "advance",
+        "ms": 64
+      },
+      {
+        "op": "pointer",
+        "kind": "move",
+        "x": 384,
+        "y": 500
+      },
+      {
+        "op": "advance",
+        "ms": 64
+      },
+      {
+        "op": "pointer",
+        "kind": "up",
+        "x": 384,
+        "y": 500
+      },
+      {
+        "op": "pointer",
+        "kind": "down",
+        "x": 40,
+        "y": 500
+      },
+      {
+        "op": "pointer",
+        "kind": "move",
+        "x": 128,
+        "y": 500
+      },
+      {
+        "op": "advance",
+        "ms": 64
+      },
+      {
+        "op": "capture"
+      }
+    ]
+  },
+  {
+    "id": "game_lvl01_near_victory",
+    "description": "Level 1 gameplay with 19/20 kg collected (HUD bar at 95 %)",
+    "profiles": ["zero", "iphone"],
+    "steps": [
+      {
+        "op": "boot"
+      },
+      {
+        "op": "loadSector",
+        "index": 0
+      },
+      {
+        "op": "showPage",
+        "page": "game"
+      },
+      {
+        "op": "call",
+        "method": "dismissGestureHint",
+        "args": []
+      },
+      {
+        "op": "advance",
+        "ms": 400
+      },
+      {
+        "op": "setApp",
+        "field": "collectedMass",
+        "value": 19
+      },
+      {
+        "op": "call",
+        "method": "updateQuotaDisplay",
+        "args": []
+      },
+      {
+        "op": "advance",
+        "ms": 16
+      },
+      {
+        "op": "capture"
+      }
+    ]
+  },
+  {
+    "id": "game_lvl01_quota_met_hud",
+    "description": "Level 1 gameplay with the quota bar full (green gradient, no victory yet)",
+    "profiles": ["zero", "iphone"],
+    "steps": [
+      {
+        "op": "boot"
+      },
+      {
+        "op": "loadSector",
+        "index": 0
+      },
+      {
+        "op": "showPage",
+        "page": "game"
+      },
+      {
+        "op": "call",
+        "method": "dismissGestureHint",
+        "args": []
+      },
+      {
+        "op": "advance",
+        "ms": 400
+      },
+      {
+        "op": "setApp",
+        "field": "collectedMass",
+        "value": 20
+      },
+      {
+        "op": "call",
+        "method": "updateQuotaDisplay",
+        "args": []
+      },
+      {
+        "op": "advance",
+        "ms": 16
+      },
+      {
+        "op": "capture"
+      }
+    ]
+  },
+  {
+    "id": "game_lvl01_paused_t1000",
+    "description": "Level 1 gameplay paused, 1000 ms after opening the pause modal (physics frozen, canvas still drawing)",
+    "profiles": ["zero", "iphone"],
+    "steps": [
+      {
+        "op": "boot"
+      },
+      {
+        "op": "loadSector",
+        "index": 0
+      },
+      {
+        "op": "showPage",
+        "page": "game"
+      },
+      {
+        "op": "call",
+        "method": "dismissGestureHint",
+        "args": []
+      },
+      {
+        "op": "advance",
+        "ms": 400
+      },
+      {
+        "op": "click",
+        "target": "btn-game-pause"
+      },
+      {
+        "op": "advance",
+        "ms": 1000
+      },
+      {
+        "op": "capture"
+      }
+    ]
+  },
+  {
+    "id": "game_lvl01_skins_kitty_party_mint",
+    "description": "Level 1 gameplay with Kitty ring, Party Popper hole and Mint Soda sky equipped",
+    "profiles": ["zero", "iphone"],
+    "steps": [
+      {
+        "op": "boot"
+      },
+      {
+        "op": "setProfile",
+        "path": "equipped.ring",
+        "value": "ring_spacecat"
+      },
+      {
+        "op": "setProfile",
+        "path": "equipped.singularity",
+        "value": "singularity_confetti"
+      },
+      {
+        "op": "setProfile",
+        "path": "equipped.skybox",
+        "value": "skybox_mint_soda"
+      },
+      {
+        "op": "loadSector",
+        "index": 0
+      },
+      {
+        "op": "showPage",
+        "page": "game"
+      },
+      {
+        "op": "call",
+        "method": "dismissGestureHint",
+        "args": []
+      },
+      {
+        "op": "advance",
+        "ms": 400
+      },
+      {
+        "op": "advance",
+        "ms": 1000
+      },
+      {
+        "op": "capture"
+      }
+    ]
+  },
+  {
+    "id": "game_lvl11_skins_duckie_berry_cheese",
+    "description": "Level 11 gameplay with Duckie ring, Berry hole and Cheese Moon sky equipped",
+    "profiles": ["zero", "iphone"],
+    "steps": [
+      {
+        "op": "boot"
+      },
+      {
+        "op": "setProfile",
+        "path": "equipped.ring",
+        "value": "ring_duckie"
+      },
+      {
+        "op": "setProfile",
+        "path": "equipped.singularity",
+        "value": "singularity_strawberry"
+      },
+      {
+        "op": "setProfile",
+        "path": "equipped.skybox",
+        "value": "skybox_cheese_moon"
+      },
+      {
+        "op": "loadSector",
+        "index": 10
+      },
+      {
+        "op": "showPage",
+        "page": "game"
+      },
+      {
+        "op": "call",
+        "method": "dismissGestureHint",
+        "args": []
+      },
+      {
+        "op": "advance",
+        "ms": 400
+      },
+      {
+        "op": "advance",
+        "ms": 1000
+      },
+      {
+        "op": "capture"
+      }
+    ]
+  },
+  {
+    "id": "game_daily_bronze_t1000",
+    "description": "Bronze daily shift gameplay 1000 ms after the hint settled",
+    "profiles": ["zero", "iphone"],
+    "steps": [
+      {
+        "op": "boot"
+      },
+      {
+        "op": "click",
+        "target": "btn-open-daily-shift"
+      },
+      {
+        "op": "advance",
+        "ms": 400
+      },
+      {
+        "op": "clickSelector",
+        "selector": ".btn-play-daily-tier:nth-child(2)"
+      },
+      {
+        "op": "advance",
+        "ms": 16
+      },
+      {
+        "op": "call",
+        "method": "dismissGestureHint",
+        "args": []
+      },
+      {
+        "op": "advance",
+        "ms": 400
+      },
+      {
+        "op": "advance",
+        "ms": 1000
+      },
+      {
+        "op": "capture"
+      }
+    ]
+  },
+  {
+    "id": "pressed_hud_pause",
+    "description": "Gameplay, HUD pause button held down",
+    "profiles": ["zero", "iphone"],
+    "steps": [
+      {
+        "op": "boot"
+      },
+      {
+        "op": "loadSector",
+        "index": 0
+      },
+      {
+        "op": "showPage",
+        "page": "game"
+      },
+      {
+        "op": "call",
+        "method": "dismissGestureHint",
+        "args": []
+      },
+      {
+        "op": "advance",
+        "ms": 400
+      },
+      {
+        "op": "holdPressed",
+        "target": "btn-game-pause"
+      },
+      {
+        "op": "capture"
+      }
+    ]
+  },
+  {
+    "id": "pressed_hud_restart",
+    "description": "Gameplay, HUD restart button held down",
+    "profiles": ["zero", "iphone"],
+    "steps": [
+      {
+        "op": "boot"
+      },
+      {
+        "op": "loadSector",
+        "index": 0
+      },
+      {
+        "op": "showPage",
+        "page": "game"
+      },
+      {
+        "op": "call",
+        "method": "dismissGestureHint",
+        "args": []
+      },
+      {
+        "op": "advance",
+        "ms": 400
+      },
+      {
+        "op": "holdPressed",
+        "target": "btn-game-restart"
+      },
+      {
+        "op": "capture"
+      }
+    ]
+  },
+  {
+    "id": "game_lvl01_restart_toast",
+    "description": "Gameplay after pressing HUD restart: Clean up toast on plateau",
+    "profiles": ["zero", "iphone"],
+    "steps": [
+      {
+        "op": "boot"
+      },
+      {
+        "op": "loadSector",
+        "index": 0
+      },
+      {
+        "op": "showPage",
+        "page": "game"
+      },
+      {
+        "op": "call",
+        "method": "dismissGestureHint",
+        "args": []
+      },
+      {
+        "op": "advance",
+        "ms": 400
+      },
+      {
+        "op": "click",
+        "target": "btn-game-restart"
+      },
+      {
+        "op": "advance",
+        "ms": 1000
+      },
+      {
+        "op": "capture"
+      }
+    ]
+  }
+]
