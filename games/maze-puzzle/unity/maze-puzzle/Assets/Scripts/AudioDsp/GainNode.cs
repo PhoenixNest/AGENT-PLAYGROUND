@@ -15,6 +15,12 @@ namespace OrbitalSalvage.AudioDsp
             Gain = new AudioParam(ctx, id, "gain", 1f, -float.MaxValue, float.MaxValue, true);
         }
 
+        internal void ResetForReuse(int id)
+        {
+            ResetBase(id);
+            Gain.ResetForReuse(id);
+        }
+
         protected override bool OutputFollowsInput
         {
             get { return true; }

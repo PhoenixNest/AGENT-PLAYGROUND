@@ -13,13 +13,16 @@ namespace OrbitalSalvage.AudioDsp
     public abstract class AudioNodeDsp
     {
         internal readonly AudioContextDsp Ctx;
-        internal readonly List<AudioNodeDsp> Sources = new List<AudioNodeDsp>();
+        internal readonly List<AudioNodeDsp> Sources = new List<AudioNodeDsp>(4);
+        internal readonly List<AudioNodeDsp> Outputs = new List<AudioNodeDsp>(2);
         internal AudioBus In;
         internal AudioBus Out;
+        readonly int initialOutputChannels;
         long lastQuantum = -1;
+        bool hadInput;
         protected double LastNonSilentTime;
 
-        public readonly int Id;
+        public int Id { get; private set; }
         public readonly string Kind;
 
         protected virtual bool HasInput
@@ -57,14 +60,50 @@ namespace OrbitalSalvage.AudioDsp
             Ctx = ctx;
             Kind = kind;
             Id = id;
+            initialOutputChannels = outputChannels;
             In = new AudioBus(1, AudioMath.RenderQuantum);
             Out = new AudioBus(outputChannels, AudioMath.RenderQuantum);
+        }
+
+        internal void ResetBase(int id)
+        {
+            Id = id;
+            lastQuantum = -1;
+            hadInput = false;
+            LastNonSilentTime = 0;
+            Sources.Clear();
+            Outputs.Clear();
+            In.SetChannelCount(1);
+            In.Zero();
+            Out.SetChannelCount(initialOutputChannels);
+            Out.Zero();
+        }
+
+        internal virtual bool CanReclaim()
+        {
+            return hadInput && Sources.Count == 0 && PropagatesSilence();
+        }
+
+        internal void Detach()
+        {
+            for (int i = 0; i < Outputs.Count; i++)
+            {
+                Outputs[i].Sources.Remove(this);
+            }
+
+            Outputs.Clear();
+        }
+
+        internal virtual void ReleaseResources()
+        {
         }
 
         public AudioNodeDsp Connect(AudioNodeDsp destination)
         {
             Ctx.Trace?.Event("node.connect", Id, destination.Id);
-            Ctx.Mutate(() => destination.Sources.Add(this));
+            destination.Sources.Add(this);
+            destination.hadInput = true;
+            Outputs.Add(destination);
             return destination;
         }
 
@@ -187,35 +226,41 @@ namespace OrbitalSalvage.AudioDsp
         public void Start(double when)
         {
             Ctx.Trace?.Event("node.start", Id, when);
-            Ctx.Mutate(() =>
+            if (State != PlaybackState.Unscheduled)
             {
-                if (State != PlaybackState.Unscheduled)
-                {
-                    throw new InvalidOperationException("cannot call start more than once");
-                }
+                throw new InvalidOperationException("cannot call start more than once");
+            }
 
-                StartTime = Math.Max(when, Ctx.CurrentTime);
-                OnStart();
-                State = PlaybackState.Scheduled;
-            });
+            StartTime = Math.Max(when, Ctx.CurrentTime);
+            OnStart();
+            State = PlaybackState.Scheduled;
         }
 
         public void Stop(double when)
         {
             Ctx.Trace?.Event("node.stop", Id, when);
-            Ctx.Mutate(() =>
+            if (State == PlaybackState.Unscheduled)
             {
-                if (State == PlaybackState.Unscheduled)
-                {
-                    throw new InvalidOperationException("cannot call stop without calling start first");
-                }
+                throw new InvalidOperationException("cannot call stop without calling start first");
+            }
 
-                EndTime = Math.Max(0.0, when);
-            });
+            EndTime = Math.Max(0.0, when);
         }
 
         protected virtual void OnStart()
         {
+        }
+
+        internal void ResetSource()
+        {
+            State = PlaybackState.Unscheduled;
+            StartTime = 0;
+            EndTime = UnknownTime;
+        }
+
+        internal override bool CanReclaim()
+        {
+            return State == PlaybackState.Finished;
         }
 
         protected void Finish()

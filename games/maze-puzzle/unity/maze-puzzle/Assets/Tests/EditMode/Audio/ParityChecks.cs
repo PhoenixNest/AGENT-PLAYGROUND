@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
+using System.Security.Cryptography;
 using System.Text;
 
 namespace OrbitalSalvage.AudioDsp.Tests
@@ -17,6 +18,8 @@ namespace OrbitalSalvage.AudioDsp.Tests
     public static class ParityChecks
     {
         public const double MinCorrelation = 0.99;
+        public const double MaxAbsErrorLimit = 1e-5;
+        public const double StftDistanceLimit = 1e-5;
         public const double TraceTolerance = 1e-6;
 
         public static string FindAudioDir(string startDir)
@@ -66,28 +69,69 @@ namespace OrbitalSalvage.AudioDsp.Tests
                 ComparisonRow row = new ComparisonRow();
                 row.Id = sc.Id;
                 string refPath = Path.Combine(audioDir, "out", "ref", sc.Id + ".wav");
+                if (!File.Exists(refPath))
+                {
+                    row.Metrics = new AudioComparison();
+                    row.Pass = false;
+                    row.Note = "missing reference " + refPath + " (" + AudioTestEnvironment.RegenerateHint + ")";
+                    rows.Add(row);
+                    continue;
+                }
+
                 int rate;
                 float[][] reference = WavIo.ReadFloat32(refPath, out rate);
+                string actualSha = Sha256Hex(reference);
+                if (!string.Equals(actualSha, sc.Sha256, StringComparison.OrdinalIgnoreCase))
+                {
+                    row.Metrics = new AudioComparison();
+                    row.Pass = false;
+                    row.Note = "stale reference: sha256 " + actualSha + " != manifest " + sc.Sha256 + " (" + AudioTestEnvironment.RegenerateHint + ")";
+                    rows.Add(row);
+                    continue;
+                }
+
                 ScenarioResult result = ScenarioRunner.Run(sc, ReadbackMode.Rendered, false, true);
                 row.Metrics = AudioMetrics.Compare(reference, result.Output);
 
                 bool lengthOk = reference[0].Length == result.Output[0].Length;
                 bool silentRef = row.Metrics.ReferenceRms == 0;
+                List<string> failures = new List<string>();
+                if (!lengthOk)
+                {
+                    failures.Add("length " + result.Output[0].Length + " != " + reference[0].Length);
+                }
+
                 if (silentRef)
                 {
-                    row.Pass = lengthOk && row.Metrics.MaxAbsError == 0;
                     row.Note = "silent reference";
+                    if (row.Metrics.MaxAbsError != 0)
+                    {
+                        failures.Add("silent reference but max abs err " + row.Metrics.MaxAbsError.ToString("E2", CultureInfo.InvariantCulture));
+                    }
                 }
                 else
                 {
-                    row.Pass = lengthOk && row.Metrics.Correlation >= MinCorrelation;
+                    if (!(row.Metrics.Correlation >= MinCorrelation))
+                    {
+                        failures.Add("correlation " + row.Metrics.Correlation.ToString("R", CultureInfo.InvariantCulture) + " < " + MinCorrelation.ToString(CultureInfo.InvariantCulture));
+                    }
+
+                    if (!(row.Metrics.MaxAbsError <= MaxAbsErrorLimit))
+                    {
+                        failures.Add("max abs err " + row.Metrics.MaxAbsError.ToString("E3", CultureInfo.InvariantCulture) + " > " + MaxAbsErrorLimit.ToString("E0", CultureInfo.InvariantCulture));
+                    }
+
+                    if (!(row.Metrics.StftDistance <= StftDistanceLimit))
+                    {
+                        failures.Add("stft distance " + row.Metrics.StftDistance.ToString("E3", CultureInfo.InvariantCulture) + " > " + StftDistanceLimit.ToString("E0", CultureInfo.InvariantCulture));
+                    }
                 }
 
-                if (!lengthOk)
+                row.Pass = failures.Count == 0;
+                if (failures.Count > 0)
                 {
-                    row.Note = "length " + result.Output[0].Length + " != " + reference[0].Length;
+                    row.Note = string.Join("; ", failures.ToArray());
                 }
-
                 if (!string.IsNullOrEmpty(compareDir))
                 {
                     int gap = (int)(0.25 * OfflineRenderer.SampleRate);
@@ -101,27 +145,68 @@ namespace OrbitalSalvage.AudioDsp.Tests
             return rows;
         }
 
+        public static string Sha256Hex(float[][] channels)
+        {
+            using (SHA256 sha = SHA256.Create())
+            {
+                foreach (float[] channel in channels)
+                {
+                    byte[] bytes = new byte[channel.Length * 4];
+                    Buffer.BlockCopy(channel, 0, bytes, 0, bytes.Length);
+                    sha.TransformBlock(bytes, 0, bytes.Length, null, 0);
+                }
+
+                sha.TransformFinalBlock(new byte[0], 0, 0);
+                StringBuilder hex = new StringBuilder();
+                foreach (byte b in sha.Hash)
+                {
+                    hex.Append(b.ToString("x2", CultureInfo.InvariantCulture));
+                }
+
+                return hex.ToString();
+            }
+        }
+
         public static string FormatTable(List<ComparisonRow> rows)
         {
             StringBuilder sb = new StringBuilder();
-            sb.AppendLine("| cue/args | correlation | max abs err | rms err | stft dist | pass |");
-            sb.AppendLine("| --- | --- | --- | --- | --- | --- |");
+            sb.AppendLine("Gates: correlation >= " + MinCorrelation.ToString(CultureInfo.InvariantCulture)
+                + ", max abs err <= " + MaxAbsErrorLimit.ToString("E0", CultureInfo.InvariantCulture)
+                + ", stft dist <= " + StftDistanceLimit.ToString("E0", CultureInfo.InvariantCulture) + ", sha256 matches ref-manifest.json.");
+            sb.AppendLine();
+            sb.AppendLine("| cue/args | correlation | 1 - corr | max abs err | rms err | stft dist | pass |");
+            sb.AppendLine("| --- | --- | --- | --- | --- | --- | --- |");
+            double worstMax = 0;
+            double worstStft = 0;
+            double worstOneMinusCorr = 0;
             foreach (ComparisonRow r in rows)
             {
+                double oneMinus = Math.Abs(1.0 - r.Metrics.Correlation);
+                worstMax = Math.Max(worstMax, r.Metrics.MaxAbsError);
+                worstStft = Math.Max(worstStft, r.Metrics.StftDistance);
+                worstOneMinusCorr = Math.Max(worstOneMinusCorr, oneMinus);
                 sb.AppendLine(string.Format(
                     CultureInfo.InvariantCulture,
-                    "| {0} | {1:F6} | {2:E2} | {3:E2} | {4:E2} | {5} |",
+                    "| {0} | {1:F12} | {2:E2} | {3:E2} | {4:E2} | {5:E2} | {6} |",
                     r.Id,
                     r.Metrics.Correlation,
+                    oneMinus,
                     r.Metrics.MaxAbsError,
                     r.Metrics.RmsError,
                     r.Metrics.StftDistance,
-                    r.Pass ? "yes" : "NO"));
+                    r.Pass ? "yes" : "NO: " + r.Note));
             }
 
+            sb.AppendLine();
+            sb.AppendLine(string.Format(
+                CultureInfo.InvariantCulture,
+                "Worst case over {0} scenarios: 1 - corr = {1:E2}, max abs err = {2:E2}, stft dist = {3:E2}.",
+                rows.Count,
+                worstOneMinusCorr,
+                worstMax,
+                worstStft));
             return sb.ToString();
         }
-
         public static List<string> RngCountFailures(string audioDir)
         {
             Dictionary<string, object> root = (Dictionary<string, object>)MiniJson.Parse(File.ReadAllText(Path.Combine(audioDir, "rng-counts.json")));
