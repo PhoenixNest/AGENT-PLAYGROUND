@@ -10,33 +10,33 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 71c1514a6bd24e1e882cebbe1904ce04, type: 3}
-  m_Name: Fredoka-700 SDF
+  m_Name: Nunito-900 SDF
   m_EditorClassIdentifier: Unity.TextMeshPro::TMPro.TMP_FontAsset
   m_Version: 1.1.0
   m_FaceInfo:
     m_FaceIndex: 0
-    m_FamilyName: Fredoka
-    m_StyleName: Bold
+    m_FamilyName: Nunito
+    m_StyleName: Black
     m_PointSize: 96
     m_Scale: 1
     m_UnitsPerEM: 1000
-    m_LineHeight: 116.159996
-    m_AscentLine: 93.504
-    m_CapLine: 67
-    m_MeanLine: 50
+    m_LineHeight: 130.944
+    m_AscentLine: 97.056
+    m_CapLine: 69
+    m_MeanLine: 49
     m_Baseline: 0
-    m_DescentLine: -22.656
-    m_SuperscriptOffset: 93.504
+    m_DescentLine: -33.888
+    m_SuperscriptOffset: 97.056
     m_SuperscriptSize: 0.5
-    m_SubscriptOffset: -22.656
+    m_SubscriptOffset: -33.888
     m_SubscriptSize: 0.5
-    m_UnderlineOffset: -12
-    m_UnderlineThickness: 4.7999997
-    m_StrikethroughOffset: 20
-    m_StrikethroughThickness: 4.7999997
-    m_TabWidth: 23
-  m_Material: {fileID: 7821505390269779576}
-  m_SourceFontFileGUID: 444f5b74bba71fc4f8569f9624e228cb
+    m_UnderlineOffset: -9.024
+    m_UnderlineThickness: 2.688
+    m_StrikethroughOffset: 19.6
+    m_StrikethroughThickness: 2.688
+    m_TabWidth: 27
+  m_Material: {fileID: 5829274725666742238}
+  m_SourceFontFileGUID: 7c6a8109df78cde41a07c71ca3531b06
   m_CreationSettings:
     sourceFontFileName: 
     sourceFontFileGUID: 
@@ -56,14 +56,14 @@ MonoBehaviour:
     fontStyleModifier: 0
     renderMode: 0
     includeFontFeatures: 0
-  m_SourceFontFile: {fileID: 12800000, guid: 444f5b74bba71fc4f8569f9624e228cb, type: 3}
+  m_SourceFontFile: {fileID: 12800000, guid: 7c6a8109df78cde41a07c71ca3531b06, type: 3}
   m_SourceFontFilePath: 
   m_AtlasPopulationMode: 1
   InternalDynamicOS: 0
   m_GlyphTable: []
   m_CharacterTable: []
   m_AtlasTextures:
-  - {fileID: 438072736557441246}
+  - {fileID: 1737167784446164438}
   m_AtlasTextureIndex: 0
   m_IsMultiAtlasTexturesEnabled: 1
   m_GetFontFeatures: 1
@@ -86,8 +86,8 @@ MonoBehaviour:
     m_MarkToMarkAdjustmentRecords: []
   m_ShouldReimportFontFeatures: 0
   m_FallbackFontAssetTable:
-  - {fileID: 11400000, guid: 81e5e545305427c4192ddb644483c3b4, type: 2}
-  - {fileID: 11400000, guid: e9530b2234ddc3d4f83496f02262e9fe, type: 2}
+  - {fileID: 11400000, guid: dd4434d9d7687cd4f8d1e6a809b4d99f, type: 2}
+  - {fileID: 11400000, guid: 145f7679af3346548bbbd0ddcaf082d2, type: 2}
   m_FontWeightTable:
   - regularTypeface: {fileID: 0}
     italicTypeface: {fileID: 0}
@@ -143,13 +143,13 @@ MonoBehaviour:
     kerningPairs: []
   fallbackFontAssets: []
   atlas: {fileID: 0}
---- !u!28 &438072736557441246
+--- !u!28 &1737167784446164438
 Texture2D:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: Fredoka-700 SDF Atlas
+  m_Name: Nunito-900 SDF Atlas
   m_ImageContentsHash:
     serializedVersion: 2
     Hash: 00000000000000000000000000000000
@@ -189,14 +189,14 @@ Texture2D:
     offset: 0
     size: 0
     path: 
---- !u!21 &7821505390269779576
+--- !u!21 &5829274725666742238
 Material:
   serializedVersion: 8
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: Fredoka-700 SDF Material
+  m_Name: Nunito-900 SDF Material
   m_Shader: {fileID: 4800000, guid: fe393ace9b354375a9cb14cdbbc28be4, type: 3}
   m_Parent: {fileID: 0}
   m_ModifiedSerializedProperties: 0
@@ -213,7 +213,7 @@ Material:
     serializedVersion: 3
     m_TexEnvs:
     - _MainTex:
-        m_Texture: {fileID: 438072736557441246}
+        m_Texture: {fileID: 1737167784446164438}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     m_Ints: []

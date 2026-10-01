@@ -1,6 +1,6 @@
 # Web-to-Unity Pixel Parity Contract
 
-Version: 1.1 (see the changelog at the end)
+Version: 1.2 (see the changelog at the end)
 
 Contract for the teams building the web harness, the Unity parity player, the canvas conformance layer and the diff tool. Values in this file are decided; details marked "probe" were measured on the pinned toolchain.
 
@@ -291,23 +291,77 @@ When initialised and not muted:
 
 ## 5. Fonts
 
-Single source of truth: the static files in `assets/fonts/` (produced by `scripts/fetch-assets.mjs`, pinned in `assets/manifest.json`).
+**Rule.** The reference reproduces what a real browser renders for the web prototype (section 1 rule 3). The app loads its fonts from Google Fonts, and Google serves only some of the requested weights (5.2, evidence). The harness therefore serves `@font-face` rules for **exactly** the faces Google serves and nothing else, and lets Chrome's normal CSS font matching resolve every other weight (no synthetic bold, no extra faces). Unity does the same with `OrbitalSalvage.Render.ParityFonts` (5.3).
 
-| File                           | wght                          | Source                                      | sha256                                                             |
-| ------------------------------ | ----------------------------- | ------------------------------------------- | ------------------------------------------------------------------ |
-| `Fredoka-400.ttf`              | 400                           | `Fredoka[wdth,wght].ttf`, wdth 100          | `4181ccb9fb9253b2a9ce037a1599589b9485904e6fdd6de97ca96e027b3ee30f` |
-| `Fredoka-600.ttf`              | 600                           | same                                        | `b24e06cf369855020b81ef1e9639f7b705d5348c96df96e875fc7d78bbbc6458` |
-| `Fredoka-700.ttf`              | 700                           | same                                        | `c570243acd47e10bc47913bd1b0b20ba36f53ec8663e093f02195cceaca25297` |
-| `Fredoka-800.ttf`              | 800 (clamped to 700 outlines) | same                                        | `c570243acd47e10bc47913bd1b0b20ba36f53ec8663e093f02195cceaca25297` |
-| `Fredoka-900.ttf`              | 900 (clamped to 700 outlines) | same                                        | `c570243acd47e10bc47913bd1b0b20ba36f53ec8663e093f02195cceaca25297` |
-| `Nunito-400.ttf`               | 400                           | `Nunito[wght].ttf`                          | `e0ece6c997db47df512b21c010284f2fd25fad7df110f0e0b8978381b55dae51` |
-| `Nunito-700.ttf`               | 700                           | same                                        | `c3943d48246d348358a8c9cea93705d3ac83f64309876abc00d7b02275acea01` |
-| `Nunito-800.ttf`               | 800                           | same                                        | `f3ca46028e63fcfe1ba08376d64219451b9eb3b7f273d6854e289456576af55e` |
-| `Nunito-900.ttf`               | 900                           | same                                        | `01abe18ab593161e909b10a59673b222b89899225ce254d0f4723bcc30964b21` |
-| `NotoSansSymbols2-Regular.ttf` | single weight                 | `NotoSansSymbols2-Regular.ttf` (unmodified) | `7d5fb73b7ca67a6798101741f5d280a3d016a56a197afcd4199dbb57b4b82a21` |
-| `NotoSansSymbols-Regular.ttf`  | 400                           | `NotoSansSymbols[wght].ttf`                 | `f7a733b390a5cc37bf60cd3131aa844ad0bef90e3f5d56cae60fec30c39617d2` |
+Faces (single source of truth: the static files in `assets/fonts/`, produced by `scripts/fetch-assets.mjs` and pinned in `assets/manifest.json`):
 
-Fredoka's variable `wght` axis spans 300-700, so the requested 800 and 900 instances are the 700 outlines. This reproduces what a browser does for an out-of-range weight, and keeps all five declared weights loadable. Instances are generated with `SOURCE_DATE_EPOCH=1767225600` so regeneration is byte-identical.
+| File                           | wght          | Source                                      | sha256                                                             |
+| ------------------------------ | ------------- | ------------------------------------------- | ------------------------------------------------------------------ |
+| `Fredoka-400.ttf`              | 400           | `Fredoka[wdth,wght].ttf`, wdth 100          | `4181ccb9fb9253b2a9ce037a1599589b9485904e6fdd6de97ca96e027b3ee30f` |
+| `Fredoka-600.ttf`              | 600           | same                                        | `b24e06cf369855020b81ef1e9639f7b705d5348c96df96e875fc7d78bbbc6458` |
+| `Fredoka-700.ttf`              | 700           | same                                        | `c570243acd47e10bc47913bd1b0b20ba36f53ec8663e093f02195cceaca25297` |
+| `Nunito-700.ttf`               | 700           | `Nunito[wght].ttf`                          | `c3943d48246d348358a8c9cea93705d3ac83f64309876abc00d7b02275acea01` |
+| `Nunito-800.ttf`               | 800           | same                                        | `f3ca46028e63fcfe1ba08376d64219451b9eb3b7f273d6854e289456576af55e` |
+| `Nunito-900.ttf`               | 900           | same                                        | `01abe18ab593161e909b10a59673b222b89899225ce254d0f4723bcc30964b21` |
+| `NotoSansSymbols2-Regular.ttf` | single weight | `NotoSansSymbols2-Regular.ttf` (unmodified) | `7d5fb73b7ca67a6798101741f5d280a3d016a56a197afcd4199dbb57b4b82a21` |
+| `NotoSansSymbols-Regular.ttf`  | 400           | `NotoSansSymbols[wght].ttf`                 | `f7a733b390a5cc37bf60cd3131aa844ad0bef90e3f5d56cae60fec30c39617d2` |
+
+There are deliberately **no** `Fredoka-800/900` and **no** `Nunito-400` files: `fetch-assets.mjs` cannot produce them, and neither the harness nor Unity may reference them. Instances are generated with `SOURCE_DATE_EPOCH=1767225600` so regeneration is byte-identical.
+
+**Evidence (retrieved 2026-09-30).** The exact `@import` URL of `styles.css` line 6, `https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700;800;900&family=Nunito:wght@700;800;900&display=swap`, was requested with a desktop Chrome `User-Agent`. Google answered HTTP 200 (9243 bytes) with `@font-face` blocks for Fredoka 400, 600, 700 and Nunito 700, 800, 900 only (the requested Fredoka 800 and 900 are silently dropped, and Nunito 400 was never requested). The raw response is committed as `evidence/google-fonts-css2.css`. Each family weight arrives as unicode-range subsets (hebrew, latin-ext, latin for Fredoka; cyrillic-ext, cyrillic, vietnamese, latin-ext, latin for Nunito); the pinned static files are full-coverage substitutes for those subsets and the app only uses Latin and symbol code points.
+
+### 5.0 Effective faces (CSS font matching)
+
+Matching follows CSS Fonts 4 section 5.2 over the available faces of the family:
+
+- desired weight in 400-500 inclusive: try the desired weight, then ascending weights up to 500, then lighter weights descending, then heavier weights above 500 ascending;
+- desired weight below 400: weights at or below desired descending, then heavier weights ascending;
+- desired weight above 500: weights at or above desired ascending, then lighter weights descending.
+
+The set of weights the app asks for was found by scanning `styles.css`, the inline `style` attributes of `index.html` and `main.js` (the declared `font-weight` values are only 700 (9 times), 800 (24) and 900 (22); the 400 comes from the initial value and from `ctx.font` strings without a weight), `engine/renderer.js` `ctx.font` strings, and the computed style of every text-bearing element of every page, store tab, world tab, modal and the toast (`scripts/font-usage-scan.mjs`, which also exports the reference implementation of the matching function and writes `out/font-usage.json`). Weight 600 is never requested by the app; its face is still served and built (Google serves it, and it is part of the face set).
+
+Resolution table for every family and weight combination the app requests:
+
+| Family  | Requested weight | Effective face | Why                                                  |
+| ------- | ---------------- | -------------- | ---------------------------------------------------- |
+| Fredoka | 400              | 400            | exact                                                |
+| Fredoka | 700              | 700            | exact                                                |
+| Fredoka | 800              | **700**        | above 500: nothing heavier than 700, nearest lighter |
+| Fredoka | 900              | **700**        | same                                                 |
+| Nunito  | 400              | **700**        | no 400/500 face, nothing lighter: nearest heavier    |
+| Nunito  | 700              | 700            | exact                                                |
+| Nunito  | 800              | 800            | exact                                                |
+| Nunito  | 900              | 900            | exact                                                |
+
+Weight 600 would resolve to Fredoka 600 and, for Nunito, to 700 (heavier ascending; no 600 face) but is not requested.
+
+Where the combinations occur in the DOM (`font-family` computed, from the scan; selectors are examples):
+
+| Family stack                 | Requested weight            | Face | Examples                                                                                                                                                       |
+| ---------------------------- | --------------------------- | ---- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Fredoka, cursive, sans-serif | 400                         | 400  | `.stat-label`                                                                                                                                                  |
+| Fredoka                      | 700                         | 700  | `.tab-btn` (store and world tabs), shop section titles (`Donut Rings`, `Nibbles Hats`, `Skies`), `Cute Cosmic Janitor`                                         |
+| Fredoka                      | 800                         | 700  | `.home-logo-subtitle`, diorama ring label, mission world and goal pills, dock tab labels                                                                       |
+| Fredoka                      | 900                         | 700  | `h1`, `.title-sub`, `.console-tag`, PLAY MISSION, the `3 NEW` badge                                                                                            |
+| Nunito, sans-serif           | 400 (inherited from `body`) | 700  | `.bg-debris` and loading-screen emoji spans, any text with no explicit weight                                                                                  |
+| Nunito                       | 700                         | 700  | `#loading-tip-text`, `strong`, `p`, `#defeat-message`                                                                                                          |
+| Nunito                       | 800                         | 800  | daily tier labels (BRONZE, SILVER, GOLD), TODAY, inline `font-weight:800` spans                                                                                |
+| Nunito                       | 900                         | 900  | LOCKED, inline `font-weight:900` spans                                                                                                                         |
+| Arial (UA `button` font)     | 400                         | none | emoji-only `<span>`s inside buttons (`#home-audio-icon`, `.dock-tab-icon`, ...); the emoji is replaced by `img.pe` (6.1), so no glyph is ever drawn from Arial |
+
+Canvas (`engine/renderer.js`; every font string ends in `, sans-serif`, rewritten per 5.2):
+
+| Line | `ctx.font`           | Requested weight | Face    |
+| ---- | -------------------- | ---------------- | ------- |
+| 1053 | `bold 13px Fredoka`  | 700              | 700     |
+| 1078 | `11px Nunito`        | 400              | **700** |
+| 1457 | `bold 10px Fredoka`  | 700              | 700     |
+| 1560 | `900 10.5px Fredoka` | 900              | **700** |
+| 1647 | `bold 10px Fredoka`  | 700              | 700     |
+| 1720 | `bold 9.5px Fredoka` | 700              | 700     |
+| 1942 | `900 16px Fredoka`   | 900              | **700** |
+
+In summary: Nunito 400 draws with the Nunito 700 outlines; Fredoka 800 and 900 draw with the Fredoka 700 outlines; Fredoka 600 is built but never selected by the app.
 
 ### 5.1 Glyph coverage and fallback chain
 
@@ -322,28 +376,40 @@ Characters checked (`scripts/font-coverage.py`): every non-ASCII, non-emoji code
 
 Fallback chain, identical on both sides, in order:
 
-1. Primary: `Fredoka` (display text, `--font-bubble`) or `Nunito` (body text, `--font-body`) at the requested weight.
+1. Primary: `Fredoka` (display text, `--font-bubble`) or `Nunito` (body text, `--font-body`) at the effective face of the requested weight (5.0).
 2. `Noto Sans Symbols 2` (`NotoSansSymbols2-Regular.ttf`): covers `✓` and `▶`, and is a broad symbol font that covers future additions in the same blocks.
 3. `Noto Sans Symbols` (`NotoSansSymbols-Regular.ttf`, wght 400 instance): covers `←` (and `→`), which Symbols 2 lacks.
+
+**The Noto symbol chain is a deliberate determinism choice, not browser fidelity.** A real device would fall through to whatever system symbol font it has (Segoe UI Symbol, Apple Symbols, DejaVu, ...), which differs per machine. The reference pins one chain instead so both sides draw identical glyphs. This is the only place where the reference intentionally differs from an unmodified browser's font selection.
 
 Both fallbacks are OFL, from `google/fonts` at the pinned commit. No system font is ever consulted for a web-used character. The chain has no weight variants: the fallback fonts are declared with `font-weight: 100 900` in CSS (no synthetic bold), and Unity uses the single TMP asset for every weight.
 
 ### 5.2 Web delivery
 
 - Intercept the request to `https://fonts.googleapis.com/css2?...` (it comes from the `@import` on `styles.css` line 6) and answer with local `@font-face` rules, `Content-Type: text/css`:
-  - family `Fredoka`, one rule per weight 400/600/700/800/900, `src: url(<origin>/__parity/fonts/Fredoka-<W>.ttf) format('truetype')`, `font-weight: <W>`, `font-display: block`;
-  - family `Nunito`, same for 400/700/800/900;
+  - family `Fredoka`, **exactly** three rules, weights 400, 600 and 700, `src: url(<origin>/__parity/fonts/Fredoka-<W>.ttf) format('truetype')`, `font-weight: <W>`, `font-display: block`;
+  - family `Nunito`, **exactly** three rules, weights 700, 800 and 900, same shape;
+  - no other `Fredoka` or `Nunito` rule is ever emitted (no 800/900 for Fredoka, no 400 for Nunito) and `font-synthesis: none` stays on, so Chrome's own matching (5.0) picks the effective face and never fakes a bold;
   - family `Noto Sans Symbols 2` and `Noto Sans Symbols`, `font-weight: 100 900`, `font-display: block`.
 - Serve `/__parity/fonts/*` and `/__parity/emoji/*` from `assets/` via `page.route`. The app itself is served from `web/` under a fake origin (`http://parity.test/`) with `page.route`, because `main.js` is an ES module and does not load from `file://`.
 - Block every other request (`route.abort()`).
 - **Injection order.** All harness `<style>` injections (the fonts `:root` variables above, the safe-area fallback of section 3, `img.pe` of 6.1) go into one `<style id="parity-overrides">` appended as the **last child of `<head>` after `styles.css` has loaded** (the `<link rel="stylesheet" href="styles.css">` is the last element of `<head>` in `index.html`; append in a `DOMContentLoaded` listener registered by the init script, and verify `document.styleSheets` ends with the harness sheet). `:root`, `.hud-top-mobile` and the other fallback selectors have the same specificity as the originals, so only later source order makes them win; an earlier `<style>` would silently lose. The CDP safe-area override (section 3) is primary, the CSS fallback secondary.
-- **Body font.** The computed `font-family` of `body` is `var(--font-body)` and the app sets no `font-weight` on `body`, so body text is Nunito **400** (verified in `styles.css` lines 36-45). Note that the app's own `@import` asks Google for Nunito 700/800/900 only (line 6), so an unmodified browser would substitute a 700 face for 400 text; the harness serves the pinned 400 face (above) and, per section 1 rule 3, the harness output is the reference.
+- **Body font.** The computed `font-family` of `body` is `var(--font-body)` and the app sets no `font-weight` on `body`, so body text requests Nunito **400** (verified in `styles.css` lines 36-45). The app's own `@import` asks Google for Nunito 700/800/900 only (line 6), so a real browser draws that text with the Nunito 700 face. The harness serves no Nunito 400 face, so Chrome's matching does the same (5.0).
 - Chain injection (the chain cannot come from the app CSS): add a stylesheet `:root{--font-bubble:"Fredoka","Noto Sans Symbols 2","Noto Sans Symbols",sans-serif;--font-body:"Nunito","Noto Sans Symbols 2","Noto Sans Symbols",sans-serif} html{font-synthesis:none}`, and wrap the `CanvasRenderingContext2D.font` setter so a trailing `, sans-serif` after `Fredoka` or `Nunito` becomes `, "Noto Sans Symbols 2", "Noto Sans Symbols", sans-serif` (`renderer.js` sets e.g. `"bold 13px Fredoka, sans-serif"`).
-- `boot` waits for `document.fonts.ready`, then verifies with `document.fonts.check` / `FontFace.status` that every family and weight is `loaded`: Fredoka 400/600/700/800/900, Nunito 400/700/800/900, both symbol fonts. Any miss fails the run.
+- `boot` waits for `document.fonts.ready`, then verifies with `document.fonts.check` / `FontFace.status` that every served face is `loaded`: Fredoka 400/600/700, Nunito 700/800/900, both symbol fonts. Any miss fails the run. It also asserts the effective faces of 5.0: for each (family, weight) pair of the 5.0 table, `document.fonts.load('<weight> 16px <family>')` resolves to exactly the face listed (check `FontFace.weight` of the returned face), so a stray extra `@font-face` fails the run.
 
 ### 5.3 Unity
 
-TMP SDF assets are generated by `OrbitalSalvage.Editor.ParityAssetBuilder.BuildAll` into `Assets/Fonts/TMP/<FontName> SDF.asset` from the same files: sampling point size 96, padding 12, render mode `SDFAA`, atlas 4096 x 4096, `AtlasPopulationMode.Dynamic`, multi-atlas enabled. Each Fredoka/Nunito asset has fallback table `[NotoSansSymbols2-Regular SDF, NotoSansSymbols-Regular SDF]` in that order. Weight selection maps the CSS weight to the matching asset (400/600/700/800/900 for Fredoka, 400/700/800/900 for Nunito).
+TMP SDF assets are generated by `OrbitalSalvage.Editor.ParityAssetBuilder.BuildAll` from the same files in `assets/fonts/` (synced to `Assets/Fonts/*.ttf`) into `Assets/Resources/Fonts/TMP/<FontName> SDF.asset`: sampling point size 96, padding 12, render mode `SDFAA`, atlas 4096 x 4096, `AtlasPopulationMode.Dynamic`, multi-atlas enabled. The assets built are exactly the face set of section 5: `Fredoka-400/600/700`, `Nunito-700/800/900`, plus the fallback fonts `NotoSansSymbols2-Regular` and `NotoSansSymbols-Regular`. Each Fredoka/Nunito asset has fallback table `[NotoSansSymbols2-Regular SDF, NotoSansSymbols-Regular SDF]` in that order. `BuildAll` also deletes obsolete outputs of earlier layouts (the old `Assets/Fonts/TMP` folder, `Fredoka-800/900` and `Nunito-400` fonts and assets), so the project can never contain a face the web does not have.
+
+**Registry decision: Resources, no ScriptableObject.** The TMP assets live under `Assets/Resources/Fonts/TMP/` and are loaded by name with `Resources.Load<TMP_FontAsset>("Fonts/TMP/<Family>-<faceWeight> SDF")`. This matches how emoji are already loaded (`Assets/Resources/Emojis`), needs no extra asset to keep in sync, and the file names are derived from the same constant face table that drives the builder, so builder and runtime cannot disagree.
+
+**`OrbitalSalvage.Render.ParityFonts`** (`Assets/Scripts/Render/ParityFonts.cs`) is the only way gameplay and UI code selects a TMP font:
+
+- `TMP_FontAsset Resolve(string family, int cssWeight)`: `family` is `Fredoka` or `Nunito`; `cssWeight` is the CSS weight the web code requests (use `ParseCssWeight` for `normal`/`bold`/numeric tokens, e.g. a canvas font string). It runs the 5.0 matching algorithm over that family's face weights (`FaceWeights`: Fredoka 400/600/700, Nunito 700/800/900) and loads and caches the asset of the resulting face. Examples: `Resolve("Nunito", 400)` returns `Nunito-700 SDF`; `Resolve("Fredoka", 900)` returns `Fredoka-700 SDF`.
+- `int MatchWeight(int desired, IReadOnlyList<int> available)` implements exactly the three rules of 5.0 (400-500: desired, up to 500, then lighter descending, then heavier ascending; below 400: lighter descending, then heavier ascending; above 500: heavier ascending, then lighter descending) and `int ResolveWeight(string family, int cssWeight)` returns the face weight (or -1 for an unknown family).
+- Resolved assets already carry the symbol fallback table, so no per-call fallback handling is needed. Unity never applies synthetic bold (`FontStyles.Bold` is not used for weight selection).
+- Verification: `ParityAssetBuilder.VerifyFonts` (batchmode, `-executeMethod OrbitalSalvage.Editor.ParityAssetBuilder.VerifyFonts`) resolves every pair of the 5.0 table and exits with code 1 if any pair returns a different face than listed there.
 
 ## 6. Emoji substitution
 
@@ -366,7 +432,7 @@ The web prototype uses 57 distinct emoji graphemes (full list in section 14).
 
 `fillText` and `strokeText` are wrapped. For a string `s` drawn at `(x, y)`:
 
-0. **Font parsing.** `fontPx` is the number immediately before `px` in `ctx.font` (regex `(\d+(?:\.\d+)?)px`), e.g. `900 10.5px Fredoka, sans-serif` -> `10.5`, `bold 13px Fredoka, sans-serif` -> `13`. The weight token selects the face: `bold` = 700, a numeric token (`900`) selects that weight, no token = 400 (the faces of section 5). `fontPx` is in CSS px **of the current local coordinate system**: the context transform `setTransform(dpr, 0, 0, dpr, 0, 0)` with `dpr = min(devicePixelRatio, 3) = 3` (`renderer.js` lines 79 and 320) and any further `translate`/`scale`/`rotate` already apply to `drawImage`, so do not multiply `fontPx` by `dpr` or by any scale. (Example: floating text is drawn under `ctx.scale(ft.scale, ft.scale)` and its emoji scale with it.)
+0. **Font parsing.** `fontPx` is the number immediately before `px` in `ctx.font` (regex `(\d+(?:\.\d+)?)px`), e.g. `900 10.5px Fredoka, sans-serif` -> `10.5`, `bold 13px Fredoka, sans-serif` -> `13`. The weight token gives the requested weight: `bold` = 700, a numeric token (`900`) is that weight, no token = 400. The face actually drawn is the effective face of section 5.0 (e.g. `900 ... Fredoka` draws the Fredoka 700 face, `11px Nunito` draws the Nunito 700 face; Unity: `ParityFonts.Resolve`). `fontPx` is in CSS px **of the current local coordinate system**: the context transform `setTransform(dpr, 0, 0, dpr, 0, 0)` with `dpr = min(devicePixelRatio, 3) = 3` (`renderer.js` lines 79 and 320) and any further `translate`/`scale`/`rotate` already apply to `drawImage`, so do not multiply `fontPx` by `dpr` or by any scale. (Example: floating text is drawn under `ctx.scale(ft.scale, ft.scale)` and its emoji scale with it.)
 1. Split `s` into runs: maximal runs of non-emoji text, and single emoji graphemes.
 2. `total = sum(ctx.measureText(textRun).width over text runs) + (#emoji * fontPx)`. The app never calls `measureText` (verified: no occurrence in the web sources); the wrapper calls the context's own, unwrapped `measureText` for the text runs, so it uses the font (including the fallback chain of 5.2) that the run is drawn with. Leading and trailing spaces of a text run are part of its width.
 3. Start x from `textAlign`: `left`/`start` -> `x`; `center` -> `x - total/2`; `right`/`end` -> `x - total`.
@@ -388,7 +454,8 @@ tools/parity/
   states.json                      (state list, authored by the states team; section 8)
   tracked-classes.json             (class list for layout JSON; section 9)
   assets/                          (pinned fonts + emoji; manifest.json)
-  scripts/                         (fetch-assets.mjs, emoji-scan.mjs, font-coverage.py, probes)
+  evidence/                        (google-fonts-css2.css: raw Google Fonts response, 2026-09-30; section 5)
+  scripts/                         (fetch-assets.mjs, emoji-scan.mjs, font-coverage.py, font-usage-scan.mjs, probes)
   web/                             (Playwright harness)
   golden/                          (curated reference captures, if any)
   audio/                           (audio trace tooling)
@@ -578,13 +645,13 @@ Scan: `node scripts/emoji-scan.mjs` over `index.html`, `main.js`, `engine/*.js`,
 
 ## 15. Known facts discovered while building this contract
 
-- `styles.css` loads Google Fonts through `@import` on line 6 with `Fredoka:wght@400;600;700;800;900`; the Fredoka family only spans 300-700, so weights 800/900 render with 700 outlines.
+- `styles.css` loads Google Fonts through `@import` on line 6 with `Fredoka:wght@400;600;700;800;900` and `Nunito:wght@700;800;900`; Google serves only Fredoka 400/600/700 and Nunito 700/800/900 (evidence 2026-09-30, `evidence/google-fonts-css2.css`), so Fredoka 800/900 render with the 700 face and Nunito 400 body text renders with the 700 face (5.0).
 - `renderer.js` uses `Fredoka`/`Nunito` with a bare `sans-serif` tail on canvas, so a system font would be reached for any glyph the primary lacks unless the harness rewrites the font string (5.2).
 - CSS animations and transitions ignore the fake clock (4.3); the animation clock of 4.5 is mandatory.
 - `performance.now()` at app construction is 0, 1 or 2 ms natively; the clock normalisation of 4.4 makes it exactly 0 and puts frames on multiples of 16.
 - `engine/audio.js` creates its context lazily and draws from `Math.random`; the audio stub of 4.6 is mandatory in all runs.
 - `getDailyResetCountdown()` uses local time while `engine/economy.js` day keys use UTC (4.2).
-- `heroPulse` has no `@keyframes` (4.5); `styles.css` requests Nunito 700/800/900 only (5.2, body font).
+- `heroPulse` has no `@keyframes` (4.5); `styles.css` requests Nunito 700/800/900 only, so body text uses the 700 face (5.0, 5.2).
 - `navigator.vibrate` exists in headless Chromium and the app gates it on `profile.settings.hapticsEnabled`; the wrapper in section 10 records calls and makes the result deterministic.
 
 ## Appendix A. CSS animation and transition inventory
@@ -690,20 +757,29 @@ Defaults for omitted parts: easing `ease`, delay 0 ms. `all` covers every animat
 
 All canvas text is drawn in `engine/renderer.js`; `main.js`, `physics.js`, `maze.js`, `economy.js` and `audio.js` contain no `fillText`, `strokeText` or `measureText`. Every `textBaseline = "middle"` assignment is inside its own `ctx.save()` / `ctx.restore()` pair. The context transform is `setTransform(dpr, 0, 0, dpr, 0, 0)` with `dpr = min(devicePixelRatio, 3)` (lines 79 and 320). Emoji column: whether the string can contain an emoji grapheme (section 6 classification).
 
-| #   | Line | Call         | Context (function)             | Font (`ctx.font`)                           | fontPx | Weight | `textAlign` | `textBaseline`                  | Position                                                             | Text                                                                                                       | Emoji?                        |
-| --- | ---- | ------------ | ------------------------------ | ------------------------------------------- | ------ | ------ | ----------- | ------------------------------- | -------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- | ----------------------------- |
-| 1   | 1077 | `fillText`   | `renderCartoonRing`, inner hub | `bold 13px Fredoka, sans-serif` (line 1053) | 13     | 700    | center      | middle                          | (0, -7)                                                              | `hubEmoji`: `✨ ORBITAL ✨`, `🦆 DUCKIE 🦆`, `🍬 CANDY 🍬`, `🐱 KITTY 🐱`, `🍩 DONUT 🍩`, `⚙️ GEAR RIG ⚙️` | yes (2 per string)            |
-| 2   | 1080 | `fillText`   | `renderCartoonRing`, inner hub | `11px Nunito, sans-serif` (line 1078)       | 11     | 400    | center      | middle                          | (0, 9)                                                               | `hubSubtitle`: `SORT RIG`, `FLOAT RIG`, `MINT RIG`, `COSMIC RIG`, `SWEET RIG`, `PLANETARY`                 | no                            |
-| 3   | 1460 | `fillText`   | `renderSawbladeGate`           | `bold 10px Fredoka, sans-serif` (1457)      | 10     | 700    | center      | middle                          | (0, 0.5)                                                             | `⚡ ×${gate.value}`                                                                                        | yes (⚡)                      |
-| 4   | 1563 | `fillText`   | `renderSuperShredderGate`      | `900 10.5px Fredoka, sans-serif` (1560)     | 10.5   | 900    | center      | middle                          | (0, 0.5)                                                             | `💥 ×${gate.value}!`                                                                                       | yes (💥)                      |
-| 5   | 1650 | `fillText`   | `renderCompactorGate`          | `bold 10px Fredoka, sans-serif` (1647)      | 10     | 700    | center      | middle                          | (0, 0.5)                                                             | `🧲 +${gate.value}`                                                                                        | yes (🧲)                      |
-| 6   | 1723 | `fillText`   | `renderBoosterGate`            | `bold 9.5px Fredoka, sans-serif` (1720)     | 9.5    | 700    | center      | middle                          | (0, 0.5)                                                             | `⏩ BOOST`                                                                                                 | yes (⏩)                      |
-| 7   | 1946 | `strokeText` | `renderVfx`, floating text     | `900 16px Fredoka, sans-serif` (1942)       | 16     | 900    | center      | alphabetic (default, never set) | (0, 0) after `translate(ft.x, ft.y)` and `scale(ft.scale, ft.scale)` | `ft.text`; draws text runs only                                                                            | emoji skipped by `strokeText` |
-| 8   | 1950 | `fillText`   | `renderVfx`, floating text     | same as 7                                   | 16     | 900    | center      | alphabetic                      | same as 7                                                            | `ft.text`, from `main.js` (below); draws text runs and emoji                                               | yes                           |
+| #   | Line | Call         | Context (function)             | Font (`ctx.font`)                           | fontPx | Weight (requested; face per 5.0) | `textAlign` | `textBaseline`                  | Position                                                             | Text                                                                                                       | Emoji?                        |
+| --- | ---- | ------------ | ------------------------------ | ------------------------------------------- | ------ | -------------------------------- | ----------- | ------------------------------- | -------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- | ----------------------------- |
+| 1   | 1077 | `fillText`   | `renderCartoonRing`, inner hub | `bold 13px Fredoka, sans-serif` (line 1053) | 13     | 700                              | center      | middle                          | (0, -7)                                                              | `hubEmoji`: `✨ ORBITAL ✨`, `🦆 DUCKIE 🦆`, `🍬 CANDY 🍬`, `🐱 KITTY 🐱`, `🍩 DONUT 🍩`, `⚙️ GEAR RIG ⚙️` | yes (2 per string)            |
+| 2   | 1080 | `fillText`   | `renderCartoonRing`, inner hub | `11px Nunito, sans-serif` (line 1078)       | 11     | 400                              | center      | middle                          | (0, 9)                                                               | `hubSubtitle`: `SORT RIG`, `FLOAT RIG`, `MINT RIG`, `COSMIC RIG`, `SWEET RIG`, `PLANETARY`                 | no                            |
+| 3   | 1460 | `fillText`   | `renderSawbladeGate`           | `bold 10px Fredoka, sans-serif` (1457)      | 10     | 700                              | center      | middle                          | (0, 0.5)                                                             | `⚡ ×${gate.value}`                                                                                        | yes (⚡)                      |
+| 4   | 1563 | `fillText`   | `renderSuperShredderGate`      | `900 10.5px Fredoka, sans-serif` (1560)     | 10.5   | 900                              | center      | middle                          | (0, 0.5)                                                             | `💥 ×${gate.value}!`                                                                                       | yes (💥)                      |
+| 5   | 1650 | `fillText`   | `renderCompactorGate`          | `bold 10px Fredoka, sans-serif` (1647)      | 10     | 700                              | center      | middle                          | (0, 0.5)                                                             | `🧲 +${gate.value}`                                                                                        | yes (🧲)                      |
+| 6   | 1723 | `fillText`   | `renderBoosterGate`            | `bold 9.5px Fredoka, sans-serif` (1720)     | 9.5    | 700                              | center      | middle                          | (0, 0.5)                                                             | `⏩ BOOST`                                                                                                 | yes (⏩)                      |
+| 7   | 1946 | `strokeText` | `renderVfx`, floating text     | `900 16px Fredoka, sans-serif` (1942)       | 16     | 900                              | center      | alphabetic (default, never set) | (0, 0) after `translate(ft.x, ft.y)` and `scale(ft.scale, ft.scale)` | `ft.text`; draws text runs only                                                                            | emoji skipped by `strokeText` |
+| 8   | 1950 | `fillText`   | `renderVfx`, floating text     | same as 7                                   | 16     | 900                              | center      | alphabetic                      | same as 7                                                            | `ft.text`, from `main.js` (below); draws text runs and emoji                                               | yes                           |
 
 Floating-text strings (`addFloatingText` callers in `main.js`): `NOM! 😋`, `YUM! ✨`, `GULP! 🍩`, `TASTY! ⭐` (line 651-652), `×${n}! SHRED ⚡`, `+${n}! COMPACT ✨`, `BOOST! ⏩` (lines 691-696), `POOF! 💨` (line 704), `TURBO! ⏩` and `⏪ TURBO!` (line 713). Every one contains exactly one emoji grapheme after or before the text, so rows 7 and 8 together exercise the stroke-without-emoji and fill-with-emoji paths.
 
 ## Changelog
+
+### 1.2
+
+- Fonts (5): the reference mirrors what Google Fonts serves for the app's `@import`: exactly Fredoka 400/600/700 and Nunito 700/800/900, everything else resolved by CSS font matching, no synthetic bold. Evidence (2026-09-30) committed as `evidence/google-fonts-css2.css`.
+- New 5.0 with the matching rules and the effective-face table for every family/weight the CSS, inline styles and canvas request (Nunito 400 -> 700 face; Fredoka 800/900 -> 700 face). Generated by `scripts/font-usage-scan.mjs`.
+- Removed `Fredoka-800/900` and `Nunito-400` from the SPEC, `fetch-assets.mjs`, `manifest.json`, `font-coverage.py`, and (Unity) `Assets/Fonts` and the TMP assets.
+- 5.1: the Noto symbol chain is documented as a deliberate determinism choice (a real device would use a system symbol font).
+- 5.3 / Unity: TMP assets moved to `Assets/Resources/Fonts/TMP/` (Resources registry, documented); `ParityAssetBuilder` builds only the six primary faces plus the two fallbacks and removes obsolete outputs; new `OrbitalSalvage.Render.ParityFonts.Resolve(family, cssWeight)` implements the CSS weight matching; `ParityAssetBuilder.VerifyFonts` checks the table in batchmode.
+- 5.2: harness `boot` asserts the effective faces; section 6.2 and Appendix B state requested weight vs. drawn face; section 13 and 15 updated.
 
 ### 1.1
 
