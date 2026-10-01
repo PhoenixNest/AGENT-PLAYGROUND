@@ -328,6 +328,7 @@ namespace OrbitalSalvage.Render
             if (!WritePaint(pb, stroke, alpha)) return;
             prm[pb + IdxFlags] = new Vector4(0, evenOdd ? 1 : 0, 0, 0);
             BindClip(pb);
+            if (glyphMaskFill) WriteGlyphPreblend(pb);
             AccumulateTo(pb, rect, ebase, ecount);
             cmd.SetRenderTarget(target);
             Draw(matFill, FillSourceOver, 6, pb);

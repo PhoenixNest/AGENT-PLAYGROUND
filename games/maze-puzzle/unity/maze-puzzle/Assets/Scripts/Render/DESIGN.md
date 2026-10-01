@@ -60,6 +60,15 @@ Shadow geometry is the shape translated by the offset, rendered into a coverage 
 
 ## Text
 
+Parity text (SPEC 6.4, v1.6) is an **outline glyph rasteriser**, selected by `Canvas2D.UseSdfText = false` (default).
+
+- `TrueTypeFont` parses the static TTFs (glyf/loca simple and compound, cmap 4/12, hmtx/head/hhea, GPOS pair kerning, GSUB ccmp/liga). `OutlineFonts` loads them from `Resources/Fonts/Ttf`, resolves the face with `ParityFonts.ResolveWeight`, builds the fallback chain (primary, Noto Sans Symbols 2, Noto Sans Symbols) and caches flattened outlines per (face, glyph, quantised size).
+- `Canvas2D.OutlineText.cs` lays text out like Blink (word-wise shaping, no kern or ligature across spaces, unrounded advances), places baselines from the rounded hhea metrics, snaps the device origin (x to 1/4 px, y to an integer) and fills the polygons non-zero with the normal exact-area filler. `Fill.shader` applies a Skia-style glyph-mask preblend (sRGB, contrast 0.5) when the draw is flagged as glyph mask.
+- Strokes use the standard stroker on the unsnapped outline. Emoji runs stay on the sprite path below.
+- Calibration (`GlyphContrast`, `GlyphSubpixel`, `GlyphSubpixelY`, `GlyphRound`, `GlyphDx/Dy`) was swept on the four text scenes; the defaults are the optimum, and the sweeps are flat to within 0.1 point. `text_fonts` ends at 98.45 % (bar 99.0), the rest of the text scenes pass.
+
+### Legacy SDF path (off by default)
+
 TextMeshPro is used only as an SDF glyph atlas provider. Layout is done manually so that it is deterministic and independent of TMP's component pipeline:
 
 1. `ParityFonts.Resolve(family, weight)` returns the dynamic `TMP_FontAsset` (point size 96, padding 12, atlas rendering SDF).

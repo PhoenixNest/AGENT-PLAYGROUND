@@ -109,6 +109,10 @@ namespace OrbitalSalvage.Editor
             string dstDir = Path.Combine(ProjectRoot, FontsDir);
             foreach (var name in PrimaryFonts) CopyIfDifferent(Path.Combine(srcDir, name + ".ttf"), Path.Combine(dstDir, name + ".ttf"));
             foreach (var name in FallbackFonts) CopyIfDifferent(Path.Combine(srcDir, name + ".ttf"), Path.Combine(dstDir, name + ".ttf"));
+            // Outline text rasteriser (OrbitalSalvage.Render.OutlineFonts) loads the same TTFs as TextAssets from Resources.
+            string ttfDir = Path.Combine(ProjectRoot, "Assets/Resources/Fonts/Ttf");
+            foreach (var name in PrimaryFonts) CopyIfDifferent(Path.Combine(srcDir, name + ".ttf"), Path.Combine(ttfDir, name + ".bytes"));
+            foreach (var name in FallbackFonts) CopyIfDifferent(Path.Combine(srcDir, name + ".ttf"), Path.Combine(ttfDir, name + ".bytes"));
             foreach (var file in Directory.GetFiles(srcDir, "*-OFL.txt"))
             {
                 CopyIfDifferent(file, Path.Combine(dstDir, Path.GetFileName(file)));

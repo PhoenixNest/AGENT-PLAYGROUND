@@ -2,7 +2,7 @@
 
 Metrics follow SPEC section 2: `pix16` = percent of pixels with every channel within 16 (bar 99.0, target 99.5), `SSIM` = skimage SSIM over the full frame (bar 0.985, target 0.99). `ROI` columns repeat both metrics over the bounding box of the drawn content (small synthetic scenes are mostly background, so the full-frame numbers flatter them). `edge max` is the largest channel difference on edge pixels of the reference.
 
-## Synthetic scenes (20/23 pass)
+## Synthetic scenes (22/23 pass)
 
 | name | pix16 % | SSIM | ROI pix16 % | ROI SSIM | max diff | edge max | alpha max | pass |
 |---|---:|---:|---:|---:|---:|---:|---:|:--:|
@@ -24,10 +24,10 @@ Metrics follow SPEC section 2: `pix16` = percent of pixels with every channel wi
 | shadows_stroke | 99.915 | 0.9992 | 99.90 | 0.9990 | 95 | 95 | 0 | PASS |
 | shear_transforms | 99.557 | 0.9991 | 99.36 | 0.9987 | 94 | 94 | 0 | PASS |
 | state_stack | 99.813 | 0.9990 | 99.75 | 0.9987 | 70 | 70 | 191 | PASS |
-| text_align_baseline | 97.987 | 0.9876 | 97.79 | 0.9864 | 228 | 228 | 0 | FAIL |
-| text_emoji | 98.605 | 0.9916 | 98.46 | 0.9908 | 228 | 228 | 0 | FAIL |
-| text_fonts | 95.952 | 0.9746 | 94.58 | 0.9662 | 223 | 223 | 0 | FAIL |
-| text_stroke_scale | 99.244 | 0.9959 | 98.65 | 0.9929 | 172 | 172 | 0 | pass* |
+| text_align_baseline | 99.211 | 0.9973 | 99.13 | 0.9970 | 126 | 126 | 0 | pass* |
+| text_emoji | 99.199 | 0.9971 | 99.12 | 0.9968 | 124 | 124 | 0 | pass* |
+| text_fonts | 98.452 | 0.9957 | 97.93 | 0.9943 | 133 | 133 | 0 | FAIL |
+| text_stroke_scale | 99.588 | 0.9984 | 99.26 | 0.9972 | 103 | 103 | 0 | PASS |
 | zero_length | 99.984 | 1.0000 | 99.86 | 0.9998 | 27 | 27 | 0 | PASS |
 
 ## Gameplay streams (30/30 pass)
@@ -104,6 +104,6 @@ Metrics follow SPEC section 2: `pix16` = percent of pixels with every channel wi
 
 - Streams: 30 recorded gameplay frames (sessions s01/s11/s21/s31/s41, each with f001/f060/f180/pause/vfx1/vfx2), reference from Chromium 153 at DPR 3, replayed through the same command stream in Unity (D3D11 verified in `unity.log`).
 - `pass*` = clears the 99.0 % / 0.985 SPEC bar but not the 99.5 % / 0.99 internal target. Pause and vfx frames carry the most text and emoji, whose edges are the residual (see `Assets/Scripts/Render/DESIGN.md`, Text).
-- The three failing scenes are text-only stress scenes; root cause and the request to the SPEC owner are in `tools/parity/reports/spec-requests/canvas.md`.
+- Text is drawn by the outline glyph rasteriser (SPEC 1.6, section 6.4); the SDF atlas is no longer the parity path. The four `text_*` rows were re-measured with it (see `tools/parity/reports/iter-01-text.md`): `text_fonts` is the one scene still under the 99.0 % bar (98.45 %, SSIM 0.9957). The 30 gameplay-stream rows below are from the earlier SDF run, except s01_f001 (99.764 %, SSIM 0.9960) and s01_pause (99.500 %, SSIM 0.9953) which were re-measured with the outline text.
 - Performance columns: `record` = CPU time in `player.Play` (command recording and geometry), `submit` = CPU time in `EndFrame` (buffer upload and `ExecuteCommandBuffer`), `replay` = the already recorded command buffer executed repeatedly and synced (GPU-bound cost), `frame` = whole record + submit pipeline over 20 frames after 3 warm-up frames, synced at the end. Measured in the Editor on a laptop GPU; individual streams show multi-ms noise between runs (GC, Editor activity).
 

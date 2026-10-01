@@ -36,7 +36,7 @@ const result = await page.evaluate(async (fonts) => {
     }
     ctx.textBaseline = "alphabetic";
     rows.widths = {};
-    for (const s of ["Hxg", "SORT RIG 0123456789 ×•", "To Wa", "AVATAR", "fi fl", "ORBITAL x2 +3 ✓ ▶ ←"]) rows.widths[s] = ctx.measureText(s).width;
+    for (const s of ["Hxg", "SORT RIG 0123456789 ×•", "To Wa", "AVATAR", "fi fl", "ORBITAL x2 +3 ✓ ▶ ←", "Hamburgefonstiv AVATAR To Wa", "SPARKLE PLANETARY COSMIC RIG fi fl", "AV AV", "A V"]) rows.widths[s] = ctx.measureText(s).width;
     out[f] = rows;
   }
   return out;

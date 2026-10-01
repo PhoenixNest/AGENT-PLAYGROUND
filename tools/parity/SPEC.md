@@ -1,6 +1,6 @@
 # Web-to-Unity Pixel Parity Contract
 
-Version: 1.5 (see the changelog at the end)
+Version: 1.6 (see the changelog at the end)
 
 Contract for the teams building the web harness, the Unity parity player, the canvas conformance layer and the diff tool. Values in this file are decided; details marked "probe" were measured on the pinned toolchain.
 
@@ -460,17 +460,28 @@ Unity: the Canvas2D layer implements the same run algorithm (`canvas-conformance
 
 Every `Assets/Resources/Emojis/3D/*.png` is imported by `ParityAssetBuilder.ConfigureEmojiImporters` as a Sprite (single) with: **uncompressed RGBA32 on every platform** (an explicit overridden `RGBA32` entry for `Standalone`, `iPhone`, `Android`, `WebGL` and `Server` plus an uncompressed default entry; a stale platform entry alone used to leave the editor and Windows player on DXT), no mipmaps, bilinear filter, clamp, sRGB, `alphaIsTransparency`, not readable, no crunch, no NPOT scaling. `maxTextureSize` is 512, not 256: the Fluent 3D PNGs are 256 px wide, but `1fa90` (ringed planet) is 256 x 264, and a 256 cap would resample it. `OrbitalSalvage.Render.Tests.EmojiImportTests` asserts these settings and that the loaded texture format is `RGBA32` with one mip.
 
-### 6.4 Text parity bar on synthetic text scenes (OPEN, 1.5)
+### 6.4 Text rendering: outline glyph rasteriser (DECIDED, 1.6)
 
-**OPEN - awaiting lead decision.** SPEC 6.1 mandates TextMeshPro SDF text. SDF glyphs rebuilt from a 96 px atlas cannot match FreeType/Skia coverage exactly (one- to two-pixel ring on glyph edges); the `TextBias`/`TextGamma` sweep is flat. The gameplay streams pass the bar (99.2 - 99.7 %), but the three canvas conformance scenes that are almost entirely text fail the 99.0 % pixel bar (`tools/parity/reports/spec-requests/processed/canvas.md`):
+**Decision (lead, 1.6).** Text for both the canvas and the UI is drawn by an **outline glyph rasteriser**, not by TextMeshPro SDF. SDF glyphs rebuilt from a 96 px atlas cannot match FreeType/Skia coverage (a one- to two-pixel ring on glyph edges; the `TextBias`/`TextGamma` sweep is flat). The SDF path (`Canvas2D.DrawTextSdf`, `UseSdfText`) stays compiled but defaults to off and **is no longer the parity path**. Sections 6.1 and 6.2 describe the face set, the weight matching and the fallback chain, which are unchanged; the TMP assets they mention are not used for parity text.
 
-| scene | pix16 % | SSIM |
+How it works:
+
+- Glyph outlines come from the static TTFs of section 5 (`assets/fonts/`, synced by `ParityAssetBuilder` to `Assets/Resources/Fonts/Ttf/<name>.bytes`): Fredoka 400/600/700, Nunito 700/800/900, Noto Sans Symbols 2, Noto Sans Symbols. `TrueTypeFont` reads `glyf`/`loca` (simple and compound glyphs, quadratic outlines), `cmap` formats 4 and 12, `hmtx`, `head`, `hhea`, and for layout GPOS `kern` pair adjustment (PairPos formats 1 and 2) and the GSUB `ccmp`/`liga` features (lookup types 2 and 4). The fonts have no `kern` table; GPOS is the kerning source. No third-party native library is used.
+- CSS weight matching is still `ParityFonts.Resolve`'s rule (5.0): Nunito 400 draws Nunito 700, Fredoka 800/900 draw Fredoka 700. Symbol fallback chain per code point: primary face, then Noto Sans Symbols 2, then Noto Sans Symbols. Emoji runs stay on the Fluent sprite path (6.3) with the unchanged square rules.
+- Layout follows Blink: words are shaped separately (no kerning and no ligatures across a space), advances are unrounded font units scaled by `fontPx / unitsPerEm`, `textAlign` and `textBaseline` use the rounded `hhea` ascent/descent (typo metrics for top/middle/bottom). `MeasureText` matches Chromium's `measureText` to 0.0003 css px.
+- Outlines are flattened (0.02 device px tolerance), cached per (face, glyph, quantised size), and filled non-zero through the same exact-area path filler as every other canvas path. The device-space glyph origin is snapped like Skia (x to 1/4 px, y to an integer). A Skia-style glyph-mask preblend (sRGB, contrast 0.5) maps coverage to the transfer curve of Chromium's text.
+- Measured numbers are in `canvas-conformance/REPORT.md` and `reports/iter-01-text.md`.
+
+Status on the synthetic text scenes (full-frame pix16 %, SSIM; bar 99.0 / 0.985):
+
+| scene | before (SDF) | after (outline) |
 |---|---:|---:|
-| text_align_baseline | 97.99 | 0.9876 |
-| text_emoji | 98.61 | 0.9916 |
-| text_fonts | 95.95 | 0.9746 |
+| text_align_baseline | 97.99 / 0.9876 | 99.21 / 0.9973 |
+| text_emoji | 98.61 / 0.9916 | 99.20 / 0.9971 |
+| text_fonts | 95.95 / 0.9746 | 98.45 / 0.9957 |
+| text_stroke_scale | 99.24 / 0.9959 | 99.59 / 0.9984 |
 
-Options put to the lead: (a) treat the synthetic text-only scenes as informational and gate on the gameplay streams, or (b) allow an outline-based glyph rasteriser (glyph outlines read from the .ttf/.otf files and filled by the same exact-area pipeline as every other canvas path) instead of the TMP SDF path, which needs a font-parsing component. Until decided, the 99.0 % bar of section 2 stays as written, those three scenes are reported as FAIL, and no implementation work toward (b) starts.
+`text_fonts` clears the SSIM bar but is still 0.55 percentage points short on pix16; the residual is glyph-edge shape (the reference rasteriser is slightly heavier horizontally), and three iterations of sweeps (contrast, origin snap, y snap) did not move it by 0.3 points. The bar stays as written.
 
 ## 7. File and directory layout
 
@@ -836,6 +847,13 @@ Dedicated states per call site (1.4; each asserts the emoji or floating text wit
 | 7, 8 | `canvas_float_shred`, `canvas_float_compact`, `canvas_float_boost` (via `physics.onGatePassed`), `canvas_float_poof` (`physics.onDebrisExploded`), `canvas_float_turbo`, `canvas_float_turbo_reverse` (`physics.onBoostTriggered`), `canvas_float_nom_words` (`renderer.addFloatingText` with the four strings of `main.js` 650; the word is `Math.random`-picked in the app, `game_lvl01_pickup` shows the seeded pick `GULP! 🍩`) |
 
 ## Changelog
+
+### 1.6
+
+Lead decision on 6.4.
+
+- 6.4 (decided): text for both canvas and UI is an outline glyph rasteriser (TTF outlines, exact-area fill, Skia-style origin snap and coverage preblend, Blink layout including GPOS kerning and GSUB `ccmp`/`liga`). The SDF path is no longer the parity path (kept compiled behind `UseSdfText`, default off). Weight matching (5.0) and the symbol fallback chain (6.1/6.2) are unchanged.
+- 6.1/6.2: the TMP assets are retained by the builder but are not used for parity text.
 
 ### 1.5
 
