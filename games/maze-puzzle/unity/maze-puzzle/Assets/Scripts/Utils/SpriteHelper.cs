@@ -1,5 +1,4 @@
 using System;
-using System.IO;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
@@ -248,36 +247,11 @@ namespace OrbitalSalvage.Utils
                 return cached;
             }
 
-#if UNITY_EDITOR
-            string assetPath = $"Assets/Sprites/Emojis/3D/{key}.png";
-            var editorSprite = UnityEditor.AssetDatabase.LoadAssetAtPath<Sprite>(assetPath);
-            if (editorSprite != null)
+            var resourceSprite = Resources.Load<Sprite>($"Emojis/3D/{key}");
+            if (resourceSprite != null)
             {
-                cachedSprites[key] = editorSprite;
-                return editorSprite;
-            }
-#endif
-
-            string filePath = Path.Combine(Application.dataPath, "Sprites", "Emojis", "3D", $"{key}.png");
-            if (File.Exists(filePath))
-            {
-                try
-                {
-                    byte[] data = File.ReadAllBytes(filePath);
-                    var tex = new Texture2D(2, 2, TextureFormat.RGBA32, false);
-                    if (tex.LoadImage(data))
-                    {
-                        tex.filterMode = FilterMode.Bilinear;
-                        var spr = Sprite.Create(tex, new Rect(0, 0, tex.width, tex.height), new Vector2(0.5f, 0.5f), 100f);
-                        spr.name = key;
-                        cachedSprites[key] = spr;
-                        return spr;
-                    }
-                }
-                catch (Exception ex)
-                {
-                    Debug.LogWarning($"[SpriteHelper] Failed to load {filePath}: {ex.Message}");
-                }
+                cachedSprites[key] = resourceSprite;
+                return resourceSprite;
             }
 
             return GetCircleSprite();

@@ -20,6 +20,7 @@ namespace OrbitalSalvage.Core
     public class GameManager : MonoBehaviour
     {
         public static GameManager Instance { get; private set; }
+        public static event Action<GameState> OnStateChanged;
 
         [Header("State")]
         [SerializeField] private GameState currentState = GameState.MainMenu;
@@ -29,6 +30,7 @@ namespace OrbitalSalvage.Core
         [SerializeField] private int currentQuota = 20;
         [SerializeField] private int swallowedDebrisCount = 0;
         [SerializeField] private int totalDebrisSpawned = 0;
+        [SerializeField] private int massLost = 0;
         [SerializeField] private bool backupPodUsed = false;
 
         [Header("Prefabs & Roots")]
@@ -41,9 +43,28 @@ namespace OrbitalSalvage.Core
         public int CurrentLevelNumber => currentLevelNumber;
         public int CurrentQuota => currentQuota;
         public int SwallowedDebrisCount => swallowedDebrisCount;
+        public int MassLost => massLost;
+        public bool BackupPodUsed => backupPodUsed;
+        public int LastCreditsEarned => lastCreditsEarned;
+        public bool IsBackupPodEligible =>
+            !backupPodUsed &&
+            (float)swallowedDebrisCount / Mathf.Max(1, currentQuota) >= 0.7f;
 
         private List<SectorDefinition> allSectors = new List<SectorDefinition>();
         private SectorDefinition currentSector;
+        private readonly HashSet<DebrisPiece> activeDebris = new HashSet<DebrisPiece>();
+        private float failureCheckTimer;
+        private float sectorStartGrace;
+        private int lastCreditsEarned;
+
+        public int ActiveDebrisCount => activeDebris.Count;
+
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        private static void ResetStatics()
+        {
+            OnStateChanged = null;
+            Instance = null;
+        }
 
         private void Awake()
         {
@@ -70,6 +91,32 @@ namespace OrbitalSalvage.Core
             SetGameplayWorldVisible(false);
             SetState(GameState.MainMenu);
             UIManager.Instance?.ShowHome();
+        }
+
+        private void Update()
+        {
+            if (!Application.isPlaying || currentState != GameState.Playing) return;
+
+            if (sectorStartGrace > 0f)
+            {
+                sectorStartGrace -= Time.deltaTime;
+                failureCheckTimer = 0f;
+                return;
+            }
+
+            if (activeDebris.Count <= 0 && swallowedDebrisCount < currentQuota)
+            {
+                failureCheckTimer += Time.deltaTime;
+                if (failureCheckTimer >= 1.2f)
+                {
+                    failureCheckTimer = 0f;
+                    TriggerDefeat();
+                }
+            }
+            else
+            {
+                failureCheckTimer = 0f;
+            }
         }
 
         public void SetGameplayWorldVisible(bool visible)
@@ -147,15 +194,20 @@ namespace OrbitalSalvage.Core
 
             currentQuota = currentSector != null ? currentSector.quota : 20;
             swallowedDebrisCount = 0;
+            massLost = 0;
             backupPodUsed = false;
+            failureCheckTimer = 0f;
+            lastCreditsEarned = 0;
+            sectorStartGrace = 1.5f;
 
-            // Clean previous debris
+            // Clean previous debris (OnDisable unregisters; do not clear registry first)
             if (debrisContainer != null)
             {
-                foreach (Transform child in debrisContainer)
+                for (int i = debrisContainer.childCount - 1; i >= 0; i--)
                 {
-                    if (Application.isPlaying) Destroy(child.gameObject);
-                    else DestroyImmediate(child.gameObject);
+                    var child = debrisContainer.GetChild(i).gameObject;
+                    if (Application.isPlaying) Destroy(child);
+                    else DestroyImmediate(child);
                 }
             }
 
@@ -219,6 +271,18 @@ namespace OrbitalSalvage.Core
             }
         }
 
+        public void RegisterActiveDebris(DebrisPiece debris)
+        {
+            if (debris == null) return;
+            activeDebris.Add(debris);
+        }
+
+        public void UnregisterActiveDebris(DebrisPiece debris)
+        {
+            if (debris == null) return;
+            activeDebris.Remove(debris);
+        }
+
         public void OnDebrisSwallowed(DebrisPiece debris)
         {
             swallowedDebrisCount++;
@@ -232,6 +296,12 @@ namespace OrbitalSalvage.Core
             }
         }
 
+        public void OnDebrisSpilled(DebrisPiece debris)
+        {
+            if (debris == null || debris.IsSwallowed) return;
+            massLost += Mathf.Max(1, debris.ScrapValue);
+        }
+
         public void LaunchBackupPod()
         {
             if (backupPodUsed || currentState != GameState.DefeatDebrief) return;
@@ -241,23 +311,43 @@ namespace OrbitalSalvage.Core
 
             // Spawn 8 emergency debris pieces into the centrifuge
             float r = 1.8f;
+            Vector3 centerPos = centrifuge != null ? centrifuge.transform.position : Vector3.zero;
             for (int i = 0; i < 8; i++)
             {
                 float ang = Mathf.PI * 0.3f + i * 0.15f;
-                Vector3 spawnPos = new Vector3(Mathf.Cos(ang) * r, Mathf.Sin(ang) * r, 0f);
-                var go = Instantiate(debrisPrefab, spawnPos, Quaternion.identity, debrisContainer);
+                Vector3 spawnPos = centerPos + new Vector3(Mathf.Cos(ang) * r, Mathf.Sin(ang) * r, 0f);
+                GameObject go;
+                if (debrisPrefab != null)
+                {
+                    go = Instantiate(debrisPrefab, spawnPos, Quaternion.identity, debrisContainer);
+                }
+                else
+                {
+                    go = new GameObject($"BackupDebris_{i}");
+                    go.transform.position = spawnPos;
+                    if (debrisContainer != null) go.transform.SetParent(debrisContainer);
+                    go.AddComponent<CircleCollider2D>().radius = 0.14f;
+                    var rb = go.AddComponent<Rigidbody2D>();
+                    rb.mass = 1.2f;
+                    rb.collisionDetectionMode = CollisionDetectionMode2D.Continuous;
+                    go.AddComponent<DebrisPiece>();
+                }
+
                 var piece = go.GetComponent<DebrisPiece>();
                 if (piece != null) piece.SetType(DebrisType.Titanium);
             }
 
+            failureCheckTimer = 0f;
+            sectorStartGrace = 1.5f;
             SetState(GameState.Playing);
         }
 
         private void TriggerVictory()
         {
             int stars = CalculateStars();
+            lastCreditsEarned = swallowedDebrisCount * 2;
             EconomyManager.Instance?.RecordSectorVictory(currentLevelNumber, stars);
-            EconomyManager.Instance?.AddScrap(swallowedDebrisCount * 2);
+            EconomyManager.Instance?.AddScrap(lastCreditsEarned);
 
             AudioManager.Instance?.PlayVictory();
             SetState(GameState.VictoryDebrief);
@@ -265,6 +355,7 @@ namespace OrbitalSalvage.Core
 
         public void TriggerDefeat()
         {
+            if (currentState != GameState.Playing) return;
             AudioManager.Instance?.PlayDefeat();
             SetState(GameState.DefeatDebrief);
         }
@@ -281,7 +372,7 @@ namespace OrbitalSalvage.Core
         public void SetState(GameState newState)
         {
             currentState = newState;
-            // UI Manager will respond to state change
+            OnStateChanged?.Invoke(currentState);
         }
     }
 }

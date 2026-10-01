@@ -43,17 +43,40 @@ namespace OrbitalSalvage.UI
         [Header("In-Game HUD References")]
         [SerializeField] private TextMeshProUGUI hudLevelBadge;
         [SerializeField] private TextMeshProUGUI hudQuotaText;
-        [SerializeField] private Image hudQuotaBarFill;
+        [SerializeField] private RectTransform hudQuotaBarFillRect;
         [SerializeField] private TextMeshProUGUI homeCreditsText;
         [SerializeField] private TextMeshProUGUI mapsCreditsText;
 
         [Header("Debrief References")]
         [SerializeField] private TextMeshProUGUI victoryStatsText;
         [SerializeField] private TextMeshProUGUI defeatStatsText;
+        [SerializeField] private TextMeshProUGUI victoryMassText;
+        [SerializeField] private TextMeshProUGUI victoryCreditsText;
+        [SerializeField] private TextMeshProUGUI defeatMassText;
+        [SerializeField] private TextMeshProUGUI defeatLostText;
+        [SerializeField] private GameObject defeatBackupButton;
+        [SerializeField] private RectTransform defeatHangarRt;
+        [SerializeField] private RectTransform defeatTryAgainRt;
+
+        private readonly List<TextMeshProUGUI> headerCreditsTexts = new List<TextMeshProUGUI>();
+        private int lastDisplayedCredits = int.MinValue;
+        private string lastQuotaLabel;
 
         private void Awake()
         {
             Instance = this;
+        }
+
+        private void OnEnable()
+        {
+            if (!Application.isPlaying) return;
+            GameManager.OnStateChanged -= HandleGameStateChanged;
+            GameManager.OnStateChanged += HandleGameStateChanged;
+        }
+
+        private void OnDisable()
+        {
+            GameManager.OnStateChanged -= HandleGameStateChanged;
         }
 
         private void Start()
@@ -91,34 +114,119 @@ namespace OrbitalSalvage.UI
             pauseModal = null;
             victoryModal = null;
             defeatModal = null;
+            victoryMassText = null;
+            victoryCreditsText = null;
+            defeatMassText = null;
+            defeatLostText = null;
+            defeatBackupButton = null;
+            defeatHangarRt = null;
+            defeatTryAgainRt = null;
+            hudQuotaBarFillRect = null;
+            headerCreditsTexts.Clear();
+            lastDisplayedCredits = int.MinValue;
+            lastQuotaLabel = null;
 
             BuildCompleteUIHierarchy();
         }
 
+        private void HandleGameStateChanged(GameState state)
+        {
+            if (this == null || !Application.isPlaying) return;
+
+            switch (state)
+            {
+                case GameState.VictoryDebrief:
+                    PopulateVictoryModalRuntime();
+                    ShowModalVictory(true);
+                    break;
+                case GameState.DefeatDebrief:
+                    PopulateDefeatModalRuntime();
+                    ShowModalDefeat(true);
+                    break;
+                default:
+                    if (victoryModal != null) victoryModal.SetActive(false);
+                    if (defeatModal != null) defeatModal.SetActive(false);
+                    break;
+            }
+        }
+
+        private void PopulateVictoryModalRuntime()
+        {
+            var gm = GameManager.Instance;
+            if (gm == null) return;
+            if (victoryMassText != null) victoryMassText.text = $"{gm.SwallowedDebrisCount} kg";
+            if (victoryCreditsText != null) victoryCreditsText.text = $"+{gm.LastCreditsEarned}";
+        }
+
+        private void PopulateDefeatModalRuntime()
+        {
+            var gm = GameManager.Instance;
+            if (gm == null) return;
+            if (defeatMassText != null) defeatMassText.text = $"{gm.SwallowedDebrisCount} / {gm.CurrentQuota} kg";
+            if (defeatLostText != null) defeatLostText.text = $"{gm.MassLost} kg";
+
+            bool eligible = gm.IsBackupPodEligible;
+            if (defeatBackupButton != null) defeatBackupButton.SetActive(eligible);
+            ApplyDefeatActionLayout(eligible);
+        }
+
+        private void ApplyDefeatActionLayout(bool backupVisible)
+        {
+            if (defeatHangarRt == null || defeatTryAgainRt == null) return;
+            if (backupVisible)
+            {
+                defeatHangarRt.anchorMin = new Vector2(0.05f, 0.04f);
+                defeatHangarRt.anchorMax = new Vector2(0.48f, 0.18f);
+                defeatTryAgainRt.anchorMin = new Vector2(0.52f, 0.04f);
+                defeatTryAgainRt.anchorMax = new Vector2(0.95f, 0.18f);
+            }
+            else
+            {
+                defeatHangarRt.anchorMin = new Vector2(0.05f, 0.06f);
+                defeatHangarRt.anchorMax = new Vector2(0.48f, 0.20f);
+                defeatTryAgainRt.anchorMin = new Vector2(0.52f, 0.06f);
+                defeatTryAgainRt.anchorMax = new Vector2(0.95f, 0.20f);
+            }
+        }
+
         private void UpdateHudData()
         {
-            if (GameManager.Instance == null) return;
-
             int credits = EconomyManager.Instance != null ? EconomyManager.Instance.SaveData.scrapCredits : 250;
-            if (homeCreditsText != null) homeCreditsText.text = $"{credits}";
-            if (mapsCreditsText != null) mapsCreditsText.text = $"{credits}";
-
-            if (GameManager.Instance.CurrentState == GameState.Playing)
+            if (credits != lastDisplayedCredits)
             {
-                if (hudLevelBadge != null)
+                lastDisplayedCredits = credits;
+                string creditsLabel = $"{credits}";
+                for (int i = 0; i < headerCreditsTexts.Count; i++)
                 {
-                    hudLevelBadge.text = $"LVL {GameManager.Instance.CurrentLevelNumber}";
+                    if (headerCreditsTexts[i] != null) headerCreditsTexts[i].text = creditsLabel;
                 }
+            }
 
-                if (hudQuotaText != null)
-                {
-                    hudQuotaText.text = $"{GameManager.Instance.SwallowedDebrisCount} / {GameManager.Instance.CurrentQuota} kg";
-                }
+            if (GameManager.Instance == null) return;
+            if (GameManager.Instance.CurrentState != GameState.Playing) return;
 
-                if (hudQuotaBarFill != null)
+            if (hudLevelBadge != null)
+            {
+                hudLevelBadge.text = $"LVL {GameManager.Instance.CurrentLevelNumber}";
+            }
+
+            string quotaLabel = $"{GameManager.Instance.SwallowedDebrisCount} / {GameManager.Instance.CurrentQuota} kg";
+            if (hudQuotaText != null && quotaLabel != lastQuotaLabel)
+            {
+                lastQuotaLabel = quotaLabel;
+                hudQuotaText.text = quotaLabel;
+            }
+
+            if (hudQuotaBarFillRect != null)
+            {
+                float p = (float)GameManager.Instance.SwallowedDebrisCount / Mathf.Max(1, GameManager.Instance.CurrentQuota);
+                p = Mathf.Clamp01(p);
+                var max = hudQuotaBarFillRect.anchorMax;
+                if (!Mathf.Approximately(max.x, p))
                 {
-                    float p = (float)GameManager.Instance.SwallowedDebrisCount / Mathf.Max(1, GameManager.Instance.CurrentQuota);
-                    hudQuotaBarFill.fillAmount = Mathf.Clamp01(p);
+                    hudQuotaBarFillRect.anchorMax = new Vector2(p, max.y);
+                    hudQuotaBarFillRect.offsetMin = Vector2.zero;
+                    hudQuotaBarFillRect.offsetMax = Vector2.zero;
                 }
             }
         }
@@ -349,19 +457,27 @@ namespace OrbitalSalvage.UI
             inGameHudPanel = CreatePage(appRoot.transform, "Page_InGameHUD");
             loadingPanel = CreatePage(appRoot.transform, "Page_Loading");
 
-            BuildHomeScreen(homePanel.transform);
-            BuildMapsScreen(mapsPanel.transform);
-            BuildDailyScreen(dailyPanel.transform);
-            BuildShopScreen(shopPanel.transform);
-            BuildTrophiesScreen(trophiesPanel.transform);
-            BuildSettingsScreen(settingsPanel.transform);
-            BuildGameplayHud(inGameHudPanel.transform);
-            BuildLoadingScreen(loadingPanel.transform);
+            // Page backgrounds stay full-bleed on the page root; interactive UI builds into SafeContent.
+            BuildHomeScreen(GetPageContent(homePanel));
+            BuildMapsScreen(GetPageContent(mapsPanel));
+            BuildDailyScreen(GetPageContent(dailyPanel));
+            BuildShopScreen(GetPageContent(shopPanel));
+            BuildTrophiesScreen(GetPageContent(trophiesPanel));
+            BuildSettingsScreen(GetPageContent(settingsPanel));
+            BuildGameplayHud(GetPageContent(inGameHudPanel));
+            BuildLoadingScreen(GetPageContent(loadingPanel));
 
             BuildModals(appRoot.transform);
 
             SetPage(homePanel);
             SetWorldVisibility(false);
+        }
+
+        private Transform GetPageContent(GameObject page)
+        {
+            if (page == null) return null;
+            var safe = page.transform.Find("SafeContent");
+            return safe != null ? safe : page.transform;
         }
 
         private GameObject CreatePage(Transform parent, string name)
@@ -380,6 +496,14 @@ namespace OrbitalSalvage.UI
                     new Color32(0x13, 0x11, 0x33, 0xff), Color.clear, 0f, 0f);
                 bg.transform.SetAsFirstSibling();
             }
+
+            var safeGo = new GameObject("SafeContent", typeof(RectTransform));
+            safeGo.transform.SetParent(go.transform, false);
+            var safeRt = safeGo.GetComponent<RectTransform>();
+            safeRt.anchorMin = Vector2.zero;
+            safeRt.anchorMax = Vector2.one;
+            safeRt.sizeDelta = Vector2.zero;
+            safeGo.AddComponent<SafeAreaFitter>();
 
             return go;
         }
@@ -409,6 +533,7 @@ namespace OrbitalSalvage.UI
             CreateEmojiImage(coinPill, "emoji_3d_coin", new Vector2(24f, 24f), new Vector2(0.20f, 0.5f));
             homeCreditsText = CreateText(coinPill, "250", 16, Color.white, TextAlignmentOptions.MidlineLeft);
             homeCreditsText.fontStyle = FontStyles.Bold;
+            headerCreditsTexts.Add(homeCreditsText);
             var cRt = homeCreditsText.GetComponent<RectTransform>();
             cRt.anchorMin = new Vector2(0.42f, 0f);
             cRt.anchorMax = new Vector2(0.95f, 1f);
@@ -906,12 +1031,12 @@ namespace OrbitalSalvage.UI
 
             CreateShopItemCard(shopRingsContainer.transform, "Rubber Duckie Floatie",
                 "Squeaky bright yellow bath duck with cute orange beak and water bubbles!",
-                new Color32(0xfa, 0xcc, 0x15, 0xff), null, "Unlock (500", false,
+                new Color32(0xfa, 0xcc, 0x15, 0xff), null, "Unlock (500)", false,
                 new Vector2(0f, 0.34f), new Vector2(1f, 0.66f));
 
             CreateShopItemCard(shopRingsContainer.transform, "Peppermint Candy Ring",
                 "Crisp red and white candy cane stripes with minty freshness!",
-                new Color32(0xef, 0x44, 0x44, 0xff), null, "Unlock (1200", false,
+                new Color32(0xef, 0x44, 0x44, 0xff), null, "Unlock (1200)", false,
                 new Vector2(0f, 0.01f), new Vector2(1f, 0.33f));
 
             // TAB 1: NIBBLES HATS ITEMS
@@ -922,12 +1047,12 @@ namespace OrbitalSalvage.UI
 
             CreateShopItemCard(shopHatsContainer.transform, "Berry Swirl Vortex",
                 "Sweet strawberry cyclone that eats trash like fruit smoothie!",
-                new Color32(0xf4, 0x72, 0xb6, 0xff), null, "Unlock (600", false,
+                new Color32(0xf4, 0x72, 0xb6, 0xff), null, "Unlock (600)", false,
                 new Vector2(0f, 0.34f), new Vector2(1f, 0.66f));
 
             CreateShopItemCard(shopHatsContainer.transform, "Sleepy Star Cloud",
                 "A sleepy pastel blue cloud that yawns and gulps down space junk!",
-                new Color32(0x38, 0xbd, 0xf8, 0xff), null, "Unlock (1500", false,
+                new Color32(0x38, 0xbd, 0xf8, 0xff), null, "Unlock (1500)", false,
                 new Vector2(0f, 0.01f), new Vector2(1f, 0.33f));
 
             // TAB 2: SKIES ITEMS
@@ -938,12 +1063,12 @@ namespace OrbitalSalvage.UI
 
             CreateShopItemCard(shopSkiesContainer.transform, "Cheese Moon Orbit",
                 "A happy cartoon moon made of Swiss cheese floating in twilight.",
-                new Color32(0xfa, 0xcc, 0x15, 0xff), null, "Unlock (800", false,
+                new Color32(0xfa, 0xcc, 0x15, 0xff), null, "Unlock (800)", false,
                 new Vector2(0f, 0.34f), new Vector2(1f, 0.66f));
 
             CreateShopItemCard(shopSkiesContainer.transform, "Mint Soda Lagoon",
                 "Sparkling emerald and turquoise cosmos with fizzy space bubbles.",
-                new Color32(0x4a, 0xde, 0x80, 0xff), null, "Unlock (2000", false,
+                new Color32(0x4a, 0xde, 0x80, 0xff), null, "Unlock (2000)", false,
                 new Vector2(0f, 0.01f), new Vector2(1f, 0.33f));
 
             SetShopTab(0);
@@ -1021,8 +1146,8 @@ namespace OrbitalSalvage.UI
             {
                 CreatePillButton3D(card, "Btn_Unlock", actionLabel,
                     SpriteHelper.ColorYellowMain, new Color32(0xf5, 0x9e, 0x0b, 0xff), SpriteHelper.ColorYellowShadow, SpriteHelper.ColorBorderDark,
-                    new Vector2(0.05f, 0.08f), new Vector2(0.48f, 0.34f), 11.5f, () => AudioManager.Instance?.PlayButtonClick(),
-                    "coin_inside_paren", SpriteHelper.ColorBorderDark, 3f);
+                    new Vector2(0.05f, 0.08f), new Vector2(0.55f, 0.34f), 11.5f, () => AudioManager.Instance?.PlayButtonClick(),
+                    "coin_right", SpriteHelper.ColorBorderDark, 3f);
             }
         }
         #endregion
@@ -1269,7 +1394,9 @@ namespace OrbitalSalvage.UI
                 new Color32(0x0f, 0x17, 0x2a, 0xee), new Color32(0x63, 0x66, 0xf1, 0x44), 1f);
             var fill = CreatePill(track, "ProgressBarFill", new Vector2(0f, 0f), new Vector2(0f, 1f),
                 SpriteHelper.ColorCyanMain, Color.clear, 0f);
-            hudQuotaBarFill = fill.GetComponent<Image>();
+            hudQuotaBarFillRect = fill.GetComponent<RectTransform>();
+            hudQuotaBarFillRect.offsetMin = Vector2.zero;
+            hudQuotaBarFillRect.offsetMax = Vector2.zero;
 
             hudQuotaText = CreateText(capsule, "0 / 20 kg", 12.5f, Color.white, TextAlignmentOptions.MidlineRight);
             hudQuotaText.fontStyle = FontStyles.Bold;
@@ -1378,6 +1505,7 @@ namespace OrbitalSalvage.UI
             CreateText(sBox1, "SNACKS EATEN", 9, new Color32(0xa5, 0xb4, 0xfc, 0xdd), TextAlignmentOptions.Center).fontStyle = FontStyles.Bold;
             var sb1Val = CreateText(sBox1, "45 kg", 18, SpriteHelper.ColorYellowMain, TextAlignmentOptions.Center);
             sb1Val.fontStyle = FontStyles.Bold;
+            victoryMassText = sb1Val;
             var sb1Rt = sb1Val.GetComponent<RectTransform>();
             sb1Rt.anchorMin = new Vector2(0f, 0.1f);
             sb1Rt.anchorMax = new Vector2(1f, 0.6f);
@@ -1387,6 +1515,7 @@ namespace OrbitalSalvage.UI
             CreateText(sBox2, "COINS WON", 9, new Color32(0xa5, 0xb4, 0xfc, 0xdd), TextAlignmentOptions.Center).fontStyle = FontStyles.Bold;
             var sb2Val = CreateText(sBox2, "+250", 18, SpriteHelper.ColorYellowMain, TextAlignmentOptions.MidlineRight);
             sb2Val.fontStyle = FontStyles.Bold;
+            victoryCreditsText = sb2Val;
             var sb2Rt = sb2Val.GetComponent<RectTransform>();
             sb2Rt.anchorMin = new Vector2(0.05f, 0.1f);
             sb2Rt.anchorMax = new Vector2(0.68f, 0.6f);
@@ -1433,6 +1562,7 @@ namespace OrbitalSalvage.UI
             CreateText(dBox1, "SNACKS COLLECTED", 8.5f, new Color32(0xa5, 0xb4, 0xfc, 0xdd), TextAlignmentOptions.Center).fontStyle = FontStyles.Bold;
             var db1Val = CreateText(dBox1, "12 / 20 kg", 16, SpriteHelper.ColorYellowMain, TextAlignmentOptions.Center);
             db1Val.fontStyle = FontStyles.Bold;
+            defeatMassText = db1Val;
             var db1Rt = db1Val.GetComponent<RectTransform>();
             db1Rt.anchorMin = new Vector2(0f, 0.1f);
             db1Rt.anchorMax = new Vector2(1f, 0.6f);
@@ -1442,23 +1572,35 @@ namespace OrbitalSalvage.UI
             CreateText(dBox2, "LOST IN VOID", 8.5f, new Color32(0xa5, 0xb4, 0xfc, 0xdd), TextAlignmentOptions.Center).fontStyle = FontStyles.Bold;
             var db2Val = CreateText(dBox2, "4 kg", 16, new Color32(0xf8, 0x71, 0x71, 0xff), TextAlignmentOptions.Center);
             db2Val.fontStyle = FontStyles.Bold;
+            defeatLostText = db2Val;
             var db2Rt = db2Val.GetComponent<RectTransform>();
             db2Rt.anchorMin = new Vector2(0f, 0.1f);
             db2Rt.anchorMax = new Vector2(1f, 0.6f);
 
-            CreatePillButton3D(defCardTr, "Btn_Hangar", "Hangar",
+            var backupBtn = CreatePillButton3D(defCardTr, "Btn_BackupPod", "Launch Backup Pod (+8)",
+                new Color32(0x06, 0xb6, 0xd4, 0xff), new Color32(0x3b, 0x82, 0xf6, 0xff), new Color32(0x02, 0x84, 0xc7, 0xff), SpriteHelper.ColorBorderDark,
+                new Vector2(0.05f, 0.21f), new Vector2(0.95f, 0.27f), 11.5f, () => {
+                    defeatModal.SetActive(false);
+                    GameManager.Instance?.LaunchBackupPod();
+                }, "emoji_3d_rocket", Color.white, 3f);
+            defeatBackupButton = backupBtn.gameObject;
+            defeatBackupButton.SetActive(false);
+
+            var hangarBtn = CreatePillButton3D(defCardTr, "Btn_Hangar", "Hangar",
                 new Color32(0x43, 0x38, 0xca, 0xff), new Color32(0x37, 0x30, 0xa3, 0xff), SpriteHelper.ColorBorderDark, SpriteHelper.ColorBorderDark,
                 new Vector2(0.05f, 0.06f), new Vector2(0.48f, 0.20f), 13.5f, () => {
                     defeatModal.SetActive(false);
                     ShowHome();
                 }, "emoji_3d_home", Color.white, 3.5f);
+            defeatHangarRt = hangarBtn.GetComponent<RectTransform>();
 
-            CreatePillButton3D(defCardTr, "Btn_TryAgain", "Try Again",
+            var tryAgainBtn = CreatePillButton3D(defCardTr, "Btn_TryAgain", "Try Again",
                 SpriteHelper.ColorYellowMain, new Color32(0xf5, 0x9e, 0x0b, 0xff), SpriteHelper.ColorYellowShadow, SpriteHelper.ColorBorderDark,
                 new Vector2(0.52f, 0.06f), new Vector2(0.95f, 0.20f), 13.5f, () => {
                     defeatModal.SetActive(false);
                     if (GameManager.Instance != null) StartSector(GameManager.Instance.CurrentLevelNumber);
                 }, "emoji_3d_retry", SpriteHelper.ColorBorderDark, 3.5f);
+            defeatTryAgainRt = tryAgainBtn.GetComponent<RectTransform>();
 
             pauseModal.SetActive(false);
             victoryModal.SetActive(false);
@@ -1467,14 +1609,22 @@ namespace OrbitalSalvage.UI
 
         private GameObject CreateModalCard(Transform parent, string name, float heightFrac, float widthFrac, float bottomY, out Transform cardTransform)
         {
-            // Dark blurred backdrop overlay
+            // Dark blurred backdrop overlay (full-bleed)
             var overlay = CreateRect(parent, name, Vector2.zero, Vector2.one);
             var oImg = overlay.gameObject.AddComponent<Image>();
             oImg.color = new Color32(0x0f, 0x0c, 0x29, 0xb8);
 
-            // Bottom-anchored modal sheet card (1:1 Web Replica)
+            var safeGo = new GameObject("SafeContent", typeof(RectTransform));
+            safeGo.transform.SetParent(overlay, false);
+            var safeRt = safeGo.GetComponent<RectTransform>();
+            safeRt.anchorMin = Vector2.zero;
+            safeRt.anchorMax = Vector2.one;
+            safeRt.sizeDelta = Vector2.zero;
+            safeGo.AddComponent<SafeAreaFitter>();
+
+            // Bottom-anchored modal sheet card (1:1 Web Replica) inside safe area
             float halfW = widthFrac * 0.5f;
-            var card = CreateSlicedCard(overlay, "ModalCard",
+            var card = CreateSlicedCard(safeGo.transform, "ModalCard",
                 new Vector2(0.5f - halfW, bottomY), new Vector2(0.5f + halfW, bottomY + heightFrac),
                 new Color32(0x31, 0x2e, 0x81, 0xfa), SpriteHelper.ColorBorderDark, 3.5f, 28f);
 
@@ -1573,6 +1723,8 @@ namespace OrbitalSalvage.UI
                 CreateEmojiImage(coinPill, "emoji_3d_coin", new Vector2(20f, 20f), new Vector2(0.22f, 0.5f));
                 var cTxt = CreateText(coinPill, "250", 14, Color.white, TextAlignmentOptions.MidlineLeft);
                 cTxt.fontStyle = FontStyles.Bold;
+                headerCreditsTexts.Add(cTxt);
+                if (mapsCreditsText == null) mapsCreditsText = cTxt;
                 var ctRt = cTxt.GetComponent<RectTransform>();
                 ctRt.anchorMin = new Vector2(0.48f, 0f);
                 ctRt.anchorMax = new Vector2(0.95f, 1f);

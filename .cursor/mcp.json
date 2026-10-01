@@ -8,6 +8,19 @@
 				"run",
 				"blender-mcp"
 			]
+		},
+		"UnityMCP": {
+			"command": "uvx",
+			"args": [
+				"--from",
+				"mcpforunityserver==10.2.0",
+				"mcp-for-unity",
+				"--transport",
+				"stdio"
+			],
+			"env": {
+				"UNITY_MCP_SKIP_STARTUP_CONNECT": "true"
+			}
 		}
 	}
 }

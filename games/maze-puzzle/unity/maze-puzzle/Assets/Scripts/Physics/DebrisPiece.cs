@@ -27,11 +27,66 @@ namespace OrbitalSalvage.Physics
         public float LastGatePassTime { get; set; } = -1f;
         public bool IsSwallowed { get; set; } = false;
 
+        private bool registered;
+        private bool spillHandled;
+
         private void Awake()
         {
             Rb = GetComponent<Rigidbody2D>();
             Col = GetComponent<CircleCollider2D>();
             ConfigurePhysics();
+        }
+
+        private void OnEnable()
+        {
+            TryRegister();
+        }
+
+        private void Start()
+        {
+            TryRegister();
+        }
+
+        private void OnDisable()
+        {
+            if (!registered) return;
+            GameManager.Instance?.UnregisterActiveDebris(this);
+            registered = false;
+        }
+
+        private void TryRegister()
+        {
+            if (!Application.isPlaying || registered) return;
+            if (GameManager.Instance == null) return;
+            GameManager.Instance.RegisterActiveDebris(this);
+            registered = true;
+        }
+
+        private void FixedUpdate()
+        {
+            if (!Application.isPlaying || IsSwallowed || spillHandled) return;
+            if (!IsOutsidePlayfield()) return;
+
+            spillHandled = true;
+            GameManager.Instance?.OnDebrisSpilled(this);
+            Destroy(gameObject);
+        }
+
+        private bool IsOutsidePlayfield()
+        {
+            var cam = Camera.main;
+            if (cam == null || !cam.orthographic) return transform.position.y < -8f;
+
+            Vector3 camPos = cam.transform.position;
+            float halfH = cam.orthographicSize;
+            float halfW = halfH * cam.aspect;
+            const float margin = 1.25f;
+
+            Vector3 p = transform.position;
+            return p.y < camPos.y - halfH - margin
+                || p.y > camPos.y + halfH + margin
+                || p.x < camPos.x - halfW - margin
+                || p.x > camPos.x + halfW + margin;
         }
 
         public void ConfigurePhysics()

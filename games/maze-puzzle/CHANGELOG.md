@@ -7,24 +7,76 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [0.9.0] - 2026-09-28
+## [Unreleased]
+
+### Fixed
+
+#### Unity
+
+- Victory / defeat modals now open from gameplay via `GameManager.OnStateChanged` with real stats.
+- Defeat path: spilled debris counted as lost; defeat when no active debris and quota unmet; 1.5s sector-start grace.
+- Backup Pod button when ≥70% quota and unused (`Launch Backup Pod (+8)`).
+- Emoji sprites moved to `Assets/Resources/Emojis/3D/` and loaded via `Resources.Load` (fixes device builds that previously fell back to circles).
+- Safe area applied via `SafeContent` + `SafeAreaFitter`.
+- HUD quota bar fill updates correctly.
+- Star ratings persisted with `List<SectorStarEntry>` instead of `Dictionary` (JsonUtility-safe).
+- Header coin labels update live and only when changed.
+- Shop unlock labels corrected (e.g. `Unlock (500)` / `Unlock (1200)`).
+
+#### Web
+
+- Missing `AudioEngine.playRcsThrust` — BOOST gates aborted the physics frame when the method was absent.
+- `AudioContext` resumed on interaction (iOS mute / suspended context).
+- SFX volume slider now applied (`setSfxVolume`); ambience bus has gain nodes but no ambience sources yet.
+- Escape / Hangar / `loadSector` share `resetGameplaySessionUi` so modals and pause state reset cleanly.
+
+### Changed
+
+#### Web
+
+- Campaign reward = `250 + (level - 1) * 5` (L1 = 250, L50 = 495).
+
+### Added
+
+#### Tooling
+
+- MCP for Unity **10.2.0** (Unity package `com.coplaydev.unity-mcp` `#v10.2.0` + Cursor `.cursor/mcp.json` entry; `.agents` configs pinned to `mcpforunityserver==10.2.0`).
+
+#### Docs
+
+- `08_UNITY_MIGRATION_AND_IOS_DEPLOYMENT_PLAN.md` and `09_VISUAL_PARITY_AND_SCREENSHOT_COMPARISON.md` corrected against repo reality.
+- `10_PROJECT_REVIEW_2026-09-30.md` added.
+
+---
+
+## [0.10.0] - 2026-09-30 (`c7ba2f5`, `c9487e5`, `3c0a048`)
+
+### Added
+
+- **Complete game scene, prefabs & build settings (`c7ba2f5`):** `MainGameScene`, `Debris_Titanium` / `Gate_Multiplier` prefabs, Resources audio + `sectors_50.json` mirrors, and Editor build settings wiring.
+- **Edit-mode UI preview tooling & visual spec parity (`c9487e5`):** `OrbitalSalvageEditorMenu` UI Previews, `ConfigureEmojiSprites`, expanded procedural `UIManager`, `SpriteHelper`, and initial web screenshot archive under `web/screenshots/`. Imported TextMesh Pro (including Examples & Extras).
+- **UI fidelity, SDF sprites & runtime screen capture (`3c0a048`):** Major `UIManager` / `SpriteHelper` visual iteration, SDF-oriented UI chrome, `RuntimeScreenshotCapture` editor tooling, and Unity screenshot archive under `unity/screenshots/`.
+
+---
+
+## [0.9.0] - 2026-09-28 (`54ec4d8`)
 
 ### Added
 
 - **Native Unity 6 Project Scaffolding (`games/maze-puzzle/unity/maze-puzzle/`):** Initialized the native Unity 6 (`6000.4.6f1`) project `maze-puzzle` via Unity Batchmode CLI, configured for iOS Portrait orientation.
 - **Git Worktree Collaborative Development (`.worktrees/unity-migration/`):** Utilized isolated git worktree branch `unity-migration` for parallel multi-agent development and seamless merging into `maze-puzzle`.
 - **Pre-baked Asset Pipelines:**
-  - Archived all 34 pre-rendered Microsoft Fluent 3D Emoji PNG assets directly into `Assets/Sprites/Emojis/3D/`.
+  - Archived all 34 pre-rendered Microsoft Fluent 3D Emoji PNG assets directly into `Assets/Sprites/Emojis/3D/` (later relocated to `Assets/Resources/Emojis/3D/` in Unreleased).
   - Synthesized all 15 discrete uncompressed 16-bit PCM `.wav` audio cues into `Assets/Audio/` matching the studio Audio Design Specification.
 - **50-Level Campaign Data & Level Sanitizer:**
   - Exported complete 50-sector campaign matrix from `web/engine/maze.js` to `Assets/Scripts/Data/sectors_50.json`.
   - Implemented C# `SectorData.cs` and `MazeSanitizer.cs` guaranteeing zero gate-wall overlaps.
   - Verified 50/50 level import via `-executeMethod OrbitalSalvage.Editor.LevelImporter.BatchImportAll50Levels` with exit code 0.
 - **Complete Core C# Gameplay Architecture:**
-  - `CentrifugeController.cs`: 1:1 tactile drag, Euler integration, 0.94 inertia damping, and double-tap attitude thrusters.
+  - `CentrifugeController.cs`: tactile drag, Euler integration, 0.94 inertia damping, and double-tap attitude thrusters.
   - `DebrisPiece.cs`: Rigid body dynamics, material restitution, and scrap valuation.
   - `MultiplierGate.cs`: Multiplier, adder, booster, and flapper gates with radial clone fanning.
-  - `NibblesController.cs`: Mascot micro-black hole with inverse-square gravitational pull, event horizon ingestion, dynamic quota growth ($1.0\times \to 1.65\times$), and squash-and-stretch wobble.
+  - `NibblesController.cs`: Mascot micro-black hole with gravitational pull, event horizon ingestion, dynamic quota growth ($1.0\times \to 1.65\times$), and squash-and-stretch wobble.
   - `MascotEyeTracker.cs`: Real-time pupil gaze tracking towards falling scrap with natural blinking routines.
   - `GameManager.cs` & `EconomyManager.cs`: Game state machine, offline JSON persistence, scrap credits, and backup pod recovery flow.
   - `AudioManager.cs`: Master audio manager pooling AudioSources for the 15 sound cues.
@@ -32,7 +84,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [0.8.0] - 2026-09-27
+## [0.8.0] - 2026-09-27 (`0428369`)
 
 ### Added
 
@@ -41,16 +93,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Module-by-module JavaScript-to-C# code translation assessment across physics, level schemas, UI, audio, and economy.
   - **1:1 Sound & Image Asset Inventory (Section 4):** Comprehensive catalogs covering all 15 discrete `.wav` audio cues (exact waveforms, DSP envelopes, and master compressor limiter specs) and all visual/image assets (4 ring skins, 4 black hole skins, 4 multiplier gates, 3 debris variants, 3 celestial skyboxes, deflector bumpers, and 8 mobile UI screens).
   - **Microsoft Fluent 3D Emoji Asset Integration (Section 4.3):** Integrated the MIT-licensed open-source `microsoft/fluentui-emoji` library. Resolved cross-platform emoji rendering divergence between Windows and iOS, bypassed Apple IP emoji restrictions, and provided turnkey fetcher `scripts/download_fluent_3d_emojis.js`.
-  - **Asset Verification:** Successfully downloaded all 34 pre-rendered 3D emoji PNG assets into `unity/Assets/Sprites/Emojis/3D/` for TextMeshPro sprite asset generation (`TMP_SpriteAsset_Emojis.asset`).
+  - **Asset Verification:** Successfully downloaded all 34 pre-rendered 3D emoji PNG assets into `unity/maze-puzzle/Assets/Sprites/Emojis/3D/` for TextMeshPro sprite asset generation (`TMP_SpriteAsset_Emojis.asset`).
   - **Complete Animation Migration Architecture (Section 5):** Detailed 1:1 translation specification converting Canvas 2D trigonometric math and particle loops into Unity animation systems (DOTween squash-and-stretch wobble, pupil gaze tracking, dynamic quota growth, Shuriken Keplerian accretion vortex, UV-scrolling booster chevrons, and HingeJoint2D one-way flappers).
   - **Unity Tooling & Automation Stack (Section 6):** Confirmed local Unity 6 (`6000.4.6f1`) and Unity Hub CLI paths, documented Unity Model Context Protocol (MCP) bridge integration (`CoplayDev/unity-mcp`), Batchmode CLI headless workflows, OpenUPM package automation, and a 4-phase hybrid velocity strategy.
-  - **Unity MCP Server Setup & Verification:** Configured workspace-level MCP server (`.agents/mcp_config.json`, `.agents/plugins/unity-mcp/`), implemented in-workspace skill runbook (`.agents/skills/unity-mcp/SKILL.md`), and successfully executed FastMCP 3.4.7 stdio connection tests and resource discovery.
+  - **Unity MCP Server Setup & Verification:** Configured workspace-level MCP server (`.agents/mcp_config.json`, `.agents/plugins/unity-mcp/`), implemented in-workspace skill runbook (`.agents/skills/unity-mcp/SKILL.md`), and successfully executed FastMCP stdio connection tests and resource discovery.
   - 7-phase Gantt execution roadmap spanning project scaffolding, ScriptableObject level imports, physics kinematics, UGUI systems, and Xcode TestFlight deployment.
   - Risk analysis and App Store Review Guideline 4.3 defense alignment.
 
 ---
 
-## [0.7.0] - 2026-09-24
+## [0.7.0] - 2026-09-24 (`85aefc7`)
 
 ### Added
 

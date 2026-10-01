@@ -8,7 +8,7 @@ namespace OrbitalSalvage.Editor
     {
         public static void ReimportAllEmojisAsSprites()
         {
-            string emojiFolder = "Assets/Sprites/Emojis/3D";
+            string emojiFolder = "Assets/Resources/Emojis/3D";
             if (!Directory.Exists(emojiFolder)) return;
 
             int count = 0;

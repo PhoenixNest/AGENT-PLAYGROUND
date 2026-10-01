@@ -6,11 +6,18 @@ using UnityEngine;
 namespace OrbitalSalvage.Core
 {
     [Serializable]
+    public class SectorStarEntry
+    {
+        public int level;
+        public int stars;
+    }
+
+    [Serializable]
     public class PlayerSaveData
     {
         public int scrapCredits = 150;
         public int highestUnlockedLevel = 1;
-        public Dictionary<int, int> sectorStars = new Dictionary<int, int>();
+        public List<SectorStarEntry> sectorStarEntries = new List<SectorStarEntry>();
         public List<string> unlockedSkins = new List<string>() { "skin_ring_default", "skin_hole_default" };
         public string equippedRingSkin = "skin_ring_default";
         public string equippedHoleSkin = "skin_hole_default";
@@ -22,6 +29,8 @@ namespace OrbitalSalvage.Core
         public static EconomyManager Instance { get; private set; }
 
         public PlayerSaveData SaveData { get; private set; } = new PlayerSaveData();
+
+        private readonly Dictionary<int, int> sectorStarsLookup = new Dictionary<int, int>();
 
         private string SaveFilePath => Path.Combine(Application.persistentDataPath, "orbital_salvage_save.json");
 
@@ -56,9 +65,10 @@ namespace OrbitalSalvage.Core
 
         public void RecordSectorVictory(int levelNum, int stars)
         {
-            if (!SaveData.sectorStars.ContainsKey(levelNum) || SaveData.sectorStars[levelNum] < stars)
+            if (!sectorStarsLookup.TryGetValue(levelNum, out int existing) || existing < stars)
             {
-                SaveData.sectorStars[levelNum] = stars;
+                sectorStarsLookup[levelNum] = stars;
+                SyncStarEntriesFromLookup();
             }
 
             if (levelNum >= SaveData.highestUnlockedLevel && levelNum < 50)
@@ -71,7 +81,7 @@ namespace OrbitalSalvage.Core
 
         public int GetSectorStars(int levelNum)
         {
-            if (SaveData.sectorStars.TryGetValue(levelNum, out int s)) return s;
+            if (sectorStarsLookup.TryGetValue(levelNum, out int s)) return s;
             return 0;
         }
 
@@ -79,6 +89,7 @@ namespace OrbitalSalvage.Core
         {
             try
             {
+                SyncStarEntriesFromLookup();
                 string json = JsonUtility.ToJson(SaveData, true);
                 File.WriteAllText(SaveFilePath, json);
             }
@@ -96,12 +107,40 @@ namespace OrbitalSalvage.Core
                 {
                     string json = File.ReadAllText(SaveFilePath);
                     SaveData = JsonUtility.FromJson<PlayerSaveData>(json);
+                    if (SaveData == null) SaveData = new PlayerSaveData();
+                    if (SaveData.sectorStarEntries == null) SaveData.sectorStarEntries = new List<SectorStarEntry>();
+                    RebuildStarLookup();
                 }
             }
             catch (Exception ex)
             {
                 Debug.LogWarning($"[EconomyManager] Load failed, using defaults: {ex.Message}");
                 SaveData = new PlayerSaveData();
+                sectorStarsLookup.Clear();
+            }
+        }
+
+        private void RebuildStarLookup()
+        {
+            sectorStarsLookup.Clear();
+            if (SaveData?.sectorStarEntries == null) return;
+            foreach (var entry in SaveData.sectorStarEntries)
+            {
+                if (entry == null) continue;
+                if (!sectorStarsLookup.ContainsKey(entry.level) || sectorStarsLookup[entry.level] < entry.stars)
+                {
+                    sectorStarsLookup[entry.level] = entry.stars;
+                }
+            }
+        }
+
+        private void SyncStarEntriesFromLookup()
+        {
+            if (SaveData.sectorStarEntries == null) SaveData.sectorStarEntries = new List<SectorStarEntry>();
+            SaveData.sectorStarEntries.Clear();
+            foreach (var kvp in sectorStarsLookup)
+            {
+                SaveData.sectorStarEntries.Add(new SectorStarEntry { level = kvp.Key, stars = kvp.Value });
             }
         }
     }

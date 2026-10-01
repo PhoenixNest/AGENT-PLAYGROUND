@@ -242,6 +242,9 @@ export class MazeLevelBuilder {
       config = this.buildWorld5Level(levelNumber, subLevel);
     }
 
+    // Campaign base reward: level 1 = 250; +5 SC per level (L50 = 495). No doc table found.
+    config.rewardCredits = 250 + (levelNumber - 1) * 5;
+
     return this.sanitizeSector(config);
   }
 
