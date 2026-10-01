@@ -1,8 +1,8 @@
 # Parity report iter-00
 
-Generated 2026-10-01T05:17:34.  web: `C:\Users\ASUS\Documents\Code\Local\AGENT-PLAYGROUND\.worktrees\parity-int\tools\parity\out\web`  unity: `C:\Users\ASUS\Documents\Code\Local\AGENT-PLAYGROUND\.worktrees\parity-int\tools\parity\out\unity-iso`
+Generated 2026-10-01T06:36:11.  web: `C:\Users\ASUS\Documents\Code\Local\AGENT-PLAYGROUND\.worktrees\parity-int\tools\parity\out\web`  unity: `C:\Users\ASUS\Documents\Code\Local\AGENT-PLAYGROUND\.worktrees\parity-int\tools\parity\out\unity`
 
-**0 PASS, 276 FAIL, 0 MISSING** of 276 (state, profile) pairs; traces: 0 PASS, 138 FAIL, 7 MISSING of 145.
+**0 PASS, 314 FAIL, 0 MISSING** of 314 (state, profile) pairs; traces: 0 PASS, 157 FAIL, 7 MISSING of 164.
 
 Pass bar (SPEC 2): >= 99.0 % pixels within 16 per channel, SSIM >= 0.985, every visible matched element within 3 px on x, y, w, h.
 
@@ -22,46 +22,79 @@ Pass bar (SPEC 2): >= 99.0 % pixels within 16 per channel, SSIM >= 0.985, every 
 | achievements_none | zero | 1.66 | 0.7753 | 198.18 (achievements-page-container h) | FAIL | FAIL | pixels 1.66% < 99.0%; ssim 0.7753 < 0.985; boxes: 94 failing; trace |
 | achievements_all | zero | 1.66 | 0.7566 | 198.18 (achievements-page-container h) | FAIL | FAIL | pixels 1.66% < 99.0%; ssim 0.7566 < 0.985; boxes: 94 failing; trace |
 | settings_toggles_off | iphone | 1.81 | 0.7522 | 113.86 (btn-reset-game-data y) | FAIL | FAIL | pixels 1.81% < 99.0%; ssim 0.7522 < 0.985; boxes: 104 failing; trace |
+| settings_sound_toggle_t0100 | iphone | 1.83 | 0.7515 | 113.86 (btn-reset-game-data y) | FAIL | FAIL | pixels 1.83% < 99.0%; ssim 0.7515 < 0.985; boxes: 104 failing; trace |
 | pressed_back_settings | zero | 1.83 | 0.7513 | 190.38 (btn-reset-game-data y) | FAIL | FAIL | pixels 1.83% < 99.0%; ssim 0.7513 < 0.985; boxes: 104 failing; trace |
 | settings_default | iphone | 1.83 | 0.7517 | 113.86 (btn-reset-game-data y) | FAIL | FAIL | pixels 1.83% < 99.0%; ssim 0.7517 < 0.985; boxes: 104 failing; trace |
-| settings_scrolled | iphone | 1.83 | 0.7517 | 113.86 (btn-reset-game-data y) | FAIL | FAIL | pixels 1.83% < 99.0%; ssim 0.7517 < 0.985; boxes: 104 failing; trace |
 | settings_sliders_moved | iphone | 1.83 | 0.7517 | 113.86 (btn-reset-game-data y) | FAIL | FAIL | pixels 1.83% < 99.0%; ssim 0.7517 < 0.985; boxes: 104 failing; trace |
 | settings_sliders_profile | iphone | 1.83 | 0.7517 | 113.86 (btn-reset-game-data y) | FAIL | FAIL | pixels 1.83% < 99.0%; ssim 0.7517 < 0.985; boxes: 104 failing; trace |
-| settings_toggles_clicked | iphone | 1.84 | 0.7519 | 113.86 (btn-reset-game-data y) | FAIL | FAIL | pixels 1.84% < 99.0%; ssim 0.7519 < 0.985; boxes: 104 failing; trace |
+| settings_haptics_clicked_off | iphone | 1.84 | 0.7520 | 113.86 (btn-reset-game-data y) | FAIL | FAIL | pixels 1.84% < 99.0%; ssim 0.7520 < 0.985; boxes: 104 failing; trace |
 | settings_default | zero | 2.12 | 0.7512 | 190.38 (btn-reset-game-data y) | FAIL | FAIL | pixels 2.12% < 99.0%; ssim 0.7512 < 0.985; boxes: 104 failing; trace |
-| settings_scrolled | zero | 2.12 | 0.7512 | 190.38 (btn-reset-game-data y) | FAIL | FAIL | pixels 2.12% < 99.0%; ssim 0.7512 < 0.985; boxes: 104 failing; trace |
 | settings_toggles_off | zero | 2.12 | 0.7518 | 190.38 (btn-reset-game-data y) | FAIL | FAIL | pixels 2.12% < 99.0%; ssim 0.7518 < 0.985; boxes: 104 failing; trace |
 | settings_sliders_moved | zero | 2.12 | 0.7510 | 190.38 (btn-reset-game-data y) | FAIL | FAIL | pixels 2.12% < 99.0%; ssim 0.7510 < 0.985; boxes: 104 failing; trace |
 | settings_sliders_profile | zero | 2.12 | 0.7510 | 190.38 (btn-reset-game-data y) | FAIL | FAIL | pixels 2.12% < 99.0%; ssim 0.7510 < 0.985; boxes: 104 failing; trace |
-| settings_toggles_clicked | zero | 2.16 | 0.7508 | 190.38 (btn-reset-game-data y) | FAIL | FAIL | pixels 2.16% < 99.0%; ssim 0.7508 < 0.985; boxes: 104 failing; trace |
+| settings_sound_toggle_t0100 | zero | 2.13 | 0.7511 | 190.38 (btn-reset-game-data y) | FAIL | FAIL | pixels 2.13% < 99.0%; ssim 0.7511 < 0.985; boxes: 104 failing; trace |
+| settings_haptics_clicked_off | zero | 2.15 | 0.7508 | 190.38 (btn-reset-game-data y) | FAIL | FAIL | pixels 2.15% < 99.0%; ssim 0.7508 < 0.985; boxes: 104 failing; trace |
 | modal_pause_closing_t0150 | iphone | 2.60 | 0.4267 | 103.13 (hud-quota-text x) | FAIL | FAIL | pixels 2.60% < 99.0%; ssim 0.4267 < 0.985; boxes: 71 failing; trace |
 | modal_pause_closing_t0150 | zero | 2.94 | 0.4249 | 103.13 (hud-quota-text x) | FAIL | FAIL | pixels 2.94% < 99.0%; ssim 0.4249 < 0.985; boxes: 71 failing; trace |
+| canvas_float_poof | iphone | 3.21 | 0.4027 | 103.13 (hud-quota-text x) | FAIL | FAIL | pixels 3.21% < 99.0%; ssim 0.4027 < 0.985; boxes: 73 failing; trace |
 | pressed_hud_pause | iphone | 3.67 | 0.4080 | 103.13 (hud-quota-text x) | FAIL | FAIL | pixels 3.67% < 99.0%; ssim 0.4080 < 0.985; boxes: 71 failing; trace |
 | pressed_hud_restart | iphone | 3.67 | 0.4080 | 103.13 (hud-quota-text x) | FAIL | FAIL | pixels 3.67% < 99.0%; ssim 0.4080 < 0.985; boxes: 71 failing; trace |
 | game_lvl01_pickup | iphone | 3.74 | 0.3973 | 103.13 (hud-quota-text x) | FAIL | FAIL | pixels 3.74% < 99.0%; ssim 0.3973 < 0.985; boxes: 73 failing; trace |
 | game_lvl01_restart_toast | iphone | 3.77 | 0.3982 | 103.13 (hud-quota-text x) | FAIL | FAIL | pixels 3.77% < 99.0%; ssim 0.3982 < 0.985; boxes: 73 failing; trace |
+| canvas_float_nom_words | iphone | 3.78 | 0.4053 | 103.13 (hud-quota-text x) | FAIL | FAIL | pixels 3.78% < 99.0%; ssim 0.4053 < 0.985; boxes: 71 failing; trace |
+| game_lvl01_quota_bar_t0125 | iphone | 3.90 | 0.4066 | 103.13 (hud-quota-text x) | FAIL | FAIL | pixels 3.90% < 99.0%; ssim 0.4066 < 0.985; boxes: 71 failing; trace |
 | game_lvl01_skins_kitty_party_mint | zero | 3.92 | 0.5202 | 103.13 (hud-quota-text x) | FAIL | FAIL | pixels 3.92% < 99.0%; ssim 0.5202 < 0.985; boxes: 71 failing; trace |
-| game_lvl01_quota_met_hud | iphone | 3.98 | 0.4082 | 103.13 (hud-quota-text x) | FAIL | FAIL | pixels 3.98% < 99.0%; ssim 0.4082 < 0.985; boxes: 71 failing; trace |
-| game_lvl01_near_victory | iphone | 3.98 | 0.4083 | 103.13 (hud-quota-text x) | FAIL | FAIL | pixels 3.98% < 99.0%; ssim 0.4083 < 0.985; boxes: 71 failing; trace |
+| game_lvl01_quota_met_t0016 | iphone | 3.98 | 0.4082 | 103.13 (hud-quota-text x) | FAIL | FAIL | pixels 3.98% < 99.0%; ssim 0.4082 < 0.985; boxes: 71 failing; trace |
+| game_lvl01_quota_bar_t0016 | iphone | 3.98 | 0.4083 | 103.13 (hud-quota-text x) | FAIL | FAIL | pixels 3.98% < 99.0%; ssim 0.4083 < 0.985; boxes: 71 failing; trace |
 | game_lvl01_skins_kitty_party_mint | iphone | 4.05 | 0.5220 | 103.13 (hud-quota-text x) | FAIL | FAIL | pixels 4.05% < 99.0%; ssim 0.5220 < 0.985; boxes: 71 failing; trace |
 | pressed_hud_pause | zero | 4.13 | 0.4066 | 103.13 (hud-quota-text x) | FAIL | FAIL | pixels 4.13% < 99.0%; ssim 0.4066 < 0.985; boxes: 71 failing; trace |
 | pressed_hud_restart | zero | 4.13 | 0.4065 | 103.13 (hud-quota-text x) | FAIL | FAIL | pixels 4.13% < 99.0%; ssim 0.4065 < 0.985; boxes: 71 failing; trace |
+| canvas_float_turbo | iphone | 4.16 | 0.4020 | 103.13 (hud-quota-text x) | FAIL | FAIL | pixels 4.16% < 99.0%; ssim 0.4020 < 0.985; boxes: 71 failing; trace |
+| canvas_float_turbo_reverse | iphone | 4.17 | 0.4019 | 103.13 (hud-quota-text x) | FAIL | FAIL | pixels 4.17% < 99.0%; ssim 0.4019 < 0.985; boxes: 71 failing; trace |
+| canvas_float_compact | iphone | 4.17 | 0.4091 | 103.13 (hud-quota-text x) | FAIL | FAIL | pixels 4.17% < 99.0%; ssim 0.4091 < 0.985; boxes: 71 failing; trace |
+| canvas_float_boost | iphone | 4.17 | 0.4095 | 103.13 (hud-quota-text x) | FAIL | FAIL | pixels 4.17% < 99.0%; ssim 0.4095 < 0.985; boxes: 71 failing; trace |
+| canvas_float_shred | iphone | 4.17 | 0.4095 | 103.13 (hud-quota-text x) | FAIL | FAIL | pixels 4.17% < 99.0%; ssim 0.4095 < 0.985; boxes: 71 failing; trace |
+| canvas_float_nom_words | zero | 4.23 | 0.4038 | 103.13 (hud-quota-text x) | FAIL | FAIL | pixels 4.23% < 99.0%; ssim 0.4038 < 0.985; boxes: 71 failing; trace |
 | game_lvl01_t0016ms | iphone | 4.31 | 0.4113 | 103.13 (hud-quota-text x) | FAIL | FAIL | pixels 4.31% < 99.0%; ssim 0.4113 < 0.985; boxes: 71 failing; trace |
-| game_lvl01_quota_met_hud | zero | 4.43 | 0.4067 | 103.13 (hud-quota-text x) | FAIL | FAIL | pixels 4.43% < 99.0%; ssim 0.4067 < 0.985; boxes: 71 failing; trace |
-| game_lvl01_near_victory | zero | 4.43 | 0.4068 | 103.13 (hud-quota-text x) | FAIL | FAIL | pixels 4.43% < 99.0%; ssim 0.4068 < 0.985; boxes: 71 failing; trace |
+| canvas_float_poof | zero | 4.32 | 0.3994 | 103.13 (hud-quota-text x) | FAIL | FAIL | pixels 4.32% < 99.0%; ssim 0.3994 < 0.985; boxes: 73 failing; trace |
+| game_lvl01_quota_bar_t0125 | zero | 4.35 | 0.4050 | 103.13 (hud-quota-text x) | FAIL | FAIL | pixels 4.35% < 99.0%; ssim 0.4050 < 0.985; boxes: 71 failing; trace |
+| canvas_gate_bolt_x3 | iphone | 4.37 | 0.4114 | 101.88 (hud-quota-text x) | FAIL | FAIL | pixels 4.37% < 99.0%; ssim 0.4114 < 0.985; boxes: 71 failing; trace |
+| canvas_hub_kitty | iphone | 4.43 | 0.4122 | 103.13 (hud-quota-text x) | FAIL | FAIL | pixels 4.43% < 99.0%; ssim 0.4122 < 0.985; boxes: 71 failing; trace |
+| game_lvl01_quota_met_t0016 | zero | 4.43 | 0.4067 | 103.13 (hud-quota-text x) | FAIL | FAIL | pixels 4.43% < 99.0%; ssim 0.4067 < 0.985; boxes: 71 failing; trace |
+| game_lvl01_quota_bar_t0016 | zero | 4.43 | 0.4068 | 103.13 (hud-quota-text x) | FAIL | FAIL | pixels 4.43% < 99.0%; ssim 0.4068 < 0.985; boxes: 71 failing; trace |
+| canvas_gate_bolt_x2 | iphone | 4.44 | 0.4125 | 103.13 (hud-quota-text x) | FAIL | FAIL | pixels 4.44% < 99.0%; ssim 0.4125 < 0.985; boxes: 71 failing; trace |
+| canvas_gate_magnet_add | iphone | 4.44 | 0.4125 | 103.13 (hud-quota-text x) | FAIL | FAIL | pixels 4.44% < 99.0%; ssim 0.4125 < 0.985; boxes: 71 failing; trace |
+| canvas_hub_donut | iphone | 4.44 | 0.4125 | 103.13 (hud-quota-text x) | FAIL | FAIL | pixels 4.44% < 99.0%; ssim 0.4125 < 0.985; boxes: 71 failing; trace |
+| canvas_hub_candy | iphone | 4.45 | 0.4157 | 103.13 (hud-quota-text x) | FAIL | FAIL | pixels 4.45% < 99.0%; ssim 0.4157 < 0.985; boxes: 71 failing; trace |
+| canvas_hub_duckie | iphone | 4.47 | 0.4149 | 103.13 (hud-quota-text x) | FAIL | FAIL | pixels 4.47% < 99.0%; ssim 0.4149 < 0.985; boxes: 71 failing; trace |
+| canvas_float_turbo | zero | 4.61 | 0.4005 | 103.13 (hud-quota-text x) | FAIL | FAIL | pixels 4.61% < 99.0%; ssim 0.4005 < 0.985; boxes: 71 failing; trace |
+| canvas_float_turbo_reverse | zero | 4.62 | 0.4004 | 103.13 (hud-quota-text x) | FAIL | FAIL | pixels 4.62% < 99.0%; ssim 0.4004 < 0.985; boxes: 71 failing; trace |
+| canvas_float_compact | zero | 4.62 | 0.4076 | 103.13 (hud-quota-text x) | FAIL | FAIL | pixels 4.62% < 99.0%; ssim 0.4076 < 0.985; boxes: 71 failing; trace |
+| canvas_float_boost | zero | 4.62 | 0.4080 | 103.13 (hud-quota-text x) | FAIL | FAIL | pixels 4.62% < 99.0%; ssim 0.4080 < 0.985; boxes: 71 failing; trace |
+| canvas_float_shred | zero | 4.62 | 0.4080 | 103.13 (hud-quota-text x) | FAIL | FAIL | pixels 4.62% < 99.0%; ssim 0.4080 < 0.985; boxes: 71 failing; trace |
 | game_lvl11_t0016ms | iphone | 4.69 | 0.4080 | 98.66 (hud-quota-text x) | FAIL | FAIL | pixels 4.69% < 99.0%; ssim 0.4080 < 0.985; boxes: 71 failing; trace |
 | game_lvl01_t0016ms | zero | 4.76 | 0.4098 | 103.13 (hud-quota-text x) | FAIL | FAIL | pixels 4.76% < 99.0%; ssim 0.4098 < 0.985; boxes: 71 failing; trace |
 | game_lvl01_hint_dismissing_t0200 | iphone | 4.78 | 0.4122 | 103.10 (hud-quota-text x) | FAIL | FAIL | pixels 4.78% < 99.0%; ssim 0.4122 < 0.985; boxes: 71 failing; trace |
 | game_lvl01_t1000ms | iphone | 4.80 | 0.4109 | 103.13 (hud-quota-text x) | FAIL | FAIL | pixels 4.80% < 99.0%; ssim 0.4109 < 0.985; boxes: 71 failing; trace |
+| canvas_gate_bolt_x3 | zero | 4.82 | 0.4099 | 101.88 (hud-quota-text x) | FAIL | FAIL | pixels 4.82% < 99.0%; ssim 0.4099 < 0.985; boxes: 71 failing; trace |
 | game_lvl01_hint_visible | iphone | 4.83 | 0.5726 | 101.39 (hud-quota-text x) | FAIL | FAIL | pixels 4.83% < 99.0%; ssim 0.5726 < 0.985; boxes: 72 failing; trace |
 | game_lvl01_mid_drag | iphone | 4.83 | 0.4107 | 103.13 (hud-quota-text x) | FAIL | FAIL | pixels 4.83% < 99.0%; ssim 0.4107 < 0.985; boxes: 71 failing; trace |
 | game_lvl01_t3000ms | iphone | 4.85 | 0.4135 | 103.13 (hud-quota-text x) | FAIL | FAIL | pixels 4.85% < 99.0%; ssim 0.4135 < 0.985; boxes: 71 failing; trace |
 | game_lvl01_gate_pass | iphone | 4.85 | 0.4087 | 103.13 (hud-quota-text x) | FAIL | FAIL | pixels 4.85% < 99.0%; ssim 0.4087 < 0.985; boxes: 71 failing; trace |
+| canvas_hub_kitty | zero | 4.88 | 0.4107 | 103.13 (hud-quota-text x) | FAIL | FAIL | pixels 4.88% < 99.0%; ssim 0.4107 < 0.985; boxes: 71 failing; trace |
+| canvas_gate_bolt_x2 | zero | 4.89 | 0.4110 | 103.13 (hud-quota-text x) | FAIL | FAIL | pixels 4.89% < 99.0%; ssim 0.4110 < 0.985; boxes: 71 failing; trace |
+| canvas_gate_magnet_add | zero | 4.89 | 0.4110 | 103.13 (hud-quota-text x) | FAIL | FAIL | pixels 4.89% < 99.0%; ssim 0.4110 < 0.985; boxes: 71 failing; trace |
+| canvas_hub_donut | zero | 4.89 | 0.4110 | 103.13 (hud-quota-text x) | FAIL | FAIL | pixels 4.89% < 99.0%; ssim 0.4110 < 0.985; boxes: 71 failing; trace |
+| canvas_hub_candy | zero | 4.89 | 0.4142 | 103.13 (hud-quota-text x) | FAIL | FAIL | pixels 4.89% < 99.0%; ssim 0.4142 < 0.985; boxes: 71 failing; trace |
+| canvas_hub_duckie | zero | 4.92 | 0.4134 | 103.13 (hud-quota-text x) | FAIL | FAIL | pixels 4.92% < 99.0%; ssim 0.4134 < 0.985; boxes: 71 failing; trace |
+| game_lvl01_near_victory | iphone | 4.96 | 0.4083 | 103.13 (hud-quota-text x) | FAIL | FAIL | pixels 4.96% < 99.0%; ssim 0.4083 < 0.985; boxes: 71 failing; trace |
+| game_lvl01_quota_met_hud | iphone | 4.96 | 0.4081 | 103.13 (hud-quota-text x) | FAIL | FAIL | pixels 4.96% < 99.0%; ssim 0.4081 < 0.985; boxes: 71 failing; trace |
 | game_lvl21_t0016ms | iphone | 4.99 | 0.4082 | 96.60 (hud-quota-text x) | FAIL | FAIL | pixels 4.99% < 99.0%; ssim 0.4082 < 0.985; boxes: 71 failing; trace |
 | game_lvl01_restart_toast | zero | 5.01 | 0.3936 | 103.13 (hud-quota-text x) | FAIL | FAIL | pixels 5.01% < 99.0%; ssim 0.3936 < 0.985; boxes: 73 failing; trace |
 | game_lvl01_hint_dismissing_t0200 | zero | 5.02 | 0.4104 | 103.10 (hud-quota-text x) | FAIL | FAIL | pixels 5.02% < 99.0%; ssim 0.4104 < 0.985; boxes: 71 failing; trace |
 | game_lvl11_skins_duckie_berry_cheese | zero | 5.07 | 0.5274 | 98.66 (hud-quota-text x) | FAIL | FAIL | pixels 5.07% < 99.0%; ssim 0.5274 < 0.985; boxes: 71 failing; trace |
 | game_lvl11_t0016ms | zero | 5.13 | 0.4064 | 98.66 (hud-quota-text x) | FAIL | FAIL | pixels 5.13% < 99.0%; ssim 0.4064 < 0.985; boxes: 71 failing; trace |
+| canvas_hub_gear | iphone | 5.14 | 0.4092 | 96.60 (hud-quota-text x) | FAIL | FAIL | pixels 5.14% < 99.0%; ssim 0.4092 < 0.985; boxes: 71 failing; trace |
 | game_lvl01_hint_visible | zero | 5.17 | 0.5731 | 101.39 (hud-quota-text x) | FAIL | FAIL | pixels 5.17% < 99.0%; ssim 0.5731 < 0.985; boxes: 72 failing; trace |
 | game_lvl11_skins_duckie_berry_cheese | iphone | 5.20 | 0.5310 | 98.66 (hud-quota-text x) | FAIL | FAIL | pixels 5.20% < 99.0%; ssim 0.5310 < 0.985; boxes: 71 failing; trace |
 | game_lvl11_t3000ms | iphone | 5.21 | 0.4115 | 98.66 (hud-quota-text x) | FAIL | FAIL | pixels 5.21% < 99.0%; ssim 0.4115 < 0.985; boxes: 71 failing; trace |
@@ -72,10 +105,15 @@ Pass bar (SPEC 2): >= 99.0 % pixels within 16 per channel, SSIM >= 0.985, every 
 | game_lvl11_t1000ms | iphone | 5.34 | 0.4195 | 98.66 (hud-quota-text x) | FAIL | FAIL | pixels 5.34% < 99.0%; ssim 0.4195 < 0.985; boxes: 71 failing; trace |
 | game_lvl31_t0016ms | iphone | 5.35 | 0.4048 | 96.61 (hud-quota-text x) | FAIL | FAIL | pixels 5.35% < 99.0%; ssim 0.4048 < 0.985; boxes: 71 failing; trace |
 | game_lvl01_pickup | zero | 5.37 | 0.3922 | 103.13 (hud-quota-text x) | FAIL | FAIL | pixels 5.37% < 99.0%; ssim 0.3922 < 0.985; boxes: 73 failing; trace |
+| game_lvl01_near_victory | zero | 5.41 | 0.4068 | 103.13 (hud-quota-text x) | FAIL | FAIL | pixels 5.41% < 99.0%; ssim 0.4068 < 0.985; boxes: 71 failing; trace |
+| game_lvl01_quota_met_hud | zero | 5.41 | 0.4066 | 103.13 (hud-quota-text x) | FAIL | FAIL | pixels 5.41% < 99.0%; ssim 0.4066 < 0.985; boxes: 71 failing; trace |
 | game_lvl21_t0016ms | zero | 5.44 | 0.4068 | 96.60 (hud-quota-text x) | FAIL | FAIL | pixels 5.44% < 99.0%; ssim 0.4068 < 0.985; boxes: 71 failing; trace |
 | game_lvl41_t0016ms | iphone | 5.52 | 0.4010 | 96.77 (hud-quota-text x) | FAIL | FAIL | pixels 5.52% < 99.0%; ssim 0.4010 < 0.985; boxes: 71 failing; trace |
 | game_lvl21_t1000ms | iphone | 5.53 | 0.4272 | 96.60 (hud-quota-text x) | FAIL | FAIL | pixels 5.53% < 99.0%; ssim 0.4272 < 0.985; boxes: 71 failing; trace |
+| canvas_gate_boost | iphone | 5.56 | 0.4038 | 94.57 (hud-quota-text x) | FAIL | FAIL | pixels 5.56% < 99.0%; ssim 0.4038 < 0.985; boxes: 71 failing; trace |
+| canvas_hub_gear | zero | 5.59 | 0.4078 | 96.60 (hud-quota-text x) | FAIL | FAIL | pixels 5.59% < 99.0%; ssim 0.4078 < 0.985; boxes: 71 failing; trace |
 | game_lvl11_t3000ms | zero | 5.65 | 0.4099 | 98.66 (hud-quota-text x) | FAIL | FAIL | pixels 5.65% < 99.0%; ssim 0.4099 < 0.985; boxes: 71 failing; trace |
+| canvas_gate_blast_x4 | iphone | 5.69 | 0.4018 | 96.77 (hud-quota-text x) | FAIL | FAIL | pixels 5.69% < 99.0%; ssim 0.4018 < 0.985; boxes: 71 failing; trace |
 | game_lvl41_t1000ms | iphone | 5.69 | 0.3976 | 96.77 (hud-quota-text x) | FAIL | FAIL | pixels 5.69% < 99.0%; ssim 0.3976 < 0.985; boxes: 71 failing; trace |
 | game_lvl31_t1000ms | iphone | 5.69 | 0.4042 | 96.61 (hud-quota-text x) | FAIL | FAIL | pixels 5.69% < 99.0%; ssim 0.4042 < 0.985; boxes: 71 failing; trace |
 | game_lvl31_t3000ms | iphone | 5.72 | 0.4039 | 96.61 (hud-quota-text x) | FAIL | FAIL | pixels 5.72% < 99.0%; ssim 0.4039 < 0.985; boxes: 71 failing; trace |
@@ -84,8 +122,10 @@ Pass bar (SPEC 2): >= 99.0 % pixels within 16 per channel, SSIM >= 0.985, every 
 | game_lvl41_t3000ms | iphone | 5.81 | 0.4011 | 96.77 (hud-quota-text x) | FAIL | FAIL | pixels 5.81% < 99.0%; ssim 0.4011 < 0.985; boxes: 71 failing; trace |
 | game_lvl21_t1000ms | zero | 5.97 | 0.4258 | 96.60 (hud-quota-text x) | FAIL | FAIL | pixels 5.97% < 99.0%; ssim 0.4258 < 0.985; boxes: 71 failing; trace |
 | game_lvl41_t0016ms | zero | 5.97 | 0.3995 | 96.77 (hud-quota-text x) | FAIL | FAIL | pixels 5.97% < 99.0%; ssim 0.3995 < 0.985; boxes: 71 failing; trace |
+| canvas_gate_boost | zero | 6.01 | 0.4024 | 94.57 (hud-quota-text x) | FAIL | FAIL | pixels 6.01% < 99.0%; ssim 0.4024 < 0.985; boxes: 71 failing; trace |
 | game_lvl31_t1000ms | zero | 6.13 | 0.4028 | 96.61 (hud-quota-text x) | FAIL | FAIL | pixels 6.13% < 99.0%; ssim 0.4028 < 0.985; boxes: 71 failing; trace |
 | game_lvl41_t1000ms | zero | 6.13 | 0.3963 | 96.77 (hud-quota-text x) | FAIL | FAIL | pixels 6.13% < 99.0%; ssim 0.3963 < 0.985; boxes: 71 failing; trace |
+| canvas_gate_blast_x4 | zero | 6.14 | 0.4003 | 96.77 (hud-quota-text x) | FAIL | FAIL | pixels 6.14% < 99.0%; ssim 0.4003 < 0.985; boxes: 71 failing; trace |
 | game_lvl31_t3000ms | zero | 6.15 | 0.4024 | 96.61 (hud-quota-text x) | FAIL | FAIL | pixels 6.15% < 99.0%; ssim 0.4024 < 0.985; boxes: 71 failing; trace |
 | game_lvl41_t3000ms | zero | 6.24 | 0.3997 | 96.77 (hud-quota-text x) | FAIL | FAIL | pixels 6.24% < 99.0%; ssim 0.3997 < 0.985; boxes: 71 failing; trace |
 | shop_buy_insufficient_toast | iphone | 6.33 | 0.6702 | 219.54 (store-page-container h) | FAIL | FAIL | pixels 6.33% < 99.0%; ssim 0.6702 < 0.985; boxes: 102 failing; trace |
@@ -97,7 +137,6 @@ Pass bar (SPEC 2): >= 99.0 % pixels within 16 per channel, SSIM >= 0.985, every 
 | pressed_claim_gift | iphone | 6.64 | 0.6862 | 219.54 (store-page-container h) | FAIL | FAIL | pixels 6.64% < 99.0%; ssim 0.6862 < 0.985; boxes: 100 failing; trace |
 | shop_singularities_default | iphone | 6.67 | 0.6859 | 219.54 (store-page-container h) | FAIL | FAIL | pixels 6.67% < 99.0%; ssim 0.6859 < 0.985; boxes: 100 failing; trace |
 | shop_rings_default | iphone | 6.68 | 0.6850 | 219.54 (store-page-container h) | FAIL | FAIL | pixels 6.68% < 99.0%; ssim 0.6850 < 0.985; boxes: 100 failing; trace |
-| shop_scrolled | iphone | 6.68 | 0.6850 | 219.54 (store-page-container h) | FAIL | FAIL | pixels 6.68% < 99.0%; ssim 0.6850 < 0.985; boxes: 100 failing; trace |
 | shop_singularities_mixed | iphone | 6.69 | 0.6903 | 219.54 (store-page-container h) | FAIL | FAIL | pixels 6.69% < 99.0%; ssim 0.6903 < 0.985; boxes: 100 failing; trace |
 | pressed_shop_buy | iphone | 6.69 | 0.6840 | 219.54 (store-page-container h) | FAIL | FAIL | pixels 6.69% < 99.0%; ssim 0.6840 < 0.985; boxes: 100 failing; trace |
 | pressed_shop_tab | iphone | 6.69 | 0.6850 | 219.54 (store-page-container h) | FAIL | FAIL | pixels 6.69% < 99.0%; ssim 0.6850 < 0.985; boxes: 100 failing; trace |
@@ -113,7 +152,6 @@ Pass bar (SPEC 2): >= 99.0 % pixels within 16 per channel, SSIM >= 0.985, every 
 | game_lvl21_t3000ms | iphone | 7.89 | 0.6160 | 529.78 (defeat-message y) | FAIL | FAIL | pixels 7.89% < 99.0%; ssim 0.6160 < 0.985; boxes: 70 failing; trace |
 | shop_rings_mixed | zero | 7.95 | 0.6794 | 301.38 (store-page-container h) | FAIL | FAIL | pixels 7.95% < 99.0%; ssim 0.6794 < 0.985; boxes: 100 failing; trace |
 | shop_rings_default | zero | 7.95 | 0.6678 | 301.38 (store-page-container h) | FAIL | FAIL | pixels 7.95% < 99.0%; ssim 0.6678 < 0.985; boxes: 100 failing; trace |
-| shop_scrolled | zero | 7.95 | 0.6678 | 301.38 (store-page-container h) | FAIL | FAIL | pixels 7.95% < 99.0%; ssim 0.6678 < 0.985; boxes: 100 failing; trace |
 | pressed_shop_buy | zero | 7.97 | 0.6677 | 301.38 (store-page-container h) | FAIL | FAIL | pixels 7.97% < 99.0%; ssim 0.6677 < 0.985; boxes: 100 failing; trace |
 | pressed_shop_tab | zero | 7.97 | 0.6678 | 301.38 (store-page-container h) | FAIL | FAIL | pixels 7.97% < 99.0%; ssim 0.6678 < 0.985; boxes: 100 failing; trace |
 | shop_buy_insufficient_toast | zero | 8.21 | 0.6554 | 301.38 (store-page-container h) | FAIL | FAIL | pixels 8.21% < 99.0%; ssim 0.6554 < 0.985; boxes: 102 failing; trace |
@@ -242,7 +280,7 @@ Pass bar (SPEC 2): >= 99.0 % pixels within 16 per channel, SSIM >= 0.985, every 
 | pressed_debrief_replay | iphone | 24.13 | 0.6994 | 122.22 (debrief-mass-val w) | FAIL | FAIL | pixels 24.13% < 99.0%; ssim 0.6994 < 0.985; boxes: 70 failing; trace |
 | daily_bronze_cleared | zero | 24.66 | 0.6492 | 43.00 (daily-page-container w) | FAIL | FAIL | pixels 24.66% < 99.0%; ssim 0.6492 < 0.985; boxes: 100 failing; trace |
 | maps_world_4 | zero | 24.72 | 0.6972 | 43.00 (sectors-page-container w) | FAIL | FAIL | pixels 24.72% < 99.0%; ssim 0.6972 < 0.985; boxes: 112 failing; trace |
-| maps_world_5_scrolled | zero | 24.76 | 0.6974 | 43.00 (sectors-page-container w) | FAIL | FAIL | pixels 24.76% < 99.0%; ssim 0.6974 < 0.985; boxes: 112 failing; trace |
+| maps_world_5_levels_1_44_done | zero | 24.76 | 0.6974 | 43.00 (sectors-page-container w) | FAIL | FAIL | pixels 24.76% < 99.0%; ssim 0.6974 < 0.985; boxes: 112 failing; trace |
 | maps_world_5 | zero | 24.77 | 0.6972 | 43.00 (sectors-page-container w) | FAIL | FAIL | pixels 24.77% < 99.0%; ssim 0.6972 < 0.985; boxes: 112 failing; trace |
 | maps_world_3 | zero | 24.84 | 0.6995 | 43.00 (sectors-page-container w) | FAIL | FAIL | pixels 24.84% < 99.0%; ssim 0.6995 < 0.985; boxes: 112 failing; trace |
 | maps_world_1 | zero | 24.91 | 0.6994 | 43.00 (sectors-page-container w) | FAIL | FAIL | pixels 24.91% < 99.0%; ssim 0.6994 < 0.985; boxes: 112 failing; trace |
@@ -252,7 +290,7 @@ Pass bar (SPEC 2): >= 99.0 % pixels within 16 per channel, SSIM >= 0.985, every 
 | maps_world_1_all_complete | zero | 25.75 | 0.7023 | 43.00 (sectors-page-container w) | FAIL | FAIL | pixels 25.75% < 99.0%; ssim 0.7023 < 0.985; boxes: 112 failing; trace |
 | maps_world_4 | iphone | 25.92 | 0.6988 | 64.68 (sectors-page-container h) | FAIL | FAIL | pixels 25.92% < 99.0%; ssim 0.6988 < 0.985; boxes: 112 failing; trace |
 | maps_world_5 | iphone | 25.94 | 0.6990 | 64.68 (sectors-page-container h) | FAIL | FAIL | pixels 25.94% < 99.0%; ssim 0.6990 < 0.985; boxes: 112 failing; trace |
-| maps_world_5_scrolled | iphone | 26.08 | 0.7009 | 64.68 (sectors-page-container h) | FAIL | FAIL | pixels 26.08% < 99.0%; ssim 0.7009 < 0.985; boxes: 112 failing; trace |
+| maps_world_5_levels_1_44_done | iphone | 26.08 | 0.7009 | 64.68 (sectors-page-container h) | FAIL | FAIL | pixels 26.08% < 99.0%; ssim 0.7009 < 0.985; boxes: 112 failing; trace |
 | maps_world_3 | iphone | 26.15 | 0.7022 | 64.68 (sectors-page-container h) | FAIL | FAIL | pixels 26.15% < 99.0%; ssim 0.7022 < 0.985; boxes: 112 failing; trace |
 | pressed_back_daily | zero | 26.26 | 0.6423 | 43.00 (daily-page-container w) | FAIL | FAIL | pixels 26.26% < 99.0%; ssim 0.6423 < 0.985; boxes: 99 failing; trace |
 | maps_world_2 | iphone | 26.29 | 0.7050 | 64.68 (sectors-page-container h) | FAIL | FAIL | pixels 26.29% < 99.0%; ssim 0.7050 < 0.985; boxes: 112 failing; trace |
@@ -260,18 +298,17 @@ Pass bar (SPEC 2): >= 99.0 % pixels within 16 per channel, SSIM >= 0.985, every 
 | pressed_daily_start_shift | zero | 26.53 | 0.6416 | 43.00 (daily-page-container w) | FAIL | FAIL | pixels 26.53% < 99.0%; ssim 0.6416 < 0.985; boxes: 99 failing; trace |
 | daily_after_two_minutes | zero | 26.55 | 0.6423 | 43.00 (daily-page-container w) | FAIL | FAIL | pixels 26.55% < 99.0%; ssim 0.6423 < 0.985; boxes: 99 failing; trace |
 | daily_default | zero | 26.55 | 0.6423 | 43.00 (daily-page-container w) | FAIL | FAIL | pixels 26.55% < 99.0%; ssim 0.6423 < 0.985; boxes: 99 failing; trace |
-| daily_scrolled | zero | 26.55 | 0.6423 | 43.00 (daily-page-container w) | FAIL | FAIL | pixels 26.55% < 99.0%; ssim 0.6423 < 0.985; boxes: 99 failing; trace |
 | pressed_level_tile | iphone | 26.64 | 0.6972 | 64.68 (sectors-page-container h) | FAIL | FAIL | pixels 26.64% < 99.0%; ssim 0.6972 < 0.985; boxes: 112 failing; trace |
 | pressed_daily_start_shift | iphone | 27.22 | 0.6528 | 64.68 (daily-page-container h) | FAIL | FAIL | pixels 27.22% < 99.0%; ssim 0.6528 < 0.985; boxes: 99 failing; trace |
 | pressed_back_maps | zero | 27.27 | 0.6936 | 43.00 (sectors-page-container w) | FAIL | FAIL | pixels 27.27% < 99.0%; ssim 0.6936 < 0.985; boxes: 112 failing; trace |
 | pressed_back_daily | iphone | 27.30 | 0.6537 | 64.68 (daily-page-container h) | FAIL | FAIL | pixels 27.30% < 99.0%; ssim 0.6537 < 0.985; boxes: 99 failing; trace |
 | daily_after_two_minutes | iphone | 27.55 | 0.6539 | 64.68 (daily-page-container h) | FAIL | FAIL | pixels 27.55% < 99.0%; ssim 0.6539 < 0.985; boxes: 99 failing; trace |
 | daily_default | iphone | 27.55 | 0.6538 | 64.68 (daily-page-container h) | FAIL | FAIL | pixels 27.55% < 99.0%; ssim 0.6538 < 0.985; boxes: 99 failing; trace |
-| daily_scrolled | iphone | 27.55 | 0.6538 | 64.68 (daily-page-container h) | FAIL | FAIL | pixels 27.55% < 99.0%; ssim 0.6538 < 0.985; boxes: 99 failing; trace |
 | pressed_world_tab | zero | 27.56 | 0.6935 | 43.00 (sectors-page-container w) | FAIL | FAIL | pixels 27.56% < 99.0%; ssim 0.6935 < 0.985; boxes: 112 failing; trace |
 | pressed_defeat_retry | zero | 27.58 | 0.7280 | 133.83 (defeat-spilled-val w) | FAIL | FAIL | pixels 27.58% < 99.0%; ssim 0.7280 < 0.985; boxes: 72 failing; trace |
 | modal_defeat_backup | zero | 27.70 | 0.7280 | 133.83 (defeat-spilled-val w) | FAIL | FAIL | pixels 27.70% < 99.0%; ssim 0.7280 < 0.985; boxes: 72 failing; trace |
 | maps_world_3_none_complete | zero | 27.70 | 0.6953 | 43.00 (sectors-page-container w) | FAIL | FAIL | pixels 27.70% < 99.0%; ssim 0.6953 < 0.985; boxes: 112 failing; trace |
+| maps_world_1_all_complete_other_active | zero | 27.79 | 0.6970 | 43.00 (sectors-page-container w) | FAIL | FAIL | pixels 27.79% < 99.0%; ssim 0.6970 < 0.985; boxes: 112 failing; trace |
 | pressed_defeat_backup | zero | 27.90 | 0.7286 | 133.83 (defeat-spilled-val w) | FAIL | FAIL | pixels 27.90% < 99.0%; ssim 0.7286 < 0.985; boxes: 72 failing; trace |
 | maps_world_1_all_complete | iphone | 28.00 | 0.7018 | 64.68 (sectors-page-container h) | FAIL | FAIL | pixels 28.00% < 99.0%; ssim 0.7018 < 0.985; boxes: 112 failing; trace |
 | pressed_defeat_home | zero | 28.12 | 0.7277 | 133.83 (defeat-spilled-val w) | FAIL | FAIL | pixels 28.12% < 99.0%; ssim 0.7277 < 0.985; boxes: 72 failing; trace |
@@ -281,6 +318,7 @@ Pass bar (SPEC 2): >= 99.0 % pixels within 16 per channel, SSIM >= 0.985, every 
 | pressed_defeat_backup | iphone | 28.66 | 0.7188 | 133.83 (defeat-spilled-val w) | FAIL | FAIL | pixels 28.66% < 99.0%; ssim 0.7188 < 0.985; boxes: 72 failing; trace |
 | maps_world_3_none_complete | iphone | 28.80 | 0.7006 | 64.68 (sectors-page-container h) | FAIL | FAIL | pixels 28.80% < 99.0%; ssim 0.7006 < 0.985; boxes: 112 failing; trace |
 | pressed_world_tab | iphone | 28.85 | 0.6987 | 64.68 (sectors-page-container h) | FAIL | FAIL | pixels 28.85% < 99.0%; ssim 0.6987 < 0.985; boxes: 112 failing; trace |
+| maps_world_1_all_complete_other_active | iphone | 28.86 | 0.7021 | 64.68 (sectors-page-container h) | FAIL | FAIL | pixels 28.86% < 99.0%; ssim 0.7021 < 0.985; boxes: 112 failing; trace |
 | pressed_defeat_home | iphone | 28.95 | 0.7169 | 133.83 (defeat-spilled-val w) | FAIL | FAIL | pixels 28.95% < 99.0%; ssim 0.7169 < 0.985; boxes: 72 failing; trace |
 | modal_debrief_daily_trophy | zero | 32.25 | 0.6733 | 122.51 (debrief-mass-val w) | FAIL | FAIL | pixels 32.25% < 99.0%; ssim 0.6733 < 0.985; boxes: 77 failing; trace |
 | modal_debrief_daily_trophy | iphone | 32.74 | 0.6636 | 122.51 (debrief-mass-val w) | FAIL | FAIL | pixels 32.74% < 99.0%; ssim 0.6636 < 0.985; boxes: 77 failing; trace |
@@ -661,6 +699,37 @@ Pass bar (SPEC 2): >= 99.0 % pixels within 16 per channel, SSIM >= 0.985, every 
 | settings-label#4 | missing_in_unity | - | - | - | - |
 | ... 79 more | | | | | |
 
+### settings_sound_toggle_t0100__iphone
+
+| element | reason | axis | delta px | web rect | unity rect |
+| --- | --- | --- | --- | --- | --- |
+| page-header-bar#5 | missing_in_unity | - | - | - | - |
+| page-header-title#5 | missing_in_unity | - | - | - | - |
+| page-scroll-body#6 | missing_in_unity | - | - | - | - |
+| settings-section-card#1 | missing_in_unity | - | - | - | - |
+| settings-section-title#1 | missing_in_unity | - | - | - | - |
+| settings-row#1 | missing_in_unity | - | - | - | - |
+| settings-label-box#1 | missing_in_unity | - | - | - | - |
+| settings-label#1 | missing_in_unity | - | - | - | - |
+| settings-sublabel#1 | missing_in_unity | - | - | - | - |
+| cartoon-switch#1 | missing_in_unity | - | - | - | - |
+| settings-sound-toggle | visibility | - | - | - | - |
+| slider-round#1 | missing_in_unity | - | - | - | - |
+| settings-row#2 | missing_in_unity | - | - | - | - |
+| settings-label-box#2 | missing_in_unity | - | - | - | - |
+| settings-label#2 | missing_in_unity | - | - | - | - |
+| settings-sublabel#2 | missing_in_unity | - | - | - | - |
+| settings-row#3 | missing_in_unity | - | - | - | - |
+| settings-label-box#3 | missing_in_unity | - | - | - | - |
+| settings-label#3 | missing_in_unity | - | - | - | - |
+| settings-sublabel#3 | missing_in_unity | - | - | - | - |
+| settings-section-card#2 | missing_in_unity | - | - | - | - |
+| settings-section-title#2 | missing_in_unity | - | - | - | - |
+| settings-row#4 | missing_in_unity | - | - | - | - |
+| settings-label-box#4 | missing_in_unity | - | - | - | - |
+| settings-label#4 | missing_in_unity | - | - | - | - |
+| ... 79 more | | | | | |
+
 ### pressed_back_settings__zero
 
 | element | reason | axis | delta px | web rect | unity rect |
@@ -693,37 +762,6 @@ Pass bar (SPEC 2): >= 99.0 % pixels within 16 per channel, SSIM >= 0.985, every 
 | ... 79 more | | | | | |
 
 ### settings_default__iphone
-
-| element | reason | axis | delta px | web rect | unity rect |
-| --- | --- | --- | --- | --- | --- |
-| page-header-bar#5 | missing_in_unity | - | - | - | - |
-| page-header-title#5 | missing_in_unity | - | - | - | - |
-| page-scroll-body#6 | missing_in_unity | - | - | - | - |
-| settings-section-card#1 | missing_in_unity | - | - | - | - |
-| settings-section-title#1 | missing_in_unity | - | - | - | - |
-| settings-row#1 | missing_in_unity | - | - | - | - |
-| settings-label-box#1 | missing_in_unity | - | - | - | - |
-| settings-label#1 | missing_in_unity | - | - | - | - |
-| settings-sublabel#1 | missing_in_unity | - | - | - | - |
-| cartoon-switch#1 | missing_in_unity | - | - | - | - |
-| settings-sound-toggle | visibility | - | - | - | - |
-| slider-round#1 | missing_in_unity | - | - | - | - |
-| settings-row#2 | missing_in_unity | - | - | - | - |
-| settings-label-box#2 | missing_in_unity | - | - | - | - |
-| settings-label#2 | missing_in_unity | - | - | - | - |
-| settings-sublabel#2 | missing_in_unity | - | - | - | - |
-| settings-row#3 | missing_in_unity | - | - | - | - |
-| settings-label-box#3 | missing_in_unity | - | - | - | - |
-| settings-label#3 | missing_in_unity | - | - | - | - |
-| settings-sublabel#3 | missing_in_unity | - | - | - | - |
-| settings-section-card#2 | missing_in_unity | - | - | - | - |
-| settings-section-title#2 | missing_in_unity | - | - | - | - |
-| settings-row#4 | missing_in_unity | - | - | - | - |
-| settings-label-box#4 | missing_in_unity | - | - | - | - |
-| settings-label#4 | missing_in_unity | - | - | - | - |
-| ... 79 more | | | | | |
-
-### settings_scrolled__iphone
 
 | element | reason | axis | delta px | web rect | unity rect |
 | --- | --- | --- | --- | --- | --- |
@@ -816,7 +854,7 @@ Pass bar (SPEC 2): >= 99.0 % pixels within 16 per channel, SSIM >= 0.985, every 
 | settings-label#4 | missing_in_unity | - | - | - | - |
 | ... 79 more | | | | | |
 
-### settings_toggles_clicked__iphone
+### settings_haptics_clicked_off__iphone
 
 | element | reason | axis | delta px | web rect | unity rect |
 | --- | --- | --- | --- | --- | --- |
@@ -848,37 +886,6 @@ Pass bar (SPEC 2): >= 99.0 % pixels within 16 per channel, SSIM >= 0.985, every 
 | ... 79 more | | | | | |
 
 ### settings_default__zero
-
-| element | reason | axis | delta px | web rect | unity rect |
-| --- | --- | --- | --- | --- | --- |
-| page-header-bar#5 | missing_in_unity | - | - | - | - |
-| page-header-title#5 | missing_in_unity | - | - | - | - |
-| page-scroll-body#6 | missing_in_unity | - | - | - | - |
-| settings-section-card#1 | missing_in_unity | - | - | - | - |
-| settings-section-title#1 | missing_in_unity | - | - | - | - |
-| settings-row#1 | missing_in_unity | - | - | - | - |
-| settings-label-box#1 | missing_in_unity | - | - | - | - |
-| settings-label#1 | missing_in_unity | - | - | - | - |
-| settings-sublabel#1 | missing_in_unity | - | - | - | - |
-| cartoon-switch#1 | missing_in_unity | - | - | - | - |
-| settings-sound-toggle | visibility | - | - | - | - |
-| slider-round#1 | missing_in_unity | - | - | - | - |
-| settings-row#2 | missing_in_unity | - | - | - | - |
-| settings-label-box#2 | missing_in_unity | - | - | - | - |
-| settings-label#2 | missing_in_unity | - | - | - | - |
-| settings-sublabel#2 | missing_in_unity | - | - | - | - |
-| settings-row#3 | missing_in_unity | - | - | - | - |
-| settings-label-box#3 | missing_in_unity | - | - | - | - |
-| settings-label#3 | missing_in_unity | - | - | - | - |
-| settings-sublabel#3 | missing_in_unity | - | - | - | - |
-| settings-section-card#2 | missing_in_unity | - | - | - | - |
-| settings-section-title#2 | missing_in_unity | - | - | - | - |
-| settings-row#4 | missing_in_unity | - | - | - | - |
-| settings-label-box#4 | missing_in_unity | - | - | - | - |
-| settings-label#4 | missing_in_unity | - | - | - | - |
-| ... 79 more | | | | | |
-
-### settings_scrolled__zero
 
 | element | reason | axis | delta px | web rect | unity rect |
 | --- | --- | --- | --- | --- | --- |
@@ -1002,7 +1009,38 @@ Pass bar (SPEC 2): >= 99.0 % pixels within 16 per channel, SSIM >= 0.985, every 
 | settings-label#4 | missing_in_unity | - | - | - | - |
 | ... 79 more | | | | | |
 
-### settings_toggles_clicked__zero
+### settings_sound_toggle_t0100__zero
+
+| element | reason | axis | delta px | web rect | unity rect |
+| --- | --- | --- | --- | --- | --- |
+| page-header-bar#5 | missing_in_unity | - | - | - | - |
+| page-header-title#5 | missing_in_unity | - | - | - | - |
+| page-scroll-body#6 | missing_in_unity | - | - | - | - |
+| settings-section-card#1 | missing_in_unity | - | - | - | - |
+| settings-section-title#1 | missing_in_unity | - | - | - | - |
+| settings-row#1 | missing_in_unity | - | - | - | - |
+| settings-label-box#1 | missing_in_unity | - | - | - | - |
+| settings-label#1 | missing_in_unity | - | - | - | - |
+| settings-sublabel#1 | missing_in_unity | - | - | - | - |
+| cartoon-switch#1 | missing_in_unity | - | - | - | - |
+| settings-sound-toggle | visibility | - | - | - | - |
+| slider-round#1 | missing_in_unity | - | - | - | - |
+| settings-row#2 | missing_in_unity | - | - | - | - |
+| settings-label-box#2 | missing_in_unity | - | - | - | - |
+| settings-label#2 | missing_in_unity | - | - | - | - |
+| settings-sublabel#2 | missing_in_unity | - | - | - | - |
+| settings-row#3 | missing_in_unity | - | - | - | - |
+| settings-label-box#3 | missing_in_unity | - | - | - | - |
+| settings-label#3 | missing_in_unity | - | - | - | - |
+| settings-sublabel#3 | missing_in_unity | - | - | - | - |
+| settings-section-card#2 | missing_in_unity | - | - | - | - |
+| settings-section-title#2 | missing_in_unity | - | - | - | - |
+| settings-row#4 | missing_in_unity | - | - | - | - |
+| settings-label-box#4 | missing_in_unity | - | - | - | - |
+| settings-label#4 | missing_in_unity | - | - | - | - |
+| ... 79 more | | | | | |
+
+### settings_haptics_clicked_off__zero
 
 | element | reason | axis | delta px | web rect | unity rect |
 | --- | --- | --- | --- | --- | --- |
@@ -1094,6 +1132,37 @@ Pass bar (SPEC 2): >= 99.0 % pixels within 16 per channel, SSIM >= 0.985, every 
 | modal-privacy | missing_in_unity | - | - | - | - |
 | modal-card#2 | missing_in_unity | - | - | - | - |
 | ... 46 more | | | | | |
+
+### canvas_float_poof__iphone
+
+| element | reason | axis | delta px | web rect | unity rect |
+| --- | --- | --- | --- | --- | --- |
+| game-canvas | missing_in_unity | - | - | - | - |
+| hud-top-mobile#1 | missing_in_unity | - | - | - | - |
+| capsule-progress-area#1 | missing_in_unity | - | - | - | - |
+| capsule-bar-track#1 | missing_in_unity | - | - | - | - |
+| hud-quota-bar | visibility | - | - | - | - |
+| gesture-hint | missing_in_unity | - | - | - | - |
+| hand-swipe-anim#1 | missing_in_unity | - | - | - | - |
+| hint-text#1 | missing_in_unity | - | - | - | - |
+| modal-pause | visibility | - | - | - | - |
+| modal-card#1 | missing_in_unity | - | - | - | - |
+| modal-header#1 | missing_in_unity | - | - | - | - |
+| modal-title#1 | missing_in_unity | - | - | - | - |
+| btn-close-pause | visibility | - | - | - | - |
+| modal-body#1 | missing_in_unity | - | - | - | - |
+| pause-level-info#1 | missing_in_unity | - | - | - | - |
+| pause-level-name | visibility | - | - | - | - |
+| pause-level-quota | visibility | - | - | - | - |
+| btn-pause-resume | visibility | - | - | - | - |
+| btn-pause-restart | visibility | - | - | - | - |
+| btn-pause-sound | visibility | - | - | - | - |
+| pause-sound-icon | visibility | - | - | - | - |
+| btn-pause-maps | visibility | - | - | - | - |
+| btn-pause-home | visibility | - | - | - | - |
+| modal-privacy | missing_in_unity | - | - | - | - |
+| modal-card#2 | missing_in_unity | - | - | - | - |
+| ... 48 more | | | | | |
 
 ### pressed_hud_pause__iphone
 
@@ -1219,6 +1288,68 @@ Pass bar (SPEC 2): >= 99.0 % pixels within 16 per channel, SSIM >= 0.985, every 
 | modal-card#2 | missing_in_unity | - | - | - | - |
 | ... 48 more | | | | | |
 
+### canvas_float_nom_words__iphone
+
+| element | reason | axis | delta px | web rect | unity rect |
+| --- | --- | --- | --- | --- | --- |
+| game-canvas | missing_in_unity | - | - | - | - |
+| hud-top-mobile#1 | missing_in_unity | - | - | - | - |
+| capsule-progress-area#1 | missing_in_unity | - | - | - | - |
+| capsule-bar-track#1 | missing_in_unity | - | - | - | - |
+| hud-quota-bar | visibility | - | - | - | - |
+| gesture-hint | missing_in_unity | - | - | - | - |
+| hand-swipe-anim#1 | missing_in_unity | - | - | - | - |
+| hint-text#1 | missing_in_unity | - | - | - | - |
+| modal-pause | visibility | - | - | - | - |
+| modal-card#1 | missing_in_unity | - | - | - | - |
+| modal-header#1 | missing_in_unity | - | - | - | - |
+| modal-title#1 | missing_in_unity | - | - | - | - |
+| btn-close-pause | visibility | - | - | - | - |
+| modal-body#1 | missing_in_unity | - | - | - | - |
+| pause-level-info#1 | missing_in_unity | - | - | - | - |
+| pause-level-name | visibility | - | - | - | - |
+| pause-level-quota | visibility | - | - | - | - |
+| btn-pause-resume | visibility | - | - | - | - |
+| btn-pause-restart | visibility | - | - | - | - |
+| btn-pause-sound | visibility | - | - | - | - |
+| pause-sound-icon | visibility | - | - | - | - |
+| btn-pause-maps | visibility | - | - | - | - |
+| btn-pause-home | visibility | - | - | - | - |
+| modal-privacy | missing_in_unity | - | - | - | - |
+| modal-card#2 | missing_in_unity | - | - | - | - |
+| ... 46 more | | | | | |
+
+### game_lvl01_quota_bar_t0125__iphone
+
+| element | reason | axis | delta px | web rect | unity rect |
+| --- | --- | --- | --- | --- | --- |
+| game-canvas | missing_in_unity | - | - | - | - |
+| hud-top-mobile#1 | missing_in_unity | - | - | - | - |
+| capsule-progress-area#1 | missing_in_unity | - | - | - | - |
+| capsule-bar-track#1 | missing_in_unity | - | - | - | - |
+| gesture-hint | missing_in_unity | - | - | - | - |
+| hand-swipe-anim#1 | missing_in_unity | - | - | - | - |
+| hint-text#1 | missing_in_unity | - | - | - | - |
+| modal-pause | visibility | - | - | - | - |
+| modal-card#1 | missing_in_unity | - | - | - | - |
+| modal-header#1 | missing_in_unity | - | - | - | - |
+| modal-title#1 | missing_in_unity | - | - | - | - |
+| btn-close-pause | visibility | - | - | - | - |
+| modal-body#1 | missing_in_unity | - | - | - | - |
+| pause-level-info#1 | missing_in_unity | - | - | - | - |
+| pause-level-name | visibility | - | - | - | - |
+| pause-level-quota | visibility | - | - | - | - |
+| btn-pause-resume | visibility | - | - | - | - |
+| btn-pause-restart | visibility | - | - | - | - |
+| btn-pause-sound | visibility | - | - | - | - |
+| pause-sound-icon | visibility | - | - | - | - |
+| btn-pause-maps | visibility | - | - | - | - |
+| btn-pause-home | visibility | - | - | - | - |
+| modal-privacy | missing_in_unity | - | - | - | - |
+| modal-card#2 | missing_in_unity | - | - | - | - |
+| modal-header#2 | missing_in_unity | - | - | - | - |
+| ... 46 more | | | | | |
+
 ### game_lvl01_skins_kitty_party_mint__zero
 
 | element | reason | axis | delta px | web rect | unity rect |
@@ -1250,7 +1381,7 @@ Pass bar (SPEC 2): >= 99.0 % pixels within 16 per channel, SSIM >= 0.985, every 
 | modal-card#2 | missing_in_unity | - | - | - | - |
 | ... 46 more | | | | | |
 
-### game_lvl01_quota_met_hud__iphone
+### game_lvl01_quota_met_t0016__iphone
 
 | element | reason | axis | delta px | web rect | unity rect |
 | --- | --- | --- | --- | --- | --- |
@@ -1281,7 +1412,7 @@ Pass bar (SPEC 2): >= 99.0 % pixels within 16 per channel, SSIM >= 0.985, every 
 | modal-header#2 | missing_in_unity | - | - | - | - |
 | ... 46 more | | | | | |
 
-### game_lvl01_near_victory__iphone
+### game_lvl01_quota_bar_t0016__iphone
 
 | element | reason | axis | delta px | web rect | unity rect |
 | --- | --- | --- | --- | --- | --- |
@@ -1405,6 +1536,192 @@ Pass bar (SPEC 2): >= 99.0 % pixels within 16 per channel, SSIM >= 0.985, every 
 | modal-card#2 | missing_in_unity | - | - | - | - |
 | ... 46 more | | | | | |
 
+### canvas_float_turbo__iphone
+
+| element | reason | axis | delta px | web rect | unity rect |
+| --- | --- | --- | --- | --- | --- |
+| game-canvas | missing_in_unity | - | - | - | - |
+| hud-top-mobile#1 | missing_in_unity | - | - | - | - |
+| capsule-progress-area#1 | missing_in_unity | - | - | - | - |
+| capsule-bar-track#1 | missing_in_unity | - | - | - | - |
+| hud-quota-bar | visibility | - | - | - | - |
+| gesture-hint | missing_in_unity | - | - | - | - |
+| hand-swipe-anim#1 | missing_in_unity | - | - | - | - |
+| hint-text#1 | missing_in_unity | - | - | - | - |
+| modal-pause | visibility | - | - | - | - |
+| modal-card#1 | missing_in_unity | - | - | - | - |
+| modal-header#1 | missing_in_unity | - | - | - | - |
+| modal-title#1 | missing_in_unity | - | - | - | - |
+| btn-close-pause | visibility | - | - | - | - |
+| modal-body#1 | missing_in_unity | - | - | - | - |
+| pause-level-info#1 | missing_in_unity | - | - | - | - |
+| pause-level-name | visibility | - | - | - | - |
+| pause-level-quota | visibility | - | - | - | - |
+| btn-pause-resume | visibility | - | - | - | - |
+| btn-pause-restart | visibility | - | - | - | - |
+| btn-pause-sound | visibility | - | - | - | - |
+| pause-sound-icon | visibility | - | - | - | - |
+| btn-pause-maps | visibility | - | - | - | - |
+| btn-pause-home | visibility | - | - | - | - |
+| modal-privacy | missing_in_unity | - | - | - | - |
+| modal-card#2 | missing_in_unity | - | - | - | - |
+| ... 46 more | | | | | |
+
+### canvas_float_turbo_reverse__iphone
+
+| element | reason | axis | delta px | web rect | unity rect |
+| --- | --- | --- | --- | --- | --- |
+| game-canvas | missing_in_unity | - | - | - | - |
+| hud-top-mobile#1 | missing_in_unity | - | - | - | - |
+| capsule-progress-area#1 | missing_in_unity | - | - | - | - |
+| capsule-bar-track#1 | missing_in_unity | - | - | - | - |
+| hud-quota-bar | visibility | - | - | - | - |
+| gesture-hint | missing_in_unity | - | - | - | - |
+| hand-swipe-anim#1 | missing_in_unity | - | - | - | - |
+| hint-text#1 | missing_in_unity | - | - | - | - |
+| modal-pause | visibility | - | - | - | - |
+| modal-card#1 | missing_in_unity | - | - | - | - |
+| modal-header#1 | missing_in_unity | - | - | - | - |
+| modal-title#1 | missing_in_unity | - | - | - | - |
+| btn-close-pause | visibility | - | - | - | - |
+| modal-body#1 | missing_in_unity | - | - | - | - |
+| pause-level-info#1 | missing_in_unity | - | - | - | - |
+| pause-level-name | visibility | - | - | - | - |
+| pause-level-quota | visibility | - | - | - | - |
+| btn-pause-resume | visibility | - | - | - | - |
+| btn-pause-restart | visibility | - | - | - | - |
+| btn-pause-sound | visibility | - | - | - | - |
+| pause-sound-icon | visibility | - | - | - | - |
+| btn-pause-maps | visibility | - | - | - | - |
+| btn-pause-home | visibility | - | - | - | - |
+| modal-privacy | missing_in_unity | - | - | - | - |
+| modal-card#2 | missing_in_unity | - | - | - | - |
+| ... 46 more | | | | | |
+
+### canvas_float_compact__iphone
+
+| element | reason | axis | delta px | web rect | unity rect |
+| --- | --- | --- | --- | --- | --- |
+| game-canvas | missing_in_unity | - | - | - | - |
+| hud-top-mobile#1 | missing_in_unity | - | - | - | - |
+| capsule-progress-area#1 | missing_in_unity | - | - | - | - |
+| capsule-bar-track#1 | missing_in_unity | - | - | - | - |
+| hud-quota-bar | visibility | - | - | - | - |
+| gesture-hint | missing_in_unity | - | - | - | - |
+| hand-swipe-anim#1 | missing_in_unity | - | - | - | - |
+| hint-text#1 | missing_in_unity | - | - | - | - |
+| modal-pause | visibility | - | - | - | - |
+| modal-card#1 | missing_in_unity | - | - | - | - |
+| modal-header#1 | missing_in_unity | - | - | - | - |
+| modal-title#1 | missing_in_unity | - | - | - | - |
+| btn-close-pause | visibility | - | - | - | - |
+| modal-body#1 | missing_in_unity | - | - | - | - |
+| pause-level-info#1 | missing_in_unity | - | - | - | - |
+| pause-level-name | visibility | - | - | - | - |
+| pause-level-quota | visibility | - | - | - | - |
+| btn-pause-resume | visibility | - | - | - | - |
+| btn-pause-restart | visibility | - | - | - | - |
+| btn-pause-sound | visibility | - | - | - | - |
+| pause-sound-icon | visibility | - | - | - | - |
+| btn-pause-maps | visibility | - | - | - | - |
+| btn-pause-home | visibility | - | - | - | - |
+| modal-privacy | missing_in_unity | - | - | - | - |
+| modal-card#2 | missing_in_unity | - | - | - | - |
+| ... 46 more | | | | | |
+
+### canvas_float_boost__iphone
+
+| element | reason | axis | delta px | web rect | unity rect |
+| --- | --- | --- | --- | --- | --- |
+| game-canvas | missing_in_unity | - | - | - | - |
+| hud-top-mobile#1 | missing_in_unity | - | - | - | - |
+| capsule-progress-area#1 | missing_in_unity | - | - | - | - |
+| capsule-bar-track#1 | missing_in_unity | - | - | - | - |
+| hud-quota-bar | visibility | - | - | - | - |
+| gesture-hint | missing_in_unity | - | - | - | - |
+| hand-swipe-anim#1 | missing_in_unity | - | - | - | - |
+| hint-text#1 | missing_in_unity | - | - | - | - |
+| modal-pause | visibility | - | - | - | - |
+| modal-card#1 | missing_in_unity | - | - | - | - |
+| modal-header#1 | missing_in_unity | - | - | - | - |
+| modal-title#1 | missing_in_unity | - | - | - | - |
+| btn-close-pause | visibility | - | - | - | - |
+| modal-body#1 | missing_in_unity | - | - | - | - |
+| pause-level-info#1 | missing_in_unity | - | - | - | - |
+| pause-level-name | visibility | - | - | - | - |
+| pause-level-quota | visibility | - | - | - | - |
+| btn-pause-resume | visibility | - | - | - | - |
+| btn-pause-restart | visibility | - | - | - | - |
+| btn-pause-sound | visibility | - | - | - | - |
+| pause-sound-icon | visibility | - | - | - | - |
+| btn-pause-maps | visibility | - | - | - | - |
+| btn-pause-home | visibility | - | - | - | - |
+| modal-privacy | missing_in_unity | - | - | - | - |
+| modal-card#2 | missing_in_unity | - | - | - | - |
+| ... 46 more | | | | | |
+
+### canvas_float_shred__iphone
+
+| element | reason | axis | delta px | web rect | unity rect |
+| --- | --- | --- | --- | --- | --- |
+| game-canvas | missing_in_unity | - | - | - | - |
+| hud-top-mobile#1 | missing_in_unity | - | - | - | - |
+| capsule-progress-area#1 | missing_in_unity | - | - | - | - |
+| capsule-bar-track#1 | missing_in_unity | - | - | - | - |
+| hud-quota-bar | visibility | - | - | - | - |
+| gesture-hint | missing_in_unity | - | - | - | - |
+| hand-swipe-anim#1 | missing_in_unity | - | - | - | - |
+| hint-text#1 | missing_in_unity | - | - | - | - |
+| modal-pause | visibility | - | - | - | - |
+| modal-card#1 | missing_in_unity | - | - | - | - |
+| modal-header#1 | missing_in_unity | - | - | - | - |
+| modal-title#1 | missing_in_unity | - | - | - | - |
+| btn-close-pause | visibility | - | - | - | - |
+| modal-body#1 | missing_in_unity | - | - | - | - |
+| pause-level-info#1 | missing_in_unity | - | - | - | - |
+| pause-level-name | visibility | - | - | - | - |
+| pause-level-quota | visibility | - | - | - | - |
+| btn-pause-resume | visibility | - | - | - | - |
+| btn-pause-restart | visibility | - | - | - | - |
+| btn-pause-sound | visibility | - | - | - | - |
+| pause-sound-icon | visibility | - | - | - | - |
+| btn-pause-maps | visibility | - | - | - | - |
+| btn-pause-home | visibility | - | - | - | - |
+| modal-privacy | missing_in_unity | - | - | - | - |
+| modal-card#2 | missing_in_unity | - | - | - | - |
+| ... 46 more | | | | | |
+
+### canvas_float_nom_words__zero
+
+| element | reason | axis | delta px | web rect | unity rect |
+| --- | --- | --- | --- | --- | --- |
+| game-canvas | missing_in_unity | - | - | - | - |
+| hud-top-mobile#1 | missing_in_unity | - | - | - | - |
+| capsule-progress-area#1 | missing_in_unity | - | - | - | - |
+| capsule-bar-track#1 | missing_in_unity | - | - | - | - |
+| hud-quota-bar | visibility | - | - | - | - |
+| gesture-hint | missing_in_unity | - | - | - | - |
+| hand-swipe-anim#1 | missing_in_unity | - | - | - | - |
+| hint-text#1 | missing_in_unity | - | - | - | - |
+| modal-pause | visibility | - | - | - | - |
+| modal-card#1 | missing_in_unity | - | - | - | - |
+| modal-header#1 | missing_in_unity | - | - | - | - |
+| modal-title#1 | missing_in_unity | - | - | - | - |
+| btn-close-pause | visibility | - | - | - | - |
+| modal-body#1 | missing_in_unity | - | - | - | - |
+| pause-level-info#1 | missing_in_unity | - | - | - | - |
+| pause-level-name | visibility | - | - | - | - |
+| pause-level-quota | visibility | - | - | - | - |
+| btn-pause-resume | visibility | - | - | - | - |
+| btn-pause-restart | visibility | - | - | - | - |
+| btn-pause-sound | visibility | - | - | - | - |
+| pause-sound-icon | visibility | - | - | - | - |
+| btn-pause-maps | visibility | - | - | - | - |
+| btn-pause-home | visibility | - | - | - | - |
+| modal-privacy | missing_in_unity | - | - | - | - |
+| modal-card#2 | missing_in_unity | - | - | - | - |
+| ... 46 more | | | | | |
+
 ### game_lvl01_t0016ms__iphone
 
 | element | reason | axis | delta px | web rect | unity rect |
@@ -1436,7 +1753,38 @@ Pass bar (SPEC 2): >= 99.0 % pixels within 16 per channel, SSIM >= 0.985, every 
 | modal-card#2 | missing_in_unity | - | - | - | - |
 | ... 46 more | | | | | |
 
-### game_lvl01_quota_met_hud__zero
+### canvas_float_poof__zero
+
+| element | reason | axis | delta px | web rect | unity rect |
+| --- | --- | --- | --- | --- | --- |
+| game-canvas | missing_in_unity | - | - | - | - |
+| hud-top-mobile#1 | missing_in_unity | - | - | - | - |
+| capsule-progress-area#1 | missing_in_unity | - | - | - | - |
+| capsule-bar-track#1 | missing_in_unity | - | - | - | - |
+| hud-quota-bar | visibility | - | - | - | - |
+| gesture-hint | missing_in_unity | - | - | - | - |
+| hand-swipe-anim#1 | missing_in_unity | - | - | - | - |
+| hint-text#1 | missing_in_unity | - | - | - | - |
+| modal-pause | visibility | - | - | - | - |
+| modal-card#1 | missing_in_unity | - | - | - | - |
+| modal-header#1 | missing_in_unity | - | - | - | - |
+| modal-title#1 | missing_in_unity | - | - | - | - |
+| btn-close-pause | visibility | - | - | - | - |
+| modal-body#1 | missing_in_unity | - | - | - | - |
+| pause-level-info#1 | missing_in_unity | - | - | - | - |
+| pause-level-name | visibility | - | - | - | - |
+| pause-level-quota | visibility | - | - | - | - |
+| btn-pause-resume | visibility | - | - | - | - |
+| btn-pause-restart | visibility | - | - | - | - |
+| btn-pause-sound | visibility | - | - | - | - |
+| pause-sound-icon | visibility | - | - | - | - |
+| btn-pause-maps | visibility | - | - | - | - |
+| btn-pause-home | visibility | - | - | - | - |
+| modal-privacy | missing_in_unity | - | - | - | - |
+| modal-card#2 | missing_in_unity | - | - | - | - |
+| ... 48 more | | | | | |
+
+### game_lvl01_quota_bar_t0125__zero
 
 | element | reason | axis | delta px | web rect | unity rect |
 | --- | --- | --- | --- | --- | --- |
@@ -1467,7 +1815,69 @@ Pass bar (SPEC 2): >= 99.0 % pixels within 16 per channel, SSIM >= 0.985, every 
 | modal-header#2 | missing_in_unity | - | - | - | - |
 | ... 46 more | | | | | |
 
-### game_lvl01_near_victory__zero
+### canvas_gate_bolt_x3__iphone
+
+| element | reason | axis | delta px | web rect | unity rect |
+| --- | --- | --- | --- | --- | --- |
+| game-canvas | missing_in_unity | - | - | - | - |
+| hud-top-mobile#1 | missing_in_unity | - | - | - | - |
+| capsule-progress-area#1 | missing_in_unity | - | - | - | - |
+| capsule-bar-track#1 | missing_in_unity | - | - | - | - |
+| hud-quota-bar | visibility | - | - | - | - |
+| gesture-hint | missing_in_unity | - | - | - | - |
+| hand-swipe-anim#1 | missing_in_unity | - | - | - | - |
+| hint-text#1 | missing_in_unity | - | - | - | - |
+| modal-pause | visibility | - | - | - | - |
+| modal-card#1 | missing_in_unity | - | - | - | - |
+| modal-header#1 | missing_in_unity | - | - | - | - |
+| modal-title#1 | missing_in_unity | - | - | - | - |
+| btn-close-pause | visibility | - | - | - | - |
+| modal-body#1 | missing_in_unity | - | - | - | - |
+| pause-level-info#1 | missing_in_unity | - | - | - | - |
+| pause-level-name | visibility | - | - | - | - |
+| pause-level-quota | visibility | - | - | - | - |
+| btn-pause-resume | visibility | - | - | - | - |
+| btn-pause-restart | visibility | - | - | - | - |
+| btn-pause-sound | visibility | - | - | - | - |
+| pause-sound-icon | visibility | - | - | - | - |
+| btn-pause-maps | visibility | - | - | - | - |
+| btn-pause-home | visibility | - | - | - | - |
+| modal-privacy | missing_in_unity | - | - | - | - |
+| modal-card#2 | missing_in_unity | - | - | - | - |
+| ... 46 more | | | | | |
+
+### canvas_hub_kitty__iphone
+
+| element | reason | axis | delta px | web rect | unity rect |
+| --- | --- | --- | --- | --- | --- |
+| game-canvas | missing_in_unity | - | - | - | - |
+| hud-top-mobile#1 | missing_in_unity | - | - | - | - |
+| capsule-progress-area#1 | missing_in_unity | - | - | - | - |
+| capsule-bar-track#1 | missing_in_unity | - | - | - | - |
+| hud-quota-bar | visibility | - | - | - | - |
+| gesture-hint | missing_in_unity | - | - | - | - |
+| hand-swipe-anim#1 | missing_in_unity | - | - | - | - |
+| hint-text#1 | missing_in_unity | - | - | - | - |
+| modal-pause | visibility | - | - | - | - |
+| modal-card#1 | missing_in_unity | - | - | - | - |
+| modal-header#1 | missing_in_unity | - | - | - | - |
+| modal-title#1 | missing_in_unity | - | - | - | - |
+| btn-close-pause | visibility | - | - | - | - |
+| modal-body#1 | missing_in_unity | - | - | - | - |
+| pause-level-info#1 | missing_in_unity | - | - | - | - |
+| pause-level-name | visibility | - | - | - | - |
+| pause-level-quota | visibility | - | - | - | - |
+| btn-pause-resume | visibility | - | - | - | - |
+| btn-pause-restart | visibility | - | - | - | - |
+| btn-pause-sound | visibility | - | - | - | - |
+| pause-sound-icon | visibility | - | - | - | - |
+| btn-pause-maps | visibility | - | - | - | - |
+| btn-pause-home | visibility | - | - | - | - |
+| modal-privacy | missing_in_unity | - | - | - | - |
+| modal-card#2 | missing_in_unity | - | - | - | - |
+| ... 46 more | | | | | |
+
+### game_lvl01_quota_met_t0016__zero
 
 | element | reason | axis | delta px | web rect | unity rect |
 | --- | --- | --- | --- | --- | --- |
@@ -1496,6 +1906,347 @@ Pass bar (SPEC 2): >= 99.0 % pixels within 16 per channel, SSIM >= 0.985, every 
 | modal-privacy | missing_in_unity | - | - | - | - |
 | modal-card#2 | missing_in_unity | - | - | - | - |
 | modal-header#2 | missing_in_unity | - | - | - | - |
+| ... 46 more | | | | | |
+
+### game_lvl01_quota_bar_t0016__zero
+
+| element | reason | axis | delta px | web rect | unity rect |
+| --- | --- | --- | --- | --- | --- |
+| game-canvas | missing_in_unity | - | - | - | - |
+| hud-top-mobile#1 | missing_in_unity | - | - | - | - |
+| capsule-progress-area#1 | missing_in_unity | - | - | - | - |
+| capsule-bar-track#1 | missing_in_unity | - | - | - | - |
+| gesture-hint | missing_in_unity | - | - | - | - |
+| hand-swipe-anim#1 | missing_in_unity | - | - | - | - |
+| hint-text#1 | missing_in_unity | - | - | - | - |
+| modal-pause | visibility | - | - | - | - |
+| modal-card#1 | missing_in_unity | - | - | - | - |
+| modal-header#1 | missing_in_unity | - | - | - | - |
+| modal-title#1 | missing_in_unity | - | - | - | - |
+| btn-close-pause | visibility | - | - | - | - |
+| modal-body#1 | missing_in_unity | - | - | - | - |
+| pause-level-info#1 | missing_in_unity | - | - | - | - |
+| pause-level-name | visibility | - | - | - | - |
+| pause-level-quota | visibility | - | - | - | - |
+| btn-pause-resume | visibility | - | - | - | - |
+| btn-pause-restart | visibility | - | - | - | - |
+| btn-pause-sound | visibility | - | - | - | - |
+| pause-sound-icon | visibility | - | - | - | - |
+| btn-pause-maps | visibility | - | - | - | - |
+| btn-pause-home | visibility | - | - | - | - |
+| modal-privacy | missing_in_unity | - | - | - | - |
+| modal-card#2 | missing_in_unity | - | - | - | - |
+| modal-header#2 | missing_in_unity | - | - | - | - |
+| ... 46 more | | | | | |
+
+### canvas_gate_bolt_x2__iphone
+
+| element | reason | axis | delta px | web rect | unity rect |
+| --- | --- | --- | --- | --- | --- |
+| game-canvas | missing_in_unity | - | - | - | - |
+| hud-top-mobile#1 | missing_in_unity | - | - | - | - |
+| capsule-progress-area#1 | missing_in_unity | - | - | - | - |
+| capsule-bar-track#1 | missing_in_unity | - | - | - | - |
+| hud-quota-bar | visibility | - | - | - | - |
+| gesture-hint | missing_in_unity | - | - | - | - |
+| hand-swipe-anim#1 | missing_in_unity | - | - | - | - |
+| hint-text#1 | missing_in_unity | - | - | - | - |
+| modal-pause | visibility | - | - | - | - |
+| modal-card#1 | missing_in_unity | - | - | - | - |
+| modal-header#1 | missing_in_unity | - | - | - | - |
+| modal-title#1 | missing_in_unity | - | - | - | - |
+| btn-close-pause | visibility | - | - | - | - |
+| modal-body#1 | missing_in_unity | - | - | - | - |
+| pause-level-info#1 | missing_in_unity | - | - | - | - |
+| pause-level-name | visibility | - | - | - | - |
+| pause-level-quota | visibility | - | - | - | - |
+| btn-pause-resume | visibility | - | - | - | - |
+| btn-pause-restart | visibility | - | - | - | - |
+| btn-pause-sound | visibility | - | - | - | - |
+| pause-sound-icon | visibility | - | - | - | - |
+| btn-pause-maps | visibility | - | - | - | - |
+| btn-pause-home | visibility | - | - | - | - |
+| modal-privacy | missing_in_unity | - | - | - | - |
+| modal-card#2 | missing_in_unity | - | - | - | - |
+| ... 46 more | | | | | |
+
+### canvas_gate_magnet_add__iphone
+
+| element | reason | axis | delta px | web rect | unity rect |
+| --- | --- | --- | --- | --- | --- |
+| game-canvas | missing_in_unity | - | - | - | - |
+| hud-top-mobile#1 | missing_in_unity | - | - | - | - |
+| capsule-progress-area#1 | missing_in_unity | - | - | - | - |
+| capsule-bar-track#1 | missing_in_unity | - | - | - | - |
+| hud-quota-bar | visibility | - | - | - | - |
+| gesture-hint | missing_in_unity | - | - | - | - |
+| hand-swipe-anim#1 | missing_in_unity | - | - | - | - |
+| hint-text#1 | missing_in_unity | - | - | - | - |
+| modal-pause | visibility | - | - | - | - |
+| modal-card#1 | missing_in_unity | - | - | - | - |
+| modal-header#1 | missing_in_unity | - | - | - | - |
+| modal-title#1 | missing_in_unity | - | - | - | - |
+| btn-close-pause | visibility | - | - | - | - |
+| modal-body#1 | missing_in_unity | - | - | - | - |
+| pause-level-info#1 | missing_in_unity | - | - | - | - |
+| pause-level-name | visibility | - | - | - | - |
+| pause-level-quota | visibility | - | - | - | - |
+| btn-pause-resume | visibility | - | - | - | - |
+| btn-pause-restart | visibility | - | - | - | - |
+| btn-pause-sound | visibility | - | - | - | - |
+| pause-sound-icon | visibility | - | - | - | - |
+| btn-pause-maps | visibility | - | - | - | - |
+| btn-pause-home | visibility | - | - | - | - |
+| modal-privacy | missing_in_unity | - | - | - | - |
+| modal-card#2 | missing_in_unity | - | - | - | - |
+| ... 46 more | | | | | |
+
+### canvas_hub_donut__iphone
+
+| element | reason | axis | delta px | web rect | unity rect |
+| --- | --- | --- | --- | --- | --- |
+| game-canvas | missing_in_unity | - | - | - | - |
+| hud-top-mobile#1 | missing_in_unity | - | - | - | - |
+| capsule-progress-area#1 | missing_in_unity | - | - | - | - |
+| capsule-bar-track#1 | missing_in_unity | - | - | - | - |
+| hud-quota-bar | visibility | - | - | - | - |
+| gesture-hint | missing_in_unity | - | - | - | - |
+| hand-swipe-anim#1 | missing_in_unity | - | - | - | - |
+| hint-text#1 | missing_in_unity | - | - | - | - |
+| modal-pause | visibility | - | - | - | - |
+| modal-card#1 | missing_in_unity | - | - | - | - |
+| modal-header#1 | missing_in_unity | - | - | - | - |
+| modal-title#1 | missing_in_unity | - | - | - | - |
+| btn-close-pause | visibility | - | - | - | - |
+| modal-body#1 | missing_in_unity | - | - | - | - |
+| pause-level-info#1 | missing_in_unity | - | - | - | - |
+| pause-level-name | visibility | - | - | - | - |
+| pause-level-quota | visibility | - | - | - | - |
+| btn-pause-resume | visibility | - | - | - | - |
+| btn-pause-restart | visibility | - | - | - | - |
+| btn-pause-sound | visibility | - | - | - | - |
+| pause-sound-icon | visibility | - | - | - | - |
+| btn-pause-maps | visibility | - | - | - | - |
+| btn-pause-home | visibility | - | - | - | - |
+| modal-privacy | missing_in_unity | - | - | - | - |
+| modal-card#2 | missing_in_unity | - | - | - | - |
+| ... 46 more | | | | | |
+
+### canvas_hub_candy__iphone
+
+| element | reason | axis | delta px | web rect | unity rect |
+| --- | --- | --- | --- | --- | --- |
+| game-canvas | missing_in_unity | - | - | - | - |
+| hud-top-mobile#1 | missing_in_unity | - | - | - | - |
+| capsule-progress-area#1 | missing_in_unity | - | - | - | - |
+| capsule-bar-track#1 | missing_in_unity | - | - | - | - |
+| hud-quota-bar | visibility | - | - | - | - |
+| gesture-hint | missing_in_unity | - | - | - | - |
+| hand-swipe-anim#1 | missing_in_unity | - | - | - | - |
+| hint-text#1 | missing_in_unity | - | - | - | - |
+| modal-pause | visibility | - | - | - | - |
+| modal-card#1 | missing_in_unity | - | - | - | - |
+| modal-header#1 | missing_in_unity | - | - | - | - |
+| modal-title#1 | missing_in_unity | - | - | - | - |
+| btn-close-pause | visibility | - | - | - | - |
+| modal-body#1 | missing_in_unity | - | - | - | - |
+| pause-level-info#1 | missing_in_unity | - | - | - | - |
+| pause-level-name | visibility | - | - | - | - |
+| pause-level-quota | visibility | - | - | - | - |
+| btn-pause-resume | visibility | - | - | - | - |
+| btn-pause-restart | visibility | - | - | - | - |
+| btn-pause-sound | visibility | - | - | - | - |
+| pause-sound-icon | visibility | - | - | - | - |
+| btn-pause-maps | visibility | - | - | - | - |
+| btn-pause-home | visibility | - | - | - | - |
+| modal-privacy | missing_in_unity | - | - | - | - |
+| modal-card#2 | missing_in_unity | - | - | - | - |
+| ... 46 more | | | | | |
+
+### canvas_hub_duckie__iphone
+
+| element | reason | axis | delta px | web rect | unity rect |
+| --- | --- | --- | --- | --- | --- |
+| game-canvas | missing_in_unity | - | - | - | - |
+| hud-top-mobile#1 | missing_in_unity | - | - | - | - |
+| capsule-progress-area#1 | missing_in_unity | - | - | - | - |
+| capsule-bar-track#1 | missing_in_unity | - | - | - | - |
+| hud-quota-bar | visibility | - | - | - | - |
+| gesture-hint | missing_in_unity | - | - | - | - |
+| hand-swipe-anim#1 | missing_in_unity | - | - | - | - |
+| hint-text#1 | missing_in_unity | - | - | - | - |
+| modal-pause | visibility | - | - | - | - |
+| modal-card#1 | missing_in_unity | - | - | - | - |
+| modal-header#1 | missing_in_unity | - | - | - | - |
+| modal-title#1 | missing_in_unity | - | - | - | - |
+| btn-close-pause | visibility | - | - | - | - |
+| modal-body#1 | missing_in_unity | - | - | - | - |
+| pause-level-info#1 | missing_in_unity | - | - | - | - |
+| pause-level-name | visibility | - | - | - | - |
+| pause-level-quota | visibility | - | - | - | - |
+| btn-pause-resume | visibility | - | - | - | - |
+| btn-pause-restart | visibility | - | - | - | - |
+| btn-pause-sound | visibility | - | - | - | - |
+| pause-sound-icon | visibility | - | - | - | - |
+| btn-pause-maps | visibility | - | - | - | - |
+| btn-pause-home | visibility | - | - | - | - |
+| modal-privacy | missing_in_unity | - | - | - | - |
+| modal-card#2 | missing_in_unity | - | - | - | - |
+| ... 46 more | | | | | |
+
+### canvas_float_turbo__zero
+
+| element | reason | axis | delta px | web rect | unity rect |
+| --- | --- | --- | --- | --- | --- |
+| game-canvas | missing_in_unity | - | - | - | - |
+| hud-top-mobile#1 | missing_in_unity | - | - | - | - |
+| capsule-progress-area#1 | missing_in_unity | - | - | - | - |
+| capsule-bar-track#1 | missing_in_unity | - | - | - | - |
+| hud-quota-bar | visibility | - | - | - | - |
+| gesture-hint | missing_in_unity | - | - | - | - |
+| hand-swipe-anim#1 | missing_in_unity | - | - | - | - |
+| hint-text#1 | missing_in_unity | - | - | - | - |
+| modal-pause | visibility | - | - | - | - |
+| modal-card#1 | missing_in_unity | - | - | - | - |
+| modal-header#1 | missing_in_unity | - | - | - | - |
+| modal-title#1 | missing_in_unity | - | - | - | - |
+| btn-close-pause | visibility | - | - | - | - |
+| modal-body#1 | missing_in_unity | - | - | - | - |
+| pause-level-info#1 | missing_in_unity | - | - | - | - |
+| pause-level-name | visibility | - | - | - | - |
+| pause-level-quota | visibility | - | - | - | - |
+| btn-pause-resume | visibility | - | - | - | - |
+| btn-pause-restart | visibility | - | - | - | - |
+| btn-pause-sound | visibility | - | - | - | - |
+| pause-sound-icon | visibility | - | - | - | - |
+| btn-pause-maps | visibility | - | - | - | - |
+| btn-pause-home | visibility | - | - | - | - |
+| modal-privacy | missing_in_unity | - | - | - | - |
+| modal-card#2 | missing_in_unity | - | - | - | - |
+| ... 46 more | | | | | |
+
+### canvas_float_turbo_reverse__zero
+
+| element | reason | axis | delta px | web rect | unity rect |
+| --- | --- | --- | --- | --- | --- |
+| game-canvas | missing_in_unity | - | - | - | - |
+| hud-top-mobile#1 | missing_in_unity | - | - | - | - |
+| capsule-progress-area#1 | missing_in_unity | - | - | - | - |
+| capsule-bar-track#1 | missing_in_unity | - | - | - | - |
+| hud-quota-bar | visibility | - | - | - | - |
+| gesture-hint | missing_in_unity | - | - | - | - |
+| hand-swipe-anim#1 | missing_in_unity | - | - | - | - |
+| hint-text#1 | missing_in_unity | - | - | - | - |
+| modal-pause | visibility | - | - | - | - |
+| modal-card#1 | missing_in_unity | - | - | - | - |
+| modal-header#1 | missing_in_unity | - | - | - | - |
+| modal-title#1 | missing_in_unity | - | - | - | - |
+| btn-close-pause | visibility | - | - | - | - |
+| modal-body#1 | missing_in_unity | - | - | - | - |
+| pause-level-info#1 | missing_in_unity | - | - | - | - |
+| pause-level-name | visibility | - | - | - | - |
+| pause-level-quota | visibility | - | - | - | - |
+| btn-pause-resume | visibility | - | - | - | - |
+| btn-pause-restart | visibility | - | - | - | - |
+| btn-pause-sound | visibility | - | - | - | - |
+| pause-sound-icon | visibility | - | - | - | - |
+| btn-pause-maps | visibility | - | - | - | - |
+| btn-pause-home | visibility | - | - | - | - |
+| modal-privacy | missing_in_unity | - | - | - | - |
+| modal-card#2 | missing_in_unity | - | - | - | - |
+| ... 46 more | | | | | |
+
+### canvas_float_compact__zero
+
+| element | reason | axis | delta px | web rect | unity rect |
+| --- | --- | --- | --- | --- | --- |
+| game-canvas | missing_in_unity | - | - | - | - |
+| hud-top-mobile#1 | missing_in_unity | - | - | - | - |
+| capsule-progress-area#1 | missing_in_unity | - | - | - | - |
+| capsule-bar-track#1 | missing_in_unity | - | - | - | - |
+| hud-quota-bar | visibility | - | - | - | - |
+| gesture-hint | missing_in_unity | - | - | - | - |
+| hand-swipe-anim#1 | missing_in_unity | - | - | - | - |
+| hint-text#1 | missing_in_unity | - | - | - | - |
+| modal-pause | visibility | - | - | - | - |
+| modal-card#1 | missing_in_unity | - | - | - | - |
+| modal-header#1 | missing_in_unity | - | - | - | - |
+| modal-title#1 | missing_in_unity | - | - | - | - |
+| btn-close-pause | visibility | - | - | - | - |
+| modal-body#1 | missing_in_unity | - | - | - | - |
+| pause-level-info#1 | missing_in_unity | - | - | - | - |
+| pause-level-name | visibility | - | - | - | - |
+| pause-level-quota | visibility | - | - | - | - |
+| btn-pause-resume | visibility | - | - | - | - |
+| btn-pause-restart | visibility | - | - | - | - |
+| btn-pause-sound | visibility | - | - | - | - |
+| pause-sound-icon | visibility | - | - | - | - |
+| btn-pause-maps | visibility | - | - | - | - |
+| btn-pause-home | visibility | - | - | - | - |
+| modal-privacy | missing_in_unity | - | - | - | - |
+| modal-card#2 | missing_in_unity | - | - | - | - |
+| ... 46 more | | | | | |
+
+### canvas_float_boost__zero
+
+| element | reason | axis | delta px | web rect | unity rect |
+| --- | --- | --- | --- | --- | --- |
+| game-canvas | missing_in_unity | - | - | - | - |
+| hud-top-mobile#1 | missing_in_unity | - | - | - | - |
+| capsule-progress-area#1 | missing_in_unity | - | - | - | - |
+| capsule-bar-track#1 | missing_in_unity | - | - | - | - |
+| hud-quota-bar | visibility | - | - | - | - |
+| gesture-hint | missing_in_unity | - | - | - | - |
+| hand-swipe-anim#1 | missing_in_unity | - | - | - | - |
+| hint-text#1 | missing_in_unity | - | - | - | - |
+| modal-pause | visibility | - | - | - | - |
+| modal-card#1 | missing_in_unity | - | - | - | - |
+| modal-header#1 | missing_in_unity | - | - | - | - |
+| modal-title#1 | missing_in_unity | - | - | - | - |
+| btn-close-pause | visibility | - | - | - | - |
+| modal-body#1 | missing_in_unity | - | - | - | - |
+| pause-level-info#1 | missing_in_unity | - | - | - | - |
+| pause-level-name | visibility | - | - | - | - |
+| pause-level-quota | visibility | - | - | - | - |
+| btn-pause-resume | visibility | - | - | - | - |
+| btn-pause-restart | visibility | - | - | - | - |
+| btn-pause-sound | visibility | - | - | - | - |
+| pause-sound-icon | visibility | - | - | - | - |
+| btn-pause-maps | visibility | - | - | - | - |
+| btn-pause-home | visibility | - | - | - | - |
+| modal-privacy | missing_in_unity | - | - | - | - |
+| modal-card#2 | missing_in_unity | - | - | - | - |
+| ... 46 more | | | | | |
+
+### canvas_float_shred__zero
+
+| element | reason | axis | delta px | web rect | unity rect |
+| --- | --- | --- | --- | --- | --- |
+| game-canvas | missing_in_unity | - | - | - | - |
+| hud-top-mobile#1 | missing_in_unity | - | - | - | - |
+| capsule-progress-area#1 | missing_in_unity | - | - | - | - |
+| capsule-bar-track#1 | missing_in_unity | - | - | - | - |
+| hud-quota-bar | visibility | - | - | - | - |
+| gesture-hint | missing_in_unity | - | - | - | - |
+| hand-swipe-anim#1 | missing_in_unity | - | - | - | - |
+| hint-text#1 | missing_in_unity | - | - | - | - |
+| modal-pause | visibility | - | - | - | - |
+| modal-card#1 | missing_in_unity | - | - | - | - |
+| modal-header#1 | missing_in_unity | - | - | - | - |
+| modal-title#1 | missing_in_unity | - | - | - | - |
+| btn-close-pause | visibility | - | - | - | - |
+| modal-body#1 | missing_in_unity | - | - | - | - |
+| pause-level-info#1 | missing_in_unity | - | - | - | - |
+| pause-level-name | visibility | - | - | - | - |
+| pause-level-quota | visibility | - | - | - | - |
+| btn-pause-resume | visibility | - | - | - | - |
+| btn-pause-restart | visibility | - | - | - | - |
+| btn-pause-sound | visibility | - | - | - | - |
+| pause-sound-icon | visibility | - | - | - | - |
+| btn-pause-maps | visibility | - | - | - | - |
+| btn-pause-home | visibility | - | - | - | - |
+| modal-privacy | missing_in_unity | - | - | - | - |
+| modal-card#2 | missing_in_unity | - | - | - | - |
 | ... 46 more | | | | | |
 
 ### game_lvl11_t0016ms__iphone
@@ -1592,6 +2343,37 @@ Pass bar (SPEC 2): >= 99.0 % pixels within 16 per channel, SSIM >= 0.985, every 
 | ... 46 more | | | | | |
 
 ### game_lvl01_t1000ms__iphone
+
+| element | reason | axis | delta px | web rect | unity rect |
+| --- | --- | --- | --- | --- | --- |
+| game-canvas | missing_in_unity | - | - | - | - |
+| hud-top-mobile#1 | missing_in_unity | - | - | - | - |
+| capsule-progress-area#1 | missing_in_unity | - | - | - | - |
+| capsule-bar-track#1 | missing_in_unity | - | - | - | - |
+| hud-quota-bar | visibility | - | - | - | - |
+| gesture-hint | missing_in_unity | - | - | - | - |
+| hand-swipe-anim#1 | missing_in_unity | - | - | - | - |
+| hint-text#1 | missing_in_unity | - | - | - | - |
+| modal-pause | visibility | - | - | - | - |
+| modal-card#1 | missing_in_unity | - | - | - | - |
+| modal-header#1 | missing_in_unity | - | - | - | - |
+| modal-title#1 | missing_in_unity | - | - | - | - |
+| btn-close-pause | visibility | - | - | - | - |
+| modal-body#1 | missing_in_unity | - | - | - | - |
+| pause-level-info#1 | missing_in_unity | - | - | - | - |
+| pause-level-name | visibility | - | - | - | - |
+| pause-level-quota | visibility | - | - | - | - |
+| btn-pause-resume | visibility | - | - | - | - |
+| btn-pause-restart | visibility | - | - | - | - |
+| btn-pause-sound | visibility | - | - | - | - |
+| pause-sound-icon | visibility | - | - | - | - |
+| btn-pause-maps | visibility | - | - | - | - |
+| btn-pause-home | visibility | - | - | - | - |
+| modal-privacy | missing_in_unity | - | - | - | - |
+| modal-card#2 | missing_in_unity | - | - | - | - |
+| ... 46 more | | | | | |
+
+### canvas_gate_bolt_x3__zero
 
 | element | reason | axis | delta px | web rect | unity rect |
 | --- | --- | --- | --- | --- | --- |
@@ -1746,6 +2528,254 @@ Pass bar (SPEC 2): >= 99.0 % pixels within 16 per channel, SSIM >= 0.985, every 
 | modal-card#2 | missing_in_unity | - | - | - | - |
 | ... 46 more | | | | | |
 
+### canvas_hub_kitty__zero
+
+| element | reason | axis | delta px | web rect | unity rect |
+| --- | --- | --- | --- | --- | --- |
+| game-canvas | missing_in_unity | - | - | - | - |
+| hud-top-mobile#1 | missing_in_unity | - | - | - | - |
+| capsule-progress-area#1 | missing_in_unity | - | - | - | - |
+| capsule-bar-track#1 | missing_in_unity | - | - | - | - |
+| hud-quota-bar | visibility | - | - | - | - |
+| gesture-hint | missing_in_unity | - | - | - | - |
+| hand-swipe-anim#1 | missing_in_unity | - | - | - | - |
+| hint-text#1 | missing_in_unity | - | - | - | - |
+| modal-pause | visibility | - | - | - | - |
+| modal-card#1 | missing_in_unity | - | - | - | - |
+| modal-header#1 | missing_in_unity | - | - | - | - |
+| modal-title#1 | missing_in_unity | - | - | - | - |
+| btn-close-pause | visibility | - | - | - | - |
+| modal-body#1 | missing_in_unity | - | - | - | - |
+| pause-level-info#1 | missing_in_unity | - | - | - | - |
+| pause-level-name | visibility | - | - | - | - |
+| pause-level-quota | visibility | - | - | - | - |
+| btn-pause-resume | visibility | - | - | - | - |
+| btn-pause-restart | visibility | - | - | - | - |
+| btn-pause-sound | visibility | - | - | - | - |
+| pause-sound-icon | visibility | - | - | - | - |
+| btn-pause-maps | visibility | - | - | - | - |
+| btn-pause-home | visibility | - | - | - | - |
+| modal-privacy | missing_in_unity | - | - | - | - |
+| modal-card#2 | missing_in_unity | - | - | - | - |
+| ... 46 more | | | | | |
+
+### canvas_gate_bolt_x2__zero
+
+| element | reason | axis | delta px | web rect | unity rect |
+| --- | --- | --- | --- | --- | --- |
+| game-canvas | missing_in_unity | - | - | - | - |
+| hud-top-mobile#1 | missing_in_unity | - | - | - | - |
+| capsule-progress-area#1 | missing_in_unity | - | - | - | - |
+| capsule-bar-track#1 | missing_in_unity | - | - | - | - |
+| hud-quota-bar | visibility | - | - | - | - |
+| gesture-hint | missing_in_unity | - | - | - | - |
+| hand-swipe-anim#1 | missing_in_unity | - | - | - | - |
+| hint-text#1 | missing_in_unity | - | - | - | - |
+| modal-pause | visibility | - | - | - | - |
+| modal-card#1 | missing_in_unity | - | - | - | - |
+| modal-header#1 | missing_in_unity | - | - | - | - |
+| modal-title#1 | missing_in_unity | - | - | - | - |
+| btn-close-pause | visibility | - | - | - | - |
+| modal-body#1 | missing_in_unity | - | - | - | - |
+| pause-level-info#1 | missing_in_unity | - | - | - | - |
+| pause-level-name | visibility | - | - | - | - |
+| pause-level-quota | visibility | - | - | - | - |
+| btn-pause-resume | visibility | - | - | - | - |
+| btn-pause-restart | visibility | - | - | - | - |
+| btn-pause-sound | visibility | - | - | - | - |
+| pause-sound-icon | visibility | - | - | - | - |
+| btn-pause-maps | visibility | - | - | - | - |
+| btn-pause-home | visibility | - | - | - | - |
+| modal-privacy | missing_in_unity | - | - | - | - |
+| modal-card#2 | missing_in_unity | - | - | - | - |
+| ... 46 more | | | | | |
+
+### canvas_gate_magnet_add__zero
+
+| element | reason | axis | delta px | web rect | unity rect |
+| --- | --- | --- | --- | --- | --- |
+| game-canvas | missing_in_unity | - | - | - | - |
+| hud-top-mobile#1 | missing_in_unity | - | - | - | - |
+| capsule-progress-area#1 | missing_in_unity | - | - | - | - |
+| capsule-bar-track#1 | missing_in_unity | - | - | - | - |
+| hud-quota-bar | visibility | - | - | - | - |
+| gesture-hint | missing_in_unity | - | - | - | - |
+| hand-swipe-anim#1 | missing_in_unity | - | - | - | - |
+| hint-text#1 | missing_in_unity | - | - | - | - |
+| modal-pause | visibility | - | - | - | - |
+| modal-card#1 | missing_in_unity | - | - | - | - |
+| modal-header#1 | missing_in_unity | - | - | - | - |
+| modal-title#1 | missing_in_unity | - | - | - | - |
+| btn-close-pause | visibility | - | - | - | - |
+| modal-body#1 | missing_in_unity | - | - | - | - |
+| pause-level-info#1 | missing_in_unity | - | - | - | - |
+| pause-level-name | visibility | - | - | - | - |
+| pause-level-quota | visibility | - | - | - | - |
+| btn-pause-resume | visibility | - | - | - | - |
+| btn-pause-restart | visibility | - | - | - | - |
+| btn-pause-sound | visibility | - | - | - | - |
+| pause-sound-icon | visibility | - | - | - | - |
+| btn-pause-maps | visibility | - | - | - | - |
+| btn-pause-home | visibility | - | - | - | - |
+| modal-privacy | missing_in_unity | - | - | - | - |
+| modal-card#2 | missing_in_unity | - | - | - | - |
+| ... 46 more | | | | | |
+
+### canvas_hub_donut__zero
+
+| element | reason | axis | delta px | web rect | unity rect |
+| --- | --- | --- | --- | --- | --- |
+| game-canvas | missing_in_unity | - | - | - | - |
+| hud-top-mobile#1 | missing_in_unity | - | - | - | - |
+| capsule-progress-area#1 | missing_in_unity | - | - | - | - |
+| capsule-bar-track#1 | missing_in_unity | - | - | - | - |
+| hud-quota-bar | visibility | - | - | - | - |
+| gesture-hint | missing_in_unity | - | - | - | - |
+| hand-swipe-anim#1 | missing_in_unity | - | - | - | - |
+| hint-text#1 | missing_in_unity | - | - | - | - |
+| modal-pause | visibility | - | - | - | - |
+| modal-card#1 | missing_in_unity | - | - | - | - |
+| modal-header#1 | missing_in_unity | - | - | - | - |
+| modal-title#1 | missing_in_unity | - | - | - | - |
+| btn-close-pause | visibility | - | - | - | - |
+| modal-body#1 | missing_in_unity | - | - | - | - |
+| pause-level-info#1 | missing_in_unity | - | - | - | - |
+| pause-level-name | visibility | - | - | - | - |
+| pause-level-quota | visibility | - | - | - | - |
+| btn-pause-resume | visibility | - | - | - | - |
+| btn-pause-restart | visibility | - | - | - | - |
+| btn-pause-sound | visibility | - | - | - | - |
+| pause-sound-icon | visibility | - | - | - | - |
+| btn-pause-maps | visibility | - | - | - | - |
+| btn-pause-home | visibility | - | - | - | - |
+| modal-privacy | missing_in_unity | - | - | - | - |
+| modal-card#2 | missing_in_unity | - | - | - | - |
+| ... 46 more | | | | | |
+
+### canvas_hub_candy__zero
+
+| element | reason | axis | delta px | web rect | unity rect |
+| --- | --- | --- | --- | --- | --- |
+| game-canvas | missing_in_unity | - | - | - | - |
+| hud-top-mobile#1 | missing_in_unity | - | - | - | - |
+| capsule-progress-area#1 | missing_in_unity | - | - | - | - |
+| capsule-bar-track#1 | missing_in_unity | - | - | - | - |
+| hud-quota-bar | visibility | - | - | - | - |
+| gesture-hint | missing_in_unity | - | - | - | - |
+| hand-swipe-anim#1 | missing_in_unity | - | - | - | - |
+| hint-text#1 | missing_in_unity | - | - | - | - |
+| modal-pause | visibility | - | - | - | - |
+| modal-card#1 | missing_in_unity | - | - | - | - |
+| modal-header#1 | missing_in_unity | - | - | - | - |
+| modal-title#1 | missing_in_unity | - | - | - | - |
+| btn-close-pause | visibility | - | - | - | - |
+| modal-body#1 | missing_in_unity | - | - | - | - |
+| pause-level-info#1 | missing_in_unity | - | - | - | - |
+| pause-level-name | visibility | - | - | - | - |
+| pause-level-quota | visibility | - | - | - | - |
+| btn-pause-resume | visibility | - | - | - | - |
+| btn-pause-restart | visibility | - | - | - | - |
+| btn-pause-sound | visibility | - | - | - | - |
+| pause-sound-icon | visibility | - | - | - | - |
+| btn-pause-maps | visibility | - | - | - | - |
+| btn-pause-home | visibility | - | - | - | - |
+| modal-privacy | missing_in_unity | - | - | - | - |
+| modal-card#2 | missing_in_unity | - | - | - | - |
+| ... 46 more | | | | | |
+
+### canvas_hub_duckie__zero
+
+| element | reason | axis | delta px | web rect | unity rect |
+| --- | --- | --- | --- | --- | --- |
+| game-canvas | missing_in_unity | - | - | - | - |
+| hud-top-mobile#1 | missing_in_unity | - | - | - | - |
+| capsule-progress-area#1 | missing_in_unity | - | - | - | - |
+| capsule-bar-track#1 | missing_in_unity | - | - | - | - |
+| hud-quota-bar | visibility | - | - | - | - |
+| gesture-hint | missing_in_unity | - | - | - | - |
+| hand-swipe-anim#1 | missing_in_unity | - | - | - | - |
+| hint-text#1 | missing_in_unity | - | - | - | - |
+| modal-pause | visibility | - | - | - | - |
+| modal-card#1 | missing_in_unity | - | - | - | - |
+| modal-header#1 | missing_in_unity | - | - | - | - |
+| modal-title#1 | missing_in_unity | - | - | - | - |
+| btn-close-pause | visibility | - | - | - | - |
+| modal-body#1 | missing_in_unity | - | - | - | - |
+| pause-level-info#1 | missing_in_unity | - | - | - | - |
+| pause-level-name | visibility | - | - | - | - |
+| pause-level-quota | visibility | - | - | - | - |
+| btn-pause-resume | visibility | - | - | - | - |
+| btn-pause-restart | visibility | - | - | - | - |
+| btn-pause-sound | visibility | - | - | - | - |
+| pause-sound-icon | visibility | - | - | - | - |
+| btn-pause-maps | visibility | - | - | - | - |
+| btn-pause-home | visibility | - | - | - | - |
+| modal-privacy | missing_in_unity | - | - | - | - |
+| modal-card#2 | missing_in_unity | - | - | - | - |
+| ... 46 more | | | | | |
+
+### game_lvl01_near_victory__iphone
+
+| element | reason | axis | delta px | web rect | unity rect |
+| --- | --- | --- | --- | --- | --- |
+| game-canvas | missing_in_unity | - | - | - | - |
+| hud-top-mobile#1 | missing_in_unity | - | - | - | - |
+| capsule-progress-area#1 | missing_in_unity | - | - | - | - |
+| capsule-bar-track#1 | missing_in_unity | - | - | - | - |
+| gesture-hint | missing_in_unity | - | - | - | - |
+| hand-swipe-anim#1 | missing_in_unity | - | - | - | - |
+| hint-text#1 | missing_in_unity | - | - | - | - |
+| modal-pause | visibility | - | - | - | - |
+| modal-card#1 | missing_in_unity | - | - | - | - |
+| modal-header#1 | missing_in_unity | - | - | - | - |
+| modal-title#1 | missing_in_unity | - | - | - | - |
+| btn-close-pause | visibility | - | - | - | - |
+| modal-body#1 | missing_in_unity | - | - | - | - |
+| pause-level-info#1 | missing_in_unity | - | - | - | - |
+| pause-level-name | visibility | - | - | - | - |
+| pause-level-quota | visibility | - | - | - | - |
+| btn-pause-resume | visibility | - | - | - | - |
+| btn-pause-restart | visibility | - | - | - | - |
+| btn-pause-sound | visibility | - | - | - | - |
+| pause-sound-icon | visibility | - | - | - | - |
+| btn-pause-maps | visibility | - | - | - | - |
+| btn-pause-home | visibility | - | - | - | - |
+| modal-privacy | missing_in_unity | - | - | - | - |
+| modal-card#2 | missing_in_unity | - | - | - | - |
+| modal-header#2 | missing_in_unity | - | - | - | - |
+| ... 46 more | | | | | |
+
+### game_lvl01_quota_met_hud__iphone
+
+| element | reason | axis | delta px | web rect | unity rect |
+| --- | --- | --- | --- | --- | --- |
+| game-canvas | missing_in_unity | - | - | - | - |
+| hud-top-mobile#1 | missing_in_unity | - | - | - | - |
+| capsule-progress-area#1 | missing_in_unity | - | - | - | - |
+| capsule-bar-track#1 | missing_in_unity | - | - | - | - |
+| gesture-hint | missing_in_unity | - | - | - | - |
+| hand-swipe-anim#1 | missing_in_unity | - | - | - | - |
+| hint-text#1 | missing_in_unity | - | - | - | - |
+| modal-pause | visibility | - | - | - | - |
+| modal-card#1 | missing_in_unity | - | - | - | - |
+| modal-header#1 | missing_in_unity | - | - | - | - |
+| modal-title#1 | missing_in_unity | - | - | - | - |
+| btn-close-pause | visibility | - | - | - | - |
+| modal-body#1 | missing_in_unity | - | - | - | - |
+| pause-level-info#1 | missing_in_unity | - | - | - | - |
+| pause-level-name | visibility | - | - | - | - |
+| pause-level-quota | visibility | - | - | - | - |
+| btn-pause-resume | visibility | - | - | - | - |
+| btn-pause-restart | visibility | - | - | - | - |
+| btn-pause-sound | visibility | - | - | - | - |
+| pause-sound-icon | visibility | - | - | - | - |
+| btn-pause-maps | visibility | - | - | - | - |
+| btn-pause-home | visibility | - | - | - | - |
+| modal-privacy | missing_in_unity | - | - | - | - |
+| modal-card#2 | missing_in_unity | - | - | - | - |
+| modal-header#2 | missing_in_unity | - | - | - | - |
+| ... 46 more | | | | | |
+
 ### game_lvl21_t0016ms__iphone
 
 | element | reason | axis | delta px | web rect | unity rect |
@@ -1871,6 +2901,37 @@ Pass bar (SPEC 2): >= 99.0 % pixels within 16 per channel, SSIM >= 0.985, every 
 | ... 46 more | | | | | |
 
 ### game_lvl11_t0016ms__zero
+
+| element | reason | axis | delta px | web rect | unity rect |
+| --- | --- | --- | --- | --- | --- |
+| game-canvas | missing_in_unity | - | - | - | - |
+| hud-top-mobile#1 | missing_in_unity | - | - | - | - |
+| capsule-progress-area#1 | missing_in_unity | - | - | - | - |
+| capsule-bar-track#1 | missing_in_unity | - | - | - | - |
+| hud-quota-bar | visibility | - | - | - | - |
+| gesture-hint | missing_in_unity | - | - | - | - |
+| hand-swipe-anim#1 | missing_in_unity | - | - | - | - |
+| hint-text#1 | missing_in_unity | - | - | - | - |
+| modal-pause | visibility | - | - | - | - |
+| modal-card#1 | missing_in_unity | - | - | - | - |
+| modal-header#1 | missing_in_unity | - | - | - | - |
+| modal-title#1 | missing_in_unity | - | - | - | - |
+| btn-close-pause | visibility | - | - | - | - |
+| modal-body#1 | missing_in_unity | - | - | - | - |
+| pause-level-info#1 | missing_in_unity | - | - | - | - |
+| pause-level-name | visibility | - | - | - | - |
+| pause-level-quota | visibility | - | - | - | - |
+| btn-pause-resume | visibility | - | - | - | - |
+| btn-pause-restart | visibility | - | - | - | - |
+| btn-pause-sound | visibility | - | - | - | - |
+| pause-sound-icon | visibility | - | - | - | - |
+| btn-pause-maps | visibility | - | - | - | - |
+| btn-pause-home | visibility | - | - | - | - |
+| modal-privacy | missing_in_unity | - | - | - | - |
+| modal-card#2 | missing_in_unity | - | - | - | - |
+| ... 46 more | | | | | |
+
+### canvas_hub_gear__iphone
 
 | element | reason | axis | delta px | web rect | unity rect |
 | --- | --- | --- | --- | --- | --- |
@@ -2211,6 +3272,68 @@ Pass bar (SPEC 2): >= 99.0 % pixels within 16 per channel, SSIM >= 0.985, every 
 | modal-header#2 | missing_in_unity | - | - | - | - |
 | ... 48 more | | | | | |
 
+### game_lvl01_near_victory__zero
+
+| element | reason | axis | delta px | web rect | unity rect |
+| --- | --- | --- | --- | --- | --- |
+| game-canvas | missing_in_unity | - | - | - | - |
+| hud-top-mobile#1 | missing_in_unity | - | - | - | - |
+| capsule-progress-area#1 | missing_in_unity | - | - | - | - |
+| capsule-bar-track#1 | missing_in_unity | - | - | - | - |
+| gesture-hint | missing_in_unity | - | - | - | - |
+| hand-swipe-anim#1 | missing_in_unity | - | - | - | - |
+| hint-text#1 | missing_in_unity | - | - | - | - |
+| modal-pause | visibility | - | - | - | - |
+| modal-card#1 | missing_in_unity | - | - | - | - |
+| modal-header#1 | missing_in_unity | - | - | - | - |
+| modal-title#1 | missing_in_unity | - | - | - | - |
+| btn-close-pause | visibility | - | - | - | - |
+| modal-body#1 | missing_in_unity | - | - | - | - |
+| pause-level-info#1 | missing_in_unity | - | - | - | - |
+| pause-level-name | visibility | - | - | - | - |
+| pause-level-quota | visibility | - | - | - | - |
+| btn-pause-resume | visibility | - | - | - | - |
+| btn-pause-restart | visibility | - | - | - | - |
+| btn-pause-sound | visibility | - | - | - | - |
+| pause-sound-icon | visibility | - | - | - | - |
+| btn-pause-maps | visibility | - | - | - | - |
+| btn-pause-home | visibility | - | - | - | - |
+| modal-privacy | missing_in_unity | - | - | - | - |
+| modal-card#2 | missing_in_unity | - | - | - | - |
+| modal-header#2 | missing_in_unity | - | - | - | - |
+| ... 46 more | | | | | |
+
+### game_lvl01_quota_met_hud__zero
+
+| element | reason | axis | delta px | web rect | unity rect |
+| --- | --- | --- | --- | --- | --- |
+| game-canvas | missing_in_unity | - | - | - | - |
+| hud-top-mobile#1 | missing_in_unity | - | - | - | - |
+| capsule-progress-area#1 | missing_in_unity | - | - | - | - |
+| capsule-bar-track#1 | missing_in_unity | - | - | - | - |
+| gesture-hint | missing_in_unity | - | - | - | - |
+| hand-swipe-anim#1 | missing_in_unity | - | - | - | - |
+| hint-text#1 | missing_in_unity | - | - | - | - |
+| modal-pause | visibility | - | - | - | - |
+| modal-card#1 | missing_in_unity | - | - | - | - |
+| modal-header#1 | missing_in_unity | - | - | - | - |
+| modal-title#1 | missing_in_unity | - | - | - | - |
+| btn-close-pause | visibility | - | - | - | - |
+| modal-body#1 | missing_in_unity | - | - | - | - |
+| pause-level-info#1 | missing_in_unity | - | - | - | - |
+| pause-level-name | visibility | - | - | - | - |
+| pause-level-quota | visibility | - | - | - | - |
+| btn-pause-resume | visibility | - | - | - | - |
+| btn-pause-restart | visibility | - | - | - | - |
+| btn-pause-sound | visibility | - | - | - | - |
+| pause-sound-icon | visibility | - | - | - | - |
+| btn-pause-maps | visibility | - | - | - | - |
+| btn-pause-home | visibility | - | - | - | - |
+| modal-privacy | missing_in_unity | - | - | - | - |
+| modal-card#2 | missing_in_unity | - | - | - | - |
+| modal-header#2 | missing_in_unity | - | - | - | - |
+| ... 46 more | | | | | |
+
 ### game_lvl21_t0016ms__zero
 
 | element | reason | axis | delta px | web rect | unity rect |
@@ -2304,7 +3427,100 @@ Pass bar (SPEC 2): >= 99.0 % pixels within 16 per channel, SSIM >= 0.985, every 
 | modal-card#2 | missing_in_unity | - | - | - | - |
 | ... 46 more | | | | | |
 
+### canvas_gate_boost__iphone
+
+| element | reason | axis | delta px | web rect | unity rect |
+| --- | --- | --- | --- | --- | --- |
+| game-canvas | missing_in_unity | - | - | - | - |
+| hud-top-mobile#1 | missing_in_unity | - | - | - | - |
+| capsule-progress-area#1 | missing_in_unity | - | - | - | - |
+| capsule-bar-track#1 | missing_in_unity | - | - | - | - |
+| hud-quota-bar | visibility | - | - | - | - |
+| gesture-hint | missing_in_unity | - | - | - | - |
+| hand-swipe-anim#1 | missing_in_unity | - | - | - | - |
+| hint-text#1 | missing_in_unity | - | - | - | - |
+| modal-pause | visibility | - | - | - | - |
+| modal-card#1 | missing_in_unity | - | - | - | - |
+| modal-header#1 | missing_in_unity | - | - | - | - |
+| modal-title#1 | missing_in_unity | - | - | - | - |
+| btn-close-pause | visibility | - | - | - | - |
+| modal-body#1 | missing_in_unity | - | - | - | - |
+| pause-level-info#1 | missing_in_unity | - | - | - | - |
+| pause-level-name | visibility | - | - | - | - |
+| pause-level-quota | visibility | - | - | - | - |
+| btn-pause-resume | visibility | - | - | - | - |
+| btn-pause-restart | visibility | - | - | - | - |
+| btn-pause-sound | visibility | - | - | - | - |
+| pause-sound-icon | visibility | - | - | - | - |
+| btn-pause-maps | visibility | - | - | - | - |
+| btn-pause-home | visibility | - | - | - | - |
+| modal-privacy | missing_in_unity | - | - | - | - |
+| modal-card#2 | missing_in_unity | - | - | - | - |
+| ... 46 more | | | | | |
+
+### canvas_hub_gear__zero
+
+| element | reason | axis | delta px | web rect | unity rect |
+| --- | --- | --- | --- | --- | --- |
+| game-canvas | missing_in_unity | - | - | - | - |
+| hud-top-mobile#1 | missing_in_unity | - | - | - | - |
+| capsule-progress-area#1 | missing_in_unity | - | - | - | - |
+| capsule-bar-track#1 | missing_in_unity | - | - | - | - |
+| hud-quota-bar | visibility | - | - | - | - |
+| gesture-hint | missing_in_unity | - | - | - | - |
+| hand-swipe-anim#1 | missing_in_unity | - | - | - | - |
+| hint-text#1 | missing_in_unity | - | - | - | - |
+| modal-pause | visibility | - | - | - | - |
+| modal-card#1 | missing_in_unity | - | - | - | - |
+| modal-header#1 | missing_in_unity | - | - | - | - |
+| modal-title#1 | missing_in_unity | - | - | - | - |
+| btn-close-pause | visibility | - | - | - | - |
+| modal-body#1 | missing_in_unity | - | - | - | - |
+| pause-level-info#1 | missing_in_unity | - | - | - | - |
+| pause-level-name | visibility | - | - | - | - |
+| pause-level-quota | visibility | - | - | - | - |
+| btn-pause-resume | visibility | - | - | - | - |
+| btn-pause-restart | visibility | - | - | - | - |
+| btn-pause-sound | visibility | - | - | - | - |
+| pause-sound-icon | visibility | - | - | - | - |
+| btn-pause-maps | visibility | - | - | - | - |
+| btn-pause-home | visibility | - | - | - | - |
+| modal-privacy | missing_in_unity | - | - | - | - |
+| modal-card#2 | missing_in_unity | - | - | - | - |
+| ... 46 more | | | | | |
+
 ### game_lvl11_t3000ms__zero
+
+| element | reason | axis | delta px | web rect | unity rect |
+| --- | --- | --- | --- | --- | --- |
+| game-canvas | missing_in_unity | - | - | - | - |
+| hud-top-mobile#1 | missing_in_unity | - | - | - | - |
+| capsule-progress-area#1 | missing_in_unity | - | - | - | - |
+| capsule-bar-track#1 | missing_in_unity | - | - | - | - |
+| hud-quota-bar | visibility | - | - | - | - |
+| gesture-hint | missing_in_unity | - | - | - | - |
+| hand-swipe-anim#1 | missing_in_unity | - | - | - | - |
+| hint-text#1 | missing_in_unity | - | - | - | - |
+| modal-pause | visibility | - | - | - | - |
+| modal-card#1 | missing_in_unity | - | - | - | - |
+| modal-header#1 | missing_in_unity | - | - | - | - |
+| modal-title#1 | missing_in_unity | - | - | - | - |
+| btn-close-pause | visibility | - | - | - | - |
+| modal-body#1 | missing_in_unity | - | - | - | - |
+| pause-level-info#1 | missing_in_unity | - | - | - | - |
+| pause-level-name | visibility | - | - | - | - |
+| pause-level-quota | visibility | - | - | - | - |
+| btn-pause-resume | visibility | - | - | - | - |
+| btn-pause-restart | visibility | - | - | - | - |
+| btn-pause-sound | visibility | - | - | - | - |
+| pause-sound-icon | visibility | - | - | - | - |
+| btn-pause-maps | visibility | - | - | - | - |
+| btn-pause-home | visibility | - | - | - | - |
+| modal-privacy | missing_in_unity | - | - | - | - |
+| modal-card#2 | missing_in_unity | - | - | - | - |
+| ... 46 more | | | | | |
+
+### canvas_gate_blast_x4__iphone
 
 | element | reason | axis | delta px | web rect | unity rect |
 | --- | --- | --- | --- | --- | --- |
@@ -2583,6 +3799,37 @@ Pass bar (SPEC 2): >= 99.0 % pixels within 16 per channel, SSIM >= 0.985, every 
 | modal-card#2 | missing_in_unity | - | - | - | - |
 | ... 46 more | | | | | |
 
+### canvas_gate_boost__zero
+
+| element | reason | axis | delta px | web rect | unity rect |
+| --- | --- | --- | --- | --- | --- |
+| game-canvas | missing_in_unity | - | - | - | - |
+| hud-top-mobile#1 | missing_in_unity | - | - | - | - |
+| capsule-progress-area#1 | missing_in_unity | - | - | - | - |
+| capsule-bar-track#1 | missing_in_unity | - | - | - | - |
+| hud-quota-bar | visibility | - | - | - | - |
+| gesture-hint | missing_in_unity | - | - | - | - |
+| hand-swipe-anim#1 | missing_in_unity | - | - | - | - |
+| hint-text#1 | missing_in_unity | - | - | - | - |
+| modal-pause | visibility | - | - | - | - |
+| modal-card#1 | missing_in_unity | - | - | - | - |
+| modal-header#1 | missing_in_unity | - | - | - | - |
+| modal-title#1 | missing_in_unity | - | - | - | - |
+| btn-close-pause | visibility | - | - | - | - |
+| modal-body#1 | missing_in_unity | - | - | - | - |
+| pause-level-info#1 | missing_in_unity | - | - | - | - |
+| pause-level-name | visibility | - | - | - | - |
+| pause-level-quota | visibility | - | - | - | - |
+| btn-pause-resume | visibility | - | - | - | - |
+| btn-pause-restart | visibility | - | - | - | - |
+| btn-pause-sound | visibility | - | - | - | - |
+| pause-sound-icon | visibility | - | - | - | - |
+| btn-pause-maps | visibility | - | - | - | - |
+| btn-pause-home | visibility | - | - | - | - |
+| modal-privacy | missing_in_unity | - | - | - | - |
+| modal-card#2 | missing_in_unity | - | - | - | - |
+| ... 46 more | | | | | |
+
 ### game_lvl31_t1000ms__zero
 
 | element | reason | axis | delta px | web rect | unity rect |
@@ -2615,6 +3862,37 @@ Pass bar (SPEC 2): >= 99.0 % pixels within 16 per channel, SSIM >= 0.985, every 
 | ... 46 more | | | | | |
 
 ### game_lvl41_t1000ms__zero
+
+| element | reason | axis | delta px | web rect | unity rect |
+| --- | --- | --- | --- | --- | --- |
+| game-canvas | missing_in_unity | - | - | - | - |
+| hud-top-mobile#1 | missing_in_unity | - | - | - | - |
+| capsule-progress-area#1 | missing_in_unity | - | - | - | - |
+| capsule-bar-track#1 | missing_in_unity | - | - | - | - |
+| hud-quota-bar | visibility | - | - | - | - |
+| gesture-hint | missing_in_unity | - | - | - | - |
+| hand-swipe-anim#1 | missing_in_unity | - | - | - | - |
+| hint-text#1 | missing_in_unity | - | - | - | - |
+| modal-pause | visibility | - | - | - | - |
+| modal-card#1 | missing_in_unity | - | - | - | - |
+| modal-header#1 | missing_in_unity | - | - | - | - |
+| modal-title#1 | missing_in_unity | - | - | - | - |
+| btn-close-pause | visibility | - | - | - | - |
+| modal-body#1 | missing_in_unity | - | - | - | - |
+| pause-level-info#1 | missing_in_unity | - | - | - | - |
+| pause-level-name | visibility | - | - | - | - |
+| pause-level-quota | visibility | - | - | - | - |
+| btn-pause-resume | visibility | - | - | - | - |
+| btn-pause-restart | visibility | - | - | - | - |
+| btn-pause-sound | visibility | - | - | - | - |
+| pause-sound-icon | visibility | - | - | - | - |
+| btn-pause-maps | visibility | - | - | - | - |
+| btn-pause-home | visibility | - | - | - | - |
+| modal-privacy | missing_in_unity | - | - | - | - |
+| modal-card#2 | missing_in_unity | - | - | - | - |
+| ... 46 more | | | | | |
+
+### canvas_gate_blast_x4__zero
 
 | element | reason | axis | delta px | web rect | unity rect |
 | --- | --- | --- | --- | --- | --- |
@@ -2956,37 +4234,6 @@ Pass bar (SPEC 2): >= 99.0 % pixels within 16 per channel, SSIM >= 0.985, every 
 | ... 75 more | | | | | |
 
 ### shop_rings_default__iphone
-
-| element | reason | axis | delta px | web rect | unity rect |
-| --- | --- | --- | --- | --- | --- |
-| page-header-bar#3 | missing_in_unity | - | - | - | - |
-| page-header-title#3 | missing_in_unity | - | - | - | - |
-| page-scroll-body#4 | missing_in_unity | - | - | - | - |
-| gift-banner-icon-box#1 | missing_in_unity | - | - | - | - |
-| gift-banner-info#1 | missing_in_unity | - | - | - | - |
-| gift-banner-tag#1 | missing_in_unity | - | - | - | - |
-| tab-row#1 | missing_in_unity | - | - | - | - |
-| tab-btn#1 | missing_in_unity | - | - | - | - |
-| tab-btn#2 | missing_in_unity | - | - | - | - |
-| tab-btn#3 | missing_in_unity | - | - | - | - |
-| store-card#1 | missing_in_unity | - | - | - | - |
-| card-title-row#1 | missing_in_unity | - | - | - | - |
-| card-title#1 | missing_in_unity | - | - | - | - |
-| card-desc#1 | missing_in_unity | - | - | - | - |
-| card-footer#1 | missing_in_unity | - | - | - | - |
-| badge-equipped#1 | missing_in_unity | - | - | - | - |
-| store-card#2 | missing_in_unity | - | - | - | - |
-| card-title-row#2 | missing_in_unity | - | - | - | - |
-| card-title#2 | missing_in_unity | - | - | - | - |
-| card-desc#2 | missing_in_unity | - | - | - | - |
-| card-footer#2 | missing_in_unity | - | - | - | - |
-| btn-cartoon-primary#2 | missing_in_unity | - | - | - | - |
-| store-card#3 | missing_in_unity | - | - | - | - |
-| card-title-row#3 | missing_in_unity | - | - | - | - |
-| card-title#3 | missing_in_unity | - | - | - | - |
-| ... 75 more | | | | | |
-
-### shop_scrolled__iphone
 
 | element | reason | axis | delta px | web rect | unity rect |
 | --- | --- | --- | --- | --- | --- |
@@ -3452,37 +4699,6 @@ Pass bar (SPEC 2): >= 99.0 % pixels within 16 per channel, SSIM >= 0.985, every 
 | ... 75 more | | | | | |
 
 ### shop_rings_default__zero
-
-| element | reason | axis | delta px | web rect | unity rect |
-| --- | --- | --- | --- | --- | --- |
-| page-header-bar#3 | missing_in_unity | - | - | - | - |
-| page-header-title#3 | missing_in_unity | - | - | - | - |
-| page-scroll-body#4 | missing_in_unity | - | - | - | - |
-| gift-banner-icon-box#1 | missing_in_unity | - | - | - | - |
-| gift-banner-info#1 | missing_in_unity | - | - | - | - |
-| gift-banner-tag#1 | missing_in_unity | - | - | - | - |
-| tab-row#1 | missing_in_unity | - | - | - | - |
-| tab-btn#1 | missing_in_unity | - | - | - | - |
-| tab-btn#2 | missing_in_unity | - | - | - | - |
-| tab-btn#3 | missing_in_unity | - | - | - | - |
-| store-card#1 | missing_in_unity | - | - | - | - |
-| card-title-row#1 | missing_in_unity | - | - | - | - |
-| card-title#1 | missing_in_unity | - | - | - | - |
-| card-desc#1 | missing_in_unity | - | - | - | - |
-| card-footer#1 | missing_in_unity | - | - | - | - |
-| badge-equipped#1 | missing_in_unity | - | - | - | - |
-| store-card#2 | missing_in_unity | - | - | - | - |
-| card-title-row#2 | missing_in_unity | - | - | - | - |
-| card-title#2 | missing_in_unity | - | - | - | - |
-| card-desc#2 | missing_in_unity | - | - | - | - |
-| card-footer#2 | missing_in_unity | - | - | - | - |
-| btn-cartoon-primary#2 | missing_in_unity | - | - | - | - |
-| store-card#3 | missing_in_unity | - | - | - | - |
-| card-title-row#3 | missing_in_unity | - | - | - | - |
-| card-title#3 | missing_in_unity | - | - | - | - |
-| ... 75 more | | | | | |
-
-### shop_scrolled__zero
 
 | element | reason | axis | delta px | web rect | unity rect |
 | --- | --- | --- | --- | --- | --- |
@@ -7481,7 +8697,7 @@ Pass bar (SPEC 2): >= 99.0 % pixels within 16 per channel, SSIM >= 0.985, every 
 | level-badge#4 | missing_in_unity | - | - | - | - |
 | ... 87 more | | | | | |
 
-### maps_world_5_scrolled__zero
+### maps_world_5_levels_1_44_done__zero
 
 | element | reason | axis | delta px | web rect | unity rect |
 | --- | --- | --- | --- | --- | --- |
@@ -7791,7 +9007,7 @@ Pass bar (SPEC 2): >= 99.0 % pixels within 16 per channel, SSIM >= 0.985, every 
 | level-badge#4 | missing_in_unity | - | - | - | - |
 | ... 87 more | | | | | |
 
-### maps_world_5_scrolled__iphone
+### maps_world_5_levels_1_44_done__iphone
 
 | element | reason | axis | delta px | web rect | unity rect |
 | --- | --- | --- | --- | --- | --- |
@@ -8039,37 +9255,6 @@ Pass bar (SPEC 2): >= 99.0 % pixels within 16 per channel, SSIM >= 0.985, every 
 | daily-tier-tag#2 | missing_in_unity | - | - | - | - |
 | ... 74 more | | | | | |
 
-### daily_scrolled__zero
-
-| element | reason | axis | delta px | web rect | unity rect |
-| --- | --- | --- | --- | --- | --- |
-| page-header-bar#2 | missing_in_unity | - | - | - | - |
-| page-header-title#2 | missing_in_unity | - | - | - | - |
-| daily-hub-banner#1 | missing_in_unity | - | - | - | - |
-| daily-hub-header#1 | missing_in_unity | - | - | - | - |
-| daily-hub-title#1 | missing_in_unity | - | - | - | - |
-| daily-hub-pill#1 | missing_in_unity | - | - | - | - |
-| daily-progress-container#1 | missing_in_unity | - | - | - | - |
-| daily-progress-track#1 | missing_in_unity | - | - | - | - |
-| daily-master-box | missing_in_unity | - | - | - | - |
-| daily-master-info#1 | missing_in_unity | - | - | - | - |
-| daily-master-icon#1 | missing_in_unity | - | - | - | - |
-| daily-master-label#1 | missing_in_unity | - | - | - | - |
-| daily-master-sub#1 | missing_in_unity | - | - | - | - |
-| badge-cost#1 | missing_in_unity | - | - | - | - |
-| sector-card#1 | missing_in_unity | - | - | - | - |
-| card-title-row#1 | missing_in_unity | - | - | - | - |
-| daily-tier-tag#1 | missing_in_unity | - | - | - | - |
-| card-title#1 | missing_in_unity | - | - | - | - |
-| daily-hazard-chip#1 | missing_in_unity | - | - | - | - |
-| card-footer#1 | missing_in_unity | - | - | - | - |
-| badge-cost#2 | missing_in_unity | - | - | - | - |
-| btn-cartoon-primary#1 | missing_in_unity | - | - | - | - |
-| sector-card#2 | missing_in_unity | - | - | - | - |
-| card-title-row#2 | missing_in_unity | - | - | - | - |
-| daily-tier-tag#2 | missing_in_unity | - | - | - | - |
-| ... 74 more | | | | | |
-
 ### pressed_level_tile__iphone
 
 | element | reason | axis | delta px | web rect | unity rect |
@@ -8256,37 +9441,6 @@ Pass bar (SPEC 2): >= 99.0 % pixels within 16 per channel, SSIM >= 0.985, every 
 | daily-tier-tag#2 | missing_in_unity | - | - | - | - |
 | ... 74 more | | | | | |
 
-### daily_scrolled__iphone
-
-| element | reason | axis | delta px | web rect | unity rect |
-| --- | --- | --- | --- | --- | --- |
-| page-header-bar#2 | missing_in_unity | - | - | - | - |
-| page-header-title#2 | missing_in_unity | - | - | - | - |
-| daily-hub-banner#1 | missing_in_unity | - | - | - | - |
-| daily-hub-header#1 | missing_in_unity | - | - | - | - |
-| daily-hub-title#1 | missing_in_unity | - | - | - | - |
-| daily-hub-pill#1 | missing_in_unity | - | - | - | - |
-| daily-progress-container#1 | missing_in_unity | - | - | - | - |
-| daily-progress-track#1 | missing_in_unity | - | - | - | - |
-| daily-master-box | missing_in_unity | - | - | - | - |
-| daily-master-info#1 | missing_in_unity | - | - | - | - |
-| daily-master-icon#1 | missing_in_unity | - | - | - | - |
-| daily-master-label#1 | missing_in_unity | - | - | - | - |
-| daily-master-sub#1 | missing_in_unity | - | - | - | - |
-| badge-cost#1 | missing_in_unity | - | - | - | - |
-| sector-card#1 | missing_in_unity | - | - | - | - |
-| card-title-row#1 | missing_in_unity | - | - | - | - |
-| daily-tier-tag#1 | missing_in_unity | - | - | - | - |
-| card-title#1 | missing_in_unity | - | - | - | - |
-| daily-hazard-chip#1 | missing_in_unity | - | - | - | - |
-| card-footer#1 | missing_in_unity | - | - | - | - |
-| badge-cost#2 | missing_in_unity | - | - | - | - |
-| btn-cartoon-primary#1 | missing_in_unity | - | - | - | - |
-| sector-card#2 | missing_in_unity | - | - | - | - |
-| card-title-row#2 | missing_in_unity | - | - | - | - |
-| daily-tier-tag#2 | missing_in_unity | - | - | - | - |
-| ... 74 more | | | | | |
-
 ### pressed_world_tab__zero
 
 | element | reason | axis | delta px | web rect | unity rect |
@@ -8381,6 +9535,37 @@ Pass bar (SPEC 2): >= 99.0 % pixels within 16 per channel, SSIM >= 0.985, every 
 | ... 47 more | | | | | |
 
 ### maps_world_3_none_complete__zero
+
+| element | reason | axis | delta px | web rect | unity rect |
+| --- | --- | --- | --- | --- | --- |
+| page-header-bar#1 | missing_in_unity | - | - | - | - |
+| page-header-title#1 | missing_in_unity | - | - | - | - |
+| world-tabs-row#1 | missing_in_unity | - | - | - | - |
+| active#1 | missing_in_unity | - | - | - | - |
+| world-banner-card#1 | missing_in_unity | - | - | - | - |
+| world-banner-icon-box#1 | missing_in_unity | - | - | - | - |
+| world-banner-info#1 | missing_in_unity | - | - | - | - |
+| world-banner-title#1 | missing_in_unity | - | - | - | - |
+| world-banner-desc#1 | missing_in_unity | - | - | - | - |
+| world-banner-progress#1 | missing_in_unity | - | - | - | - |
+| level-grid-50#1 | missing_in_unity | - | - | - | - |
+| level-tile-header#1 | missing_in_unity | - | - | - | - |
+| level-badge#1 | missing_in_unity | - | - | - | - |
+| level-name#1 | missing_in_unity | - | - | - | - |
+| level-quota#1 | missing_in_unity | - | - | - | - |
+| level-tile-header#2 | missing_in_unity | - | - | - | - |
+| level-badge#2 | missing_in_unity | - | - | - | - |
+| level-name#2 | missing_in_unity | - | - | - | - |
+| level-quota#2 | missing_in_unity | - | - | - | - |
+| level-tile-header#3 | missing_in_unity | - | - | - | - |
+| level-badge#3 | missing_in_unity | - | - | - | - |
+| level-name#3 | missing_in_unity | - | - | - | - |
+| level-quota#3 | missing_in_unity | - | - | - | - |
+| level-tile-header#4 | missing_in_unity | - | - | - | - |
+| level-badge#4 | missing_in_unity | - | - | - | - |
+| ... 87 more | | | | | |
+
+### maps_world_1_all_complete_other_active__zero
 
 | element | reason | axis | delta px | web rect | unity rect |
 | --- | --- | --- | --- | --- | --- |
@@ -8690,6 +9875,37 @@ Pass bar (SPEC 2): >= 99.0 % pixels within 16 per channel, SSIM >= 0.985, every 
 | level-badge#4 | missing_in_unity | - | - | - | - |
 | ... 87 more | | | | | |
 
+### maps_world_1_all_complete_other_active__iphone
+
+| element | reason | axis | delta px | web rect | unity rect |
+| --- | --- | --- | --- | --- | --- |
+| page-header-bar#1 | missing_in_unity | - | - | - | - |
+| page-header-title#1 | missing_in_unity | - | - | - | - |
+| world-tabs-row#1 | missing_in_unity | - | - | - | - |
+| active#1 | missing_in_unity | - | - | - | - |
+| world-banner-card#1 | missing_in_unity | - | - | - | - |
+| world-banner-icon-box#1 | missing_in_unity | - | - | - | - |
+| world-banner-info#1 | missing_in_unity | - | - | - | - |
+| world-banner-title#1 | missing_in_unity | - | - | - | - |
+| world-banner-desc#1 | missing_in_unity | - | - | - | - |
+| world-banner-progress#1 | missing_in_unity | - | - | - | - |
+| level-grid-50#1 | missing_in_unity | - | - | - | - |
+| level-tile-header#1 | missing_in_unity | - | - | - | - |
+| level-badge#1 | missing_in_unity | - | - | - | - |
+| level-name#1 | missing_in_unity | - | - | - | - |
+| level-quota#1 | missing_in_unity | - | - | - | - |
+| level-tile-header#2 | missing_in_unity | - | - | - | - |
+| level-badge#2 | missing_in_unity | - | - | - | - |
+| level-name#2 | missing_in_unity | - | - | - | - |
+| level-quota#2 | missing_in_unity | - | - | - | - |
+| level-tile-header#3 | missing_in_unity | - | - | - | - |
+| level-badge#3 | missing_in_unity | - | - | - | - |
+| level-name#3 | missing_in_unity | - | - | - | - |
+| level-quota#3 | missing_in_unity | - | - | - | - |
+| level-tile-header#4 | missing_in_unity | - | - | - | - |
+| level-badge#4 | missing_in_unity | - | - | - | - |
+| ... 87 more | | | | | |
+
 ### pressed_defeat_home__iphone
 
 | element | reason | axis | delta px | web rect | unity rect |
@@ -8853,6 +10069,23 @@ Pass bar (SPEC 2): >= 99.0 % pixels within 16 per channel, SSIM >= 0.985, every 
 | achievements_none | FAIL | FAIL (28 web / 1 unity events, first mismatch #0 [type,name,args,t]: web={"t":240,"type":"timer","name":"interval","args":[240]} unity={"t":0,"type":"page","name":"home","args":[]}) |
 | achievements_some | FAIL | FAIL (28 web / 1 unity events, first mismatch #0 [type,name,args,t]: web={"t":240,"type":"timer","name":"interval","args":[240]} unity={"t":0,"type":"page","name":"home","args":[]}) |
 | boot_to_home | MISSING | MISSING (unity) |
+| canvas_float_boost | FAIL | FAIL (66 web / 2 unity events, first mismatch #0 [type,name,args,t]: web={"t":240,"type":"timer","name":"interval","args":[240]} unity={"t":0,"type":"page","name":"home","args":[]}) |
+| canvas_float_compact | FAIL | FAIL (66 web / 2 unity events, first mismatch #0 [type,name,args,t]: web={"t":240,"type":"timer","name":"interval","args":[240]} unity={"t":0,"type":"page","name":"home","args":[]}) |
+| canvas_float_nom_words | FAIL | FAIL (66 web / 2 unity events, first mismatch #0 [type,name,args,t]: web={"t":240,"type":"timer","name":"interval","args":[240]} unity={"t":0,"type":"page","name":"home","args":[]}) |
+| canvas_float_poof | FAIL | FAIL (67 web / 2 unity events, first mismatch #0 [type,name,args,t]: web={"t":240,"type":"timer","name":"interval","args":[240]} unity={"t":0,"type":"page","name":"home","args":[]}) |
+| canvas_float_shred | FAIL | FAIL (66 web / 2 unity events, first mismatch #0 [type,name,args,t]: web={"t":240,"type":"timer","name":"interval","args":[240]} unity={"t":0,"type":"page","name":"home","args":[]}) |
+| canvas_float_turbo | FAIL | FAIL (67 web / 2 unity events, first mismatch #0 [type,name,args,t]: web={"t":240,"type":"timer","name":"interval","args":[240]} unity={"t":0,"type":"page","name":"home","args":[]}) |
+| canvas_float_turbo_reverse | FAIL | FAIL (67 web / 2 unity events, first mismatch #0 [type,name,args,t]: web={"t":240,"type":"timer","name":"interval","args":[240]} unity={"t":0,"type":"page","name":"home","args":[]}) |
+| canvas_gate_blast_x4 | FAIL | FAIL (124 web / 2 unity events, first mismatch #0 [type,name,args,t]: web={"t":240,"type":"timer","name":"interval","args":[240]} unity={"t":0,"type":"page","name":"home","args":[]}) |
+| canvas_gate_bolt_x2 | FAIL | FAIL (64 web / 2 unity events, first mismatch #0 [type,name,args,t]: web={"t":240,"type":"timer","name":"interval","args":[240]} unity={"t":0,"type":"page","name":"home","args":[]}) |
+| canvas_gate_bolt_x3 | FAIL | FAIL (119 web / 2 unity events, first mismatch #0 [type,name,args,t]: web={"t":240,"type":"timer","name":"interval","args":[240]} unity={"t":0,"type":"page","name":"home","args":[]}) |
+| canvas_gate_boost | FAIL | FAIL (176 web / 2 unity events, first mismatch #0 [type,name,args,t]: web={"t":240,"type":"timer","name":"interval","args":[240]} unity={"t":0,"type":"page","name":"home","args":[]}) |
+| canvas_gate_magnet_add | FAIL | FAIL (64 web / 2 unity events, first mismatch #0 [type,name,args,t]: web={"t":240,"type":"timer","name":"interval","args":[240]} unity={"t":0,"type":"page","name":"home","args":[]}) |
+| canvas_hub_candy | FAIL | FAIL (64 web / 2 unity events, first mismatch #0 [type,name,args,t]: web={"t":240,"type":"timer","name":"interval","args":[240]} unity={"t":0,"type":"page","name":"home","args":[]}) |
+| canvas_hub_donut | FAIL | FAIL (64 web / 2 unity events, first mismatch #0 [type,name,args,t]: web={"t":240,"type":"timer","name":"interval","args":[240]} unity={"t":0,"type":"page","name":"home","args":[]}) |
+| canvas_hub_duckie | FAIL | FAIL (64 web / 2 unity events, first mismatch #0 [type,name,args,t]: web={"t":240,"type":"timer","name":"interval","args":[240]} unity={"t":0,"type":"page","name":"home","args":[]}) |
+| canvas_hub_gear | FAIL | FAIL (131 web / 2 unity events, first mismatch #0 [type,name,args,t]: web={"t":240,"type":"timer","name":"interval","args":[240]} unity={"t":0,"type":"page","name":"home","args":[]}) |
+| canvas_hub_kitty | FAIL | FAIL (64 web / 2 unity events, first mismatch #0 [type,name,args,t]: web={"t":240,"type":"timer","name":"interval","args":[240]} unity={"t":0,"type":"page","name":"home","args":[]}) |
 | daily_after_two_minutes | FAIL | FAIL (28 web / 1 unity events, first mismatch #0 [type,name,args,t]: web={"t":240,"type":"timer","name":"interval","args":[240]} unity={"t":0,"type":"page","name":"home","args":[]}) |
 | daily_bronze_cleared | FAIL | FAIL (28 web / 1 unity events, first mismatch #0 [type,name,args,t]: web={"t":240,"type":"timer","name":"interval","args":[240]} unity={"t":0,"type":"page","name":"home","args":[]}) |
 | daily_default | FAIL | FAIL (28 web / 1 unity events, first mismatch #0 [type,name,args,t]: web={"t":240,"type":"timer","name":"interval","args":[240]} unity={"t":0,"type":"page","name":"home","args":[]}) |
@@ -8860,7 +10093,6 @@ Pass bar (SPEC 2): >= 99.0 % pixels within 16 per channel, SSIM >= 0.985, every 
 | daily_master_claim_toast | FAIL | FAIL (46 web / 1 unity events, first mismatch #0 [type,name,args,t]: web={"t":240,"type":"timer","name":"interval","args":[240]} unity={"t":0,"type":"page","name":"home","args":[]}) |
 | daily_master_claimed | FAIL | FAIL (28 web / 1 unity events, first mismatch #0 [type,name,args,t]: web={"t":240,"type":"timer","name":"interval","args":[240]} unity={"t":0,"type":"page","name":"home","args":[]}) |
 | daily_master_ready | FAIL | FAIL (28 web / 1 unity events, first mismatch #0 [type,name,args,t]: web={"t":240,"type":"timer","name":"interval","args":[240]} unity={"t":0,"type":"page","name":"home","args":[]}) |
-| daily_scrolled | FAIL | FAIL (28 web / 1 unity events, first mismatch #0 [type,name,args,t]: web={"t":240,"type":"timer","name":"interval","args":[240]} unity={"t":0,"type":"page","name":"home","args":[]}) |
 | daily_two_cleared | FAIL | FAIL (28 web / 1 unity events, first mismatch #0 [type,name,args,t]: web={"t":240,"type":"timer","name":"interval","args":[240]} unity={"t":0,"type":"page","name":"home","args":[]}) |
 | defeat_sector_1 | MISSING | MISSING (unity) |
 | game_daily_bronze_t1000 | FAIL | FAIL (1581 web / 1 unity events, first mismatch #0 [type,name,args,t]: web={"t":240,"type":"timer","name":"interval","args":[240]} unity={"t":0,"type":"page","name":"home","args":[]}) |
@@ -8868,10 +10100,13 @@ Pass bar (SPEC 2): >= 99.0 % pixels within 16 per channel, SSIM >= 0.985, every 
 | game_lvl01_hint_dismissing_t0200 | FAIL | FAIL (30 web / 2 unity events, first mismatch #0 [type,name,args,t]: web={"t":240,"type":"timer","name":"interval","args":[240]} unity={"t":0,"type":"page","name":"home","args":[]}) |
 | game_lvl01_hint_visible | FAIL | FAIL (10 web / 2 unity events, first mismatch #0 [type,name,args,t]: web={"t":240,"type":"timer","name":"interval","args":[240]} unity={"t":0,"type":"page","name":"home","args":[]}) |
 | game_lvl01_mid_drag | FAIL | FAIL (1163 web / 2 unity events, first mismatch #0 [type,name,args,t]: web={"t":240,"type":"timer","name":"interval","args":[240]} unity={"t":0,"type":"page","name":"home","args":[]}) |
-| game_lvl01_near_victory | FAIL | FAIL (66 web / 2 unity events, first mismatch #0 [type,name,args,t]: web={"t":240,"type":"timer","name":"interval","args":[240]} unity={"t":0,"type":"page","name":"home","args":[]}) |
+| game_lvl01_near_victory | FAIL | FAIL (157 web / 2 unity events, first mismatch #0 [type,name,args,t]: web={"t":240,"type":"timer","name":"interval","args":[240]} unity={"t":0,"type":"page","name":"home","args":[]}) |
 | game_lvl01_paused_t1000 | FAIL | FAIL (65 web / 2 unity events, first mismatch #0 [type,name,args,t]: web={"t":240,"type":"timer","name":"interval","args":[240]} unity={"t":0,"type":"page","name":"home","args":[]}) |
 | game_lvl01_pickup | FAIL | FAIL (3435 web / 2 unity events, first mismatch #0 [type,name,args,t]: web={"t":240,"type":"timer","name":"interval","args":[240]} unity={"t":0,"type":"page","name":"home","args":[]}) |
-| game_lvl01_quota_met_hud | FAIL | FAIL (66 web / 2 unity events, first mismatch #0 [type,name,args,t]: web={"t":240,"type":"timer","name":"interval","args":[240]} unity={"t":0,"type":"page","name":"home","args":[]}) |
+| game_lvl01_quota_bar_t0016 | FAIL | FAIL (66 web / 2 unity events, first mismatch #0 [type,name,args,t]: web={"t":240,"type":"timer","name":"interval","args":[240]} unity={"t":0,"type":"page","name":"home","args":[]}) |
+| game_lvl01_quota_bar_t0125 | FAIL | FAIL (88 web / 2 unity events, first mismatch #0 [type,name,args,t]: web={"t":240,"type":"timer","name":"interval","args":[240]} unity={"t":0,"type":"page","name":"home","args":[]}) |
+| game_lvl01_quota_met_hud | FAIL | FAIL (157 web / 2 unity events, first mismatch #0 [type,name,args,t]: web={"t":240,"type":"timer","name":"interval","args":[240]} unity={"t":0,"type":"page","name":"home","args":[]}) |
+| game_lvl01_quota_met_t0016 | FAIL | FAIL (66 web / 2 unity events, first mismatch #0 [type,name,args,t]: web={"t":240,"type":"timer","name":"interval","args":[240]} unity={"t":0,"type":"page","name":"home","args":[]}) |
 | game_lvl01_restart_toast | FAIL | FAIL (396 web / 2 unity events, first mismatch #0 [type,name,args,t]: web={"t":240,"type":"timer","name":"interval","args":[240]} unity={"t":0,"type":"page","name":"home","args":[]}) |
 | game_lvl01_skins_kitty_party_mint | FAIL | FAIL (607 web / 2 unity events, first mismatch #0 [type,name,args,t]: web={"t":240,"type":"timer","name":"interval","args":[240]} unity={"t":0,"type":"page","name":"home","args":[]}) |
 | game_lvl01_t0016ms | FAIL | FAIL (66 web / 2 unity events, first mismatch #0 [type,name,args,t]: web={"t":240,"type":"timer","name":"interval","args":[240]} unity={"t":0,"type":"page","name":"home","args":[]}) |
@@ -8912,12 +10147,13 @@ Pass bar (SPEC 2): >= 99.0 % pixels within 16 per channel, SSIM >= 0.985, every 
 | loading_t1100 | FAIL | FAIL (4 web / 1 unity events, first mismatch #0 [type,name,args,t]: web={"t":240,"type":"timer","name":"interval","args":[240]} unity={"t":0,"type":"page","name":"loading","args":[]}) |
 | maps_world_1 | FAIL | FAIL (28 web / 1 unity events, first mismatch #0 [type,name,args,t]: web={"t":240,"type":"timer","name":"interval","args":[240]} unity={"t":0,"type":"page","name":"home","args":[]}) |
 | maps_world_1_all_complete | FAIL | FAIL (28 web / 1 unity events, first mismatch #0 [type,name,args,t]: web={"t":240,"type":"timer","name":"interval","args":[240]} unity={"t":0,"type":"page","name":"home","args":[]}) |
+| maps_world_1_all_complete_other_active | FAIL | FAIL (28 web / 1 unity events, first mismatch #0 [type,name,args,t]: web={"t":240,"type":"timer","name":"interval","args":[240]} unity={"t":0,"type":"page","name":"home","args":[]}) |
 | maps_world_2 | FAIL | FAIL (28 web / 1 unity events, first mismatch #0 [type,name,args,t]: web={"t":240,"type":"timer","name":"interval","args":[240]} unity={"t":0,"type":"page","name":"home","args":[]}) |
 | maps_world_3 | FAIL | FAIL (28 web / 1 unity events, first mismatch #0 [type,name,args,t]: web={"t":240,"type":"timer","name":"interval","args":[240]} unity={"t":0,"type":"page","name":"home","args":[]}) |
 | maps_world_3_none_complete | FAIL | FAIL (28 web / 1 unity events, first mismatch #0 [type,name,args,t]: web={"t":240,"type":"timer","name":"interval","args":[240]} unity={"t":0,"type":"page","name":"home","args":[]}) |
 | maps_world_4 | FAIL | FAIL (28 web / 1 unity events, first mismatch #0 [type,name,args,t]: web={"t":240,"type":"timer","name":"interval","args":[240]} unity={"t":0,"type":"page","name":"home","args":[]}) |
 | maps_world_5 | FAIL | FAIL (28 web / 1 unity events, first mismatch #0 [type,name,args,t]: web={"t":240,"type":"timer","name":"interval","args":[240]} unity={"t":0,"type":"page","name":"home","args":[]}) |
-| maps_world_5_scrolled | FAIL | FAIL (28 web / 1 unity events, first mismatch #0 [type,name,args,t]: web={"t":240,"type":"timer","name":"interval","args":[240]} unity={"t":0,"type":"page","name":"home","args":[]}) |
+| maps_world_5_levels_1_44_done | FAIL | FAIL (28 web / 1 unity events, first mismatch #0 [type,name,args,t]: web={"t":240,"type":"timer","name":"interval","args":[240]} unity={"t":0,"type":"page","name":"home","args":[]}) |
 | modal_debrief_daily_trophy | FAIL | FAIL (1481 web / 1 unity events, first mismatch #0 [type,name,args,t]: web={"t":240,"type":"timer","name":"interval","args":[240]} unity={"t":0,"type":"page","name":"home","args":[]}) |
 | modal_debrief_exact | FAIL | FAIL (539 web / 2 unity events, first mismatch #0 [type,name,args,t]: web={"t":240,"type":"timer","name":"interval","args":[240]} unity={"t":0,"type":"page","name":"home","args":[]}) |
 | modal_debrief_surplus | FAIL | FAIL (539 web / 2 unity events, first mismatch #0 [type,name,args,t]: web={"t":240,"type":"timer","name":"interval","args":[240]} unity={"t":0,"type":"page","name":"home","args":[]}) |
@@ -8966,15 +10202,15 @@ Pass bar (SPEC 2): >= 99.0 % pixels within 16 per channel, SSIM >= 0.985, every 
 | pressed_shop_tab | FAIL | FAIL (28 web / 1 unity events, first mismatch #0 [type,name,args,t]: web={"t":240,"type":"timer","name":"interval","args":[240]} unity={"t":0,"type":"page","name":"home","args":[]}) |
 | pressed_world_tab | FAIL | FAIL (28 web / 1 unity events, first mismatch #0 [type,name,args,t]: web={"t":240,"type":"timer","name":"interval","args":[240]} unity={"t":0,"type":"page","name":"home","args":[]}) |
 | settings_default | FAIL | FAIL (32 web / 1 unity events, first mismatch #0 [type,name,args,t]: web={"t":240,"type":"timer","name":"interval","args":[240]} unity={"t":0,"type":"page","name":"home","args":[]}) |
+| settings_haptics_clicked_off | FAIL | FAIL (32 web / 1 unity events, first mismatch #0 [type,name,args,t]: web={"t":240,"type":"timer","name":"interval","args":[240]} unity={"t":0,"type":"page","name":"home","args":[]}) |
 | settings_modal_privacy | FAIL | FAIL (33 web / 1 unity events, first mismatch #0 [type,name,args,t]: web={"t":240,"type":"timer","name":"interval","args":[240]} unity={"t":0,"type":"page","name":"home","args":[]}) |
 | settings_modal_privacy_t0150 | FAIL | FAIL (33 web / 1 unity events, first mismatch #0 [type,name,args,t]: web={"t":240,"type":"timer","name":"interval","args":[240]} unity={"t":0,"type":"page","name":"home","args":[]}) |
 | settings_modal_reset_confirm | FAIL | FAIL (33 web / 1 unity events, first mismatch #0 [type,name,args,t]: web={"t":240,"type":"timer","name":"interval","args":[240]} unity={"t":0,"type":"page","name":"home","args":[]}) |
 | settings_reset_confirmed_toast | FAIL | FAIL (42 web / 1 unity events, first mismatch #0 [type,name,args,t]: web={"t":240,"type":"timer","name":"interval","args":[240]} unity={"t":0,"type":"page","name":"home","args":[]}) |
-| settings_scrolled | FAIL | FAIL (32 web / 1 unity events, first mismatch #0 [type,name,args,t]: web={"t":240,"type":"timer","name":"interval","args":[240]} unity={"t":0,"type":"page","name":"home","args":[]}) |
 | settings_sliders_moved | FAIL | FAIL (40 web / 1 unity events, first mismatch #0 [type,name,args,t]: web={"t":240,"type":"timer","name":"interval","args":[240]} unity={"t":0,"type":"page","name":"home","args":[]}) |
 | settings_sliders_profile | FAIL | FAIL (32 web / 1 unity events, first mismatch #0 [type,name,args,t]: web={"t":240,"type":"timer","name":"interval","args":[240]} unity={"t":0,"type":"page","name":"home","args":[]}) |
+| settings_sound_toggle_t0100 | FAIL | FAIL (37 web / 1 unity events, first mismatch #0 [type,name,args,t]: web={"t":240,"type":"timer","name":"interval","args":[240]} unity={"t":0,"type":"page","name":"home","args":[]}) |
 | settings_toggles | MISSING | MISSING (unity) |
-| settings_toggles_clicked | FAIL | FAIL (37 web / 1 unity events, first mismatch #0 [type,name,args,t]: web={"t":240,"type":"timer","name":"interval","args":[240]} unity={"t":0,"type":"page","name":"home","args":[]}) |
 | settings_toggles_off | FAIL | FAIL (32 web / 1 unity events, first mismatch #0 [type,name,args,t]: web={"t":240,"type":"timer","name":"interval","args":[240]} unity={"t":0,"type":"page","name":"home","args":[]}) |
 | shop_buy_insufficient_toast | FAIL | FAIL (29 web / 1 unity events, first mismatch #0 [type,name,args,t]: web={"t":240,"type":"timer","name":"interval","args":[240]} unity={"t":0,"type":"page","name":"home","args":[]}) |
 | shop_buy_success_toast | FAIL | FAIL (31 web / 1 unity events, first mismatch #0 [type,name,args,t]: web={"t":240,"type":"timer","name":"interval","args":[240]} unity={"t":0,"type":"page","name":"home","args":[]}) |
@@ -8984,7 +10220,6 @@ Pass bar (SPEC 2): >= 99.0 % pixels within 16 per channel, SSIM >= 0.985, every 
 | shop_purchase_and_equip | MISSING | MISSING (unity) |
 | shop_rings_default | FAIL | FAIL (28 web / 1 unity events, first mismatch #0 [type,name,args,t]: web={"t":240,"type":"timer","name":"interval","args":[240]} unity={"t":0,"type":"page","name":"home","args":[]}) |
 | shop_rings_mixed | FAIL | FAIL (29 web / 1 unity events, first mismatch #0 [type,name,args,t]: web={"t":240,"type":"timer","name":"interval","args":[240]} unity={"t":0,"type":"page","name":"home","args":[]}) |
-| shop_scrolled | FAIL | FAIL (28 web / 1 unity events, first mismatch #0 [type,name,args,t]: web={"t":240,"type":"timer","name":"interval","args":[240]} unity={"t":0,"type":"page","name":"home","args":[]}) |
 | shop_singularities_default | FAIL | FAIL (28 web / 1 unity events, first mismatch #0 [type,name,args,t]: web={"t":240,"type":"timer","name":"interval","args":[240]} unity={"t":0,"type":"page","name":"home","args":[]}) |
 | shop_singularities_mixed | FAIL | FAIL (29 web / 1 unity events, first mismatch #0 [type,name,args,t]: web={"t":240,"type":"timer","name":"interval","args":[240]} unity={"t":0,"type":"page","name":"home","args":[]}) |
 | shop_skyboxes_default | FAIL | FAIL (28 web / 1 unity events, first mismatch #0 [type,name,args,t]: web={"t":240,"type":"timer","name":"interval","args":[240]} unity={"t":0,"type":"page","name":"home","args":[]}) |
@@ -9002,7 +10237,7 @@ Pass bar (SPEC 2): >= 99.0 % pixels within 16 per channel, SSIM >= 0.985, every 
 - Chromium: 153.0.8010.12
 - Launch args: `--force-color-profile=srgb --font-render-hinting=none --disable-lcd-text`
 - Animation clock: registry+sweep (SPEC 4.5)
-- perfOffset per run: 1, 10, 100, 101, 11, 117, 12, 13, 2, 20, 21, 22, 24, 249, 3, 33, 34, 37, 39, 4, 42, 47, 5, 58, 6, 61, 67, 7, 70, 74, 75, 79, 8, 80, 81, 9, 92 (276 runs)
+- perfOffset per run: 1, 10, 102, 103, 11, 12, 13, 15, 153, 17, 171, 19, 2, 20, 28, 29, 3, 35, 37, 4, 40, 41, 44, 45, 457, 47, 48, 49, 5, 51, 52, 6, 65, 68, 7, 72, 74, 77, 8, 84, 89, 9, 91, 92, 93, 94 (314 runs)
 
 ### unity
 
