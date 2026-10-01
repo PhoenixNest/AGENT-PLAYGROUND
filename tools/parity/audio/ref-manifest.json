@@ -1,0 +1,3271 @@
+{
+ "chromium": "153.0.8010.12",
+ "sampleRate": 44100,
+ "entries": [
+  {
+   "id": "playSpinRatchet__0p6",
+   "cue": "playSpinRatchet",
+   "args": [
+    0.6
+   ],
+   "calls": [
+    {
+     "t": 0.07256235827664399,
+     "m": "playSpinRatchet",
+     "a": [
+      0.6
+     ]
+    }
+   ],
+   "setup": [],
+   "suspends": [],
+   "noInit": false,
+   "seconds": 0.19256235827664397,
+   "channels": 2,
+   "sampleRate": 44100,
+   "frames": 8492,
+   "rngDraws": 0,
+   "rms": 0.00106935831,
+   "peak": 0.0145487338,
+   "sha256": "f8995f6865c5eb9b8535425531a57de6ef25412e6c2854a9d2bcabcf350062e7",
+   "bitExactRepeat": true,
+   "repeatMaxAbsDiff": 0
+  },
+  {
+   "id": "playSpinRatchet__0p8",
+   "cue": "playSpinRatchet",
+   "args": [
+    0.8
+   ],
+   "calls": [
+    {
+     "t": 0.07256235827664399,
+     "m": "playSpinRatchet",
+     "a": [
+      0.8
+     ]
+    }
+   ],
+   "setup": [],
+   "suspends": [],
+   "noInit": false,
+   "seconds": 0.19256235827664397,
+   "channels": 2,
+   "sampleRate": 44100,
+   "frames": 8492,
+   "rngDraws": 0,
+   "rms": 0.00140611164,
+   "peak": 0.0201205909,
+   "sha256": "71d623fe6ee9f644e6f2ddb9bff6b1797bc6c90b57d47f5201c6854b3a276985",
+   "bitExactRepeat": true,
+   "repeatMaxAbsDiff": 0
+  },
+  {
+   "id": "playSpinRatchet__1",
+   "cue": "playSpinRatchet",
+   "args": [
+    1
+   ],
+   "calls": [
+    {
+     "t": 0.07256235827664399,
+     "m": "playSpinRatchet",
+     "a": [
+      1
+     ]
+    }
+   ],
+   "setup": [],
+   "suspends": [],
+   "noInit": false,
+   "seconds": 0.19256235827664397,
+   "channels": 2,
+   "sampleRate": 44100,
+   "frames": 8492,
+   "rngDraws": 0,
+   "rms": 0.00180058121,
+   "peak": 0.0249817632,
+   "sha256": "461cf493f2080c70c25be558eb85a500ccf0847e5afe307113985df4cc326529",
+   "bitExactRepeat": true,
+   "repeatMaxAbsDiff": 0
+  },
+  {
+   "id": "playSpinRatchet__1p2",
+   "cue": "playSpinRatchet",
+   "args": [
+    1.2
+   ],
+   "calls": [
+    {
+     "t": 0.07256235827664399,
+     "m": "playSpinRatchet",
+     "a": [
+      1.2
+     ]
+    }
+   ],
+   "setup": [],
+   "suspends": [],
+   "noInit": false,
+   "seconds": 0.19256235827664397,
+   "channels": 2,
+   "sampleRate": 44100,
+   "frames": 8492,
+   "rngDraws": 0,
+   "rms": 0.00222957194,
+   "peak": 0.0294211283,
+   "sha256": "b96cf4466b3fb60d62b5e1d7b3790698dc8866e940d2a575e438c3ead532360b",
+   "bitExactRepeat": true,
+   "repeatMaxAbsDiff": 0
+  },
+  {
+   "id": "playSpinRatchet__1p5",
+   "cue": "playSpinRatchet",
+   "args": [
+    1.5
+   ],
+   "calls": [
+    {
+     "t": 0.07256235827664399,
+     "m": "playSpinRatchet",
+     "a": [
+      1.5
+     ]
+    }
+   ],
+   "setup": [],
+   "suspends": [],
+   "noInit": false,
+   "seconds": 0.19256235827664397,
+   "channels": 2,
+   "sampleRate": 44100,
+   "frames": 8492,
+   "rngDraws": 0,
+   "rms": 0.00279647737,
+   "peak": 0.0357480608,
+   "sha256": "bb1fc3ac48a21500cf8e472e297690bf7978ca31c636d961a8543fe36734c0d8",
+   "bitExactRepeat": true,
+   "repeatMaxAbsDiff": 0
+  },
+  {
+   "id": "playSpinRatchet__1p6",
+   "cue": "playSpinRatchet",
+   "args": [
+    1.6
+   ],
+   "calls": [
+    {
+     "t": 0.07256235827664399,
+     "m": "playSpinRatchet",
+     "a": [
+      1.6
+     ]
+    }
+   ],
+   "setup": [],
+   "suspends": [],
+   "noInit": false,
+   "seconds": 0.19256235827664397,
+   "channels": 2,
+   "sampleRate": 44100,
+   "frames": 8492,
+   "rngDraws": 0,
+   "rms": 0.00292371055,
+   "peak": 0.0375393219,
+   "sha256": "50ffef354311a0e7aa65bdc1eab2418c0e75b25592aa941ddc1476edeeac23e2",
+   "bitExactRepeat": true,
+   "repeatMaxAbsDiff": 0
+  },
+  {
+   "id": "playSpinRatchet__2p5",
+   "cue": "playSpinRatchet",
+   "args": [
+    2.5
+   ],
+   "calls": [
+    {
+     "t": 0.07256235827664399,
+     "m": "playSpinRatchet",
+     "a": [
+      2.5
+     ]
+    }
+   ],
+   "setup": [],
+   "suspends": [],
+   "noInit": false,
+   "seconds": 0.19256235827664397,
+   "channels": 2,
+   "sampleRate": 44100,
+   "frames": 8492,
+   "rngDraws": 0,
+   "rms": 0.00304392146,
+   "peak": 0.0384779498,
+   "sha256": "36db0c9dcd8f58f288d838c33671e47c9d8aa3e346495de3f6e5df3ecf8aeab9",
+   "bitExactRepeat": true,
+   "repeatMaxAbsDiff": 0
+  },
+  {
+   "id": "playSpinRatchet__none",
+   "cue": "playSpinRatchet",
+   "args": [],
+   "calls": [
+    {
+     "t": 0.07256235827664399,
+     "m": "playSpinRatchet",
+     "a": []
+    }
+   ],
+   "setup": [],
+   "suspends": [],
+   "noInit": false,
+   "seconds": 0.19256235827664397,
+   "channels": 2,
+   "sampleRate": 44100,
+   "frames": 8492,
+   "rngDraws": 0,
+   "rms": 0.00180058121,
+   "peak": 0.0249817632,
+   "sha256": "461cf493f2080c70c25be558eb85a500ccf0847e5afe307113985df4cc326529",
+   "bitExactRepeat": true,
+   "repeatMaxAbsDiff": 0
+  },
+  {
+   "id": "playDebrisCollision__0p2_titanium",
+   "cue": "playDebrisCollision",
+   "args": [
+    0.2,
+    "titanium"
+   ],
+   "calls": [
+    {
+     "t": 0.07256235827664399,
+     "m": "playDebrisCollision",
+     "a": [
+      0.2,
+      "titanium"
+     ]
+    }
+   ],
+   "setup": [],
+   "suspends": [],
+   "noInit": false,
+   "seconds": 0.222562358276644,
+   "channels": 2,
+   "sampleRate": 44100,
+   "frames": 9815,
+   "rngDraws": 1,
+   "rms": 0.00196108291,
+   "peak": 0.0240724683,
+   "sha256": "5d311dd9045f680f9d94376c0a17fa40ef1244b368a94c46be646a9d9adc1c19",
+   "bitExactRepeat": true,
+   "repeatMaxAbsDiff": 0
+  },
+  {
+   "id": "playDebrisCollision__0p6_titanium",
+   "cue": "playDebrisCollision",
+   "args": [
+    0.6,
+    "titanium"
+   ],
+   "calls": [
+    {
+     "t": 0.07256235827664399,
+     "m": "playDebrisCollision",
+     "a": [
+      0.6,
+      "titanium"
+     ]
+    }
+   ],
+   "setup": [],
+   "suspends": [],
+   "noInit": false,
+   "seconds": 0.222562358276644,
+   "channels": 2,
+   "sampleRate": 44100,
+   "frames": 9815,
+   "rngDraws": 1,
+   "rms": 0.00535239104,
+   "peak": 0.0711903125,
+   "sha256": "b41fa0efcd0ed17d534b5e985ac7ee5fa24246fcb4398437fa913af2de36719f",
+   "bitExactRepeat": true,
+   "repeatMaxAbsDiff": 0
+  },
+  {
+   "id": "playDebrisCollision__1_titanium",
+   "cue": "playDebrisCollision",
+   "args": [
+    1,
+    "titanium"
+   ],
+   "calls": [
+    {
+     "t": 0.07256235827664399,
+     "m": "playDebrisCollision",
+     "a": [
+      1,
+      "titanium"
+     ]
+    }
+   ],
+   "setup": [],
+   "suspends": [],
+   "noInit": false,
+   "seconds": 0.222562358276644,
+   "channels": 2,
+   "sampleRate": 44100,
+   "frames": 9815,
+   "rngDraws": 1,
+   "rms": 0.00858246202,
+   "peak": 0.117862888,
+   "sha256": "54a218d7f98fa15f7c4f92c9694495972013b5ed74435e29cf7ef5945d8b59d0",
+   "bitExactRepeat": true,
+   "repeatMaxAbsDiff": 0
+  },
+  {
+   "id": "playDebrisCollision__1p25_titanium",
+   "cue": "playDebrisCollision",
+   "args": [
+    1.25,
+    "titanium"
+   ],
+   "calls": [
+    {
+     "t": 0.07256235827664399,
+     "m": "playDebrisCollision",
+     "a": [
+      1.25,
+      "titanium"
+     ]
+    }
+   ],
+   "setup": [],
+   "suspends": [],
+   "noInit": false,
+   "seconds": 0.222562358276644,
+   "channels": 2,
+   "sampleRate": 44100,
+   "frames": 9815,
+   "rngDraws": 1,
+   "rms": 0.0099022169,
+   "peak": 0.13723059,
+   "sha256": "add34cb42f55261b46cc6355532953bf1420834cc60a9597742f083bbb9c32ef",
+   "bitExactRepeat": true,
+   "repeatMaxAbsDiff": 0
+  },
+  {
+   "id": "playDebrisCollision__0p2_solar",
+   "cue": "playDebrisCollision",
+   "args": [
+    0.2,
+    "solar"
+   ],
+   "calls": [
+    {
+     "t": 0.07256235827664399,
+     "m": "playDebrisCollision",
+     "a": [
+      0.2,
+      "solar"
+     ]
+    }
+   ],
+   "setup": [],
+   "suspends": [],
+   "noInit": false,
+   "seconds": 0.222562358276644,
+   "channels": 2,
+   "sampleRate": 44100,
+   "frames": 9815,
+   "rngDraws": 1,
+   "rms": 0.00196186761,
+   "peak": 0.0244194288,
+   "sha256": "da9c5e03be6a7223783d6a0ebb1bac1761e8900b2fbb20381f0f60802652bef9",
+   "bitExactRepeat": true,
+   "repeatMaxAbsDiff": 0
+  },
+  {
+   "id": "playDebrisCollision__0p6_solar",
+   "cue": "playDebrisCollision",
+   "args": [
+    0.6,
+    "solar"
+   ],
+   "calls": [
+    {
+     "t": 0.07256235827664399,
+     "m": "playDebrisCollision",
+     "a": [
+      0.6,
+      "solar"
+     ]
+    }
+   ],
+   "setup": [],
+   "suspends": [],
+   "noInit": false,
+   "seconds": 0.222562358276644,
+   "channels": 2,
+   "sampleRate": 44100,
+   "frames": 9815,
+   "rngDraws": 1,
+   "rms": 0.00535564066,
+   "peak": 0.0724867582,
+   "sha256": "5033f5820383dd3c0b6be44b32c50b9e9fa71f761d3b581ad6ff3b9f671e81f4",
+   "bitExactRepeat": true,
+   "repeatMaxAbsDiff": 0
+  },
+  {
+   "id": "playDebrisCollision__1_solar",
+   "cue": "playDebrisCollision",
+   "args": [
+    1,
+    "solar"
+   ],
+   "calls": [
+    {
+     "t": 0.07256235827664399,
+     "m": "playDebrisCollision",
+     "a": [
+      1,
+      "solar"
+     ]
+    }
+   ],
+   "setup": [],
+   "suspends": [],
+   "noInit": false,
+   "seconds": 0.222562358276644,
+   "channels": 2,
+   "sampleRate": 44100,
+   "frames": 9815,
+   "rngDraws": 1,
+   "rms": 0.00858861674,
+   "peak": 0.120217964,
+   "sha256": "75e8346dec908b4664437aa4e9b91ddf108bed7535e99e47aada9aa5a211ffc8",
+   "bitExactRepeat": true,
+   "repeatMaxAbsDiff": 0
+  },
+  {
+   "id": "playDebrisCollision__1p25_solar",
+   "cue": "playDebrisCollision",
+   "args": [
+    1.25,
+    "solar"
+   ],
+   "calls": [
+    {
+     "t": 0.07256235827664399,
+     "m": "playDebrisCollision",
+     "a": [
+      1.25,
+      "solar"
+     ]
+    }
+   ],
+   "setup": [],
+   "suspends": [],
+   "noInit": false,
+   "seconds": 0.222562358276644,
+   "channels": 2,
+   "sampleRate": 44100,
+   "frames": 9815,
+   "rngDraws": 1,
+   "rms": 0.00990966418,
+   "peak": 0.14004609,
+   "sha256": "a4063a5dcc806a716a5acebd45271c336a38f6df47688659faa0a62192c8022c",
+   "bitExactRepeat": true,
+   "repeatMaxAbsDiff": 0
+  },
+  {
+   "id": "playDebrisCollision__0p2_volatile",
+   "cue": "playDebrisCollision",
+   "args": [
+    0.2,
+    "volatile"
+   ],
+   "calls": [
+    {
+     "t": 0.07256235827664399,
+     "m": "playDebrisCollision",
+     "a": [
+      0.2,
+      "volatile"
+     ]
+    }
+   ],
+   "setup": [],
+   "suspends": [],
+   "noInit": false,
+   "seconds": 0.222562358276644,
+   "channels": 2,
+   "sampleRate": 44100,
+   "frames": 9815,
+   "rngDraws": 1,
+   "rms": 0.00239751464,
+   "peak": 0.0231798496,
+   "sha256": "f84233ee8d0a130a7f10060c8d93223ff3745c973861fbd1372471df8364d74e",
+   "bitExactRepeat": true,
+   "repeatMaxAbsDiff": 0
+  },
+  {
+   "id": "playDebrisCollision__0p6_volatile",
+   "cue": "playDebrisCollision",
+   "args": [
+    0.6,
+    "volatile"
+   ],
+   "calls": [
+    {
+     "t": 0.07256235827664399,
+     "m": "playDebrisCollision",
+     "a": [
+      0.6,
+      "volatile"
+     ]
+    }
+   ],
+   "setup": [],
+   "suspends": [],
+   "noInit": false,
+   "seconds": 0.222562358276644,
+   "channels": 2,
+   "sampleRate": 44100,
+   "frames": 9815,
+   "rngDraws": 1,
+   "rms": 0.0065384438,
+   "peak": 0.067913115,
+   "sha256": "8a1bd0a62feab515ccd6c1d11ab2e7949e8019592e41866f20bb4f50b392b791",
+   "bitExactRepeat": true,
+   "repeatMaxAbsDiff": 0
+  },
+  {
+   "id": "playDebrisCollision__1_volatile",
+   "cue": "playDebrisCollision",
+   "args": [
+    1,
+    "volatile"
+   ],
+   "calls": [
+    {
+     "t": 0.07256235827664399,
+     "m": "playDebrisCollision",
+     "a": [
+      1,
+      "volatile"
+     ]
+    }
+   ],
+   "setup": [],
+   "suspends": [],
+   "noInit": false,
+   "seconds": 0.222562358276644,
+   "channels": 2,
+   "sampleRate": 44100,
+   "frames": 9815,
+   "rngDraws": 1,
+   "rms": 0.0104799193,
+   "peak": 0.111949824,
+   "sha256": "5994eb39ca5398f86075dca1b2b015e432651d1fb277addc5143501d149a7b2d",
+   "bitExactRepeat": true,
+   "repeatMaxAbsDiff": 0
+  },
+  {
+   "id": "playDebrisCollision__1p25_volatile",
+   "cue": "playDebrisCollision",
+   "args": [
+    1.25,
+    "volatile"
+   ],
+   "calls": [
+    {
+     "t": 0.07256235827664399,
+     "m": "playDebrisCollision",
+     "a": [
+      1.25,
+      "volatile"
+     ]
+    }
+   ],
+   "setup": [],
+   "suspends": [],
+   "noInit": false,
+   "seconds": 0.222562358276644,
+   "channels": 2,
+   "sampleRate": 44100,
+   "frames": 9815,
+   "rngDraws": 1,
+   "rms": 0.0120898577,
+   "peak": 0.130175129,
+   "sha256": "bfb11e5cb7bb3e39f3929517272ca7d53d89eabeca3b1b20cf51b23e85139cab",
+   "bitExactRepeat": true,
+   "repeatMaxAbsDiff": 0
+  },
+  {
+   "id": "playDebrisCollision__0p2_magnetic",
+   "cue": "playDebrisCollision",
+   "args": [
+    0.2,
+    "magnetic"
+   ],
+   "calls": [
+    {
+     "t": 0.07256235827664399,
+     "m": "playDebrisCollision",
+     "a": [
+      0.2,
+      "magnetic"
+     ]
+    }
+   ],
+   "setup": [],
+   "suspends": [],
+   "noInit": false,
+   "seconds": 0.222562358276644,
+   "channels": 2,
+   "sampleRate": 44100,
+   "frames": 9815,
+   "rngDraws": 1,
+   "rms": 0.00196108291,
+   "peak": 0.0240724683,
+   "sha256": "5d311dd9045f680f9d94376c0a17fa40ef1244b368a94c46be646a9d9adc1c19",
+   "bitExactRepeat": true,
+   "repeatMaxAbsDiff": 0
+  },
+  {
+   "id": "playDebrisCollision__0p6_magnetic",
+   "cue": "playDebrisCollision",
+   "args": [
+    0.6,
+    "magnetic"
+   ],
+   "calls": [
+    {
+     "t": 0.07256235827664399,
+     "m": "playDebrisCollision",
+     "a": [
+      0.6,
+      "magnetic"
+     ]
+    }
+   ],
+   "setup": [],
+   "suspends": [],
+   "noInit": false,
+   "seconds": 0.222562358276644,
+   "channels": 2,
+   "sampleRate": 44100,
+   "frames": 9815,
+   "rngDraws": 1,
+   "rms": 0.00535239104,
+   "peak": 0.0711903125,
+   "sha256": "b41fa0efcd0ed17d534b5e985ac7ee5fa24246fcb4398437fa913af2de36719f",
+   "bitExactRepeat": true,
+   "repeatMaxAbsDiff": 0
+  },
+  {
+   "id": "playDebrisCollision__1_magnetic",
+   "cue": "playDebrisCollision",
+   "args": [
+    1,
+    "magnetic"
+   ],
+   "calls": [
+    {
+     "t": 0.07256235827664399,
+     "m": "playDebrisCollision",
+     "a": [
+      1,
+      "magnetic"
+     ]
+    }
+   ],
+   "setup": [],
+   "suspends": [],
+   "noInit": false,
+   "seconds": 0.222562358276644,
+   "channels": 2,
+   "sampleRate": 44100,
+   "frames": 9815,
+   "rngDraws": 1,
+   "rms": 0.00858246202,
+   "peak": 0.117862888,
+   "sha256": "54a218d7f98fa15f7c4f92c9694495972013b5ed74435e29cf7ef5945d8b59d0",
+   "bitExactRepeat": true,
+   "repeatMaxAbsDiff": 0
+  },
+  {
+   "id": "playDebrisCollision__1p25_magnetic",
+   "cue": "playDebrisCollision",
+   "args": [
+    1.25,
+    "magnetic"
+   ],
+   "calls": [
+    {
+     "t": 0.07256235827664399,
+     "m": "playDebrisCollision",
+     "a": [
+      1.25,
+      "magnetic"
+     ]
+    }
+   ],
+   "setup": [],
+   "suspends": [],
+   "noInit": false,
+   "seconds": 0.222562358276644,
+   "channels": 2,
+   "sampleRate": 44100,
+   "frames": 9815,
+   "rngDraws": 1,
+   "rms": 0.0099022169,
+   "peak": 0.13723059,
+   "sha256": "add34cb42f55261b46cc6355532953bf1420834cc60a9597742f083bbb9c32ef",
+   "bitExactRepeat": true,
+   "repeatMaxAbsDiff": 0
+  },
+  {
+   "id": "playDebrisCollision__none",
+   "cue": "playDebrisCollision",
+   "args": [],
+   "calls": [
+    {
+     "t": 0.07256235827664399,
+     "m": "playDebrisCollision",
+     "a": []
+    }
+   ],
+   "setup": [],
+   "suspends": [],
+   "noInit": false,
+   "seconds": 0.222562358276644,
+   "channels": 2,
+   "sampleRate": 44100,
+   "frames": 9815,
+   "rngDraws": 1,
+   "rms": 0.00858246202,
+   "peak": 0.117862888,
+   "sha256": "54a218d7f98fa15f7c4f92c9694495972013b5ed74435e29cf7ef5945d8b59d0",
+   "bitExactRepeat": true,
+   "repeatMaxAbsDiff": 0
+  },
+  {
+   "id": "playGatePass__MULTIPLY_2",
+   "cue": "playGatePass",
+   "args": [
+    "MULTIPLY",
+    2
+   ],
+   "calls": [
+    {
+     "t": 0.07256235827664399,
+     "m": "playGatePass",
+     "a": [
+      "MULTIPLY",
+      2
+     ]
+    }
+   ],
+   "setup": [],
+   "suspends": [],
+   "noInit": false,
+   "seconds": 0.472562358276644,
+   "channels": 2,
+   "sampleRate": 44100,
+   "frames": 20840,
+   "rngDraws": 0,
+   "rms": 0.0102982743,
+   "peak": 0.142153636,
+   "sha256": "4def2a8473299d74e97cbf33c5fb6830faf5ddb463ac7c98e1bf0e3bcb286ce6",
+   "bitExactRepeat": true,
+   "repeatMaxAbsDiff": 0
+  },
+  {
+   "id": "playGatePass__MULTIPLY_3",
+   "cue": "playGatePass",
+   "args": [
+    "MULTIPLY",
+    3
+   ],
+   "calls": [
+    {
+     "t": 0.07256235827664399,
+     "m": "playGatePass",
+     "a": [
+      "MULTIPLY",
+      3
+     ]
+    }
+   ],
+   "setup": [],
+   "suspends": [],
+   "noInit": false,
+   "seconds": 0.472562358276644,
+   "channels": 2,
+   "sampleRate": 44100,
+   "frames": 20840,
+   "rngDraws": 0,
+   "rms": 0.0102982743,
+   "peak": 0.142153636,
+   "sha256": "4def2a8473299d74e97cbf33c5fb6830faf5ddb463ac7c98e1bf0e3bcb286ce6",
+   "bitExactRepeat": true,
+   "repeatMaxAbsDiff": 0
+  },
+  {
+   "id": "playGatePass__MULTIPLY_4",
+   "cue": "playGatePass",
+   "args": [
+    "MULTIPLY",
+    4
+   ],
+   "calls": [
+    {
+     "t": 0.07256235827664399,
+     "m": "playGatePass",
+     "a": [
+      "MULTIPLY",
+      4
+     ]
+    }
+   ],
+   "setup": [],
+   "suspends": [],
+   "noInit": false,
+   "seconds": 0.472562358276644,
+   "channels": 2,
+   "sampleRate": 44100,
+   "frames": 20840,
+   "rngDraws": 0,
+   "rms": 0.0272458264,
+   "peak": 0.187997103,
+   "sha256": "afb43bf4c7e8311fc4b9e19f4ac6620c0a58b6c702390921052474bd0b5599b5",
+   "bitExactRepeat": true,
+   "repeatMaxAbsDiff": 0
+  },
+  {
+   "id": "playGatePass__MULTIPLY_5",
+   "cue": "playGatePass",
+   "args": [
+    "MULTIPLY",
+    5
+   ],
+   "calls": [
+    {
+     "t": 0.07256235827664399,
+     "m": "playGatePass",
+     "a": [
+      "MULTIPLY",
+      5
+     ]
+    }
+   ],
+   "setup": [],
+   "suspends": [],
+   "noInit": false,
+   "seconds": 0.472562358276644,
+   "channels": 2,
+   "sampleRate": 44100,
+   "frames": 20840,
+   "rngDraws": 0,
+   "rms": 0.0272458264,
+   "peak": 0.187997103,
+   "sha256": "c961e2ccddf84a288c526414f9cfa60ead1808ba85a284830a62a4980fb50f43",
+   "bitExactRepeat": true,
+   "repeatMaxAbsDiff": 0
+  },
+  {
+   "id": "playGatePass__ADD_3",
+   "cue": "playGatePass",
+   "args": [
+    "ADD",
+    3
+   ],
+   "calls": [
+    {
+     "t": 0.07256235827664399,
+     "m": "playGatePass",
+     "a": [
+      "ADD",
+      3
+     ]
+    }
+   ],
+   "setup": [],
+   "suspends": [],
+   "noInit": false,
+   "seconds": 0.472562358276644,
+   "channels": 2,
+   "sampleRate": 44100,
+   "frames": 20840,
+   "rngDraws": 0,
+   "rms": 0.030983479,
+   "peak": 0.226850867,
+   "sha256": "222d6377e39fefbaf146074b07489309d21823799f8ef1396ea888d194eb685b",
+   "bitExactRepeat": true,
+   "repeatMaxAbsDiff": 0
+  },
+  {
+   "id": "playGatePass__ADD_8",
+   "cue": "playGatePass",
+   "args": [
+    "ADD",
+    8
+   ],
+   "calls": [
+    {
+     "t": 0.07256235827664399,
+     "m": "playGatePass",
+     "a": [
+      "ADD",
+      8
+     ]
+    }
+   ],
+   "setup": [],
+   "suspends": [],
+   "noInit": false,
+   "seconds": 0.472562358276644,
+   "channels": 2,
+   "sampleRate": 44100,
+   "frames": 20840,
+   "rngDraws": 0,
+   "rms": 0.030983479,
+   "peak": 0.226850867,
+   "sha256": "222d6377e39fefbaf146074b07489309d21823799f8ef1396ea888d194eb685b",
+   "bitExactRepeat": true,
+   "repeatMaxAbsDiff": 0
+  },
+  {
+   "id": "playGatePass__ADD_15",
+   "cue": "playGatePass",
+   "args": [
+    "ADD",
+    15
+   ],
+   "calls": [
+    {
+     "t": 0.07256235827664399,
+     "m": "playGatePass",
+     "a": [
+      "ADD",
+      15
+     ]
+    }
+   ],
+   "setup": [],
+   "suspends": [],
+   "noInit": false,
+   "seconds": 0.472562358276644,
+   "channels": 2,
+   "sampleRate": 44100,
+   "frames": 20840,
+   "rngDraws": 0,
+   "rms": 0.030983479,
+   "peak": 0.226850867,
+   "sha256": "222d6377e39fefbaf146074b07489309d21823799f8ef1396ea888d194eb685b",
+   "bitExactRepeat": true,
+   "repeatMaxAbsDiff": 0
+  },
+  {
+   "id": "playGatePass__BOOST_160",
+   "cue": "playGatePass",
+   "args": [
+    "BOOST",
+    160
+   ],
+   "calls": [
+    {
+     "t": 0.07256235827664399,
+     "m": "playGatePass",
+     "a": [
+      "BOOST",
+      160
+     ]
+    }
+   ],
+   "setup": [],
+   "suspends": [],
+   "noInit": false,
+   "seconds": 0.472562358276644,
+   "channels": 2,
+   "sampleRate": 44100,
+   "frames": 20840,
+   "rngDraws": 0,
+   "rms": 0.0188004237,
+   "peak": 0.16853404,
+   "sha256": "15707d026365511af7733419a515c787bbe78e77be8673bb0ac5a3b646bbb67b",
+   "bitExactRepeat": true,
+   "repeatMaxAbsDiff": 0
+  },
+  {
+   "id": "playGatePass__BOOST_180",
+   "cue": "playGatePass",
+   "args": [
+    "BOOST",
+    180
+   ],
+   "calls": [
+    {
+     "t": 0.07256235827664399,
+     "m": "playGatePass",
+     "a": [
+      "BOOST",
+      180
+     ]
+    }
+   ],
+   "setup": [],
+   "suspends": [],
+   "noInit": false,
+   "seconds": 0.472562358276644,
+   "channels": 2,
+   "sampleRate": 44100,
+   "frames": 20840,
+   "rngDraws": 0,
+   "rms": 0.0188004237,
+   "peak": 0.16853404,
+   "sha256": "15707d026365511af7733419a515c787bbe78e77be8673bb0ac5a3b646bbb67b",
+   "bitExactRepeat": true,
+   "repeatMaxAbsDiff": 0
+  },
+  {
+   "id": "playGatePass__none",
+   "cue": "playGatePass",
+   "args": [],
+   "calls": [
+    {
+     "t": 0.07256235827664399,
+     "m": "playGatePass",
+     "a": []
+    }
+   ],
+   "setup": [],
+   "suspends": [],
+   "noInit": false,
+   "seconds": 0.472562358276644,
+   "channels": 2,
+   "sampleRate": 44100,
+   "frames": 20840,
+   "rngDraws": 0,
+   "rms": 0.0102982743,
+   "peak": 0.142153636,
+   "sha256": "4def2a8473299d74e97cbf33c5fb6830faf5ddb463ac7c98e1bf0e3bcb286ce6",
+   "bitExactRepeat": true,
+   "repeatMaxAbsDiff": 0
+  },
+  {
+   "id": "playShredderPass__null_2",
+   "cue": "playShredderPass",
+   "args": [
+    null,
+    2
+   ],
+   "calls": [
+    {
+     "t": 0.07256235827664399,
+     "m": "playShredderPass",
+     "a": [
+      null,
+      2
+     ]
+    }
+   ],
+   "setup": [],
+   "suspends": [],
+   "noInit": false,
+   "seconds": 0.472562358276644,
+   "channels": 2,
+   "sampleRate": 44100,
+   "frames": 20840,
+   "rngDraws": 0,
+   "rms": 0.0102982743,
+   "peak": 0.142153636,
+   "sha256": "4def2a8473299d74e97cbf33c5fb6830faf5ddb463ac7c98e1bf0e3bcb286ce6",
+   "bitExactRepeat": true,
+   "repeatMaxAbsDiff": 0
+  },
+  {
+   "id": "playCompactorPass__null_3",
+   "cue": "playCompactorPass",
+   "args": [
+    null,
+    3
+   ],
+   "calls": [
+    {
+     "t": 0.07256235827664399,
+     "m": "playCompactorPass",
+     "a": [
+      null,
+      3
+     ]
+    }
+   ],
+   "setup": [],
+   "suspends": [],
+   "noInit": false,
+   "seconds": 0.472562358276644,
+   "channels": 2,
+   "sampleRate": 44100,
+   "frames": 20840,
+   "rngDraws": 0,
+   "rms": 0.030983479,
+   "peak": 0.226850867,
+   "sha256": "222d6377e39fefbaf146074b07489309d21823799f8ef1396ea888d194eb685b",
+   "bitExactRepeat": true,
+   "repeatMaxAbsDiff": 0
+  },
+  {
+   "id": "playSuperShredderPass__null_4",
+   "cue": "playSuperShredderPass",
+   "args": [
+    null,
+    4
+   ],
+   "calls": [
+    {
+     "t": 0.07256235827664399,
+     "m": "playSuperShredderPass",
+     "a": [
+      null,
+      4
+     ]
+    }
+   ],
+   "setup": [],
+   "suspends": [],
+   "noInit": false,
+   "seconds": 0.472562358276644,
+   "channels": 2,
+   "sampleRate": 44100,
+   "frames": 20840,
+   "rngDraws": 0,
+   "rms": 0.0272458264,
+   "peak": 0.187997103,
+   "sha256": "c961e2ccddf84a288c526414f9cfa60ead1808ba85a284830a62a4980fb50f43",
+   "bitExactRepeat": false,
+   "repeatMaxAbsDiff": 2.9802322387695312e-8
+  },
+  {
+   "id": "playBoosterPass__none",
+   "cue": "playBoosterPass",
+   "args": [],
+   "calls": [
+    {
+     "t": 0.07256235827664399,
+     "m": "playBoosterPass",
+     "a": []
+    }
+   ],
+   "setup": [],
+   "suspends": [],
+   "noInit": false,
+   "seconds": 0.472562358276644,
+   "channels": 2,
+   "sampleRate": 44100,
+   "frames": 20840,
+   "rngDraws": 0,
+   "rms": 0.0188004237,
+   "peak": 0.16853404,
+   "sha256": "15707d026365511af7733419a515c787bbe78e77be8673bb0ac5a3b646bbb67b",
+   "bitExactRepeat": true,
+   "repeatMaxAbsDiff": 0
+  },
+  {
+   "id": "playBoosterPass___now",
+   "cue": "playBoosterPass",
+   "args": [
+    "@now"
+   ],
+   "calls": [
+    {
+     "t": 0.07256235827664399,
+     "m": "playBoosterPass",
+     "a": [
+      "@now"
+     ]
+    }
+   ],
+   "setup": [],
+   "suspends": [],
+   "noInit": false,
+   "seconds": 0.472562358276644,
+   "channels": 2,
+   "sampleRate": 44100,
+   "frames": 20840,
+   "rngDraws": 0,
+   "rms": 0.0188004237,
+   "peak": 0.16853404,
+   "sha256": "15707d026365511af7733419a515c787bbe78e77be8673bb0ac5a3b646bbb67b",
+   "bitExactRepeat": true,
+   "repeatMaxAbsDiff": 0
+  },
+  {
+   "id": "playRcsThrust__none",
+   "cue": "playRcsThrust",
+   "args": [],
+   "calls": [
+    {
+     "t": 0.07256235827664399,
+     "m": "playRcsThrust",
+     "a": []
+    }
+   ],
+   "setup": [],
+   "suspends": [],
+   "noInit": false,
+   "seconds": 0.472562358276644,
+   "channels": 2,
+   "sampleRate": 44100,
+   "frames": 20840,
+   "rngDraws": 9702,
+   "rms": 0.00407450723,
+   "peak": 0.0704867169,
+   "sha256": "5d4efb6c914f63baf09843032d95d3b7366a733c2351fb66a21eb16347bc9175",
+   "bitExactRepeat": true,
+   "repeatMaxAbsDiff": 0
+  },
+  {
+   "id": "playBumperBounce__none",
+   "cue": "playBumperBounce",
+   "args": [],
+   "calls": [
+    {
+     "t": 0.07256235827664399,
+     "m": "playBumperBounce",
+     "a": []
+    }
+   ],
+   "setup": [],
+   "suspends": [],
+   "noInit": false,
+   "seconds": 0.272562358276644,
+   "channels": 2,
+   "sampleRate": 44100,
+   "frames": 12020,
+   "rngDraws": 1,
+   "rms": 0.017779698,
+   "peak": 0.169025302,
+   "sha256": "7d75e410d8c592f96553823e132a35c764d38112b5b6951da805040679ac9dbc",
+   "bitExactRepeat": true,
+   "repeatMaxAbsDiff": 0
+  },
+  {
+   "id": "playDebrisSwallowed__none",
+   "cue": "playDebrisSwallowed",
+   "args": [],
+   "calls": [
+    {
+     "t": 0.07256235827664399,
+     "m": "playDebrisSwallowed",
+     "a": []
+    }
+   ],
+   "setup": [],
+   "suspends": [],
+   "noInit": false,
+   "seconds": 0.672562358276644,
+   "channels": 2,
+   "sampleRate": 44100,
+   "frames": 29660,
+   "rngDraws": 0,
+   "rms": 0.0292205982,
+   "peak": 0.208863854,
+   "sha256": "f8aa97be577db2cdf99dcf98e29edebae43c173e88ada316b5c3ff05732eb0ce",
+   "bitExactRepeat": true,
+   "repeatMaxAbsDiff": 0
+  },
+  {
+   "id": "playHazardExplosion__none",
+   "cue": "playHazardExplosion",
+   "args": [],
+   "calls": [
+    {
+     "t": 0.07256235827664399,
+     "m": "playHazardExplosion",
+     "a": []
+    }
+   ],
+   "setup": [],
+   "suspends": [],
+   "noInit": false,
+   "seconds": 0.472562358276644,
+   "channels": 2,
+   "sampleRate": 44100,
+   "frames": 20840,
+   "rngDraws": 0,
+   "rms": 0.0188726676,
+   "peak": 0.187313259,
+   "sha256": "659919f8e2b2fb50407e67aa344c24947338ee5d04b716c6251629d78598d48c",
+   "bitExactRepeat": true,
+   "repeatMaxAbsDiff": 0
+  },
+  {
+   "id": "playVictoryFanfare__none",
+   "cue": "playVictoryFanfare",
+   "args": [],
+   "calls": [
+    {
+     "t": 0.07256235827664399,
+     "m": "playVictoryFanfare",
+     "a": []
+    }
+   ],
+   "setup": [],
+   "suspends": [],
+   "noInit": false,
+   "seconds": 1.2725623582766439,
+   "channels": 2,
+   "sampleRate": 44100,
+   "frames": 56120,
+   "rngDraws": 0,
+   "rms": 0.0337692343,
+   "peak": 0.238994762,
+   "sha256": "ce397a8162175dc93c8a5c16ab94f80c212cffa69fedfa284c92b209094b66c1",
+   "bitExactRepeat": true,
+   "repeatMaxAbsDiff": 0
+  },
+  {
+   "id": "playDefeatSound__none",
+   "cue": "playDefeatSound",
+   "args": [],
+   "calls": [
+    {
+     "t": 0.07256235827664399,
+     "m": "playDefeatSound",
+     "a": []
+    }
+   ],
+   "setup": [],
+   "suspends": [],
+   "noInit": false,
+   "seconds": 1.2725623582766439,
+   "channels": 2,
+   "sampleRate": 44100,
+   "frames": 56120,
+   "rngDraws": 0,
+   "rms": 0.0318803838,
+   "peak": 0.21610117,
+   "sha256": "257fd5a5293702ad84fd0688b90bfef1424efaf0acb084f75d181e4d389b4e29",
+   "bitExactRepeat": true,
+   "repeatMaxAbsDiff": 0
+  },
+  {
+   "id": "playBackupPodSound__none",
+   "cue": "playBackupPodSound",
+   "args": [],
+   "calls": [
+    {
+     "t": 0.07256235827664399,
+     "m": "playBackupPodSound",
+     "a": []
+    }
+   ],
+   "setup": [],
+   "suspends": [],
+   "noInit": false,
+   "seconds": 0.8725623582766441,
+   "channels": 2,
+   "sampleRate": 44100,
+   "frames": 38481,
+   "rngDraws": 0,
+   "rms": 0.0419375296,
+   "peak": 0.24624823,
+   "sha256": "93fbf1653617a499edb143125230fc0603c7a92054ae98f7e5338436560ec425",
+   "bitExactRepeat": true,
+   "repeatMaxAbsDiff": 0
+  },
+  {
+   "id": "setThrusterActive__true",
+   "cue": "setThrusterActive",
+   "args": [
+    true
+   ],
+   "calls": [
+    {
+     "t": 0.07256235827664399,
+     "m": "setThrusterActive",
+     "a": [
+      true
+     ]
+    }
+   ],
+   "setup": [],
+   "suspends": [],
+   "noInit": false,
+   "seconds": 0.19256235827664397,
+   "channels": 2,
+   "sampleRate": 44100,
+   "frames": 8492,
+   "rngDraws": 0,
+   "rms": 0.00222957194,
+   "peak": 0.0294211283,
+   "sha256": "b96cf4466b3fb60d62b5e1d7b3790698dc8866e940d2a575e438c3ead532360b",
+   "bitExactRepeat": true,
+   "repeatMaxAbsDiff": 0
+  },
+  {
+   "id": "seq_swallow_4",
+   "cue": "sequence",
+   "args": [],
+   "calls": [
+    {
+     "t": 0.07256235827664399,
+     "m": "playDebrisSwallowed",
+     "a": []
+    },
+    {
+     "t": 0.11256235827664399,
+     "m": "playDebrisSwallowed",
+     "a": []
+    },
+    {
+     "t": 0.152562358276644,
+     "m": "playDebrisSwallowed",
+     "a": []
+    },
+    {
+     "t": 0.19256235827664397,
+     "m": "playDebrisSwallowed",
+     "a": []
+    }
+   ],
+   "setup": [],
+   "suspends": [],
+   "noInit": false,
+   "seconds": 0.932562358276644,
+   "channels": 2,
+   "sampleRate": 44100,
+   "frames": 41126,
+   "rngDraws": 0,
+   "rms": 0.049616919,
+   "peak": 0.230434999,
+   "sha256": "7560a514ec14c4d052f55024f8b5790e682817f085e87e08140b2839373b924a",
+   "bitExactRepeat": false,
+   "repeatMaxAbsDiff": 2.9802322387695312e-8
+  },
+  {
+   "id": "seq_swallow_12",
+   "cue": "sequence",
+   "args": [],
+   "calls": [
+    {
+     "t": 0.07256235827664399,
+     "m": "playDebrisSwallowed",
+     "a": []
+    },
+    {
+     "t": 0.122562358276644,
+     "m": "playDebrisSwallowed",
+     "a": []
+    },
+    {
+     "t": 0.172562358276644,
+     "m": "playDebrisSwallowed",
+     "a": []
+    },
+    {
+     "t": 0.222562358276644,
+     "m": "playDebrisSwallowed",
+     "a": []
+    },
+    {
+     "t": 0.272562358276644,
+     "m": "playDebrisSwallowed",
+     "a": []
+    },
+    {
+     "t": 0.322562358276644,
+     "m": "playDebrisSwallowed",
+     "a": []
+    },
+    {
+     "t": 0.372562358276644,
+     "m": "playDebrisSwallowed",
+     "a": []
+    },
+    {
+     "t": 0.422562358276644,
+     "m": "playDebrisSwallowed",
+     "a": []
+    },
+    {
+     "t": 0.472562358276644,
+     "m": "playDebrisSwallowed",
+     "a": []
+    },
+    {
+     "t": 0.522562358276644,
+     "m": "playDebrisSwallowed",
+     "a": []
+    },
+    {
+     "t": 0.572562358276644,
+     "m": "playDebrisSwallowed",
+     "a": []
+    },
+    {
+     "t": 0.6225623582766441,
+     "m": "playDebrisSwallowed",
+     "a": []
+    }
+   ],
+   "setup": [],
+   "suspends": [],
+   "noInit": false,
+   "seconds": 1.3725623582766442,
+   "channels": 2,
+   "sampleRate": 44100,
+   "frames": 60531,
+   "rngDraws": 0,
+   "rms": 0.071468215,
+   "peak": 0.274860382,
+   "sha256": "025a2a95f19b1c34b914da1f3a48c1962c98f28302e37c8072164ac6fa161529",
+   "bitExactRepeat": false,
+   "repeatMaxAbsDiff": 5.960464477539063e-8
+  },
+  {
+   "id": "seq_swallow_restart",
+   "cue": "sequence",
+   "args": [],
+   "calls": [
+    {
+     "t": 0.07256235827664399,
+     "m": "playDebrisSwallowed",
+     "a": []
+    },
+    {
+     "t": 0.122562358276644,
+     "m": "playDebrisSwallowed",
+     "a": []
+    },
+    {
+     "t": 0.172562358276644,
+     "m": "playDebrisSwallowed",
+     "a": []
+    },
+    {
+     "t": 0.9725623582766441,
+     "m": "playDebrisSwallowed",
+     "a": []
+    },
+    {
+     "t": 1.022562358276644,
+     "m": "playDebrisSwallowed",
+     "a": []
+    }
+   ],
+   "setup": [],
+   "suspends": [],
+   "noInit": false,
+   "seconds": 1.672562358276644,
+   "channels": 2,
+   "sampleRate": 44100,
+   "frames": 73760,
+   "rngDraws": 0,
+   "rms": 0.0419403968,
+   "peak": 0.231327623,
+   "sha256": "af266b44da2490c5fad3ab049143b80294094225a55c9fa1bf1560e377e889ea",
+   "bitExactRepeat": false,
+   "repeatMaxAbsDiff": 2.9802322387695312e-8
+  },
+  {
+   "id": "seq_ratchet_cooldown",
+   "cue": "sequence",
+   "args": [],
+   "calls": [
+    {
+     "t": 0.07256235827664399,
+     "m": "playSpinRatchet",
+     "a": [
+      0.8
+     ]
+    },
+    {
+     "t": 0.10256235827664399,
+     "m": "playSpinRatchet",
+     "a": [
+      0.9
+     ]
+    },
+    {
+     "t": 0.13256235827664398,
+     "m": "playSpinRatchet",
+     "a": [
+      1
+     ]
+    },
+    {
+     "t": 0.162562358276644,
+     "m": "playSpinRatchet",
+     "a": [
+      1.1
+     ]
+    },
+    {
+     "t": 0.19256235827664397,
+     "m": "playSpinRatchet",
+     "a": [
+      1.2000000000000002
+     ]
+    },
+    {
+     "t": 0.222562358276644,
+     "m": "playSpinRatchet",
+     "a": [
+      1.3
+     ]
+    },
+    {
+     "t": 0.252562358276644,
+     "m": "playSpinRatchet",
+     "a": [
+      1.4000000000000001
+     ]
+    },
+    {
+     "t": 0.282562358276644,
+     "m": "playSpinRatchet",
+     "a": [
+      1.5
+     ]
+    },
+    {
+     "t": 0.31256235827664397,
+     "m": "playSpinRatchet",
+     "a": [
+      1.6
+     ]
+    },
+    {
+     "t": 0.342562358276644,
+     "m": "playSpinRatchet",
+     "a": [
+      1.7000000000000002
+     ]
+    }
+   ],
+   "setup": [],
+   "suspends": [],
+   "noInit": false,
+   "seconds": 0.522562358276644,
+   "channels": 2,
+   "sampleRate": 44100,
+   "frames": 23045,
+   "rngDraws": 0,
+   "rms": 0.00297816378,
+   "peak": 0.0376866385,
+   "sha256": "d1536ce39d698bc56bc1424b3c88f0c699fa1985c3686510e3490f6e9d463737",
+   "bitExactRepeat": true,
+   "repeatMaxAbsDiff": 0
+  },
+  {
+   "id": "seq_collision_storm",
+   "cue": "sequence",
+   "args": [],
+   "calls": [
+    {
+     "t": 0.07256235827664399,
+     "m": "playDebrisCollision",
+     "a": [
+      0.3,
+      "titanium"
+     ]
+    },
+    {
+     "t": 0.092562358276644,
+     "m": "playDebrisCollision",
+     "a": [
+      0.5,
+      "solar"
+     ]
+    },
+    {
+     "t": 0.11256235827664399,
+     "m": "playDebrisCollision",
+     "a": [
+      0.7,
+      "volatile"
+     ]
+    },
+    {
+     "t": 0.13256235827664398,
+     "m": "playDebrisCollision",
+     "a": [
+      0.9000000000000001,
+      "titanium"
+     ]
+    },
+    {
+     "t": 0.152562358276644,
+     "m": "playDebrisCollision",
+     "a": [
+      1,
+      "solar"
+     ]
+    },
+    {
+     "t": 0.172562358276644,
+     "m": "playDebrisCollision",
+     "a": [
+      0.3,
+      "volatile"
+     ]
+    },
+    {
+     "t": 0.19256235827664397,
+     "m": "playDebrisCollision",
+     "a": [
+      0.5,
+      "titanium"
+     ]
+    },
+    {
+     "t": 0.212562358276644,
+     "m": "playDebrisCollision",
+     "a": [
+      0.7,
+      "solar"
+     ]
+    },
+    {
+     "t": 0.232562358276644,
+     "m": "playDebrisCollision",
+     "a": [
+      0.9000000000000001,
+      "volatile"
+     ]
+    },
+    {
+     "t": 0.252562358276644,
+     "m": "playDebrisCollision",
+     "a": [
+      1,
+      "titanium"
+     ]
+    },
+    {
+     "t": 0.272562358276644,
+     "m": "playDebrisCollision",
+     "a": [
+      0.3,
+      "solar"
+     ]
+    },
+    {
+     "t": 0.292562358276644,
+     "m": "playDebrisCollision",
+     "a": [
+      0.5,
+      "volatile"
+     ]
+    },
+    {
+     "t": 0.31256235827664397,
+     "m": "playDebrisCollision",
+     "a": [
+      0.7,
+      "titanium"
+     ]
+    },
+    {
+     "t": 0.332562358276644,
+     "m": "playDebrisCollision",
+     "a": [
+      0.9000000000000001,
+      "solar"
+     ]
+    },
+    {
+     "t": 0.352562358276644,
+     "m": "playDebrisCollision",
+     "a": [
+      1,
+      "volatile"
+     ]
+    },
+    {
+     "t": 0.37256235827664397,
+     "m": "playDebrisCollision",
+     "a": [
+      0.3,
+      "titanium"
+     ]
+    },
+    {
+     "t": 0.392562358276644,
+     "m": "playDebrisCollision",
+     "a": [
+      0.5,
+      "solar"
+     ]
+    },
+    {
+     "t": 0.412562358276644,
+     "m": "playDebrisCollision",
+     "a": [
+      0.7,
+      "volatile"
+     ]
+    },
+    {
+     "t": 0.43256235827664397,
+     "m": "playDebrisCollision",
+     "a": [
+      0.9000000000000001,
+      "titanium"
+     ]
+    },
+    {
+     "t": 0.452562358276644,
+     "m": "playDebrisCollision",
+     "a": [
+      1,
+      "solar"
+     ]
+    },
+    {
+     "t": 0.472562358276644,
+     "m": "playDebrisCollision",
+     "a": [
+      0.3,
+      "volatile"
+     ]
+    },
+    {
+     "t": 0.49256235827664396,
+     "m": "playDebrisCollision",
+     "a": [
+      0.5,
+      "titanium"
+     ]
+    },
+    {
+     "t": 0.512562358276644,
+     "m": "playDebrisCollision",
+     "a": [
+      0.7,
+      "solar"
+     ]
+    },
+    {
+     "t": 0.532562358276644,
+     "m": "playDebrisCollision",
+     "a": [
+      0.9000000000000001,
+      "volatile"
+     ]
+    }
+   ],
+   "setup": [],
+   "suspends": [],
+   "noInit": false,
+   "seconds": 0.8725623582766441,
+   "channels": 2,
+   "sampleRate": 44100,
+   "frames": 38481,
+   "rngDraws": 8,
+   "rms": 0.00959381885,
+   "peak": 0.133366734,
+   "sha256": "d07c91794a5c8f815c72c0cb489b248aeaf5720cf30e3362e628ff2768629dfe",
+   "bitExactRepeat": true,
+   "repeatMaxAbsDiff": 0
+  },
+  {
+   "id": "seq_gate_cascade",
+   "cue": "sequence",
+   "args": [],
+   "calls": [
+    {
+     "t": 0.07256235827664399,
+     "m": "playGatePass",
+     "a": [
+      "MULTIPLY",
+      2
+     ]
+    },
+    {
+     "t": 0.122562358276644,
+     "m": "playGatePass",
+     "a": [
+      "ADD",
+      5
+     ]
+    },
+    {
+     "t": 0.172562358276644,
+     "m": "playGatePass",
+     "a": [
+      "BOOST",
+      160
+     ]
+    },
+    {
+     "t": 0.222562358276644,
+     "m": "playGatePass",
+     "a": [
+      "MULTIPLY",
+      4
+     ]
+    },
+    {
+     "t": 0.272562358276644,
+     "m": "playGatePass",
+     "a": [
+      "MULTIPLY",
+      2
+     ]
+    },
+    {
+     "t": 0.322562358276644,
+     "m": "playGatePass",
+     "a": [
+      "ADD",
+      5
+     ]
+    },
+    {
+     "t": 0.372562358276644,
+     "m": "playGatePass",
+     "a": [
+      "BOOST",
+      160
+     ]
+    },
+    {
+     "t": 0.422562358276644,
+     "m": "playGatePass",
+     "a": [
+      "MULTIPLY",
+      4
+     ]
+    },
+    {
+     "t": 0.472562358276644,
+     "m": "playGatePass",
+     "a": [
+      "MULTIPLY",
+      2
+     ]
+    },
+    {
+     "t": 0.522562358276644,
+     "m": "playGatePass",
+     "a": [
+      "ADD",
+      5
+     ]
+    },
+    {
+     "t": 0.572562358276644,
+     "m": "playGatePass",
+     "a": [
+      "BOOST",
+      160
+     ]
+    },
+    {
+     "t": 0.6225623582766441,
+     "m": "playGatePass",
+     "a": [
+      "MULTIPLY",
+      4
+     ]
+    },
+    {
+     "t": 0.6725623582766441,
+     "m": "playGatePass",
+     "a": [
+      "MULTIPLY",
+      2
+     ]
+    },
+    {
+     "t": 0.7225623582766441,
+     "m": "playGatePass",
+     "a": [
+      "ADD",
+      5
+     ]
+    }
+   ],
+   "setup": [],
+   "suspends": [],
+   "noInit": false,
+   "seconds": 1.2725623582766439,
+   "channels": 2,
+   "sampleRate": 44100,
+   "frames": 56120,
+   "rngDraws": 0,
+   "rms": 0.0253995557,
+   "peak": 0.192101419,
+   "sha256": "9c94e66da3f491b010741e6cf33ccadf8b238d617654941c606285c99c06c490",
+   "bitExactRepeat": true,
+   "repeatMaxAbsDiff": 0
+  },
+  {
+   "id": "seq_rcs_overlap",
+   "cue": "sequence",
+   "args": [],
+   "calls": [
+    {
+     "t": 0.07256235827664399,
+     "m": "playRcsThrust",
+     "a": []
+    },
+    {
+     "t": 0.13256235827664398,
+     "m": "playRcsThrust",
+     "a": []
+    },
+    {
+     "t": 0.19256235827664397,
+     "m": "playRcsThrust",
+     "a": []
+    },
+    {
+     "t": 0.272562358276644,
+     "m": "playRcsThrust",
+     "a": []
+    }
+   ],
+   "setup": [],
+   "suspends": [],
+   "noInit": false,
+   "seconds": 0.772562358276644,
+   "channels": 2,
+   "sampleRate": 44100,
+   "frames": 34070,
+   "rngDraws": 38808,
+   "rms": 0.00689427973,
+   "peak": 0.0741743967,
+   "sha256": "41115af7af0db755b4ca46dccfbd0a3217c9bc195b6322f3d654c2c31a5ef171",
+   "bitExactRepeat": false,
+   "repeatMaxAbsDiff": 7.450580596923828e-9
+  },
+  {
+   "id": "mix_chaos_c0ffee",
+   "cue": "sequence",
+   "args": [],
+   "calls": [
+    {
+     "t": 0.072562,
+     "m": "playSpinRatchet",
+     "a": [
+      1.3328879972919823
+     ]
+    },
+    {
+     "t": 0.15276,
+     "m": "playHazardExplosion",
+     "a": []
+    },
+    {
+     "t": 0.172395,
+     "m": "playBumperBounce",
+     "a": []
+    },
+    {
+     "t": 0.195531,
+     "m": "playRcsThrust",
+     "a": []
+    },
+    {
+     "t": 0.275445,
+     "m": "playGatePass",
+     "a": [
+      "ADD",
+      5
+     ]
+    },
+    {
+     "t": 0.289979,
+     "m": "playVictoryFanfare",
+     "a": []
+    },
+    {
+     "t": 0.349348,
+     "m": "playGatePass",
+     "a": [
+      "ADD",
+      5
+     ]
+    },
+    {
+     "t": 0.405562,
+     "m": "playHazardExplosion",
+     "a": []
+    },
+    {
+     "t": 0.439404,
+     "m": "playRcsThrust",
+     "a": []
+    },
+    {
+     "t": 0.49814,
+     "m": "playVictoryFanfare",
+     "a": []
+    },
+    {
+     "t": 0.546485,
+     "m": "playDebrisSwallowed",
+     "a": []
+    },
+    {
+     "t": 0.642234,
+     "m": "playSpinRatchet",
+     "a": [
+      1.3306233450770377
+     ]
+    },
+    {
+     "t": 0.677411,
+     "m": "playGatePass",
+     "a": [
+      "BOOST",
+      160
+     ]
+    },
+    {
+     "t": 0.697044,
+     "m": "playDebrisCollision",
+     "a": [
+      0.2813947796821594,
+      "solar"
+     ]
+    },
+    {
+     "t": 0.765087,
+     "m": "playBumperBounce",
+     "a": []
+    },
+    {
+     "t": 0.830168,
+     "m": "playSpinRatchet",
+     "a": [
+      1.3310079647228124
+     ]
+    },
+    {
+     "t": 0.888531,
+     "m": "playGatePass",
+     "a": [
+      "ADD",
+      5
+     ]
+    },
+    {
+     "t": 0.951411,
+     "m": "playGatePass",
+     "a": [
+      "ADD",
+      5
+     ]
+    },
+    {
+     "t": 0.999361,
+     "m": "playBackupPodSound",
+     "a": []
+    },
+    {
+     "t": 1.0764,
+     "m": "playBackupPodSound",
+     "a": []
+    },
+    {
+     "t": 1.158394,
+     "m": "playBumperBounce",
+     "a": []
+    },
+    {
+     "t": 1.192477,
+     "m": "playBackupPodSound",
+     "a": []
+    },
+    {
+     "t": 1.236696,
+     "m": "playRcsThrust",
+     "a": []
+    },
+    {
+     "t": 1.261379,
+     "m": "playDebrisCollision",
+     "a": [
+      0.44366661040112376,
+      "titanium"
+     ]
+    },
+    {
+     "t": 1.330465,
+     "m": "playGatePass",
+     "a": [
+      "BOOST",
+      160
+     ]
+    },
+    {
+     "t": 1.364239,
+     "m": "playBumperBounce",
+     "a": []
+    },
+    {
+     "t": 1.397619,
+     "m": "playDebrisCollision",
+     "a": [
+      0.40626788488589227,
+      "solar"
+     ]
+    },
+    {
+     "t": 1.494184,
+     "m": "playVictoryFanfare",
+     "a": []
+    },
+    {
+     "t": 1.580932,
+     "m": "playDebrisCollision",
+     "a": [
+      0.5131913982331753,
+      "titanium"
+     ]
+    },
+    {
+     "t": 1.619712,
+     "m": "playSpinRatchet",
+     "a": [
+      1.0048069689422847
+     ]
+    },
+    {
+     "t": 1.707056,
+     "m": "playBumperBounce",
+     "a": []
+    },
+    {
+     "t": 1.805579,
+     "m": "playVictoryFanfare",
+     "a": []
+    },
+    {
+     "t": 1.858704,
+     "m": "playVictoryFanfare",
+     "a": []
+    },
+    {
+     "t": 1.955763,
+     "m": "playVictoryFanfare",
+     "a": []
+    },
+    {
+     "t": 1.988567,
+     "m": "playGatePass",
+     "a": [
+      "MULTIPLY",
+      4
+     ]
+    },
+    {
+     "t": 2.083409,
+     "m": "playRcsThrust",
+     "a": []
+    },
+    {
+     "t": 2.108628,
+     "m": "playBumperBounce",
+     "a": []
+    },
+    {
+     "t": 2.121904,
+     "m": "playVictoryFanfare",
+     "a": []
+    },
+    {
+     "t": 2.139816,
+     "m": "playDebrisCollision",
+     "a": [
+      0.30037438590079546,
+      "volatile"
+     ]
+    },
+    {
+     "t": 2.173177,
+     "m": "playVictoryFanfare",
+     "a": []
+    },
+    {
+     "t": 2.199659,
+     "m": "playGatePass",
+     "a": [
+      "MULTIPLY",
+      4
+     ]
+    },
+    {
+     "t": 2.241603,
+     "m": "playVictoryFanfare",
+     "a": []
+    },
+    {
+     "t": 2.252436,
+     "m": "playVictoryFanfare",
+     "a": []
+    },
+    {
+     "t": 2.263949,
+     "m": "playBumperBounce",
+     "a": []
+    },
+    {
+     "t": 2.284015,
+     "m": "playSpinRatchet",
+     "a": [
+      1.3203505272045732
+     ]
+    },
+    {
+     "t": 2.35011,
+     "m": "playBackupPodSound",
+     "a": []
+    },
+    {
+     "t": 2.40916,
+     "m": "playRcsThrust",
+     "a": []
+    },
+    {
+     "t": 2.443297,
+     "m": "playBackupPodSound",
+     "a": []
+    },
+    {
+     "t": 2.455237,
+     "m": "playRcsThrust",
+     "a": []
+    },
+    {
+     "t": 2.519386,
+     "m": "playBackupPodSound",
+     "a": []
+    },
+    {
+     "t": 2.548704,
+     "m": "playGatePass",
+     "a": [
+      "ADD",
+      5
+     ]
+    },
+    {
+     "t": 2.623776,
+     "m": "playSpinRatchet",
+     "a": [
+      1.5486297702416778
+     ]
+    },
+    {
+     "t": 2.661617,
+     "m": "playRcsThrust",
+     "a": []
+    },
+    {
+     "t": 2.757241,
+     "m": "playSpinRatchet",
+     "a": [
+      1.2211716262623669
+     ]
+    },
+    {
+     "t": 2.818207,
+     "m": "playDebrisCollision",
+     "a": [
+      0.19025915767997503,
+      "solar"
+     ]
+    },
+    {
+     "t": 2.895092,
+     "m": "playDebrisCollision",
+     "a": [
+      0.39755229093134403,
+      "volatile"
+     ]
+    },
+    {
+     "t": 2.953689,
+     "m": "playHazardExplosion",
+     "a": []
+    },
+    {
+     "t": 2.980628,
+     "m": "playSpinRatchet",
+     "a": [
+      1.3062108663842082
+     ]
+    },
+    {
+     "t": 3.019777,
+     "m": "playGatePass",
+     "a": [
+      "MULTIPLY",
+      4
+     ]
+    },
+    {
+     "t": 3.039055,
+     "m": "playGatePass",
+     "a": [
+      "ADD",
+      5
+     ]
+    }
+   ],
+   "setup": [],
+   "suspends": [],
+   "noInit": false,
+   "seconds": 4.2725623582766445,
+   "channels": 2,
+   "sampleRate": 44100,
+   "frames": 188421,
+   "rngDraws": 58226,
+   "rms": 0.0783929939,
+   "peak": 0.487585843,
+   "sha256": "8ba665e053a355c00c6e5ca674c7ba64a33d5c0e4dd9a7215b3f670f3d726c45",
+   "bitExactRepeat": false,
+   "repeatMaxAbsDiff": 1.7881393432617188e-7
+  },
+  {
+   "id": "mix_chaos_beef01",
+   "cue": "sequence",
+   "args": [],
+   "calls": [
+    {
+     "t": 0.072562,
+     "m": "playDebrisSwallowed",
+     "a": []
+    },
+    {
+     "t": 0.137717,
+     "m": "playGatePass",
+     "a": [
+      "ADD",
+      5
+     ]
+    },
+    {
+     "t": 0.233391,
+     "m": "playBumperBounce",
+     "a": []
+    },
+    {
+     "t": 0.259104,
+     "m": "playGatePass",
+     "a": [
+      "BOOST",
+      160
+     ]
+    },
+    {
+     "t": 0.302261,
+     "m": "playSpinRatchet",
+     "a": [
+      1.1504591779783369
+     ]
+    },
+    {
+     "t": 0.319323,
+     "m": "playHazardExplosion",
+     "a": []
+    },
+    {
+     "t": 0.366537,
+     "m": "playSpinRatchet",
+     "a": [
+      1.3178887777030468
+     ]
+    },
+    {
+     "t": 0.385351,
+     "m": "playVictoryFanfare",
+     "a": []
+    },
+    {
+     "t": 0.416099,
+     "m": "playHazardExplosion",
+     "a": []
+    },
+    {
+     "t": 0.461002,
+     "m": "playVictoryFanfare",
+     "a": []
+    },
+    {
+     "t": 0.515059,
+     "m": "playSpinRatchet",
+     "a": [
+      1.3056552724912764
+     ]
+    },
+    {
+     "t": 0.572709,
+     "m": "playBumperBounce",
+     "a": []
+    },
+    {
+     "t": 0.659179,
+     "m": "playBumperBounce",
+     "a": []
+    },
+    {
+     "t": 0.710424,
+     "m": "playHazardExplosion",
+     "a": []
+    },
+    {
+     "t": 0.793981,
+     "m": "playBumperBounce",
+     "a": []
+    },
+    {
+     "t": 0.832771,
+     "m": "playDebrisSwallowed",
+     "a": []
+    },
+    {
+     "t": 0.844644,
+     "m": "playBumperBounce",
+     "a": []
+    },
+    {
+     "t": 0.904696,
+     "m": "playHazardExplosion",
+     "a": []
+    },
+    {
+     "t": 0.989297,
+     "m": "playGatePass",
+     "a": [
+      "BOOST",
+      160
+     ]
+    },
+    {
+     "t": 1.046111,
+     "m": "playVictoryFanfare",
+     "a": []
+    },
+    {
+     "t": 1.067543,
+     "m": "playHazardExplosion",
+     "a": []
+    },
+    {
+     "t": 1.105158,
+     "m": "playDebrisSwallowed",
+     "a": []
+    },
+    {
+     "t": 1.115294,
+     "m": "playRcsThrust",
+     "a": []
+    },
+    {
+     "t": 1.145586,
+     "m": "playVictoryFanfare",
+     "a": []
+    },
+    {
+     "t": 1.229448,
+     "m": "playDebrisCollision",
+     "a": [
+      0.2614809633232653,
+      "solar"
+     ]
+    },
+    {
+     "t": 1.306009,
+     "m": "playBumperBounce",
+     "a": []
+    },
+    {
+     "t": 1.333719,
+     "m": "playDebrisSwallowed",
+     "a": []
+    },
+    {
+     "t": 1.420148,
+     "m": "playBumperBounce",
+     "a": []
+    },
+    {
+     "t": 1.496022,
+     "m": "playVictoryFanfare",
+     "a": []
+    },
+    {
+     "t": 1.549824,
+     "m": "playDebrisCollision",
+     "a": [
+      0.24257600586861372,
+      "titanium"
+     ]
+    },
+    {
+     "t": 1.612496,
+     "m": "playBumperBounce",
+     "a": []
+    },
+    {
+     "t": 1.689557,
+     "m": "playVictoryFanfare",
+     "a": []
+    },
+    {
+     "t": 1.728488,
+     "m": "playDebrisCollision",
+     "a": [
+      0.0658098787534982,
+      "volatile"
+     ]
+    },
+    {
+     "t": 1.792433,
+     "m": "playDebrisCollision",
+     "a": [
+      0.9831174574792385,
+      "volatile"
+     ]
+    },
+    {
+     "t": 1.870941,
+     "m": "playSpinRatchet",
+     "a": [
+      1.1461987817659975
+     ]
+    },
+    {
+     "t": 1.883083,
+     "m": "playBackupPodSound",
+     "a": []
+    },
+    {
+     "t": 1.960715,
+     "m": "playGatePass",
+     "a": [
+      "MULTIPLY",
+      4
+     ]
+    },
+    {
+     "t": 2.01603,
+     "m": "playDebrisCollision",
+     "a": [
+      0.41135964496061206,
+      "volatile"
+     ]
+    },
+    {
+     "t": 2.084791,
+     "m": "playBumperBounce",
+     "a": []
+    },
+    {
+     "t": 2.144709,
+     "m": "playVictoryFanfare",
+     "a": []
+    },
+    {
+     "t": 2.201493,
+     "m": "playBackupPodSound",
+     "a": []
+    },
+    {
+     "t": 2.264391,
+     "m": "playRcsThrust",
+     "a": []
+    },
+    {
+     "t": 2.352306,
+     "m": "playDebrisSwallowed",
+     "a": []
+    },
+    {
+     "t": 2.428275,
+     "m": "playRcsThrust",
+     "a": []
+    },
+    {
+     "t": 2.527358,
+     "m": "playDebrisSwallowed",
+     "a": []
+    },
+    {
+     "t": 2.538946,
+     "m": "playDebrisSwallowed",
+     "a": []
+    },
+    {
+     "t": 2.617659,
+     "m": "playBumperBounce",
+     "a": []
+    },
+    {
+     "t": 2.702632,
+     "m": "playVictoryFanfare",
+     "a": []
+    },
+    {
+     "t": 2.745436,
+     "m": "playGatePass",
+     "a": [
+      "MULTIPLY",
+      4
+     ]
+    },
+    {
+     "t": 2.840749,
+     "m": "playVictoryFanfare",
+     "a": []
+    },
+    {
+     "t": 2.920094,
+     "m": "playDebrisSwallowed",
+     "a": []
+    },
+    {
+     "t": 3.003578,
+     "m": "playBackupPodSound",
+     "a": []
+    },
+    {
+     "t": 3.016169,
+     "m": "playBumperBounce",
+     "a": []
+    }
+   ],
+   "setup": [],
+   "suspends": [],
+   "noInit": false,
+   "seconds": 4.2725623582766445,
+   "channels": 2,
+   "sampleRate": 44100,
+   "frames": 188421,
+   "rngDraws": 29122,
+   "rms": 0.0767351002,
+   "peak": 0.444151938,
+   "sha256": "83caf6d5b45b6bee966ac9256f3ecc4a93bcb695ddafd17d65d893614e96d233",
+   "bitExactRepeat": false,
+   "repeatMaxAbsDiff": 8.940696716308594e-8
+  },
+  {
+   "id": "playGatePass__MULTIPLY_4__sfx20",
+   "cue": "playGatePass",
+   "args": [
+    "MULTIPLY",
+    4
+   ],
+   "calls": [
+    {
+     "t": 0.07256235827664399,
+     "m": "playGatePass",
+     "a": [
+      "MULTIPLY",
+      4
+     ]
+    }
+   ],
+   "setup": [
+    {
+     "m": "setSfxVolume",
+     "a": [
+      20
+     ]
+    }
+   ],
+   "suspends": [],
+   "noInit": false,
+   "seconds": 0.472562358276644,
+   "channels": 2,
+   "sampleRate": 44100,
+   "frames": 20840,
+   "rngDraws": 0,
+   "rms": 0.00681145661,
+   "peak": 0.0469992757,
+   "sha256": "d64e28c44df139086267e1930d4a3e0e064d86864cd9e9dd3428b2caddbc731f",
+   "bitExactRepeat": false,
+   "repeatMaxAbsDiff": 7.450580596923828e-9
+  },
+  {
+   "id": "playSuperShredderPass__null_4__sfx100",
+   "cue": "playSuperShredderPass",
+   "args": [
+    null,
+    4
+   ],
+   "calls": [
+    {
+     "t": 0.07256235827664399,
+     "m": "playSuperShredderPass",
+     "a": [
+      null,
+      4
+     ]
+    }
+   ],
+   "setup": [
+    {
+     "m": "setSfxVolume",
+     "a": [
+      100
+     ]
+    }
+   ],
+   "suspends": [],
+   "noInit": false,
+   "seconds": 0.472562358276644,
+   "channels": 2,
+   "sampleRate": 44100,
+   "frames": 20840,
+   "rngDraws": 0,
+   "rms": 0.0340572824,
+   "peak": 0.234996364,
+   "sha256": "beccbc9099a8f9d77e38305191de56f236e84a6cbac939f9d670df4827fd0f42",
+   "bitExactRepeat": true,
+   "repeatMaxAbsDiff": 0
+  },
+  {
+   "id": "playBumperBounce__none__sfx0",
+   "cue": "playBumperBounce",
+   "args": [],
+   "calls": [
+    {
+     "t": 0.07256235827664399,
+     "m": "playBumperBounce",
+     "a": []
+    }
+   ],
+   "setup": [
+    {
+     "m": "setSfxVolume",
+     "a": [
+      0
+     ]
+    }
+   ],
+   "suspends": [],
+   "noInit": false,
+   "seconds": 0.272562358276644,
+   "channels": 2,
+   "sampleRate": 44100,
+   "frames": 12020,
+   "rngDraws": 1,
+   "rms": 0,
+   "peak": 0,
+   "sha256": "bf3b9af2aa681b4808aa7b4c2f24b88af765468c963e384c1cc68b9d4de7c38c",
+   "bitExactRepeat": true,
+   "repeatMaxAbsDiff": 0
+  },
+  {
+   "id": "playBackupPodSound__none__amb0",
+   "cue": "playBackupPodSound",
+   "args": [],
+   "calls": [
+    {
+     "t": 0.07256235827664399,
+     "m": "playBackupPodSound",
+     "a": []
+    }
+   ],
+   "setup": [
+    {
+     "m": "setAmbienceVolume",
+     "a": [
+      0
+     ]
+    }
+   ],
+   "suspends": [],
+   "noInit": false,
+   "seconds": 0.8725623582766441,
+   "channels": 2,
+   "sampleRate": 44100,
+   "frames": 38481,
+   "rngDraws": 0,
+   "rms": 0.0419375296,
+   "peak": 0.24624823,
+   "sha256": "93fbf1653617a499edb143125230fc0603c7a92054ae98f7e5338436560ec425",
+   "bitExactRepeat": true,
+   "repeatMaxAbsDiff": 0
+  },
+  {
+   "id": "playHazardExplosion__none__sfx150",
+   "cue": "playHazardExplosion",
+   "args": [],
+   "calls": [
+    {
+     "t": 0.07256235827664399,
+     "m": "playHazardExplosion",
+     "a": []
+    }
+   ],
+   "setup": [
+    {
+     "m": "setSfxVolume",
+     "a": [
+      150
+     ]
+    },
+    {
+     "m": "setAmbienceVolume",
+     "a": [
+      "abc"
+     ]
+    }
+   ],
+   "suspends": [],
+   "noInit": false,
+   "seconds": 0.472562358276644,
+   "channels": 2,
+   "sampleRate": 44100,
+   "frames": 20840,
+   "rngDraws": 0,
+   "rms": 0.0235908341,
+   "peak": 0.234141573,
+   "sha256": "de992e1f2e3ac092e8018b2ba7ce4d41e96db2e3d22715a4073470b89fc7ce9c",
+   "bitExactRepeat": true,
+   "repeatMaxAbsDiff": 0
+  },
+  {
+   "id": "mute_before_cue",
+   "cue": "sequence",
+   "args": [],
+   "calls": [
+    {
+     "t": 0.02,
+     "m": "toggleMute",
+     "a": []
+    },
+    {
+     "t": 0.07256235827664399,
+     "m": "playGatePass",
+     "a": [
+      "MULTIPLY",
+      2
+     ]
+    },
+    {
+     "t": 0.172562358276644,
+     "m": "playDebrisCollision",
+     "a": [
+      1,
+      "solar"
+     ]
+    }
+   ],
+   "setup": [],
+   "suspends": [],
+   "noInit": false,
+   "seconds": 0.572562358276644,
+   "channels": 2,
+   "sampleRate": 44100,
+   "frames": 25251,
+   "rngDraws": 0,
+   "rms": 0,
+   "peak": 0,
+   "sha256": "e23e96498758cfc057413e0beb4a1576c9fe36469f1f36165460e4e40dde8dd7",
+   "bitExactRepeat": true,
+   "repeatMaxAbsDiff": 0
+  },
+  {
+   "id": "mute_cycle",
+   "cue": "sequence",
+   "args": [],
+   "calls": [
+    {
+     "t": 0.07256235827664399,
+     "m": "playVictoryFanfare",
+     "a": []
+    }
+   ],
+   "setup": [],
+   "suspends": [
+    {
+     "at": 0.36281179138321995,
+     "calls": [
+      {
+       "m": "toggleMute",
+       "a": []
+      }
+     ]
+    },
+    {
+     "at": 0.7256235827664399,
+     "calls": [
+      {
+       "m": "toggleMute",
+       "a": []
+      },
+      {
+       "m": "playBoosterPass",
+       "a": []
+      }
+     ]
+    }
+   ],
+   "noInit": false,
+   "seconds": 1.8,
+   "channels": 2,
+   "sampleRate": 44100,
+   "frames": 79380,
+   "rngDraws": 0,
+   "rms": 0.0221848168,
+   "peak": 0.238994762,
+   "sha256": "fcfbe6403593affce93b43e3aef67b96f21382630d19a01d86bca0515f34e8ff",
+   "bitExactRepeat": true,
+   "repeatMaxAbsDiff": 0
+  },
+  {
+   "id": "playSpinRatchet__1__unaligned",
+   "cue": "playSpinRatchet",
+   "args": [
+    1
+   ],
+   "calls": [
+    {
+     "t": 0.07386167800453515,
+     "m": "playSpinRatchet",
+     "a": [
+      1
+     ]
+    }
+   ],
+   "setup": [],
+   "suspends": [],
+   "noInit": false,
+   "seconds": 0.19386167800453513,
+   "channels": 2,
+   "sampleRate": 44100,
+   "frames": 8550,
+   "rngDraws": 0,
+   "rms": 0.00135320048,
+   "peak": 0.0156227592,
+   "sha256": "89018783a2da1cc9039acf249341b52c30ad94969ed3a3cae466a4206aa542e2",
+   "bitExactRepeat": true,
+   "repeatMaxAbsDiff": 0
+  },
+  {
+   "id": "playShredderPass__null_2__unaligned",
+   "cue": "playShredderPass",
+   "args": [
+    null,
+    2
+   ],
+   "calls": [
+    {
+     "t": 0.07386167800453515,
+     "m": "playShredderPass",
+     "a": [
+      null,
+      2
+     ]
+    }
+   ],
+   "setup": [],
+   "suspends": [],
+   "noInit": false,
+   "seconds": 0.47386167800453516,
+   "channels": 2,
+   "sampleRate": 44100,
+   "frames": 20898,
+   "rngDraws": 0,
+   "rms": 0.0103362514,
+   "peak": 0.143343389,
+   "sha256": "ca590f3c811e4a135769b1dd36e7acaebf0a329c2fc2d06fe9eaf0411d68798f",
+   "bitExactRepeat": true,
+   "repeatMaxAbsDiff": 0
+  },
+  {
+   "id": "playRcsThrust__none__unaligned",
+   "cue": "playRcsThrust",
+   "args": [],
+   "calls": [
+    {
+     "t": 0.07386167800453515,
+     "m": "playRcsThrust",
+     "a": []
+    }
+   ],
+   "setup": [],
+   "suspends": [],
+   "noInit": false,
+   "seconds": 0.47386167800453516,
+   "channels": 2,
+   "sampleRate": 44100,
+   "frames": 20898,
+   "rngDraws": 9702,
+   "rms": 0.00398185733,
+   "peak": 0.0686054155,
+   "sha256": "d7d18ac23c21936adcd433007de0b58ca0178f82dd68a206063e4c82b6e16b8e",
+   "bitExactRepeat": true,
+   "repeatMaxAbsDiff": 0
+  },
+  {
+   "id": "playDebrisSwallowed__none__unaligned",
+   "cue": "playDebrisSwallowed",
+   "args": [],
+   "calls": [
+    {
+     "t": 0.07386167800453515,
+     "m": "playDebrisSwallowed",
+     "a": []
+    }
+   ],
+   "setup": [],
+   "suspends": [],
+   "noInit": false,
+   "seconds": 0.6738616780045351,
+   "channels": 2,
+   "sampleRate": 44100,
+   "frames": 29718,
+   "rngDraws": 0,
+   "rms": 0.0300449882,
+   "peak": 0.226041719,
+   "sha256": "b43913fb6171ffcd0e9dcf9b57dad16e0715ecd3204c6eec1106b433703a67e5",
+   "bitExactRepeat": true,
+   "repeatMaxAbsDiff": 0
+  },
+  {
+   "id": "playVictoryFanfare__none__unaligned",
+   "cue": "playVictoryFanfare",
+   "args": [],
+   "calls": [
+    {
+     "t": 0.07386167800453515,
+     "m": "playVictoryFanfare",
+     "a": []
+    }
+   ],
+   "setup": [],
+   "suspends": [],
+   "noInit": false,
+   "seconds": 1.273861678004535,
+   "channels": 2,
+   "sampleRate": 44100,
+   "frames": 56178,
+   "rngDraws": 0,
+   "rms": 0.0337726799,
+   "peak": 0.240399808,
+   "sha256": "d86d37fc3cf98f4187496c509d4ac86883987ff94c91a420ea387fa6e213483c",
+   "bitExactRepeat": true,
+   "repeatMaxAbsDiff": 0
+  },
+  {
+   "id": "playDebrisCollision__0p8_solar__unaligned",
+   "cue": "playDebrisCollision",
+   "args": [
+    0.8,
+    "solar"
+   ],
+   "calls": [
+    {
+     "t": 0.07386167800453515,
+     "m": "playDebrisCollision",
+     "a": [
+      0.8,
+      "solar"
+     ]
+    }
+   ],
+   "setup": [],
+   "suspends": [],
+   "noInit": false,
+   "seconds": 0.22386167800453516,
+   "channels": 2,
+   "sampleRate": 44100,
+   "frames": 9873,
+   "rngDraws": 1,
+   "rms": 0.00694504428,
+   "peak": 0.0943383351,
+   "sha256": "b6524fab1e87ab2b7a09e09d71169890531edd4ea28cf222d7155f89bd6c87b0",
+   "bitExactRepeat": true,
+   "repeatMaxAbsDiff": 0
+  },
+  {
+   "id": "playBumperBounce__none__unaligned",
+   "cue": "playBumperBounce",
+   "args": [],
+   "calls": [
+    {
+     "t": 0.07386167800453515,
+     "m": "playBumperBounce",
+     "a": []
+    }
+   ],
+   "setup": [],
+   "suspends": [],
+   "noInit": false,
+   "seconds": 0.27386167800453515,
+   "channels": 2,
+   "sampleRate": 44100,
+   "frames": 12078,
+   "rngDraws": 1,
+   "rms": 0.0177323338,
+   "peak": 0.166375697,
+   "sha256": "dcd39dbff2284fd5f616ad88f34ac2398ba3895aecd2944b0cca75f6ced832de",
+   "bitExactRepeat": true,
+   "repeatMaxAbsDiff": 0
+  },
+  {
+   "id": "init_twice_then_cues",
+   "cue": "sequence",
+   "args": [],
+   "calls": [
+    {
+     "t": 0,
+     "m": "publicInit",
+     "a": []
+    },
+    {
+     "t": 0.07256235827664399,
+     "m": "playDebrisCollision",
+     "a": [
+      1,
+      "solar"
+     ]
+    },
+    {
+     "t": 0.08256235827664399,
+     "m": "playDebrisCollision",
+     "a": [
+      1,
+      "solar"
+     ]
+    },
+    {
+     "t": 0.172562358276644,
+     "m": "playBumperBounce",
+     "a": []
+    },
+    {
+     "t": 0.272562358276644,
+     "m": "playRcsThrust",
+     "a": []
+    }
+   ],
+   "setup": [],
+   "suspends": [],
+   "noInit": false,
+   "seconds": 0.772562358276644,
+   "channels": 2,
+   "sampleRate": 44100,
+   "frames": 34070,
+   "rngDraws": 9704,
+   "rms": 0.0129487997,
+   "peak": 0.186884314,
+   "sha256": "1958218e4ac06c062fe29eb2fdb48d26bb7204c02f2a9deb0c6af59312a7bcbe",
+   "bitExactRepeat": true,
+   "repeatMaxAbsDiff": 0
+  }
+ ]
+}
