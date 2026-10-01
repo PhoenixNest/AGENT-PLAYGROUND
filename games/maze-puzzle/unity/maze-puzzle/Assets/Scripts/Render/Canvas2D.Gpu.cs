@@ -142,8 +142,11 @@ namespace OrbitalSalvage.Render
 
         // ---- edges ----------------------------------------------------------------------------
 
-        bool EmitEdges(PolygonSet ps, double dx, double dy, out PixelRect rect, out int ebase, out int ecount)
+        bool snapY;
+
+        bool EmitEdges(PolygonSet ps, double dx, double dy, out PixelRect rect, out int ebase, out int ecount, bool snap = true)
         {
+            snapY = snap;
             rect = default; ebase = edgeCount; ecount = 0;
             double minX = double.MaxValue, minY = double.MaxValue, maxX = double.MinValue, maxY = double.MinValue;
             var pts = ps.pts;
@@ -188,6 +191,14 @@ namespace OrbitalSalvage.Render
 
         void AddEdge(double x0, double y0, double x1, double y1)
         {
+            if (snapY)
+            {
+                double sy0 = Math.Floor(y0 * 4 + 0.5) * 0.25, sy1 = Math.Floor(y1 * 4 + 0.5) * 0.25;
+                if (sy0 == sy1) return;
+                double slope = (x1 - x0) / (y1 - y0);
+                double nx0 = x0 + (sy0 - y0) * slope, nx1 = x0 + (sy1 - y0) * slope;
+                x0 = nx0; x1 = nx1; y0 = sy0; y1 = sy1;
+            }
             if (y0 == y1) return;
             double H = Height, W = Width;
             if (Math.Max(y0, y1) <= 0 || Math.Min(y0, y1) >= H) return;
@@ -301,16 +312,16 @@ namespace OrbitalSalvage.Render
             Draw(matAccum, AccPass, 6 * ecount, pb);
         }
 
-        void RenderShape(PolygonSet ps, bool evenOdd, bool stroke, float alphaMul)
+        void RenderShape(PolygonSet ps, bool evenOdd, bool stroke, float alphaMul, bool snap = true)
         {
             var st = state;
             if (st.globalAlpha <= 0) return;
             if (!st.ctm.IsInvertible) return;
             float alpha = (float)(st.globalAlpha * alphaMul);
             bool shadow = st.shadowColor.a > 0 && (st.shadowBlur > 0 || st.shadowOffsetX != 0 || st.shadowOffsetY != 0);
-            if (shadow) RenderShadow(ps, evenOdd, stroke, alpha);
+            if (shadow) RenderShadow(ps, evenOdd, stroke, alpha, snap);
 
-            if (!EmitEdges(ps, 0, 0, out var rect, out int ebase, out int ecount)) return;
+            if (!EmitEdges(ps, 0, 0, out var rect, out int ebase, out int ecount, snap)) return;
             int pb = NewParams();
             if (!WritePaint(pb, stroke, alpha)) return;
             prm[pb + IdxFlags] = new Vector4(0, evenOdd ? 1 : 0, 0, 0);
@@ -320,14 +331,14 @@ namespace OrbitalSalvage.Render
             Draw(matFill, FillSourceOver, 6, pb);
         }
 
-        void RenderShadow(PolygonSet ps, bool evenOdd, bool stroke, float alpha)
+        void RenderShadow(PolygonSet ps, bool evenOdd, bool stroke, float alpha, bool snap)
         {
             var st = state;
             double dx = st.shadowOffsetX * ShadowScale, dy = st.shadowOffsetY * ShadowScale;
             double blur = st.shadowBlur * ShadowScale;
             double sigma = blur * 0.5;
             int radius = sigma > 0 ? (int)Math.Ceiling(sigma * 3) : 0;
-            if (!EmitEdges(ps, dx, dy, out var rect, out int ebase, out int ecount)) return;
+            if (!EmitEdges(ps, dx, dy, out var rect, out int ebase, out int ecount, snap)) return;
             var full = new PixelRect(0, 0, Width, Height);
             int pbA = NewParams();
             if (!WritePaint(pbA, stroke, alpha)) return;
@@ -373,9 +384,9 @@ namespace OrbitalSalvage.Render
             Draw(matFill, FillSourceOver, 6, pbF);
         }
 
-        void RenderClear(PolygonSet ps)
+        void RenderClear(PolygonSet ps, bool snap)
         {
-            if (!EmitEdges(ps, 0, 0, out var rect, out int ebase, out int ecount)) return;
+            if (!EmitEdges(ps, 0, 0, out var rect, out int ebase, out int ecount, snap)) return;
             int pb = NewParams();
             prm[pb + IdxFlags] = new Vector4(0, 0, 0, 0);
             BindClip(pb);
@@ -396,7 +407,7 @@ namespace OrbitalSalvage.Render
             var next = NextClipRT();
             int pb = NewParams();
             SetRect(pb, 0, 0, Width, Height);
-            bool any = EmitEdges(ps, 0, 0, out var rect, out int ebase, out int ecount);
+            bool any = EmitEdges(ps, 0, 0, out var rect, out int ebase, out int ecount, true);
             prm[pb + IdxFlags] = new Vector4(0, evenOdd ? 1 : 0, state.clip != null ? 1f : 0f, 0);
             cmd.SetRenderTarget(accum);
             cmd.ClearRenderTarget(false, true, Color.clear);

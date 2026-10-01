@@ -53,12 +53,12 @@ namespace OrbitalSalvage.Render
                     dst.RemoveAt(dst.Count - 1);
         }
 
-        public void Stroke(IList<Vec2d> input, bool closed, PolygonSet output, double eps)
+        public void Stroke(IList<Vec2d> input, bool closed, PolygonSet output, double eps, bool allowDot = false)
         {
             Dedupe(input, closed, work, eps);
             int n = work.Count;
             if (n == 0) return;
-            if (n == 1) { Dot(work[0], output); return; }
+            if (n == 1) { if (allowDot) Dot(work[0], output); return; }
             if (closed && n >= 2) StrokeClosed(work, output);
             else StrokeOpen(work, output);
         }
@@ -231,7 +231,7 @@ namespace OrbitalSalvage.Render
             var pts = new List<Vec2d>(src.Count + 1);
             Stroker.Dedupe(src, closed, pts, eps);
             if (pts.Count == 0) return;
-            if (pts.Count == 1) { var d = New(pool); d.Add(pts[0]); d.Add(pts[0]); result.Add(d); return; }
+            if (pts.Count == 1) return;
             if (closed) pts.Add(pts[0]);
 
             double total = 0;

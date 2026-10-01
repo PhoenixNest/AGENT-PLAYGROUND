@@ -79,6 +79,9 @@ def compare(ref_path, test_path, heat_path):
     hm[worst == 0] = (0, 0, 40)
     os.makedirs(os.path.dirname(heat_path), exist_ok=True)
     Image.fromarray(hm).save(heat_path)
+    if ref.shape[1] <= 1400:
+        tri = np.concatenate([ref, np.full((ref.shape[0], 6, 3), 60, np.uint8), test, np.full((ref.shape[0], 6, 3), 60, np.uint8), hm], axis=1)
+        Image.fromarray(tri).save(heat_path.replace("_diff.png", "_cmp.png"))
 
     return {
         "pix16": pix16, "ssim": s, "roi16": roi16, "roi_ssim": roi_ssim,
@@ -108,9 +111,10 @@ def main():
         name = os.path.splitext(f)[0]
         if args.filter and args.filter not in name:
             continue
-        kind = "scene" if name in scene_names else "stream"
+        base = name.split("~")[0]
+        kind = "scene" if base in scene_names else "stream"
         ref_dir = args.scenes if kind == "scene" else args.streams
-        ref_path = os.path.join(ref_dir, f)
+        ref_path = os.path.join(ref_dir, base + ".png")
         if not os.path.exists(ref_path):
             print(f"{name}: no reference at {ref_path}", file=sys.stderr)
             continue
@@ -126,6 +130,13 @@ def main():
             print(f"{name:28s} {r['error']}")
         else:
             print(f"{name:28s} pix16 {r['pix16']:7.3f}  ssim {r['ssim']:.4f}  roi16 {r['roi16']:7.3f}  roi_ssim {r['roi_ssim']:.4f}  max {r['max']:3d}  edge_max {r['edge_max']:3d}  {'PASS' if r['pass'] else 'FAIL'}")
+
+    tags = {}
+    for r in rows:
+        if "~" in r["name"] and "error" not in r:
+            tags.setdefault(r["name"].split("~", 1)[1], []).append(r)
+    for tag, rs in sorted(tags.items()):
+        print(f"{tag:50s} mean pix16 {np.mean([x['pix16'] for x in rs]):7.3f}  mean ssim {np.mean([x['ssim'] for x in rs]):.4f}  mean roi16 {np.mean([x['roi16'] for x in rs]):7.3f}  n={len(rs)}")
 
     with open(os.path.join(args.out, "results.json"), "w") as fh:
         json.dump(rows, fh, indent=1)

@@ -36,7 +36,7 @@ namespace OrbitalSalvage.Render
             tmpPath.Reset();
             tmpPath.Rect(state.ctm, dx, dy, dw, dh);
             BuildFillPolygons(tmpPath, polys);
-            if (!EmitEdges(polys, 0, 0, out var rect, out int ebase, out int ecount)) return;
+            if (!EmitEdges(polys, 0, 0, out var rect, out int ebase, out int ecount, false)) return;
 
             int pb = NewParams();
             prm[pb + IdxAlpha] = new Vector4((float)state.globalAlpha, 0, 0, 0);
