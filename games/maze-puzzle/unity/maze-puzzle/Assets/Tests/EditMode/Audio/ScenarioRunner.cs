@@ -100,7 +100,8 @@ namespace OrbitalSalvage.AudioDsp.Tests
         public int Frames;
         public double Rms;
         public double Peak;
-        public string Sha256;
+        // rms of 32 equal segments per channel, fingerprint[channel][segment]; null when the entry has none.
+        public double[][] Fingerprint;
 
         static List<ScenarioCall> ParseCalls(object node)
         {
@@ -151,7 +152,21 @@ namespace OrbitalSalvage.AudioDsp.Tests
             s.Frames = d.ContainsKey("frames") ? (int)(double)d["frames"] : 0;
             s.Rms = d.ContainsKey("rms") ? (double)d["rms"] : 0.0;
             s.Peak = d.ContainsKey("peak") ? (double)d["peak"] : 0.0;
-            s.Sha256 = d.ContainsKey("sha256") ? (string)d["sha256"] : null;
+            if (d.ContainsKey("fingerprint") && d["fingerprint"] is List<object>)
+            {
+                List<object> chans = (List<object>)d["fingerprint"];
+                s.Fingerprint = new double[chans.Count][];
+                for (int c = 0; c < chans.Count; c++)
+                {
+                    List<object> seg = (List<object>)chans[c];
+                    s.Fingerprint[c] = new double[seg.Count];
+                    for (int i = 0; i < seg.Count; i++)
+                    {
+                        s.Fingerprint[c][i] = (double)seg[i];
+                    }
+                }
+            }
+
             return s;
         }
     }

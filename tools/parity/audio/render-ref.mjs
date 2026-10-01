@@ -79,6 +79,27 @@ function stats(channels) {
   return { rms: Math.sqrt(sum / count), peak };
 }
 
+// Committed statistics are rounded to 1e-7 so that a legitimate re-render (Chromium output differs by ~3e-8)
+// almost never changes the manifest; the test compares them within 1e-6 absolute.
+const round7 = (x) => Number(x.toFixed(7));
+const FINGERPRINT_SEGMENTS = 32;
+
+// rms of FINGERPRINT_SEGMENTS equal segments per channel (the last segment takes the remainder).
+function fingerprint(channels) {
+  return channels.map((ch) => {
+    const out = [];
+    const n = ch.length;
+    for (let s = 0; s < FINGERPRINT_SEGMENTS; s++) {
+      const from = Math.floor((s * n) / FINGERPRINT_SEGMENTS);
+      const to = Math.floor(((s + 1) * n) / FINGERPRINT_SEGMENTS);
+      let sum = 0;
+      for (let i = from; i < to; i++) sum += ch[i] * ch[i];
+      out.push(round7(to > from ? Math.sqrt(sum / (to - from)) : 0));
+    }
+    return out;
+  });
+}
+
 function sha(channels) {
   const h = createHash("sha256");
   for (const ch of channels) h.update(Buffer.from(ch.buffer, ch.byteOffset, ch.byteLength));
@@ -102,6 +123,7 @@ const withTimeout = (p, ms, what) =>
   Promise.race([p, new Promise((_, rej) => setTimeout(() => rej(new Error(`timeout: ${what}`)), ms))]);
 
 const entries = [];
+const local = {};
 for (const sc of scenarios) {
   const payload = { ...sc };
   const first = await withTimeout(page.evaluate((s) => window.__render(s), payload), 60000, sc.id);
@@ -120,7 +142,13 @@ for (const sc of scenarios) {
     }
   }
   const { rms, peak } = stats(a);
-  writeWavFloat32(join(outRef, `${sc.id}.wav`), a, SAMPLE_RATE);
+  const wavPath = join(outRef, `${sc.id}.wav`);
+  writeWavFloat32(wavPath, a, SAMPLE_RATE);
+  local[`${sc.id}.wav`] = {
+    sha256: createHash("sha256").update(readFileSync(wavPath)).digest("hex"),
+    bitExactRepeat: hashA === hashB,
+    repeatMaxAbsDiff: selfDiff,
+  };
   entries.push({
     id: sc.id,
     cue: sc.cue,
@@ -134,11 +162,9 @@ for (const sc of scenarios) {
     sampleRate: SAMPLE_RATE,
     frames: first.frames,
     rngDraws: first.draws,
-    rms: Number(rms.toPrecision(9)),
-    peak: Number(peak.toPrecision(9)),
-    sha256: hashA,
-    bitExactRepeat: hashA === hashB,
-    repeatMaxAbsDiff: selfDiff,
+    rms: round7(rms),
+    peak: round7(peak),
+    fingerprint: fingerprint(a),
   });
   console.log(`${sc.id}  frames=${first.frames} rms=${rms.toExponential(3)} peak=${peak.toFixed(4)} draws=${first.draws}${selfDiff ? ` repeatDiff=${selfDiff.toExponential(2)}` : ""}`);
 }
@@ -146,6 +172,15 @@ for (const sc of scenarios) {
 const version = browser.version();
 await browser.close();
 server.close();
+
+// out/ref/manifest.local.json: sha256 of the WAV files this run wrote (corruption check; never committed, out/ is
+// gitignored). A partial run (id filter) merges into the existing file.
+const localPath = join(outRef, "manifest.local.json");
+let localFiles = {};
+if (only.length > 0 && existsSync(localPath)) localFiles = JSON.parse(readFileSync(localPath, "utf8")).files ?? {};
+Object.assign(localFiles, local);
+writeFileSync(localPath, JSON.stringify({ chromium: version, sampleRate: SAMPLE_RATE, files: localFiles }, null, 1) + "\n");
+console.log(`wrote ${localPath} (${Object.keys(localFiles).length} files)`);
 
 if (only.length === 0) {
   writeFileSync(
