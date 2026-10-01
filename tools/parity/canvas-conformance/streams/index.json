@@ -1,0 +1,219 @@
+{
+ "streams": [
+  {
+   "name": "s01_f001",
+   "ops": 2174,
+   "frame": 1
+  },
+  {
+   "name": "s01_f060",
+   "ops": 2328,
+   "frame": 60
+  },
+  {
+   "name": "s01_f180",
+   "ops": 2192,
+   "frame": 180
+  },
+  {
+   "name": "s01_vfx1",
+   "ops": 2891,
+   "frame": 181
+  },
+  {
+   "name": "s01_vfx2",
+   "ops": 3106,
+   "frame": 190
+  },
+  {
+   "name": "s01_pause",
+   "ops": 3169,
+   "frame": 202
+  },
+  {
+   "name": "s11_f001",
+   "ops": 2450,
+   "frame": 1
+  },
+  {
+   "name": "s11_f060",
+   "ops": 2585,
+   "frame": 60
+  },
+  {
+   "name": "s11_f180",
+   "ops": 2508,
+   "frame": 180
+  },
+  {
+   "name": "s11_vfx1",
+   "ops": 3217,
+   "frame": 181
+  },
+  {
+   "name": "s11_vfx2",
+   "ops": 3365,
+   "frame": 190
+  },
+  {
+   "name": "s11_pause",
+   "ops": 3338,
+   "frame": 202
+  },
+  {
+   "name": "s21_f001",
+   "ops": 2667,
+   "frame": 1
+  },
+  {
+   "name": "s21_f060",
+   "ops": 2662,
+   "frame": 60
+  },
+  {
+   "name": "s21_f180",
+   "ops": 2644,
+   "frame": 180
+  },
+  {
+   "name": "s21_vfx1",
+   "ops": 3343,
+   "frame": 181
+  },
+  {
+   "name": "s21_vfx2",
+   "ops": 3511,
+   "frame": 190
+  },
+  {
+   "name": "s21_pause",
+   "ops": 3544,
+   "frame": 202
+  },
+  {
+   "name": "s31_f001",
+   "ops": 2654,
+   "frame": 1
+  },
+  {
+   "name": "s31_f060",
+   "ops": 2659,
+   "frame": 60
+  },
+  {
+   "name": "s31_f180",
+   "ops": 2763,
+   "frame": 180
+  },
+  {
+   "name": "s31_vfx1",
+   "ops": 3462,
+   "frame": 181
+  },
+  {
+   "name": "s31_vfx2",
+   "ops": 3620,
+   "frame": 190
+  },
+  {
+   "name": "s31_pause",
+   "ops": 3613,
+   "frame": 202
+  },
+  {
+   "name": "s41_f001",
+   "ops": 3158,
+   "frame": 1
+  },
+  {
+   "name": "s41_f060",
+   "ops": 2981,
+   "frame": 60
+  },
+  {
+   "name": "s41_f180",
+   "ops": 2963,
+   "frame": 180
+  },
+  {
+   "name": "s41_vfx1",
+   "ops": 3662,
+   "frame": 181
+  },
+  {
+   "name": "s41_vfx2",
+   "ops": 3850,
+   "frame": 190
+  },
+  {
+   "name": "s41_pause",
+   "ops": 3803,
+   "frame": 202
+  }
+ ],
+ "histogram": {
+  "methods": {
+   "setTransform": 30,
+   "clearRect": 30,
+   "createLinearGradient": 60,
+   "addColorStop": 432,
+   "fillRect": 1167,
+   "save": 6875,
+   "beginPath": 11749,
+   "arc": 7461,
+   "fill": 8631,
+   "ellipse": 100,
+   "stroke": 5937,
+   "restore": 6875,
+   "translate": 5099,
+   "moveTo": 3326,
+   "quadraticCurveTo": 4080,
+   "lineTo": 3272,
+   "closePath": 258,
+   "setLineDash": 120,
+   "scale": 246,
+   "createRadialGradient": 84,
+   "rotate": 2131,
+   "fillText": 336,
+   "rect": 936,
+   "roundRect": 424,
+   "strokeText": 162
+  },
+  "props": {
+   "fillStyle": 8828,
+   "strokeStyle": 4549,
+   "lineWidth": 4425,
+   "lineCap": 468,
+   "lineDashOffset": 30,
+   "shadowColor": 75,
+   "shadowBlur": 105,
+   "globalAlpha": 1795,
+   "font": 336,
+   "textAlign": 306,
+   "textBaseline": 144
+  },
+  "colors": {
+   "addColorStop:hex6": 252,
+   "fillStyle:gradient": 144,
+   "fillStyle:hex6": 8450,
+   "fillStyle:rgba()": 234,
+   "strokeStyle:hex6": 4175,
+   "addColorStop:hex8": 120,
+   "addColorStop:rgba()": 60,
+   "shadowColor:hex6": 75,
+   "strokeStyle:rgba()": 284,
+   "strokeStyle:hex8": 90
+  },
+  "fonts": {},
+  "values": {
+   "lineCap=round": 468,
+   "font=bold 13px Fredoka, sans-serif": 30,
+   "textAlign=center": 306,
+   "textBaseline=middle": 144,
+   "font=11px Nunito, sans-serif": 30,
+   "font=bold 10px Fredoka, sans-serif": 108,
+   "font=900 16px Fredoka, sans-serif": 162,
+   "font=900 10.5px Fredoka, sans-serif": 6
+  }
+ }
+}
