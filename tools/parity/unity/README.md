@@ -22,7 +22,7 @@ pwsh tools/parity/unity/capture.ps1 -Out tools/parity/out/unity
 | `-WindowStyle` | default `Minimized` |
 | `-TimeoutSec` | player timeout |
 
-Exit codes: 0 ok, 1 one or more captures failed, 2 usage or invalid states file. Unsupported ops are not failures: they are recorded in `<state>__<profile>.unity-notes.json` and the capture still happens.
+Exit codes: 0 ok, 1 one or more captures failed, 2 usage or invalid states file. Unsupported ops are not failures: they are recorded in `<state>__<profile>.unity-notes.json` and the capture still happens. An op that cannot execute on the baseline UI (unmapped id, target not visible, no RectTransform, unknown page, selector outside 8.1) is `unsupported` in the notes and does not change the exit code; only infrastructure failures (a manager missing from the scene, an exception in the runner, a capture that cannot be written, a timeout) give exit 1.
 
 Player CLI (SPEC section 11): `OrbitalSalvageParity.exe --parity <statesJson> <outDir> [--only ids] [--profile p] [--summary dir]`.
 
