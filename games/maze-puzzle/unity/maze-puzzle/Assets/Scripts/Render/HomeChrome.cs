@@ -11,8 +11,8 @@ namespace OrbitalSalvage.Render
     /// <c>tools/parity/web/dump-spec.mjs</c> by <c>web/distill-spec.mjs</c>) with <see cref="Canvas2D"/>: every visible element is a
     /// <see cref="CssBox"/> plus its text runs (outline glyph text) and emoji images, at the rect Chromium reports in CSS px.
     /// The spec carries a rect set per safe-area profile, so zero and iphone differ exactly as measured.
-    /// Deferred (not drawn, listed in <see cref="Deferred"/>): filters, inset shadows, the pedestal diorama,
-    /// the play-button shine, and CSS animations (elements sit at their measured rect only). Backdrop blur is drawn.
+    /// Deferred (not drawn, listed in <see cref="Deferred"/>): filters, blurred inset shadows, and CSS animations
+    /// other than the play-button shine (elements sit at their measured rect; the shine uses its sampled matrix).
     /// </summary>
     public sealed class HomeChrome : IDisposable
     {
@@ -31,6 +31,7 @@ namespace OrbitalSalvage.Render
         public readonly string Profile;
         public readonly Dictionary<string, int> Deferred = new Dictionary<string, int>();
         public int DrawnBoxes, DrawnRuns, DrawnEmoji;
+        Dictionary<int, Dictionary<string, object>> byId;
 
         public RenderTexture Target => canvas.Target;
         public int PixelWidth => canvas.Width;
@@ -173,6 +174,7 @@ namespace OrbitalSalvage.Render
             var r = Rect(e);
             // A rotated square's measured box is the AABB, which is larger than the circle drawn inside it.
             UnrotateCircle(e, r);
+            double tilt = InheritedTilt(e, r);
             if (r[2] <= 0 || r[3] <= 0) return;
             var style = new CssBoxStyle { x = r[0], y = r[1], w = r[2], h = r[3] };
             bool any = false;
@@ -197,7 +199,16 @@ namespace OrbitalSalvage.Render
             foreach (var sh in style.shadows)
                 if (sh.color.a > 0) any = true;
             if (!any) return;
+            if (tilt != 0)
+            {
+                double cx = style.x + style.w * 0.5, cy = style.y + style.h * 0.5;
+                canvas.Save();
+                canvas.Translate(cx, cy);
+                canvas.Rotate(tilt);
+                canvas.Translate(-cx, -cy);
+            }
             CssBox.Draw(canvas, style, alpha);
+            if (tilt != 0) canvas.Restore();
             DrawnBoxes++;
         }
 
@@ -307,6 +318,57 @@ namespace OrbitalSalvage.Render
             CssBox.Draw(canvas, style, alpha);
             canvas.Restore();
             DrawnBoxes++;
+        }
+
+        /// <summary>
+        /// A child of a rotated element is measured as an axis-aligned box. Circles ignore that rotation.
+        /// Anything else is drawn at its pre-rotation size and rotated about the box centre by the accumulated angle.
+        /// </summary>
+        double InheritedTilt(Dictionary<string, object> e, double[] r)
+        {
+            var rad = Strs(e, "rad");
+            if (rad.Count >= 4)
+            {
+                bool circle = true;
+                for (int i = 0; i < 4; i++) if (rad[i] != "50%") circle = false;
+                if (circle) return 0;
+            }
+            double a = 1, b = 0, c = 0, d = 1;
+            var cur = e;
+            for (int guard = 0; cur != null && guard < 16; guard++)
+            {
+                if (TryMatrix(S(cur, "tf"), out var ma, out var mb, out var mc, out var md, out _, out _))
+                {
+                    double na = ma * a + mc * b, nb = mb * a + md * b, nc = ma * c + mc * d, nd = mb * c + md * d;
+                    a = na; b = nb; c = nc; d = nd;
+                }
+                cur = ParentOf(cur);
+            }
+            double ang = Math.Atan2(b, a);
+            if (Math.Abs(ang) < 0.02) return 0;
+            double cos = Math.Abs(Math.Cos(ang)), sin = Math.Abs(Math.Sin(ang));
+            double det = cos * cos - sin * sin;
+            if (Math.Abs(det) < 1e-4) return 0;
+            double visW = (r[2] * cos - r[3] * sin) / det;
+            double visH = (r[3] * cos - r[2] * sin) / det;
+            if (visW <= 1 || visH <= 1 || visW > r[2] + 1 || visH > r[3] + 1) return 0;
+            double cx = r[0] + r[2] * 0.5, cy = r[1] + r[3] * 0.5;
+            r[0] = cx - visW * 0.5;
+            r[1] = cy - visH * 0.5;
+            r[2] = visW;
+            r[3] = visH;
+            return ang;
+        }
+
+        Dictionary<string, object> ParentOf(Dictionary<string, object> e)
+        {
+            if (byId == null)
+            {
+                byId = new Dictionary<int, Dictionary<string, object>>();
+                foreach (var el in elements) byId[(int)N(el, "i", -1)] = el;
+            }
+            int p = (int)N(e, "p", -1);
+            return p >= 0 && byId.TryGetValue(p, out var par) ? par : null;
         }
 
         /// <summary>
