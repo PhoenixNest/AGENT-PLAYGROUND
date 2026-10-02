@@ -183,9 +183,12 @@ namespace OrbitalSalvage.Render
             }
             if (!string.IsNullOrEmpty(s.bgImage) && s.bgImage != "none")
             {
-                var g = CssGradient.Create(c, s.bgImage, s.x, s.y, s.w, s.h);
-                if (g != null)
+                // Computed background-image is a comma-separated list. The first layer is painted on top.
+                var layers = SplitTop(s.bgImage);
+                for (int li = layers.Count - 1; li >= 0; li--)
                 {
+                    var g = CssGradient.Create(c, layers[li], s.x, s.y, s.w, s.h);
+                    if (g == null) continue;
                     c.FillStyle = g;
                     c.BeginPath();
                     RRect(c, s.x, s.y, s.w, s.h, outer);
