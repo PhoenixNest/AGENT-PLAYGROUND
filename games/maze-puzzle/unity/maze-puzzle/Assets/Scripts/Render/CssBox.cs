@@ -173,7 +173,6 @@ namespace OrbitalSalvage.Render
                 c.Restore();
                 c.Restore();
             }
-
             if (s.hasBg && s.bg.a > 0)
             {
                 c.FillStyle = ToCss(s.bg);
