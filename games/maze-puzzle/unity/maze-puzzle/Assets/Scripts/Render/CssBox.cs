@@ -136,13 +136,21 @@ namespace OrbitalSalvage.Render
             c.Save();
             c.GlobalAlpha = Math.Min(1, alpha);
 
-            // Outer shadows: the last one listed is painted first.
+            // Outer shadows are visible only outside the border box. A fill, even a translucent one, composites
+            // against the page rather than against this element's own shadow.
+            var outer = ResolveRadii(s, 0);
             for (int i = s.shadows.Count - 1; i >= 0; i--)
             {
                 var sh = s.shadows[i];
                 if (sh.inset || sh.color.a <= 0) continue;
                 double sx = s.x - sh.spread, sy = s.y - sh.spread, sw = s.w + 2 * sh.spread, shh = s.h + 2 * sh.spread;
                 var radii = ResolveRadii(s, sh.spread);
+                double pad = sh.blur + sh.spread + Math.Abs(sh.dx) + Math.Abs(sh.dy) + 4;
+                c.Save();
+                c.BeginPath();
+                c.Rect(s.x - pad, s.y - pad, s.w + pad * 2, s.h + pad * 2);
+                RRect(c, s.x, s.y, s.w, s.h, outer);
+                c.Clip("evenodd");
                 c.Save();
                 c.FillStyle = "rgba(0,0,0,1)";
                 if (sh.blur <= 0)
@@ -163,9 +171,9 @@ namespace OrbitalSalvage.Render
                     c.Fill();
                 }
                 c.Restore();
+                c.Restore();
             }
 
-            var outer = ResolveRadii(s, 0);
             if (s.hasBg && s.bg.a > 0)
             {
                 c.FillStyle = ToCss(s.bg);
