@@ -242,11 +242,38 @@ namespace OrbitalSalvage.Render
                     double err = Math.Abs(canvas.MeasureText(cand) - r[2]);
                     if (err < bestErr - 0.01) { bestErr = err; best = cand; }
                 }
-                double baseline = r[1] + canvas.FontAscent();
-                CssBox.DrawText(canvas, best, r[0], baseline, color, shadows, alpha);
+                var lines = WrapToWidth(canvas, best, r[2]);
+                double lineH = lines.Count > 1 ? r[3] / lines.Count : 0;
+                for (int i = 0; i < lines.Count; i++)
+                {
+                    // The run rect's top is the first em box, the same origin a single line uses.
+                    double baseline = r[1] + (lines.Count > 1 ? i * lineH : 0) + canvas.FontAscent();
+                    CssBox.DrawText(canvas, lines[i], r[0], baseline, color, shadows, alpha);
+                    DrawnRuns++;
+                }
                 canvas.Restore();
-                DrawnRuns++;
             }
+        }
+
+        static List<string> WrapToWidth(Canvas2D canvas, string text, double width)
+        {
+            var lines = new List<string>();
+            if (canvas.MeasureText(text) <= width + Math.Max(8, width * 0.08)) { lines.Add(text); return lines; }
+            string cur = "";
+            foreach (var word in text.Split(' '))
+            {
+                if (word.Length == 0) continue;
+                string trial = cur.Length == 0 ? word : cur + " " + word;
+                if (cur.Length > 0 && canvas.MeasureText(trial) > width + 0.5)
+                {
+                    lines.Add(cur);
+                    cur = word;
+                }
+                else cur = trial;
+            }
+            if (cur.Length > 0) lines.Add(cur);
+            if (lines.Count == 0) lines.Add(text);
+            return lines;
         }
 
         void DrawEmoji(Dictionary<string, object> e, double alpha)
