@@ -134,10 +134,8 @@ namespace OrbitalSalvage.Render
                 skip[k] = parentSkipped;
                 if (parentSkipped) continue;
                 if (N(e, "v", 1) == 0 || S(e, "vis") == "hidden" || classes.Contains(" page-hidden ")) { skip[k] = true; continue; }
-                if (classes.Contains(" stage-pedestal-3d ")) { skip[k] = true; Defer("3D pedestal diorama (matrix3d, glow beam, rim pulse)"); continue; }
                 if (classes.Contains(" play-btn-glow ")) { skip[k] = true; Defer("play button shine sweep (animated gradient, overflow clip)"); continue; }
-                string tf = S(e, "tf");
-                if (tf.Contains("matrix3d")) { skip[k] = true; Defer("3D transform"); continue; }
+                // matrix3d discs are painted in their measured (already foreshortened) box.
 
                 if (S(e, "bf") != "" && S(e, "bf") != "none")
                 {
