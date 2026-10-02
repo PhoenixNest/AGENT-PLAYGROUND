@@ -195,10 +195,7 @@ namespace OrbitalSalvage.Render
 
             style.shadows.AddRange(CssBox.ParseShadows(S(e, "sh")));
             foreach (var sh in style.shadows)
-            {
-                if (sh.inset && sh.blur > 0) Defer("inset box-shadow");
-                else any = true;
-            }
+                if (sh.color.a > 0) any = true;
             if (!any) return;
             CssBox.Draw(canvas, style, alpha);
             DrawnBoxes++;
