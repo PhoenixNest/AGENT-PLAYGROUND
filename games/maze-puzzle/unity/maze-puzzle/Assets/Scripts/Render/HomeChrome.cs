@@ -171,6 +171,8 @@ namespace OrbitalSalvage.Render
         void PaintBox(Dictionary<string, object> e, double alpha)
         {
             var r = Rect(e);
+            // A rotated square's measured box is the AABB, which is larger than the circle drawn inside it.
+            UnrotateCircle(e, r);
             if (r[2] <= 0 || r[3] <= 0) return;
             var style = new CssBoxStyle { x = r[0], y = r[1], w = r[2], h = r[3] };
             bool any = false;
@@ -308,6 +310,33 @@ namespace OrbitalSalvage.Render
             CssBox.Draw(canvas, style, alpha);
             canvas.Restore();
             DrawnBoxes++;
+        }
+
+        /// <summary>
+        /// <c>getBoundingClientRect</c> is the axis-aligned bounds of the border box after rotation. A circle
+        /// (50% radius on a square) does not grow when it rotates, so the painted box is the pre-rotation size,
+        /// still centered on that AABB. Translation in the matrix is already included in the measured rect.
+        /// </summary>
+        static void UnrotateCircle(Dictionary<string, object> e, double[] r)
+        {
+            if (!TryMatrix(S(e, "tf"), out var a, out var b, out _, out _, out _, out _)) return;
+            var rad = Strs(e, "rad");
+            if (rad.Count < 4) return;
+            for (int i = 0; i < 4; i++) if (rad[i] != "50%") return;
+            double s = Math.Sqrt(a * a + b * b);
+            if (s < 1e-6) return;
+            double cos = Math.Abs(a / s), sin = Math.Abs(b / s);
+            if (sin < 0.01) return;
+            double det = cos * cos - sin * sin;
+            if (Math.Abs(det) < 1e-4) return;
+            double visW = (r[2] * cos - r[3] * sin) / det;
+            double visH = (r[3] * cos - r[2] * sin) / det;
+            if (visW <= 1 || visH <= 1 || visW > r[2] + 1 || visH > r[3] + 1) return;
+            double cx = r[0] + r[2] * 0.5, cy = r[1] + r[3] * 0.5;
+            r[0] = cx - visW * 0.5;
+            r[1] = cy - visH * 0.5;
+            r[2] = visW;
+            r[3] = visH;
         }
 
         static bool TryMatrix(string tf, out double a, out double b, out double c, out double d, out double e, out double f)
