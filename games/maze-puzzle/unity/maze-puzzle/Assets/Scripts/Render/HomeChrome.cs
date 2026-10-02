@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Text.RegularExpressions;
 using UnityEngine;
 
@@ -134,7 +135,7 @@ namespace OrbitalSalvage.Render
                 skip[k] = parentSkipped;
                 if (parentSkipped) continue;
                 if (N(e, "v", 1) == 0 || S(e, "vis") == "hidden" || classes.Contains(" page-hidden ")) { skip[k] = true; continue; }
-                if (classes.Contains(" play-btn-glow ")) { skip[k] = true; Defer("play button shine sweep (animated gradient, overflow clip)"); continue; }
+                if (classes.Contains(" play-btn-glow ")) { PaintShine(e, pk, eff[k]); continue; }
                 // matrix3d discs are painted in their measured (already foreshortened) box.
 
                 if (S(e, "bf") != "" && S(e, "bf") != "none")
@@ -272,6 +273,55 @@ namespace OrbitalSalvage.Render
             if (cur.Length > 0) lines.Add(cur);
             if (lines.Count == 0) lines.Add(text);
             return lines;
+        }
+
+        /// <summary>
+        /// The play-button shine is a 200% strip at -50%/-50%, rotated about its center by the sampled
+        /// <c>matrix()</c>, and clipped to the button. Painting that local box (not the measured AABB) puts the
+        /// white band where Chromium sampled <c>shineSweep</c>.
+        /// </summary>
+        void PaintShine(Dictionary<string, object> e, int pk, double alpha)
+        {
+            if (pk < 0 || alpha <= 0.001) return;
+            var parent = elements[pk];
+            var pr = Rect(parent);
+            if (pr[2] <= 0 || pr[3] <= 0) return;
+            double lx = pr[0] - pr[2] * 0.5, ly = pr[1] - pr[3] * 0.5, lw = pr[2] * 2, lh = pr[3] * 2;
+            double ox = lx + lw * 0.5, oy = ly + lh * 0.5;
+
+            canvas.Save();
+            canvas.BeginPath();
+            var rad = Strs(parent, "rad");
+            var radii = new Vec2d[4];
+            for (int i = 0; i < 4; i++) radii[i] = i < rad.Count ? Radius(rad[i], pr[2], pr[3]) : new Vec2d(0, 0);
+            canvas.RoundRect(pr[0], pr[1], pr[2], pr[3], radii);
+            canvas.Clip();
+
+            if (TryMatrix(S(e, "tf"), out var a, out var b, out var c, out var d, out var ee, out var f))
+            {
+                canvas.Translate(ox, oy);
+                canvas.Transform(a, b, c, d, ee, f);
+                canvas.Translate(-ox, -oy);
+            }
+
+            var style = new CssBoxStyle { x = lx, y = ly, w = lw, h = lh, bgImage = S(e, "bi") };
+            CssBox.Draw(canvas, style, alpha);
+            canvas.Restore();
+            DrawnBoxes++;
+        }
+
+        static bool TryMatrix(string tf, out double a, out double b, out double c, out double d, out double e, out double f)
+        {
+            a = b = c = d = e = f = 0;
+            if (string.IsNullOrEmpty(tf) || !tf.StartsWith("matrix(", StringComparison.Ordinal) || !tf.EndsWith(")", StringComparison.Ordinal)) return false;
+            var parts = tf.Substring(7, tf.Length - 8).Split(',');
+            if (parts.Length != 6) return false;
+            return double.TryParse(parts[0], NumberStyles.Float, CultureInfo.InvariantCulture, out a)
+                && double.TryParse(parts[1], NumberStyles.Float, CultureInfo.InvariantCulture, out b)
+                && double.TryParse(parts[2], NumberStyles.Float, CultureInfo.InvariantCulture, out c)
+                && double.TryParse(parts[3], NumberStyles.Float, CultureInfo.InvariantCulture, out d)
+                && double.TryParse(parts[4], NumberStyles.Float, CultureInfo.InvariantCulture, out e)
+                && double.TryParse(parts[5], NumberStyles.Float, CultureInfo.InvariantCulture, out f);
         }
 
         void DrawEmoji(Dictionary<string, object> e, double alpha)
