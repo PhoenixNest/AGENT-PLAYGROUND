@@ -327,6 +327,7 @@ export class Session {
         this.safeArea === "css-fallback",
       ),
     };
+    if (this.extraInit) await page.addInitScript({ content: this.extraInit });
     await page.addInitScript({
       content: `window.__PARITY_CONFIG=${JSON.stringify(cfg)};\n${initSource}`,
     });

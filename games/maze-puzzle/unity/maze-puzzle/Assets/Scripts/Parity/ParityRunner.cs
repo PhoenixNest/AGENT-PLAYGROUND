@@ -284,7 +284,6 @@ namespace OrbitalSalvage.Parity
                     while (Time.realtimeSinceStartup < until) yield return null;
                 }
                 bool chrome = OrbitalSalvage.Render.HomeChrome.Applies(ctx.StateId);
-                if (chrome) HideLegacyPage("AppRoot/Page_Home");
                 rig.Refresh();
                 yield return new WaitForEndOfFrame();
                 if (chrome) DrawHomeChrome();
@@ -320,10 +319,11 @@ namespace OrbitalSalvage.Parity
 
         void DrawHomeChrome()
         {
-            if (!homeChromes.TryGetValue(ctx.Profile, out var chrome))
+            string key = ctx.StateId + "__" + ctx.Profile;
+            if (!homeChromes.TryGetValue(key, out var chrome))
             {
-                chrome = OrbitalSalvage.Render.HomeChrome.Load(ctx.Profile);
-                homeChromes[ctx.Profile] = chrome;
+                chrome = OrbitalSalvage.Render.HomeChrome.Load(ctx.StateId, ctx.Profile);
+                homeChromes[key] = chrome;
             }
             chrome.Draw();
             Graphics.CopyTexture(chrome.Target, rig.Target);

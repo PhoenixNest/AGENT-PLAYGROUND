@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Text.RegularExpressions;
 using UnityEngine;
 
@@ -11,15 +10,20 @@ namespace OrbitalSalvage.Render
     /// <c>tools/parity/web/dump-spec.mjs</c> by <c>web/distill-spec.mjs</c>) with <see cref="Canvas2D"/>: every visible element is a
     /// <see cref="CssBox"/> plus its text runs (outline glyph text) and emoji images, at the rect Chromium reports in CSS px.
     /// The spec carries a rect set per safe-area profile, so zero and iphone differ exactly as measured.
-    /// Deferred (not drawn, listed in <see cref="Deferred"/>): backdrop-filter, filters, 3D transforms, inset shadows and every
-    /// CSS animation (elements sit at their measured rect only), the pedestal diorama and the shine sweep.
+    /// Deferred (not drawn, listed in <see cref="Deferred"/>): filters, inset shadows, the pedestal diorama,
+    /// the play-button shine, and CSS animations (elements sit at their measured rect only). Backdrop blur is drawn.
     /// </summary>
     public sealed class HomeChrome : IDisposable
     {
-        public const string StateId = "home_default";
-        public static bool Applies(string stateId) => stateId == StateId;
+        public static bool Applies(string stateId) =>
+            stateId == "home_default" || stateId == "maps_world_1_fresh" || stateId == "daily_default"
+            || stateId == "shop_rings_default" || stateId == "shop_singularities_default" || stateId == "shop_skyboxes_default"
+            || stateId == "achievements_none" || stateId == "settings_default" || stateId == "game_lvl01_t1000ms"
+            || stateId == "modal_pause" || stateId == "modal_debrief_exact" || stateId == "modal_defeat_12_of_20"
+            || stateId == "loading_t0500";
 
         readonly Canvas2D canvas;
+        readonly StreamPlayer playfield;
         readonly List<Dictionary<string, object>> elements;
         readonly double scale;
         readonly int cssW, cssH;
@@ -31,14 +35,16 @@ namespace OrbitalSalvage.Render
         public int PixelWidth => canvas.Width;
         public int PixelHeight => canvas.Height;
 
-        HomeChrome(string profile, Canvas2D canvas, List<Dictionary<string, object>> elements, int cssW, int cssH, double scale)
+        HomeChrome(string profile, Canvas2D canvas, StreamPlayer playfield, List<Dictionary<string, object>> elements, int cssW, int cssH, double scale)
         {
-            Profile = profile; this.canvas = canvas; this.elements = elements; this.cssW = cssW; this.cssH = cssH; this.scale = scale;
+            Profile = profile; this.canvas = canvas; this.playfield = playfield; this.elements = elements; this.cssW = cssW; this.cssH = cssH; this.scale = scale;
         }
 
-        public static HomeChrome Load(string profile)
+        public static HomeChrome Load(string profile) => Load("home", profile);
+
+        public static HomeChrome Load(string spec, string profile)
         {
-            var asset = Resources.Load<TextAsset>("Parity/Spec/home__" + profile);
+            var asset = Resources.Load<TextAsset>("Parity/Spec/" + spec + "__" + profile);
             if (asset == null) throw new InvalidOperationException("missing home spec for profile " + profile);
             var root = (Dictionary<string, object>)MiniJson.Parse(asset.text);
             var vp = (Dictionary<string, object>)root["viewport"];
@@ -47,10 +53,12 @@ namespace OrbitalSalvage.Render
             var list = new List<Dictionary<string, object>>();
             foreach (var o in (List<object>)root["elements"]) list.Add((Dictionary<string, object>)o);
             var canvas = new Canvas2D((int)Math.Round(w * scale), (int)Math.Round(h * scale));
-            return new HomeChrome(profile, canvas, list, w, h, scale);
+            var fieldAsset = Resources.Load<TextAsset>("Parity/Playfield/" + spec);
+            StreamPlayer field = fieldAsset != null ? StreamPlayer.Load(fieldAsset.text) : null;
+            return new HomeChrome(profile, canvas, field, list, w, h, scale);
         }
 
-        public void Dispose() { canvas.Dispose(); }
+        public void Dispose() { playfield?.Dispose(); canvas.Dispose(); }
 
         // ---- spec access ---------------------------------------------------------------------------------
 
@@ -103,7 +111,17 @@ namespace OrbitalSalvage.Render
                 double parentOpacity = pk >= 0 ? eff[pk] : 1;
                 bool parentSkipped = pk >= 0 && skip[pk];
 
-                if (S(e, "t") == "img")
+            if (S(e, "t") == "canvas")
+            {
+                if (playfield != null)
+                {
+                    playfield.Play(canvas);
+                    canvas.SetTransform(scale, 0, 0, scale, 0, 0);
+                }
+                continue;
+            }
+
+            if (S(e, "t") == "img")
                 {
                     eff[k] = parentOpacity; skip[k] = parentSkipped;
                     if (parentSkipped) continue;
@@ -115,13 +133,22 @@ namespace OrbitalSalvage.Render
                 eff[k] = parentOpacity * N(e, "o", 1);
                 skip[k] = parentSkipped;
                 if (parentSkipped) continue;
-                if (N(e, "v", 1) == 0 || S(e, "vis") == "hidden") { skip[k] = true; continue; }
+                if (N(e, "v", 1) == 0 || S(e, "vis") == "hidden" || classes.Contains(" page-hidden ")) { skip[k] = true; continue; }
                 if (classes.Contains(" stage-pedestal-3d ")) { skip[k] = true; Defer("3D pedestal diorama (matrix3d, glow beam, rim pulse)"); continue; }
                 if (classes.Contains(" play-btn-glow ")) { skip[k] = true; Defer("play button shine sweep (animated gradient, overflow clip)"); continue; }
                 string tf = S(e, "tf");
                 if (tf.Contains("matrix3d")) { skip[k] = true; Defer("3D transform"); continue; }
 
-                if (S(e, "bf") != "" && S(e, "bf") != "none") Defer("backdrop-filter");
+                if (S(e, "bf") != "" && S(e, "bf") != "none")
+                {
+                    var m = System.Text.RegularExpressions.Regex.Match(S(e, "bf"), @"blur\(([^)]+)\)");
+                    if (m.Success && eff[k] > 0.001)
+                    {
+                        var rr = Rect(e);
+                        canvas.BackdropBlur(rr[0], rr[1], rr[2], rr[3], CssBox.ParseLength(m.Groups[1].Value));
+                    }
+                    else Defer("backdrop-filter");
+                }
                 if (S(e, "flt") != "" && S(e, "flt") != "none") Defer("filter (drop-shadow / blur)");
                 if (S(e, "an") != "" && S(e, "an") != "none") Defer("animation (drawn at the measured rect only): " + S(e, "an"));
 
@@ -212,9 +239,8 @@ namespace OrbitalSalvage.Render
                     double err = Math.Abs(canvas.MeasureText(cand) - r[2]);
                     if (err < bestErr - 0.01) { bestErr = err; best = cand; }
                 }
-                double x = r[0];
                 double baseline = r[1] + canvas.FontAscent();
-                CssBox.DrawText(canvas, best, x, baseline, color, shadows, alpha);
+                CssBox.DrawText(canvas, best, r[0], baseline, color, shadows, alpha);
                 canvas.Restore();
                 DrawnRuns++;
             }
