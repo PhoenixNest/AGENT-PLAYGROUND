@@ -197,6 +197,7 @@ namespace OrbitalSalvage.Render
             }
 
             DrawHardInsets(c, s, outer);
+            DrawBlurredInsets(c, s, outer);
             DrawBorder(c, s, outer);
             c.Restore();
         }
@@ -221,6 +222,50 @@ namespace OrbitalSalvage.Render
                 c.BeginPath();
                 RRect(c, ix, iy, iw, ih, inner);
                 RRect(c, ix + sh.dx, iy + sh.dy, iw, ih, inner);
+                c.Fill("evenodd");
+                c.Restore();
+            }
+        }
+
+        /// <summary>
+        /// Blurred inset shadows. The shadow is the blur of everything outside the padding box (shifted by the
+        /// offset), clipped to the inside, so the centre stays clear and the edge darkens.
+        /// </summary>
+        static void DrawBlurredInsets(Canvas2D c, CssBoxStyle s, Vec2d[] outer)
+        {
+            double scale = c.CurrentTransform.a;
+            double bt = s.borderOn[0] ? s.borderW[0] : 0, br = s.borderOn[1] ? s.borderW[1] : 0;
+            double bb = s.borderOn[2] ? s.borderW[2] : 0, bl = s.borderOn[3] ? s.borderW[3] : 0;
+            for (int i = s.shadows.Count - 1; i >= 0; i--)
+            {
+                var sh = s.shadows[i];
+                if (!sh.inset || sh.color.a <= 0 || sh.blur <= 0) continue;
+                double ix = s.x + bl, iy = s.y + bt, iw = s.w - bl - br, ih = s.h - bt - bb;
+                if (iw <= 0 || ih <= 0) continue;
+                var inner = new Vec2d[4];
+                for (int k = 0; k < 4; k++) inner[k] = new Vec2d(Math.Max(0, outer[k].x - bl), Math.Max(0, outer[k].y - bt));
+                double spread = sh.spread;
+                double hx = ix + sh.dx + spread, hy = iy + sh.dy + spread, hw = iw - spread * 2, hh = ih - spread * 2;
+                var hole = inner;
+                if (hw > 0 && hh > 0)
+                {
+                    hole = new Vec2d[4];
+                    for (int k = 0; k < 4; k++) hole[k] = new Vec2d(Math.Max(0, inner[k].x - spread), Math.Max(0, inner[k].y - spread));
+                }
+                else { hx = ix + sh.dx; hy = iy + sh.dy; hw = iw; hh = ih; }
+                double pad = sh.blur + Math.Abs(sh.dx) + Math.Abs(sh.dy) + Math.Abs(sh.spread) + 4;
+                c.Save();
+                c.BeginPath();
+                RRect(c, ix, iy, iw, ih, inner);
+                c.Clip();
+                c.FillStyle = "rgba(0,0,0,1)";
+                c.ShadowColor = ToCss(sh.color);
+                c.ShadowBlur = sh.blur * scale;
+                c.ShadowOffsetX = OffCanvas * scale;
+                c.ShadowOffsetY = 0;
+                c.BeginPath();
+                c.Rect(ix - pad - OffCanvas, iy - pad, iw + pad * 2, ih + pad * 2);
+                RRect(c, hx - OffCanvas, hy, hw, hh, hole);
                 c.Fill("evenodd");
                 c.Restore();
             }
