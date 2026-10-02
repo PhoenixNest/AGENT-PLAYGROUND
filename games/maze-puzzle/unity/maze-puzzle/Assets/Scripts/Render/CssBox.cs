@@ -196,8 +196,34 @@ namespace OrbitalSalvage.Render
                 }
             }
 
+            DrawHardInsets(c, s, outer);
             DrawBorder(c, s, outer);
             c.Restore();
+        }
+
+        /// <summary>Zero-blur inset shadows: the part of the padding box not covered by that box shifted by the offset.</summary>
+        static void DrawHardInsets(Canvas2D c, CssBoxStyle s, Vec2d[] outer)
+        {
+            double bt = s.borderOn[0] ? s.borderW[0] : 0, br = s.borderOn[1] ? s.borderW[1] : 0;
+            double bb = s.borderOn[2] ? s.borderW[2] : 0, bl = s.borderOn[3] ? s.borderW[3] : 0;
+            foreach (var sh in s.shadows)
+            {
+                if (!sh.inset || sh.color.a <= 0 || sh.blur > 0) continue;
+                double ix = s.x + bl, iy = s.y + bt, iw = s.w - bl - br, ih = s.h - bt - bb;
+                if (iw <= 0 || ih <= 0) continue;
+                var inner = new Vec2d[4];
+                for (int i = 0; i < 4; i++) inner[i] = new Vec2d(Math.Max(0, outer[i].x - bl), Math.Max(0, outer[i].y - bt));
+                c.Save();
+                c.BeginPath();
+                RRect(c, ix, iy, iw, ih, inner);
+                c.Clip();
+                c.FillStyle = ToCss(sh.color);
+                c.BeginPath();
+                RRect(c, ix, iy, iw, ih, inner);
+                RRect(c, ix + sh.dx, iy + sh.dy, iw, ih, inner);
+                c.Fill("evenodd");
+                c.Restore();
+            }
         }
 
         static void DrawBorder(Canvas2D c, CssBoxStyle s, Vec2d[] outer)
