@@ -164,7 +164,11 @@ namespace OrbitalSalvage.Render
                 if (SnapGlyphs && axisAligned)
                 {
                     ox = Math.Floor(ox * GlyphSubpixel + GlyphRound) / GlyphSubpixel + GlyphDx;
-                    oy = Math.Floor(oy * GlyphSubpixelY + 0.5) / GlyphSubpixelY + GlyphDy;
+                    double yUnits = oy * GlyphSubpixelY;
+                    double yFrac = yUnits - Math.Floor(yUnits);
+                    oy = Math.Floor(yUnits + 0.5) / GlyphSubpixelY + GlyphDy;
+                    // A baseline halfway between device pixels lands one pixel high versus Chromium.
+                    if (GlyphSubpixelY <= 1.0 && yFrac > 0.45 && yFrac < 0.55) oy += 1.0;
                 }
                 int total = fg.pts.Length / 2;
                 for (int c = 0; c < fg.contourCount; c++)
