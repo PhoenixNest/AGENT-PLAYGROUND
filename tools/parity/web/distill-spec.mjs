@@ -5,7 +5,7 @@
 //
 // One record per element in DOM order (= paint order for the unpositioned content of these pages). Rects are CSS px,
 // top-left origin, as measured by getBoundingClientRect in Chromium (after transforms and animation at the capture time).
-import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, isAbsolute, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -28,11 +28,44 @@ mkdirSync(outDir, { recursive: true });
 
 const round = (n) => Math.round(n * 1000) / 1000;
 const rect = (r) => [round(r.x), round(r.y), round(r.w), round(r.h)];
+const num = (s) => {
+  const n = parseFloat(s);
+  return Number.isFinite(n) ? n : 0;
+};
+
+function pseudoBox(host, p) {
+  if (!p) return null;
+  const w = num(p.width);
+  const h = num(p.height);
+  if (w <= 0 || h <= 0) return null;
+  let x = host.rect.x + num(p.left);
+  let y = p.top != null && p.top !== "auto" ? host.rect.y + num(p.top) : host.rect.y + host.rect.h - num(p.bottom) - h;
+  const m = /matrix\(\s*[^,]+,[^,]+,[^,]+,[^,]+,\s*([-0-9.eE]+)\s*,\s*([-0-9.eE]+)\s*\)/.exec(p.transform || "");
+  if (m) {
+    x += Number(m[1]);
+    y += Number(m[2]);
+  }
+  const rad = p["border-top-left-radius"] || (w === h ? `${w / 2}px` : "0px");
+  const box = {
+    r: [round(x), round(y), round(w), round(h)],
+    bg: p["background-color"] || "transparent",
+    rad: [rad, p["border-top-right-radius"] || rad, p["border-bottom-right-radius"] || rad, p["border-bottom-left-radius"] || rad],
+    v: 1,
+    o: Number(p.opacity || 1),
+  };
+  if (p["box-shadow"] && p["box-shadow"] !== "none") box.sh = p["box-shadow"];
+  if (num(p["border-top-width"]) > 0) {
+    box.bw = [p["border-top-width"], p["border-right-width"], p["border-bottom-width"], p["border-left-width"]];
+    box.bc = [p["border-top-color"], p["border-right-color"], p["border-bottom-color"], p["border-left-color"]];
+    box.bs = [p["border-top-style"], p["border-right-style"], p["border-bottom-style"], p["border-left-style"]];
+  }
+  return box;
+}
 
 for (const profile of ["zero", "iphone"]) {
-  const src = JSON.parse(
-    readFileSync(join(parityDir, "out/web/spec", `${page}__${profile}.json`), "utf8"),
-  );
+  const srcPath = join(parityDir, "out/web/spec", `${page}__${profile}.json`);
+  if (!existsSync(srcPath)) continue;
+  const src = JSON.parse(readFileSync(srcPath, "utf8"));
   const elements = src.elements.map((e) => {
     const o = { i: e.index, p: e.parent, t: e.tag, r: rect(e.rect) };
     if (e.id) o.id = e.id;
@@ -84,6 +117,29 @@ for (const profile of ["zero", "iphone"]) {
     o.ls = s["letter-spacing"];
     o.ts = s["text-shadow"];
     o.tt = s["text-transform"];
+    const knob = pseudoBox(e, e.before);
+    if (knob) o.bef = knob;
+    const tail = pseudoBox(e, e.after);
+    if (tail) o.aft = tail;
+    if (e.input && e.input.type === "range" && (e.classes || []).includes("cartoon-range") && e.rect.w > 0) {
+      const min = Number(e.input.min || 0);
+      const max = Number(e.input.max || 100);
+      const val = Number(e.input.value);
+      const tw = 22;
+      const th = 22;
+      const t = max === min ? 0 : (val - min) / (max - min);
+      o.th = {
+        r: [round(e.rect.x + t * (e.rect.w - tw)), round(e.rect.y + (e.rect.h - th) / 2), tw, th],
+        bg: "#facc15",
+        rad: ["11px", "11px", "11px", "11px"],
+        bw: ["2.5px", "2.5px", "2.5px", "2.5px"],
+        bc: ["#1e1b4b", "#1e1b4b", "#1e1b4b", "#1e1b4b"],
+        bs: ["solid", "solid", "solid", "solid"],
+        sh: "rgba(0, 0, 0, 0.3) 0px 2px 4px 0px",
+        v: 1,
+        o: 1,
+      };
+    }
     o.runs = e.textRuns
       .filter((t) => t.kind === "text")
       .map((t) => ({ s: t.text, r: rect(t.rect) }));

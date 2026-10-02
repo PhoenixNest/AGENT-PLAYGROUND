@@ -154,6 +154,9 @@ namespace OrbitalSalvage.Render
 
                 PaintBox(e, eff[k]);
                 PaintRuns(e, eff[k]);
+                if (e.TryGetValue("bef", out var bef) && bef is Dictionary<string, object> bd) PaintBox(bd, eff[k]);
+                if (e.TryGetValue("aft", out var aft) && aft is Dictionary<string, object> ad) PaintBox(ad, eff[k]);
+                if (e.TryGetValue("th", out var th) && th is Dictionary<string, object> td) PaintBox(td, eff[k]);
             }
         }
 
