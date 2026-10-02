@@ -1,13 +1,17 @@
-import { mkdirSync, writeFileSync } from "node:fs";
+import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { isAbsolute, join, resolve } from "node:path";
 import { ROOT, Session, launchBrowser } from "./harness.mjs";
 
 const args = process.argv.slice(2);
 let outArg = "out/web";
 let only = null;
+let statesFile = null;
+let profiles = ["zero", "iphone"];
 for (let i = 0; i < args.length; i++) {
   if (args[i] === "--out") outArg = args[++i];
   else if (args[i] === "--only") only = args[++i].split(",");
+  else if (args[i] === "--states") statesFile = args[++i];
+  else if (args[i] === "--profile") profiles = [args[++i]];
   else {
     console.error(`unknown argument ${args[i]}`);
     process.exit(2);
@@ -630,10 +634,22 @@ function sheetDump() {
   return { keyframes, vars, computed };
 }
 
+if (statesFile) {
+  const states = JSON.parse(readFileSync(resolve(ROOT, statesFile), "utf8"));
+  ENTRIES.length = 0;
+  for (const state of states) {
+    ENTRIES.push({
+      name: state.id,
+      root: "#mobile-frame",
+      steps: state.steps.filter((s) => s.op !== "capture"),
+    });
+  }
+}
+
 const browser = await launchBrowser();
 const written = [];
 let sheets = null;
-for (const profile of ["zero", "iphone"]) {
+for (const profile of profiles) {
   for (const entry of ENTRIES) {
     if (only && !only.includes(entry.name)) continue;
     const session = new Session(browser, {

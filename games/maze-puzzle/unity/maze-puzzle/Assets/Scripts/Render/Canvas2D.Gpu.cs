@@ -28,6 +28,7 @@ namespace OrbitalSalvage.Render
         readonly RenderTexture accum;
         readonly RenderTexture maskA, maskB;
         readonly List<RenderTexture> clipPool = new List<RenderTexture>();
+        readonly List<Texture2D> snapshots = new List<Texture2D>();
         int clipUsed;
         readonly CommandBuffer cmd = new CommandBuffer { name = "Canvas2D" };
         GraphicsBuffer edgeBuffer, paramBuffer;
@@ -86,6 +87,7 @@ namespace OrbitalSalvage.Render
             paramBuffer?.Dispose();
             cmd.Release();
             foreach (var c in clipPool) c.Release();
+            foreach (var s in snapshots) UnityEngine.Object.Destroy(s);
             target.Release(); accum.Release(); maskA.Release(); maskB.Release();
         }
 
@@ -104,7 +106,12 @@ namespace OrbitalSalvage.Render
             cmd.ClearRenderTarget(false, true, Color.clear);
         }
 
-        public void EndFrame()
+        public void EndFrame() { Submit(false); }
+
+        /// <summary>Executes the draws so far and leaves <see cref="Target"/> intact for a readback.</summary>
+        public void Flush() { Submit(true); }
+
+        void Submit(bool keepDrawing)
         {
             EnsureBuffer(ref edgeBuffer, edgeCount, 16);
             EnsureBuffer(ref paramBuffer, prmCount, 16);
@@ -117,6 +124,148 @@ namespace OrbitalSalvage.Render
             Shader.SetGlobalTexture(IdAccum, accum);
             UploadText();
             Graphics.ExecuteCommandBuffer(cmd);
+            if (!keepDrawing) return;
+            cmd.Clear();
+            edgeCount = 0;
+            prmCount = 0;
+            cmd.SetRenderTarget(target);
+        }
+
+        /// <summary>
+        /// CSS backdrop-filter: blur(sigmaCssPx) of what has already been drawn, shown inside the user-space rect.
+        /// Sigma is in user px; the current transform maps it to device pixels.
+        /// </summary>
+        public void BackdropBlur(double x, double y, double w, double h, double sigmaUser)
+        {
+            if (sigmaUser <= 0 || w == 0 || h == 0 || state.globalAlpha <= 0) return;
+            var origin = state.ctm.Apply(0, 0);
+            var unit = state.ctm.Apply(sigmaUser, 0);
+            double sigmaDev = Math.Abs(unit.x - origin.x);
+            if (sigmaDev < 0.5) return;
+            Flush();
+
+            var prev = RenderTexture.active;
+            RenderTexture.active = target;
+            var shot = new Texture2D(Width, Height, TextureFormat.RGBA32, false, true) { filterMode = FilterMode.Point, wrapMode = TextureWrapMode.Clamp };
+            shot.ReadPixels(new Rect(0, 0, Width, Height), 0, 0, false);
+            shot.Apply(false, false);
+            RenderTexture.active = prev;
+            snapshots.Add(shot);
+
+            var px = shot.GetPixels32();
+            var p0 = state.ctm.Apply(x, y);
+            var p1 = state.ctm.Apply(x + w, y + h);
+            int x0 = Clamp((int)Math.Floor(Math.Min(p0.x, p1.x)), 0, Width);
+            int x1 = Clamp((int)Math.Ceiling(Math.Max(p0.x, p1.x)), 0, Width);
+            int top = (int)Math.Floor(Math.Min(p0.y, p1.y));
+            int bot = (int)Math.Ceiling(Math.Max(p0.y, p1.y));
+            int y0 = Clamp(Height - bot, 0, Height);
+            int y1 = Clamp(Height - top, 0, Height);
+            BoxBlur(px, Width, Height, x0, y0, x1, y1, sigmaDev);
+            shot.SetPixels32(px);
+            shot.Apply(false, false);
+
+            bool smooth = state.imageSmoothing;
+            state.imageSmoothing = false;
+            var img = new CanvasImage(shot);
+            double sx = Math.Min(p0.x, p1.x);
+            double sy = Math.Min(p0.y, p1.y);
+            double sw = Math.Abs(p1.x - p0.x);
+            double sh = Math.Abs(p1.y - p0.y);
+            DrawImage(img, sx, sy, sw, sh, x, y, w, h);
+            state.imageSmoothing = smooth;
+        }
+
+        static int Clamp(int v, int lo, int hi) => v < lo ? lo : (v > hi ? hi : v);
+
+        static void BoxBlur(Color32[] px, int width, int height, int x0, int y0, int x1, int y1, double sigma)
+        {
+            if (x1 <= x0 || y1 <= y0) return;
+            int[] radii = BoxRadii(sigma);
+            var tmp = new Color32[px.Length];
+            for (int pass = 0; pass < radii.Length; pass++)
+            {
+                BoxH(px, tmp, width, height, x0, y0, x1, y1, radii[pass]);
+                BoxV(tmp, px, width, height, x0, y0, x1, y1, radii[pass]);
+            }
+        }
+
+        static int[] BoxRadii(double sigma)
+        {
+            const int n = 3;
+            double wIdeal = Math.Sqrt((12 * sigma * sigma / n) + 1);
+            int wl = (int)Math.Floor(wIdeal);
+            if ((wl & 1) == 0) wl--;
+            if (wl < 1) wl = 1;
+            int wu = wl + 2;
+            double m = (12 * sigma * sigma - n * wl * wl - 4 * n * wl - 3 * n) / (-4.0 * wl - 4);
+            int mI = (int)Math.Round(m);
+            if (mI < 0) mI = 0;
+            if (mI > n) mI = n;
+            var r = new int[n];
+            for (int i = 0; i < n; i++) r[i] = Math.Max(0, ((i < mI ? wl : wu) - 1) / 2);
+            return r;
+        }
+
+        static void BoxH(Color32[] src, Color32[] dst, int width, int height, int x0, int y0, int x1, int y1, int r)
+        {
+            for (int y = 0; y < height; y++)
+            {
+                int row = y * width;
+                bool hot = y >= y0 && y < y1 && r > 0;
+                if (!hot)
+                {
+                    Array.Copy(src, row, dst, row, width);
+                    continue;
+                }
+                int i0 = Math.Max(0, x0 - r), i1 = Math.Min(width - 1, x1 - 1 + r);
+                int sumR = 0, sumG = 0, sumB = 0, sumA = 0, count = 0;
+                for (int i = i0; i <= Math.Min(width - 1, i0 + 2 * r); i++)
+                {
+                    var c = src[row + i];
+                    sumR += c.r; sumG += c.g; sumB += c.b; sumA += c.a; count++;
+                }
+                for (int x = 0; x < width; x++)
+                {
+                    if (x < x0 || x >= x1) { dst[row + x] = src[row + x]; continue; }
+                    // rebuild window centered on x, clamped
+                    int a = Math.Max(0, x - r), b = Math.Min(width - 1, x + r);
+                    sumR = sumG = sumB = sumA = 0; count = b - a + 1;
+                    for (int i = a; i <= b; i++)
+                    {
+                        var c = src[row + i];
+                        sumR += c.r; sumG += c.g; sumB += c.b; sumA += c.a;
+                    }
+                    dst[row + x] = new Color32((byte)(sumR / count), (byte)(sumG / count), (byte)(sumB / count), (byte)(sumA / count));
+                }
+            }
+        }
+
+        static void BoxV(Color32[] src, Color32[] dst, int width, int height, int x0, int y0, int x1, int y1, int r)
+        {
+            for (int y = 0; y < height; y++)
+            {
+                int row = y * width;
+                if (y < y0 || y >= y1 || r == 0)
+                {
+                    Array.Copy(src, row, dst, row, width);
+                    continue;
+                }
+                int a = Math.Max(0, y - r), b = Math.Min(height - 1, y + r);
+                int count = b - a + 1;
+                for (int x = x0; x < x1; x++)
+                {
+                    int sumR = 0, sumG = 0, sumB = 0, sumA = 0;
+                    for (int i = a; i <= b; i++)
+                    {
+                        var c = src[i * width + x];
+                        sumR += c.r; sumG += c.g; sumB += c.b; sumA += c.a;
+                    }
+                    dst[row + x] = new Color32((byte)(sumR / count), (byte)(sumG / count), (byte)(sumB / count), (byte)(sumA / count));
+                }
+                for (int x = 0; x < x0; x++) dst[row + x] = src[row + x];
+                for (int x = x1; x < width; x++) dst[row + x] = src[row + x];
+            }
         }
 
         public void Replay() { Graphics.ExecuteCommandBuffer(cmd); }

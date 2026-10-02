@@ -129,6 +129,12 @@
       if (imgNames.has(v)) return { img: imgNames.get(v) };
       if (v instanceof HTMLImageElement) {
         for (const [g, e] of emojiImages) if (e === v) return { emoji: g };
+        const src = String(v.currentSrc || v.src || "");
+        const m = /([0-9a-f]{4,}(?:-[0-9a-f]{4,})*)\./i.exec(src);
+        if (m && cc.emojiByFile) {
+          const g = cc.emojiByFile[m[1].toLowerCase()];
+          if (g) return { emoji: g };
+        }
       }
       if (Array.isArray(v)) return v.map(ser);
       if (typeof v.x === "number") return { x: v.x, y: v.y, w: v.width, h: v.height };
