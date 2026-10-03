@@ -203,6 +203,8 @@ namespace OrbitalSalvage.Render
         public readonly double[][][] Runs;
         public readonly int[] Parent;
         public readonly double[] ExtraY;
+        public readonly double[] OriginX;
+        public readonly double[] OriginY;
         public int PressRoot = -1;
         public Matrix2D PressMatrix = Matrix2D.Identity;
         public bool HasMotion;
@@ -225,7 +227,9 @@ namespace OrbitalSalvage.Render
             Runs = new double[n][][];
             Parent = new int[n];
             ExtraY = new double[n];
-            for (int i = 0; i < n; i++) Opacity[i] = double.NaN;
+            OriginX = new double[n];
+            OriginY = new double[n];
+            for (int i = 0; i < n; i++) { Opacity[i] = double.NaN; OriginX[i] = double.NaN; OriginY[i] = double.NaN; }
         }
 
         public static CssFrame Build(IList<Dictionary<string, object>> elements, double timeMs, bool pinPageEnter, bool modalIntro, int pressIndex, string pressCss)
@@ -295,6 +299,7 @@ namespace OrbitalSalvage.Render
                 frame.Tree[k] = under;
                 if (!under) continue;
                 frame.Local[k] = CopyRect(elements[k], elements[k].ContainsKey("br") ? "br" : "r");
+                if (frame.Local[k] != null) OriginOf(elements[k], frame.Local[k][2], frame.Local[k][3], out frame.OriginX[k], out frame.OriginY[k]);
                 frame.Runs[k] = CopyRuns(elements[k], true);
                 frame.HasMotion = true;
             }
@@ -352,7 +357,10 @@ namespace OrbitalSalvage.Render
             {
                 var r = Local[chain[i]];
                 if (r == null) continue;
-                double cx = r[0] + r[2] * 0.5, cy = r[1] + r[3] * 0.5 + ExtraY[chain[i]];
+                double ox = OriginX[chain[i]], oy = OriginY[chain[i]];
+                if (double.IsNaN(ox)) ox = r[2] * 0.5;
+                if (double.IsNaN(oy)) oy = r[3] * 0.5;
+                double cx = r[0] + ox, cy = r[1] + oy + ExtraY[chain[i]];
                 var m = Matrix[chain[i]];
                 canvas.Translate(cx, cy);
                 canvas.Transform(m.a, m.b, m.c, m.d, m.e, m.f);
@@ -378,6 +386,16 @@ namespace OrbitalSalvage.Render
         }
 
         static double Clamp(double t) => t < 0 ? 0 : t > 1 ? 1 : t;
+
+        static void OriginOf(Dictionary<string, object> e, double w, double h, out double ox, out double oy)
+        {
+            ox = w * 0.5;
+            oy = h * 0.5;
+            if (!e.TryGetValue("to", out var v) || !(v is string s) || s.Length == 0) return;
+            var parts = s.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+            if (parts.Length >= 1) ox = CssBox.ParseLength(parts[0], w);
+            if (parts.Length >= 2) oy = CssBox.ParseLength(parts[1], h);
+        }
 
         static void RectOf(Dictionary<string, object> e, string key, ref double w, ref double h)
         {

@@ -422,13 +422,13 @@
   },
   {
     "id": "loading_t0500_t1500",
-    "spec": "loading_t0500",
-    "timeOffsetMs": 1500,
-    "description": "Loading 1500 ms after the 500 ms capture",
+    "spec": "home_default",
+    "timeOffsetMs": 500,
+    "description": "2000 ms from boot has left loading; the web frame is home at the +500 pose",
     "profiles": ["zero"],
     "steps": [
-      { "op": "boot", "completeLoading": false },
-      { "op": "advance", "ms": 2000 },
+      { "op": "boot" },
+      { "op": "advance", "ms": 500 },
       { "op": "capture" }
     ]
   },
