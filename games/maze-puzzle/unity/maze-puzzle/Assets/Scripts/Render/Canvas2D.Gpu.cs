@@ -36,7 +36,7 @@ namespace OrbitalSalvage.Render
         int edgeCount;
         Vector4[] prm = new Vector4[ParamStride * 256];
         int prmCount;
-        Material matAccum, matFill, matMask;
+        Material matAccum, matFill, matMask, matLayer;
 
         public RenderTexture Target => target;
         public CommandBuffer Commands => cmd;
@@ -85,6 +85,7 @@ namespace OrbitalSalvage.Render
             DisposeText();
             edgeBuffer?.Dispose();
             paramBuffer?.Dispose();
+            if (matLayer != null) UnityEngine.Object.Destroy(matLayer);
             cmd.Release();
             foreach (var c in clipPool) c.Release();
             ReleaseSnapshots();
@@ -124,6 +125,21 @@ namespace OrbitalSalvage.Render
         }
 
         public void EndFrame() { Submit(false); }
+
+        /// <summary>Source-over a straight-alpha texture onto the frame. Recorded in order with the other draws.</summary>
+        public void BlitLayer(Texture tex)
+        {
+            if (tex == null || state.globalAlpha <= 0) return;
+            if (matLayer == null)
+            {
+                var sh = Resources.Load<Shader>("Canvas2D/LayerBlit");
+                if (sh == null) sh = Shader.Find("Hidden/Canvas2D/LayerBlit");
+                if (sh == null) throw new InvalidOperationException("missing LayerBlit shader");
+                matLayer = new Material(sh) { hideFlags = HideFlags.HideAndDontSave };
+            }
+            matLayer.SetFloat("_Alpha", (float)state.globalAlpha);
+            cmd.Blit(tex, target, matLayer);
+        }
 
         /// <summary>Executes the draws so far and leaves <see cref="Target"/> intact for a readback.</summary>
         public void Flush() { Submit(true); }
