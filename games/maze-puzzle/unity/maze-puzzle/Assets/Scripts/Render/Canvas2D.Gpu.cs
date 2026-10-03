@@ -38,6 +38,9 @@ namespace OrbitalSalvage.Render
         int prmCount;
         Material matAccum, matFill, matMask, matLayer;
 
+        /// <summary>Frozen captures keep the CPU box blur. Live draws record a GPU box blur and do not read the frame back.</summary>
+        public bool ExactBackdrop = true;
+
         public RenderTexture Target => target;
         public CommandBuffer Commands => cmd;
         public int EdgeCount => edgeCount;
@@ -86,6 +89,9 @@ namespace OrbitalSalvage.Render
             edgeBuffer?.Dispose();
             paramBuffer?.Dispose();
             if (matLayer != null) UnityEngine.Object.Destroy(matLayer);
+            if (matBlur != null) UnityEngine.Object.Destroy(matBlur);
+            if (blurA != null) { blurA.Release(); UnityEngine.Object.Destroy(blurA); }
+            if (blurB != null) { blurB.Release(); UnityEngine.Object.Destroy(blurB); }
             cmd.Release();
             foreach (var c in clipPool) c.Release();
             ReleaseSnapshots();
@@ -137,8 +143,10 @@ namespace OrbitalSalvage.Render
                 if (sh == null) throw new InvalidOperationException("missing LayerBlit shader");
                 matLayer = new Material(sh) { hideFlags = HideFlags.HideAndDontSave };
             }
+            PaintProfile.Begin(PaintProfile.Blit);
             matLayer.SetFloat("_Alpha", (float)state.globalAlpha);
             cmd.Blit(tex, target, matLayer);
+            PaintProfile.End(PaintProfile.Blit);
         }
 
         /// <summary>Executes the draws so far and leaves <see cref="Target"/> intact for a readback.</summary>
@@ -146,6 +154,8 @@ namespace OrbitalSalvage.Render
 
         void Submit(bool keepDrawing)
         {
+            PaintProfile.Begin(PaintProfile.Submit);
+            PaintProfile.CountFlush();
             EnsureBuffer(ref edgeBuffer, edgeCount, 16);
             EnsureBuffer(ref paramBuffer, prmCount, 16);
             if (edgeCount > 0) edgeBuffer.SetData(edges, 0, 0, edgeCount);
@@ -157,6 +167,7 @@ namespace OrbitalSalvage.Render
             Shader.SetGlobalTexture(IdAccum, accum);
             UploadText();
             Graphics.ExecuteCommandBuffer(cmd);
+            PaintProfile.End(PaintProfile.Submit);
             if (!keepDrawing) return;
             cmd.Clear();
             edgeCount = 0;
@@ -170,22 +181,12 @@ namespace OrbitalSalvage.Render
         /// </summary>
         public void BackdropBlur(double x, double y, double w, double h, double sigmaUser)
         {
-            if (sigmaUser <= 0 || w == 0 || h == 0 || state.globalAlpha <= 0) return;
+            PaintProfile.Begin(PaintProfile.Backdrop);
+            if (sigmaUser <= 0 || w == 0 || h == 0 || state.globalAlpha <= 0) { PaintProfile.End(PaintProfile.Backdrop); return; }
             var origin = state.ctm.Apply(0, 0);
             var unit = state.ctm.Apply(sigmaUser, 0);
             double sigmaDev = Math.Abs(unit.x - origin.x);
-            if (sigmaDev < 0.5) return;
-            Flush();
-
-            var prev = RenderTexture.active;
-            RenderTexture.active = target;
-            var shot = new Texture2D(Width, Height, TextureFormat.RGBA32, false, true) { filterMode = FilterMode.Point, wrapMode = TextureWrapMode.Clamp };
-            shot.ReadPixels(new Rect(0, 0, Width, Height), 0, 0, false);
-            shot.Apply(false, false);
-            RenderTexture.active = prev;
-            snapshots.Add(shot);
-
-            var px = shot.GetPixels32();
+            if (sigmaDev < 0.5) { PaintProfile.End(PaintProfile.Backdrop); return; }
             var p0 = state.ctm.Apply(x, y);
             var p1 = state.ctm.Apply(x + w, y + h);
             int x0 = Clamp((int)Math.Floor(Math.Min(p0.x, p1.x)), 0, Width);
@@ -194,9 +195,51 @@ namespace OrbitalSalvage.Render
             int bot = (int)Math.Ceiling(Math.Max(p0.y, p1.y));
             int y0 = Clamp(Height - bot, 0, Height);
             int y1 = Clamp(Height - top, 0, Height);
-            BoxBlur(px, Width, Height, x0, y0, x1, y1, sigmaDev);
+            if (x1 <= x0 || y1 <= y0) { PaintProfile.End(PaintProfile.Backdrop); return; }
+
+            int[] radii = BoxRadii(sigmaDev);
+            if (!ExactBackdrop)
+            {
+                double gsx = Math.Min(p0.x, p1.x);
+                double gsy = Math.Min(p0.y, p1.y);
+                BackdropBlurGpu(radii, gsx, gsy, Math.Abs(p1.x - p0.x), Math.Abs(p1.y - p0.y), x, y, w, h);
+                PaintProfile.End(PaintProfile.Backdrop);
+                return;
+            }
+            int maxR = 0;
+            for (int i = 0; i < radii.Length; i++) if (radii[i] > maxR) maxR = radii[i];
+            // Padding stays the original framebuffer; only [x0,y0,x1,y1) is blurred, matching BoxH/BoxV.
+            int wx0 = Clamp(x0 - maxR, 0, Width);
+            int wy0 = Clamp(y0 - maxR, 0, Height);
+            int wx1 = Clamp(x1 + maxR, 0, Width);
+            int wy1 = Clamp(y1 + maxR, 0, Height);
+            int ww = wx1 - wx0, wh = wy1 - wy0;
+
+            Flush();
+            var prev = RenderTexture.active;
+            RenderTexture.active = target;
+            var shot = new Texture2D(ww, wh, TextureFormat.RGBA32, false, true) { filterMode = FilterMode.Point, wrapMode = TextureWrapMode.Clamp };
+            PaintProfile.CountNewTexture();
+            PaintProfile.Begin(PaintProfile.Readback);
+            PaintProfile.CropW = ww;
+            PaintProfile.CropH = wh;
+            PaintProfile.FrameW = Width;
+            PaintProfile.FrameH = Height;
+            long rp0 = PaintProfile.Stamp();
+            shot.ReadPixels(new Rect(wx0, wy0, ww, wh), 0, 0, false);
+            PaintProfile.ReadPixelsTicks += PaintProfile.Stamp() - rp0;
+            PaintProfile.CountReadPixels();
+            shot.Apply(false, false);
+            RenderTexture.active = prev;
+            snapshots.Add(shot);
+            var px = shot.GetPixels32();
+            PaintProfile.End(PaintProfile.Readback);
+
+            PaintProfile.Begin(PaintProfile.CpuBlur);
+            BoxBlurWindow(px, ww, wh, wx0, wy0, Width, Height, x0, y0, x1, y1, radii);
             shot.SetPixels32(px);
             shot.Apply(false, false);
+            PaintProfile.End(PaintProfile.CpuBlur);
 
             bool smooth = state.imageSmoothing;
             state.imageSmoothing = false;
@@ -205,11 +248,140 @@ namespace OrbitalSalvage.Render
             double sy = Math.Min(p0.y, p1.y);
             double sw = Math.Abs(p1.x - p0.x);
             double sh = Math.Abs(p1.y - p0.y);
-            DrawImage(img, sx, sy, sw, sh, x, y, w, h);
+            // Image.shader flips y against the texture height, so the crop's y-down origin is the top of the window.
+            double yDown0 = Height - wy1;
+            DrawImage(img, sx - wx0, sy - yDown0, sw, sh, x, y, w, h);
+            state.imageSmoothing = smooth;
+            PaintProfile.End(PaintProfile.Backdrop);
+        }
+
+        RenderTexture blurA, blurB;
+        Material matBlur;
+
+        void BackdropBlurGpu(int[] radii, double sx, double sy, double sw, double sh, double x, double y, double w, double h)
+        {
+            if (matBlur == null)
+            {
+                var shader = Resources.Load<Shader>("Canvas2D/BackdropBlur");
+                if (shader == null) shader = Shader.Find("Hidden/Canvas2D/BackdropBlur");
+                if (shader == null) throw new InvalidOperationException("missing BackdropBlur shader");
+                matBlur = new Material(shader) { hideFlags = HideFlags.HideAndDontSave };
+            }
+            if (blurA == null || blurA.width != Width || blurA.height != Height)
+            {
+                if (blurA != null) { blurA.Release(); UnityEngine.Object.Destroy(blurA); }
+                if (blurB != null) { blurB.Release(); UnityEngine.Object.Destroy(blurB); }
+                blurA = MakeRT(RenderTextureFormat.ARGB32, "Canvas2D.BlurA");
+                blurB = MakeRT(RenderTextureFormat.ARGB32, "Canvas2D.BlurB");
+                PaintProfile.CountNewTexture();
+            }
+            cmd.Blit(target, blurA);
+            for (int pass = 0; pass < radii.Length; pass++)
+            {
+                matBlur.SetFloat("_Radius", radii[pass]);
+                matBlur.SetVector("_Axis", new Vector4(1f, 0f, 0f, 0f));
+                cmd.Blit(blurA, blurB, matBlur);
+                matBlur.SetVector("_Axis", new Vector4(0f, 1f, 0f, 0f));
+                cmd.Blit(blurB, blurA, matBlur);
+            }
+            bool smooth = state.imageSmoothing;
+            state.imageSmoothing = false;
+            DrawTexture(blurA, sx, sy, sw, sh, x, y, w, h);
             state.imageSmoothing = smooth;
         }
 
         static int Clamp(int v, int lo, int hi) => v < lo ? lo : (v > hi ? hi : v);
+
+        /// <summary>
+        /// Same three box passes as <see cref="BoxBlur"/>, on a crop of the frame.
+        /// <paramref name="px"/> holds rows <paramref name="wy0"/>..<paramref name="wy0"/>+<paramref name="wh"/> and columns
+        /// <paramref name="wx0"/>..+<paramref name="ww"/> of a <paramref name="frameW"/>×<paramref name="frameH"/> image.
+        /// Pixels outside [x0,y0,x1,y1) stay at the crop's original values, which is what the full-frame passes copy through.
+        /// </summary>
+        static void BoxBlurWindow(Color32[] px, int ww, int wh, int wx0, int wy0, int frameW, int frameH, int x0, int y0, int x1, int y1, int[] radii)
+        {
+            var tmp = new Color32[px.Length];
+            Array.Copy(px, tmp, px.Length);
+            for (int pass = 0; pass < radii.Length; pass++)
+            {
+                BoxHWindow(px, tmp, ww, wx0, wy0, frameW, x0, y0, x1, y1, radii[pass]);
+                BoxVWindow(tmp, px, ww, wx0, wy0, frameH, x0, y0, x1, y1, radii[pass]);
+            }
+        }
+
+        static int WinIndex(int ww, int wx0, int wy0, int x, int y) => (y - wy0) * ww + (x - wx0);
+
+        static void BoxHWindow(Color32[] src, Color32[] dst, int ww, int wx0, int wy0, int frameW, int x0, int y0, int x1, int y1, int r)
+        {
+            for (int y = y0; y < y1; y++)
+            {
+                int x = x0;
+                int a = Math.Max(0, x - r);
+                int b = Math.Min(frameW - 1, x + r);
+                int sumR = 0, sumG = 0, sumB = 0, sumA = 0;
+                for (int i = a; i <= b; i++)
+                {
+                    var c = src[WinIndex(ww, wx0, wy0, i, y)];
+                    sumR += c.r; sumG += c.g; sumB += c.b; sumA += c.a;
+                }
+                while (true)
+                {
+                    int count = b - a + 1;
+                    dst[WinIndex(ww, wx0, wy0, x, y)] = new Color32((byte)(sumR / count), (byte)(sumG / count), (byte)(sumB / count), (byte)(sumA / count));
+                    if (++x >= x1) break;
+                    int na = Math.Max(0, x - r);
+                    int nb = Math.Min(frameW - 1, x + r);
+                    while (a < na)
+                    {
+                        var c = src[WinIndex(ww, wx0, wy0, a, y)];
+                        sumR -= c.r; sumG -= c.g; sumB -= c.b; sumA -= c.a;
+                        a++;
+                    }
+                    while (b < nb)
+                    {
+                        b++;
+                        var c = src[WinIndex(ww, wx0, wy0, b, y)];
+                        sumR += c.r; sumG += c.g; sumB += c.b; sumA += c.a;
+                    }
+                }
+            }
+        }
+
+        static void BoxVWindow(Color32[] src, Color32[] dst, int ww, int wx0, int wy0, int frameH, int x0, int y0, int x1, int y1, int r)
+        {
+            for (int x = x0; x < x1; x++)
+            {
+                int y = y0;
+                int a = Math.Max(0, y - r);
+                int b = Math.Min(frameH - 1, y + r);
+                int sumR = 0, sumG = 0, sumB = 0, sumA = 0;
+                for (int i = a; i <= b; i++)
+                {
+                    var c = src[WinIndex(ww, wx0, wy0, x, i)];
+                    sumR += c.r; sumG += c.g; sumB += c.b; sumA += c.a;
+                }
+                while (true)
+                {
+                    int count = b - a + 1;
+                    dst[WinIndex(ww, wx0, wy0, x, y)] = new Color32((byte)(sumR / count), (byte)(sumG / count), (byte)(sumB / count), (byte)(sumA / count));
+                    if (++y >= y1) break;
+                    int na = Math.Max(0, y - r);
+                    int nb = Math.Min(frameH - 1, y + r);
+                    while (a < na)
+                    {
+                        var c = src[WinIndex(ww, wx0, wy0, x, a)];
+                        sumR -= c.r; sumG -= c.g; sumB -= c.b; sumA -= c.a;
+                        a++;
+                    }
+                    while (b < nb)
+                    {
+                        b++;
+                        var c = src[WinIndex(ww, wx0, wy0, x, b)];
+                        sumR += c.r; sumG += c.g; sumB += c.b; sumA += c.a;
+                    }
+                }
+            }
+        }
 
         static void BoxBlur(Color32[] px, int width, int height, int x0, int y0, int x1, int y1, double sigma)
         {
@@ -326,6 +498,7 @@ namespace OrbitalSalvage.Render
             cmd.SetGlobalFloat(IdParamBase, pb);
             cmd.DrawProcedural(Matrix4x4.identity, m, pass, MeshTopology.Triangles, verts);
             DrawCount++;
+            PaintProfile.CountDraw(verts);
         }
 
         void SetRect(int pb, int x0, int y0, int x1, int y1) { prm[pb + IdxRect] = new Vector4(x0, y0, x1, y1); }
@@ -504,35 +677,38 @@ namespace OrbitalSalvage.Render
 
         void RenderShape(PolygonSet ps, bool evenOdd, bool stroke, float alphaMul, bool snap = true)
         {
+            PaintProfile.Begin(PaintProfile.RenderShape);
             var st = state;
-            if (st.globalAlpha <= 0) return;
-            if (!st.ctm.IsInvertible) return;
+            if (st.globalAlpha <= 0 || !st.ctm.IsInvertible) { PaintProfile.End(PaintProfile.RenderShape); return; }
             float alpha = (float)(st.globalAlpha * alphaMul);
             bool shadow = st.shadowColor.a > 0 && (st.shadowBlur > 0 || st.shadowOffsetX != 0 || st.shadowOffsetY != 0);
             if (shadow) RenderShadow(ps, evenOdd, stroke, alpha, snap);
 
-            if (!EmitEdges(ps, 0, 0, out var rect, out int ebase, out int ecount, snap)) return;
+            if (!EmitEdges(ps, 0, 0, out var rect, out int ebase, out int ecount, snap)) { PaintProfile.End(PaintProfile.RenderShape); return; }
             int pb = NewParams();
-            if (!WritePaint(pb, stroke, alpha)) return;
+            if (!WritePaint(pb, stroke, alpha)) { PaintProfile.End(PaintProfile.RenderShape); return; }
             prm[pb + IdxFlags] = new Vector4(0, evenOdd ? 1 : 0, 0, 0);
             BindClip(pb);
             if (glyphMaskFill) WriteGlyphPreblend(pb);
             AccumulateTo(pb, rect, ebase, ecount);
             cmd.SetRenderTarget(target);
             Draw(matFill, FillSourceOver, 6, pb);
+            PaintProfile.End(PaintProfile.RenderShape);
         }
 
         void RenderShadow(PolygonSet ps, bool evenOdd, bool stroke, float alpha, bool snap)
         {
+            PaintProfile.Begin(PaintProfile.Shadow);
+            PaintProfile.CountShadow();
             var st = state;
             double dx = st.shadowOffsetX * ShadowScale, dy = st.shadowOffsetY * ShadowScale;
             double blur = st.shadowBlur * ShadowScale;
             double sigma = blur * 0.5;
             int radius = sigma > 0 ? (int)Math.Ceiling(sigma * 3) : 0;
-            if (!EmitEdges(ps, dx, dy, out var rect, out int ebase, out int ecount, snap)) return;
+            if (!EmitEdges(ps, dx, dy, out var rect, out int ebase, out int ecount, snap)) { PaintProfile.End(PaintProfile.Shadow); return; }
             var full = new PixelRect(0, 0, Width, Height);
             int pbA = NewParams();
-            if (!WritePaint(pbA, stroke, alpha)) return;
+            if (!WritePaint(pbA, stroke, alpha)) { PaintProfile.End(PaintProfile.Shadow); return; }
             prm[pbA + IdxFlags] = new Vector4(0, evenOdd ? 1 : 0, 0, 1);
             prm[pbA + IdxShadow] = new Vector4(st.shadowColor.r, st.shadowColor.g, st.shadowColor.b, st.shadowColor.a);
             BindClip(pbA);
@@ -541,6 +717,7 @@ namespace OrbitalSalvage.Render
             {
                 cmd.SetRenderTarget(target);
                 Draw(matFill, FillSourceOver, 6, pbA);
+                PaintProfile.End(PaintProfile.Shadow);
                 return;
             }
             var big = rect.Expand(radius).Intersect(full);
@@ -573,6 +750,7 @@ namespace OrbitalSalvage.Render
             cmd.SetRenderTarget(target);
             cmd.SetGlobalTexture(IdMask, maskA);
             Draw(matFill, FillSourceOver, 6, pbF);
+            PaintProfile.End(PaintProfile.Shadow);
         }
 
         void RenderClear(PolygonSet ps, bool snap)

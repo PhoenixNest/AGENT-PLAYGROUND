@@ -90,8 +90,9 @@ namespace OrbitalSalvage.Render
         /// <summary>Parses <c>color dx dy [blur [spread]] [inset]</c> layers (box-shadow) or <c>color dx dy [blur]</c> (text-shadow).</summary>
         public static List<CssShadow> ParseShadows(string css)
         {
+            PaintProfile.Begin(PaintProfile.ParseShadows);
             var list = new List<CssShadow>();
-            if (string.IsNullOrWhiteSpace(css) || css == "none") return list;
+            if (string.IsNullOrWhiteSpace(css) || css == "none") { PaintProfile.End(PaintProfile.ParseShadows); return list; }
             foreach (var layer in SplitTop(css))
             {
                 var sh = new CssShadow { color = Rgba.Black };
@@ -108,6 +109,7 @@ namespace OrbitalSalvage.Render
                 if (nums.Count > 3) sh.spread = nums[3];
                 list.Add(sh);
             }
+            PaintProfile.End(PaintProfile.ParseShadows);
             return list;
         }
 
@@ -131,7 +133,8 @@ namespace OrbitalSalvage.Render
         /// <summary>Draws the box. <paramref name="alpha"/> is the accumulated opacity of the element and its ancestors.</summary>
         public static void Draw(Canvas2D c, CssBoxStyle s, double alpha)
         {
-            if (s.w <= 0 || s.h <= 0 || alpha <= 0) return;
+            PaintProfile.Begin(PaintProfile.CssBox);
+            if (s.w <= 0 || s.h <= 0 || alpha <= 0) { PaintProfile.End(PaintProfile.CssBox); return; }
             double scale = c.CurrentTransform.a;
             c.Save();
             c.GlobalAlpha = Math.Min(1, alpha);
@@ -199,6 +202,7 @@ namespace OrbitalSalvage.Render
             DrawBlurredInsets(c, s, outer);
             DrawBorder(c, s, outer);
             c.Restore();
+            PaintProfile.End(PaintProfile.CssBox);
         }
 
         /// <summary>Zero-blur inset shadows: the part of the padding box not covered by that box shifted by the offset.</summary>
@@ -304,8 +308,11 @@ namespace OrbitalSalvage.Render
 
         public static string ToCss(Rgba c)
         {
-            return "rgba(" + Math.Round(c.r * 255).ToString(CultureInfo.InvariantCulture) + "," + Math.Round(c.g * 255).ToString(CultureInfo.InvariantCulture) + "," +
+            PaintProfile.Begin(PaintProfile.ToCss);
+            string s = "rgba(" + Math.Round(c.r * 255).ToString(CultureInfo.InvariantCulture) + "," + Math.Round(c.g * 255).ToString(CultureInfo.InvariantCulture) + "," +
                 Math.Round(c.b * 255).ToString(CultureInfo.InvariantCulture) + "," + c.a.ToString("0.#####", CultureInfo.InvariantCulture) + ")";
+            PaintProfile.End(PaintProfile.ToCss);
+            return s;
         }
 
         // ---- text -------------------------------------------------------------------------------------

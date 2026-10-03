@@ -46,6 +46,16 @@ namespace OrbitalSalvage.Render
         int paintOnlyLayer = -1;
         int lastBlit = -2;
         // Blit of cached layers replaced the frame with empty gray. Keep the builder, do not composite.
+        sealed class PreparedBox
+        {
+            public CssBoxStyle style;
+            public string[] rad = new string[4];
+            public double w, h;
+            public bool any;
+        }
+
+        readonly Dictionary<Dictionary<string, object>, PreparedBox> prepared = new Dictionary<Dictionary<string, object>, PreparedBox>();
+
         static readonly bool UseLayerCache = false;
         /// <summary>True after a live draw has cached static runs. Full home paint measured about 800 ms.</summary>
         public bool UsesLayerCache => UseLayerCache && cacheReady && staticLayerCount > 0;
@@ -234,13 +244,15 @@ namespace OrbitalSalvage.Render
 
         public void Draw(double timeMs, int pressed, string pressCss, bool modalIntro, bool pinPageEnter)
         {
+            long prof = PaintProfile.Stamp();
             frame = double.IsNaN(timeMs) ? null : CssFrame.Build(elements, timeMs, pinPageEnter, modalIntro, pressed, pressCss);
+            canvas.ExactBackdrop = frame == null;
             bool savedPremul = Canvas2D.GradientInterpolatesPremultiplied;
             Canvas2D.GradientInterpolatesPremultiplied = true; // CSS gradients interpolate premultiplied
             Deferred.Clear(); DrawnBoxes = DrawnRuns = DrawnEmoji = 0;
             try
             {
-                if (frame != null && UseLayerCache) EnsureCache();
+                if (frame != null && UseLayerCache) { PaintProfile.Begin(PaintProfile.Cache); EnsureCache(); PaintProfile.End(PaintProfile.Cache); }
                 cacheOn = frame != null && cacheReady && paintOnlyLayer < 0;
                 lastBlit = -2;
                 canvas.BeginFrame();
@@ -258,7 +270,13 @@ namespace OrbitalSalvage.Render
                 PaintAll();
                 canvas.EndFrame();
             }
-            finally { cacheOn = false; Canvas2D.GradientInterpolatesPremultiplied = savedPremul; frame = null; }
+            finally
+            {
+                cacheOn = false;
+                Canvas2D.GradientInterpolatesPremultiplied = savedPremul;
+                frame = null;
+                PaintProfile.AddWall(PaintProfile.Stamp() - prof);
+            }
         }
 
         void PaintAll()
@@ -368,37 +386,34 @@ namespace OrbitalSalvage.Render
 
         void PaintBox(Dictionary<string, object> e, int k, double alpha, bool element)
         {
+            PaintProfile.Begin(PaintProfile.PaintBox);
+            PaintProfile.Elements++;
             var r = ElementRect(e, k, element);
             bool flat = element && frame != null && frame.Tree[k];
             // A rotated square's measured box is the AABB, which is larger than the circle drawn inside it.
             if (!flat) UnrotateCircle(e, r);
             double tilt = flat ? 0 : InheritedTilt(e, r);
-            if (r[2] <= 0 || r[3] <= 0) return;
-            var style = new CssBoxStyle { x = r[0], y = r[1], w = r[2], h = r[3] };
-            bool any = false;
-
-            if (CssColor.TryParse(S(e, "bg"), out var bg) && bg.a > 0) { style.hasBg = true; style.bg = bg; any = true; }
-            string bi = S(e, "bi");
-            if (bi != "" && bi != "none") { style.bgImage = bi; any = true; }
-
-            var rad = Strs(e, "rad");
-            for (int i = 0; i < 4 && i < rad.Count; i++) style.radii[i] = Radius(rad[i], r[2], r[3]);
-
-            var bw = Strs(e, "bw"); var bc = Strs(e, "bc"); var bs = Strs(e, "bs");
-            for (int i = 0; i < 4 && i < bw.Count; i++)
+            if (r[2] <= 0 || r[3] <= 0) { PaintProfile.End(PaintProfile.PaintBox); return; }
+            var prep = PrepareBox(e, r[2], r[3]);
+            var style = prep.style;
+            style.x = r[0]; style.y = r[1]; style.w = r[2]; style.h = r[3];
+            bool borderOverride = element && frame != null && frame.Border[k] != null;
+            bool shadowOverride = element && frame != null && frame.Shadow[k] != null;
+            if (!prep.any && !borderOverride && !shadowOverride) { PaintProfile.End(PaintProfile.PaintBox); return; }
+            Rgba[] savedBorder = null;
+            CssShadow[] savedShadow = null;
+            if (borderOverride)
             {
-                style.borderW[i] = CssBox.ParseLength(bw[i]);
-                style.borderOn[i] = style.borderW[i] > 0 && i < bs.Count && bs[i] == "solid";
-                string border = element && frame != null && frame.Border[k] != null ? frame.Border[k] : (i < bc.Count ? bc[i] : "");
-                style.borderC[i] = CssColor.Parse(border, Rgba.Transparent);
-                if (style.borderOn[i]) any = true;
+                savedBorder = (Rgba[])style.borderC.Clone();
+                var parsed = CssColor.Parse(frame.Border[k], Rgba.Transparent);
+                for (int i = 0; i < 4; i++) style.borderC[i] = parsed;
             }
-
-            string shadow = element && frame != null && frame.Shadow[k] != null ? frame.Shadow[k] : S(e, "sh");
-            style.shadows.AddRange(CssBox.ParseShadows(shadow));
-            foreach (var sh in style.shadows)
-                if (sh.color.a > 0) any = true;
-            if (!any) return;
+            if (shadowOverride)
+            {
+                savedShadow = style.shadows.ToArray();
+                style.shadows.Clear();
+                style.shadows.AddRange(CssBox.ParseShadows(frame.Shadow[k]));
+            }
             if (tilt != 0)
             {
                 double cx = style.x + style.w * 0.5, cy = style.y + style.h * 0.5;
@@ -409,7 +424,48 @@ namespace OrbitalSalvage.Render
             }
             CssBox.Draw(canvas, style, alpha);
             if (tilt != 0) canvas.Restore();
+            if (savedBorder != null) Array.Copy(savedBorder, style.borderC, 4);
+            if (savedShadow != null)
+            {
+                style.shadows.Clear();
+                style.shadows.AddRange(savedShadow);
+            }
             DrawnBoxes++;
+            PaintProfile.End(PaintProfile.PaintBox);
+        }
+
+        PreparedBox PrepareBox(Dictionary<string, object> e, double w, double h)
+        {
+            if (!prepared.TryGetValue(e, out var prep))
+            {
+                prep = new PreparedBox { style = new CssBoxStyle() };
+                var style = prep.style;
+                if (CssColor.TryParse(S(e, "bg"), out var bg) && bg.a > 0) { style.hasBg = true; style.bg = bg; prep.any = true; }
+                string bi = S(e, "bi");
+                if (bi != "" && bi != "none") { style.bgImage = bi; prep.any = true; }
+                var rad = Strs(e, "rad");
+                for (int i = 0; i < 4 && i < rad.Count; i++) prep.rad[i] = rad[i];
+                var bw = Strs(e, "bw"); var bc = Strs(e, "bc"); var bs = Strs(e, "bs");
+                for (int i = 0; i < 4 && i < bw.Count; i++)
+                {
+                    style.borderW[i] = CssBox.ParseLength(bw[i]);
+                    style.borderOn[i] = style.borderW[i] > 0 && i < bs.Count && bs[i] == "solid";
+                    style.borderC[i] = CssColor.Parse(i < bc.Count ? bc[i] : "", Rgba.Transparent);
+                    if (style.borderOn[i]) prep.any = true;
+                }
+                style.shadows.AddRange(CssBox.ParseShadows(S(e, "sh")));
+                foreach (var sh in style.shadows)
+                    if (sh.color.a > 0) prep.any = true;
+                prep.w = double.NaN;
+                prepared[e] = prep;
+            }
+            if (double.IsNaN(prep.w) || Math.Abs(prep.w - w) > 0.02 || Math.Abs(prep.h - h) > 0.02)
+            {
+                for (int i = 0; i < 4; i++) prep.style.radii[i] = Radius(prep.rad[i], w, h);
+                prep.w = w;
+                prep.h = h;
+            }
+            return prep;
         }
 
         static readonly Regex Spaces = new Regex(@"\s+", RegexOptions.Compiled);
@@ -425,6 +481,7 @@ namespace OrbitalSalvage.Render
         void PaintRuns(Dictionary<string, object> e, int k, double alpha)
         {
             if (!e.TryGetValue("runs", out var rv) || !(rv is List<object> runs) || runs.Count == 0) return;
+            PaintProfile.Begin(PaintProfile.PaintRuns);
             string family = FontFamily(S(e, "ff"));
             string font = S(e, "fw") + " " + S(e, "fz") + " " + family;
             double ls = CssBox.ParseLength(S(e, "ls"));
@@ -443,6 +500,7 @@ namespace OrbitalSalvage.Render
                 else r = Rect(run);
                 if (frame != null && Math.Abs(frame.ExtraY[k]) > 1e-6) r[1] += frame.ExtraY[k];
                 if (text.Trim().Length == 0) continue;
+                PaintProfile.Runs++;
 
                 canvas.Save();
                 canvas.Font = font;
@@ -466,6 +524,7 @@ namespace OrbitalSalvage.Render
                 }
                 canvas.Restore();
             }
+            PaintProfile.End(PaintProfile.PaintRuns);
         }
 
         static List<string> WrapToWidth(Canvas2D canvas, string text, double width)

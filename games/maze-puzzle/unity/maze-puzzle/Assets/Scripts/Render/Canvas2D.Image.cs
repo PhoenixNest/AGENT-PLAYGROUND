@@ -25,7 +25,13 @@ namespace OrbitalSalvage.Render
 
         public void DrawImage(CanvasImage img, double sx, double sy, double sw, double sh, double dx, double dy, double dw, double dh)
         {
-            if (img == null || !state.ctm.IsInvertible || state.globalAlpha <= 0) return;
+            if (img == null) return;
+            DrawTexture(img.texture, sx, sy, sw, sh, dx, dy, dw, dh);
+        }
+
+        public void DrawTexture(Texture tex, double sx, double sy, double sw, double sh, double dx, double dy, double dw, double dh)
+        {
+            if (tex == null || !state.ctm.IsInvertible || state.globalAlpha <= 0) return;
             if (!Finite(sx, sy) || !Finite(sw, sh) || !Finite(dx, dy) || !Finite(dw, dh) || sw == 0 || sh == 0 || dw == 0 || dh == 0) return;
             if (sw < 0) { sx += sw; sw = -sw; }
             if (sh < 0) { sy += sh; sh = -sh; }
@@ -49,7 +55,7 @@ namespace OrbitalSalvage.Render
             prm[pb + IdxImgD] = new Vector4((float)dx, (float)dy, (float)dw, (float)dh);
             AccumulateTo(pb, rect, ebase, ecount);
             cmd.SetRenderTarget(target);
-            cmd.SetGlobalTexture(IdImage, img.texture);
+            cmd.SetGlobalTexture(IdImage, tex);
             Draw(matImage, 0, 6, pb);
         }
     }

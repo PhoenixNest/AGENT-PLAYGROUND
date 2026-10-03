@@ -13,6 +13,33 @@ namespace OrbitalSalvage.Render
             public double pen; // CSS px from the start of the string
         }
 
+        readonly struct LayoutKey : IEquatable<LayoutKey>
+        {
+            public readonly string text;
+            public readonly TrueTypeFont font;
+            public readonly int px, ls;
+            public LayoutKey(string text, TrueTypeFont font, int px, int ls) { this.text = text; this.font = font; this.px = px; this.ls = ls; }
+            public bool Equals(LayoutKey o) => px == o.px && ls == o.ls && font == o.font && text == o.text;
+            public override bool Equals(object obj) => obj is LayoutKey o && Equals(o);
+            public override int GetHashCode()
+            {
+                int h = text == null ? 0 : text.GetHashCode();
+                h = (h * 397) ^ (font == null ? 0 : font.GetHashCode());
+                h = (h * 397) ^ px;
+                return (h * 397) ^ ls;
+            }
+        }
+
+        sealed class LayoutHit
+        {
+            public LaidGlyph[] glyphs = Array.Empty<LaidGlyph>();
+            public double[] emojiPens = Array.Empty<double>();
+            public CanvasImage[] emoji = Array.Empty<CanvasImage>();
+            public double width;
+        }
+
+        readonly Dictionary<LayoutKey, LayoutHit> layoutCache = new Dictionary<LayoutKey, LayoutHit>();
+
         readonly List<LaidGlyph> laid = new List<LaidGlyph>(128);
         readonly List<int> segOut = new List<int>(64);
         readonly List<TrueTypeFont> cpFonts = new List<TrueTypeFont>(64);
@@ -38,6 +65,14 @@ namespace OrbitalSalvage.Render
         /// </summary>
         double Layout(string text, double px, TrueTypeFont primary, bool measureOnly)
         {
+            PaintProfile.Begin(PaintProfile.Layout);
+            var key = new LayoutKey(text, primary, (int)Math.Round(px * 64.0), (int)Math.Round(state.letterSpacing * 64.0));
+            if (layoutCache.TryGetValue(key, out var hit))
+            {
+                if (!measureOnly) ApplyLayoutHit(hit);
+                PaintProfile.End(PaintProfile.Layout);
+                return hit.width;
+            }
             var chain = OutlineFonts.Chain(primary);
             CanvasEmoji.SplitRuns(text, runs);
             laid.Clear(); emojiPens.Clear(); emojiImages.Clear();
@@ -47,7 +82,7 @@ namespace OrbitalSalvage.Render
             {
                 if (run.Value)
                 {
-                    if (!measureOnly) { emojiPens.Add(pen); emojiImages.Add(CanvasEmoji.Get(run.Key)); }
+                    emojiPens.Add(pen); emojiImages.Add(CanvasEmoji.Get(run.Key));
                     pen += px;
                     continue;
                 }
@@ -89,7 +124,27 @@ namespace OrbitalSalvage.Render
                     s = e;
                 }
             }
+            var stored = new LayoutHit
+            {
+                width = pen,
+                glyphs = laid.ToArray(),
+                emojiPens = emojiPens.ToArray(),
+                emoji = emojiImages.ToArray()
+            };
+            layoutCache[key] = stored;
+            if (measureOnly) { laid.Clear(); emojiPens.Clear(); emojiImages.Clear(); }
+            PaintProfile.End(PaintProfile.Layout);
             return pen;
+        }
+
+        void ApplyLayoutHit(LayoutHit hit)
+        {
+            laid.Clear();
+            for (int i = 0; i < hit.glyphs.Length; i++) laid.Add(hit.glyphs[i]);
+            emojiPens.Clear();
+            emojiImages.Clear();
+            for (int i = 0; i < hit.emojiPens.Length; i++) emojiPens.Add(hit.emojiPens[i]);
+            for (int i = 0; i < hit.emoji.Length; i++) emojiImages.Add(hit.emoji[i]);
         }
 
         /// <summary>Rounded hhea ascent in CSS px of the current font (Blink's text-fragment ascent): baseline = top of the line box's text rect + this.</summary>
@@ -105,8 +160,9 @@ namespace OrbitalSalvage.Render
         void DrawTextOutline(string text, double x, double y, bool stroke)
         {
             if (string.IsNullOrEmpty(text) || !Finite(x, y)) return;
+            PaintProfile.Begin(PaintProfile.Layout);
             var st = state;
-            if (st.globalAlpha <= 0 || !st.ctm.IsInvertible) return;
+            if (st.globalAlpha <= 0 || !st.ctm.IsInvertible) { PaintProfile.End(PaintProfile.Layout); return; }
             var spec = ParseFont(st.font);
             var primary = OutlineFonts.Primary(spec.family, spec.weight);
             double px = spec.px;
@@ -147,16 +203,19 @@ namespace OrbitalSalvage.Render
                     DrawImage(emojiImages[i], startX + emojiPens[i], top, px, px);
                 }
             }
+            PaintProfile.End(PaintProfile.Layout);
         }
 
         void EmitOutlineGlyphs(double startX, double baseline, double px, bool stroke)
         {
+            PaintProfile.Begin(PaintProfile.GlyphEmit);
             var ctm = state.ctm;
             bool axisAligned = ctm.b == 0 && ctm.c == 0;
             double devScale = ctm.MaxScale();
             if (stroke) tmpPath.Reset(); else polys.Clear();
             foreach (var g in laid)
             {
+                PaintProfile.Glyphs++;
                 var fg = OutlineFonts.Flat(g.font, g.gid, px, devScale);
                 if (fg.contourCount == 0) continue;
                 var o = ctm.Apply(startX + g.pen, baseline);
@@ -195,6 +254,7 @@ namespace OrbitalSalvage.Render
                 RenderShape(polys, false, false, 1f, false);
                 glyphMaskFill = false;
             }
+            PaintProfile.End(PaintProfile.GlyphEmit);
         }
 
         // ---- Skia glyph-mask preblend (SkMaskGamma with sRGB luminance) --------------------------------

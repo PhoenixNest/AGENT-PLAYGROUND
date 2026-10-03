@@ -375,18 +375,23 @@ namespace OrbitalSalvage.Viewer
                 File.WriteAllBytes(Path.Combine(dir, "home_t" + marks[i].ToString("0") + ".png"), ReadPng(current.Target));
                 yield return null;
             }
-            var samples = new double[300];
+            var samples = new double[20];
             var watch = new System.Diagnostics.Stopwatch();
+            PaintProfile.Enabled = true;
+            PaintProfile.Reset();
             for (int i = 0; i < samples.Length; i++)
             {
                 watch.Restart();
                 current.Draw(i * 16.0);
                 watch.Stop();
                 samples[i] = watch.Elapsed.TotalMilliseconds;
-                if ((i + 1) % 50 == 0) WriteDrawStats(dir, samples, i + 1, current != null && current.UsesLayerCache);
                 yield return null;
             }
+            PaintProfile.Enabled = false;
             WriteDrawStats(dir, samples, samples.Length, current != null && current.UsesLayerCache);
+            string table = PaintProfile.Report(samples.Length);
+            File.WriteAllText(Path.Combine(dir, "paint-profile.txt"), table);
+            Debug.Log("[ParityViewer] paint profile\n" + table);
         }
 
         static void WriteDrawStats(string dir, double[] samples, int n, bool cache)
