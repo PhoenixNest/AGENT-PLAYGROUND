@@ -24,6 +24,9 @@ namespace OrbitalSalvage.Parity
         bool pointerTouched;
         int exitCode;
         readonly Dictionary<string, OrbitalSalvage.Render.HomeChrome> homeChromes = new Dictionary<string, OrbitalSalvage.Render.HomeChrome>();
+        string chromeSpec;
+        bool chromeHasOffset;
+        double chromeOffsetMs;
 
         readonly List<Dictionary<string, object>> errors = new List<Dictionary<string, object>>();
         readonly List<object> timings = new List<object>();
@@ -126,6 +129,9 @@ namespace OrbitalSalvage.Parity
         IEnumerator RunState(ParityState state, string profile)
         {
             ctx = new ParityContext { StateId = state.Id, Profile = profile, Clock = clock, Rig = rig };
+            chromeSpec = string.IsNullOrEmpty(state.Spec) ? state.Id : state.Spec;
+            chromeHasOffset = state.HasTimeOffset;
+            chromeOffsetMs = state.TimeOffsetMs;
             booted = false;
             holding = false;
             pointerTouched = false;
@@ -283,7 +289,7 @@ namespace OrbitalSalvage.Parity
                     float until = Time.realtimeSinceStartup + UiTweenFlushSeconds;
                     while (Time.realtimeSinceStartup < until) yield return null;
                 }
-                bool chrome = OrbitalSalvage.Render.HomeChrome.Applies(ctx.StateId);
+                bool chrome = OrbitalSalvage.Render.HomeChrome.Applies(chromeSpec);
                 rig.Refresh();
                 yield return new WaitForEndOfFrame();
                 if (chrome) DrawHomeChrome();
@@ -319,13 +325,16 @@ namespace OrbitalSalvage.Parity
 
         void DrawHomeChrome()
         {
-            string key = ctx.StateId + "__" + ctx.Profile;
+            string key = chromeSpec + "__" + ctx.Profile;
             if (!homeChromes.TryGetValue(key, out var chrome))
             {
-                chrome = OrbitalSalvage.Render.HomeChrome.Load(ctx.StateId, ctx.Profile);
+                chrome = OrbitalSalvage.Render.HomeChrome.Load(chromeSpec, ctx.Profile);
                 homeChromes[key] = chrome;
             }
-            chrome.Draw();
+            if (chromeHasOffset)
+                chrome.Draw(chrome.CaptureTimeMs + chromeOffsetMs);
+            else
+                chrome.Draw();
             Graphics.CopyTexture(chrome.Target, rig.Target);
             var deferred = new List<object>();
             foreach (var kv in chrome.Deferred) deferred.Add(kv.Key + " x" + kv.Value);
