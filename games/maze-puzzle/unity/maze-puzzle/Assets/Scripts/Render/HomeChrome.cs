@@ -27,6 +27,10 @@ namespace OrbitalSalvage.Render
         readonly Canvas2D canvas;
         readonly StreamPlayer playfield;
         readonly List<Dictionary<string, object>> elements;
+        /// <summary>When set, the playfield canvas element is not replayed and full-viewport boxes under it are left transparent.</summary>
+        public bool SkipPlayfield;
+        public readonly Dictionary<string, string> TextOverrides = new Dictionary<string, string>();
+        public readonly Dictionary<string, double> WidthOverrides = new Dictionary<string, double>();
         readonly double scale;
         readonly int cssW, cssH;
         public readonly string Profile;
@@ -67,6 +71,12 @@ namespace OrbitalSalvage.Render
 
         static string S(Dictionary<string, object> e, string key) => e.TryGetValue(key, out var v) && v is string s ? s : "";
         static double N(Dictionary<string, object> e, string key, double fallback = 0) => e.TryGetValue(key, out var v) && v is double d ? d : fallback;
+        bool CoversViewport(Dictionary<string, object> e)
+        {
+            var r = Rect(e);
+            return r[0] <= 1 && r[1] <= 1 && r[2] >= cssW - 1 && r[3] >= cssH - 1;
+        }
+
         static double[] Rect(Dictionary<string, object> e)
         {
             var l = (List<object>)e["r"];
@@ -105,6 +115,12 @@ namespace OrbitalSalvage.Render
             var skip = new bool[n];
             var byIndex = new Dictionary<int, int>();
             for (int k = 0; k < n; k++) byIndex[(int)N(elements[k], "i", k)] = k;
+            int playfieldIndex = -1;
+            if (SkipPlayfield)
+            {
+                for (int k = 0; k < n; k++)
+                    if (S(elements[k], "t") == "canvas") { playfieldIndex = k; break; }
+            }
 
             for (int k = 0; k < n; k++)
             {
@@ -114,9 +130,19 @@ namespace OrbitalSalvage.Render
                 double parentOpacity = pk >= 0 ? eff[pk] : 1;
                 bool parentSkipped = pk >= 0 && skip[pk];
 
+                if (SkipPlayfield && playfieldIndex >= 0 && k < playfieldIndex && CoversViewport(e))
+                {
+                    string coverClasses = " " + S(e, "c") + " ";
+                    eff[k] = parentOpacity * N(e, "o", 1);
+                    skip[k] = parentSkipped;
+                    if (parentSkipped) continue;
+                    if (N(e, "v", 1) == 0 || S(e, "vis") == "hidden" || coverClasses.Contains(" page-hidden ")) { skip[k] = true; continue; }
+                    continue;
+                }
+
             if (S(e, "t") == "canvas")
             {
-                if (playfield != null)
+                if (!SkipPlayfield && playfield != null)
                 {
                     playfield.Play(canvas);
                     canvas.SetTransform(scale, 0, 0, scale, 0, 0);
@@ -175,6 +201,8 @@ namespace OrbitalSalvage.Render
             var r = Rect(e);
             // A rotated square's measured box is the AABB, which is larger than the circle drawn inside it.
             UnrotateCircle(e, r);
+            string widthId = S(e, "id");
+            if (widthId.Length > 0 && WidthOverrides.TryGetValue(widthId, out double widthOverride)) r[2] = widthOverride;
             double tilt = InheritedTilt(e, r);
             if (r[2] <= 0 || r[3] <= 0) return;
             var style = new CssBoxStyle { x = r[0], y = r[1], w = r[2], h = r[3] };
@@ -233,10 +261,14 @@ namespace OrbitalSalvage.Render
             var shadows = CssBox.ParseShadows(S(e, "ts"));
             bool upper = S(e, "tt") == "uppercase";
 
-            foreach (var ro in runs)
+            string textId = S(e, "id");
+            string textReplacement = null;
+            bool replaceText = textId.Length > 0 && TextOverrides.TryGetValue(textId, out textReplacement);
+            for (int ri = 0; ri < runs.Count; ri++)
             {
-                var run = (Dictionary<string, object>)ro;
-                string text = Spaces.Replace(S(run, "s"), " ");
+                var run = (Dictionary<string, object>)runs[ri];
+                string text = replaceText && ri == 0 ? textReplacement : Spaces.Replace(S(run, "s"), " ");
+                if (replaceText && ri > 0) continue;
                 if (upper) text = text.ToUpperInvariant();
                 var r = Rect(run);
                 if (text.Trim().Length == 0) continue;
