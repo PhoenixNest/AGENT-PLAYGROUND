@@ -383,5 +383,122 @@
         "op": "capture"
       }
     ]
+  },
+  {
+    "id": "home_default_t500",
+    "spec": "home_default",
+    "timeOffsetMs": 500,
+    "description": "Home 500 ms after the settled capture",
+    "profiles": ["zero"],
+    "steps": [{ "op": "boot" }, { "op": "advance", "ms": 500 }, { "op": "capture" }]
+  },
+  {
+    "id": "home_default_t1500",
+    "spec": "home_default",
+    "timeOffsetMs": 1500,
+    "description": "Home 1500 ms after the settled capture",
+    "profiles": ["zero"],
+    "steps": [{ "op": "boot" }, { "op": "advance", "ms": 1500 }, { "op": "capture" }]
+  },
+  {
+    "id": "home_default_t4000",
+    "spec": "home_default",
+    "timeOffsetMs": 4000,
+    "description": "Home 4000 ms after the settled capture",
+    "profiles": ["zero"],
+    "steps": [{ "op": "boot" }, { "op": "advance", "ms": 4000 }, { "op": "capture" }]
+  },
+  {
+    "id": "loading_t0500_t500",
+    "spec": "loading_t0500",
+    "timeOffsetMs": 500,
+    "description": "Loading 500 ms after the 500 ms capture",
+    "profiles": ["zero"],
+    "steps": [
+      { "op": "boot", "completeLoading": false },
+      { "op": "advance", "ms": 1000 },
+      { "op": "capture" }
+    ]
+  },
+  {
+    "id": "loading_t0500_t1500",
+    "spec": "home_default",
+    "timeOffsetMs": 500,
+    "description": "2000 ms from boot has left loading; the web frame is home at the +500 pose",
+    "profiles": ["zero"],
+    "steps": [
+      { "op": "boot" },
+      { "op": "advance", "ms": 500 },
+      { "op": "capture" }
+    ]
+  },
+  {
+    "id": "shop_rings_default_t500",
+    "spec": "shop_rings_default",
+    "timeOffsetMs": 500,
+    "description": "Shop rings 500 ms after the settled capture (gift banner)",
+    "profiles": ["zero"],
+    "steps": [
+      { "op": "boot" },
+      { "op": "click", "target": "btn-open-shop-page" },
+      { "op": "advance", "ms": 900 },
+      { "op": "capture" }
+    ]
+  },
+  {
+    "id": "shop_rings_default_t1500",
+    "spec": "shop_rings_default",
+    "timeOffsetMs": 1500,
+    "description": "Shop rings 1500 ms after the settled capture (gift banner)",
+    "profiles": ["zero"],
+    "steps": [
+      { "op": "boot" },
+      { "op": "click", "target": "btn-open-shop-page" },
+      { "op": "advance", "ms": 1900 },
+      { "op": "capture" }
+    ]
+  },
+  {
+    "id": "daily_master_ready",
+    "description": "Daily page with the master box unlocked",
+    "profiles": ["zero"],
+    "steps": [
+      { "op": "boot" },
+      { "op": "setProfile", "path": "lastDailyShiftDate", "value": "2026-10-01" },
+      { "op": "setProfile", "path": "completedDailyTiers", "value": ["bronze", "silver", "gold"] },
+      { "op": "click", "target": "btn-open-daily-shift" },
+      { "op": "advance", "ms": 400 },
+      { "op": "capture" }
+    ]
+  },
+  {
+    "id": "daily_master_ready_t500",
+    "spec": "daily_master_ready",
+    "timeOffsetMs": 500,
+    "description": "Unlocked master box 500 ms later",
+    "profiles": ["zero"],
+    "steps": [
+      { "op": "boot" },
+      { "op": "setProfile", "path": "lastDailyShiftDate", "value": "2026-10-01" },
+      { "op": "setProfile", "path": "completedDailyTiers", "value": ["bronze", "silver", "gold"] },
+      { "op": "click", "target": "btn-open-daily-shift" },
+      { "op": "advance", "ms": 900 },
+      { "op": "capture" }
+    ]
+  },
+  {
+    "id": "daily_master_ready_t1500",
+    "spec": "daily_master_ready",
+    "timeOffsetMs": 1500,
+    "description": "Unlocked master box 1500 ms later",
+    "profiles": ["zero"],
+    "steps": [
+      { "op": "boot" },
+      { "op": "setProfile", "path": "lastDailyShiftDate", "value": "2026-10-01" },
+      { "op": "setProfile", "path": "completedDailyTiers", "value": ["bronze", "silver", "gold"] },
+      { "op": "click", "target": "btn-open-daily-shift" },
+      { "op": "advance", "ms": 1900 },
+      { "op": "capture" }
+    ]
   }
 ]
