@@ -4,7 +4,9 @@
     "references": [
         "UnityEngine.TestRunner",
         "UnityEditor.TestRunner",
-        "OrbitalSalvage.Render"
+        "OrbitalSalvage.Render",
+        "OrbitalSalvage.Logic",
+        "OrbitalSalvage.JsCompat"
     ],
     "includePlatforms": [
         "Editor"
