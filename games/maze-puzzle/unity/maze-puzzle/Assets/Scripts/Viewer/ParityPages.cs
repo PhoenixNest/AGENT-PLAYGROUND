@@ -171,6 +171,13 @@ namespace OrbitalSalvage.Viewer
         /// <summary>CSS-pixel hit test. Returns a painted state id, or null when the click does not navigate.</summary>
         public static string Hit(string stateId, string specJson, double cssX, double cssY)
         {
+            var edge = HitEdge(stateId, specJson, cssX, cssY);
+            return edge != null ? edge.TargetId : null;
+        }
+
+        /// <summary>Same hit test as <see cref="Hit"/>, including which control was pressed.</summary>
+        public static NavEdge HitEdge(string stateId, string specJson, double cssX, double cssY)
+        {
             var els = Parse(specJson);
             int hit = -1;
             for (int i = els.Count - 1; i >= 0; i--)
@@ -187,13 +194,13 @@ namespace OrbitalSalvage.Viewer
             // Anything under an opaque overlay is not reached.
             for (int i = hit; i >= 0; i = els[i].Parent)
             {
-                string target = Match(stateId, els, i);
-                if (target != null) return target;
+                var edge = Match(stateId, els, i);
+                if (edge != null) return edge;
             }
             return null;
         }
 
-        static string Match(string stateId, List<El> els, int index)
+        static NavEdge Match(string stateId, List<El> els, int index)
         {
             var e = els[index];
             for (int r = 0; r < Edges.Count; r++)
@@ -202,12 +209,12 @@ namespace OrbitalSalvage.Viewer
                 if (edge.StateId != stateId) continue;
                 if (edge.Id != null)
                 {
-                    if (e.Id == edge.Id) return edge.TargetId;
+                    if (e.Id == edge.Id) return edge;
                     continue;
                 }
                 if (edge.ClassToken == null || !HasToken(e.Classes, edge.ClassToken)) continue;
                 if (edge.ClassIndex < 0 || Ordinal(els, index, edge.ClassToken) == edge.ClassIndex)
-                    return edge.TargetId;
+                    return edge;
             }
             return null;
         }
