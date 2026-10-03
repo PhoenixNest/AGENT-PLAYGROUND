@@ -89,7 +89,10 @@ namespace OrbitalSalvage.Parity
     public sealed class ParityState
     {
         public string Id;
+        public string Spec;
         public string Description;
+        public bool HasTimeOffset;
+        public double TimeOffsetMs;
         public List<string> Profiles = new List<string>();
         public List<ParityStep> Steps = new List<ParityStep>();
     }
@@ -119,6 +122,13 @@ namespace OrbitalSalvage.Parity
                     Description = obj.TryGetValue("description", out var d) ? Convert.ToString(d) : ""
                 };
 
+                if (obj.TryGetValue("spec", out var spec) && spec != null) state.Spec = Convert.ToString(spec);
+                if (obj.TryGetValue("timeOffsetMs", out var off) && off != null)
+                {
+                    // Parity MiniJson stores JSON integers as long, not double.
+                    state.HasTimeOffset = true;
+                    state.TimeOffsetMs = Convert.ToDouble(off, System.Globalization.CultureInfo.InvariantCulture);
+                }
                 if (obj.TryGetValue("profiles", out var profs) && profs is List<object> plist)
                     foreach (var p in plist) state.Profiles.Add(Convert.ToString(p));
 

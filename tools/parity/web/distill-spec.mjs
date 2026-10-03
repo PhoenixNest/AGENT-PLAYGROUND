@@ -32,6 +32,118 @@ const num = (s) => {
   const n = parseFloat(s);
   return Number.isFinite(n) ? n : 0;
 };
+const moved = (a, b) => a.some((v, i) => Math.abs(v - b[i]) > 0.02);
+
+// Split a CSS list on commas that are not inside parentheses.
+function splitList(text) {
+  const parts = [];
+  let depth = 0;
+  let cur = "";
+  for (const ch of String(text ?? "")) {
+    if (ch === "(") depth++;
+    else if (ch === ")") depth--;
+    if (ch === "," && depth === 0) {
+      parts.push(cur.trim());
+      cur = "";
+    } else cur += ch;
+  }
+  if (cur.trim()) parts.push(cur.trim());
+  return parts;
+}
+
+function timeMs(s) {
+  const str = String(s ?? "").trim();
+  if (!str || str === "none") return 0;
+  if (str.endsWith("ms")) return parseFloat(str) || 0;
+  if (str.endsWith("s")) return (parseFloat(str) || 0) * 1000;
+  const n = parseFloat(str);
+  return Number.isFinite(n) ? n : 0;
+}
+
+// One animation (the first, when a shorthand lists several). it = 0 means infinite.
+function compactAnim(anim) {
+  if (!anim || !anim.name || anim.name === "none") return null;
+  const name = splitList(anim.name)[0];
+  if (!name || name === "none") return null;
+  const iter = splitList(String(anim.iteration ?? "1"))[0];
+  return {
+    n: name,
+    du: round(timeMs(splitList(anim.duration)[0])),
+    ea: splitList(anim.timing || "ease")[0] || "ease",
+    dl: round(timeMs(splitList(anim.delay)[0])),
+    it: iter === "infinite" ? 0 : Number(iter) || 1,
+    di: splitList(anim.direction || "normal")[0] || "normal",
+    fi: splitList(anim.fill || "none")[0] || "none",
+    ct: anim.currentTime == null ? 0 : round(anim.currentTime),
+    xf: anim.transforms ? 1 : 0,
+  };
+}
+
+// Keep the scored still-frame fields. Overlay only the animation baseline so Draw() stays put.
+function mergePaint(path, fresh) {
+  if (!existsSync(path)) return fresh;
+  const base = JSON.parse(readFileSync(path, "utf8"));
+  if (!base.elements || base.elements.length !== fresh.elements.length) {
+    console.warn(`paint merge skipped for ${path}: element count ${base.elements && base.elements.length} vs ${fresh.elements.length}`);
+    return fresh;
+  }
+  base.t0 = fresh.t0;
+  base.elements.forEach((el, i) => {
+    const src = fresh.elements[i];
+    for (const key of ["am", "br", "bt", "dx", "to"]) {
+      if (src[key] != null) el[key] = src[key];
+      else delete el[key];
+    }
+    const runs = el.runs || [];
+    const srcRuns = src.runs || [];
+    if (runs.length === srcRuns.length) {
+      runs.forEach((run, ri) => {
+        if (srcRuns[ri].br) run.br = srcRuns[ri].br;
+        else delete run.br;
+      });
+    }
+  });
+  return base;
+}
+
+function writeKeyframes(dir) {
+  const srcPath = join(parityDir, "out/web/spec/keyframes.json");
+  if (!existsSync(srcPath)) {
+    console.warn(`no ${srcPath}; _keyframes.json not written`);
+    return;
+  }
+  const raw = JSON.parse(readFileSync(srcPath, "utf8"));
+  const doc = {};
+  for (const rule of raw) {
+    const stops = [];
+    for (const k of rule.keyframes || []) {
+      const props = {};
+      for (const pair of k.declarations || []) {
+        const p = pair[0];
+        const v = pair[1];
+        if (p === "transform") props.tf = v;
+        else if (p === "opacity") props.o = v;
+        else if (p === "box-shadow") props.sh = v;
+        else if (p === "border-color") props.bc = v;
+        else if (p === "animation-timing-function") props.ea = v;
+      }
+      for (const piece of String(k.keyText || "0%").split(",")) {
+        const s = piece.trim();
+        let t = 0;
+        if (s === "from") t = 0;
+        else if (s === "to") t = 1;
+        else if (s.endsWith("%")) t = parseFloat(s) / 100;
+        else t = parseFloat(s);
+        stops.push({ t: round(t), ...props });
+      }
+    }
+    stops.sort((a, b) => a.t - b.t);
+    doc[rule.name] = stops;
+  }
+  const path = join(dir, "_keyframes.json");
+  writeFileSync(path, JSON.stringify(doc));
+  console.log(`wrote ${path} (${Object.keys(doc).length} animations)`);
+}
 
 function pseudoBox(host, p) {
   if (!p) return null;
@@ -142,17 +254,42 @@ for (const profile of ["zero", "iphone"]) {
     }
     o.runs = e.textRuns
       .filter((t) => t.kind === "text")
-      .map((t) => ({ s: t.text, r: rect(t.rect) }));
+      .map((t, ri) => {
+        const run = { s: t.text, r: rect(t.rect) };
+        const br = e.baseRuns && e.baseRuns[ri];
+        if (br && moved(run.r, rect(br))) run.br = rect(br);
+        return run;
+      });
+    const anim = compactAnim(e.anim);
+    if (anim) o.am = anim;
+    if (e.baseRect) {
+      const br = rect(e.baseRect);
+      if (moved(o.r, br)) o.br = br;
+    }
+    if (e.baseTransform && e.baseTransform !== "none") o.bt = e.baseTransform;
+    if (e.dx) {
+      const n = parseFloat(e.dx);
+      if (Number.isFinite(n)) o.dx = round(n);
+    }
+    if (e.anim && e.anim.origin && e.anim.origin !== "50% 50%" && e.anim.origin !== "50% 50% 0px")
+      o.to = e.anim.origin;
     return o;
   });
-  const out = {
+  // Hidden pages in the same frame report currentTime 0. The capture clock is the latest visible animation.
+  const times = elements.filter((el) => el.v === 1 && el.am && el.am.ct > 0).map((el) => el.am.ct);
+  const t0 = times.length ? round(Math.max(...times)) : 0;
+  const fresh = {
     page,
     profile,
     viewport: src.viewport,
+    t0,
     count: elements.length,
     elements,
   };
   const path = join(outDir, `${page}__${profile}.json`);
-  writeFileSync(path, JSON.stringify(out));
-  console.log(`wrote ${path} (${elements.length} elements)`);
+  const merged = mergePaint(path, fresh);
+  writeFileSync(path, JSON.stringify(merged));
+  console.log(`wrote ${path} (${merged.elements.length} elements, t0=${merged.t0}ms, anim=${merged.elements.filter((e) => e.am).length})`);
 }
+
+writeKeyframes(outDir);

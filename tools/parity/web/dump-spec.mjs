@@ -462,6 +462,7 @@ function pageDump({ rootSel, props }) {
   };
 
   const elements = [];
+  const nodes = [];
   const indexOf = new Map();
   const walk = (el, parentIndex) => {
     if (el.nodeName === "IMG" && el.classList.contains("pe")) {
@@ -478,6 +479,7 @@ function pageDump({ rootSel, props }) {
         file: el.getAttribute("src"),
         rect: { x: r.x, y: r.y, w: r.width, h: r.height },
       });
+      nodes.push(el);
       return;
     }
     const cs = getComputedStyle(el);
@@ -552,6 +554,7 @@ function pageDump({ rootSel, props }) {
       });
     }
     elements.push(entry);
+    nodes.push(el);
     for (let c = el.firstChild; c; c = c.nextSibling) {
       if (c.nodeType === 3) {
         if (!c.nodeValue.trim()) continue;
@@ -579,7 +582,106 @@ function pageDump({ rootSel, props }) {
       }
     }
   };
+  // currentTime is the animation clock at this capture. baseRect / baseRuns are measured with animations
+  // removed and, where the animation replaces transform, with that transform cleared so playback can
+  // apply the evaluated matrix once (the captured rect already includes the frozen pose).
+  const annotateAnimations = (nodes, elements) => {
+  const keyframeHas = (nameList, prop) => {
+    const names = new Set(
+      String(nameList)
+        .split(",")
+        .map((s) => s.trim())
+        .filter((s) => s && s !== "none"),
+    );
+    const visit = (rules) => {
+      for (const rule of rules) {
+        if (rule.type === CSSRule.KEYFRAMES_RULE && names.has(rule.name)) {
+          for (const k of rule.cssRules) {
+            if (k.style.getPropertyValue(prop)) return true;
+          }
+        } else if (rule.cssRules && rule.type !== CSSRule.KEYFRAMES_RULE) {
+          if (visit(rule.cssRules)) return true;
+        }
+      }
+      return false;
+    };
+    for (const sheet of document.styleSheets) {
+      try {
+        if (visit(sheet.cssRules)) return true;
+      } catch {}
+    }
+    return false;
+  };
+  const numTime = (ct) => {
+    if (ct == null) return null;
+    if (typeof ct === "number") return Number.isFinite(ct) ? ct : null;
+    if (typeof ct === "object" && typeof ct.value === "number")
+      return ct.unit === "s" ? ct.value * 1000 : ct.value;
+    const n = parseFloat(String(ct));
+    return Number.isFinite(n) ? n : null;
+  };
+
+  const animIdx = [];
+  for (let i = 0; i < elements.length; i++) {
+    const el = nodes[i];
+    const style = elements[i] && elements[i].style;
+    if (!el || !style) continue;
+    const name = style["animation-name"];
+    if (!name || name === "none") continue;
+    const running =
+      typeof el.getAnimations === "function"
+        ? el.getAnimations().filter((a) => a.animationName)
+        : [];
+    const dx = getComputedStyle(el).getPropertyValue("--dx").trim();
+    elements[i].anim = {
+      name,
+      duration: style["animation-duration"],
+      timing: style["animation-timing-function"],
+      delay: style["animation-delay"],
+      iteration: style["animation-iteration-count"],
+      direction: style["animation-direction"],
+      fill: style["animation-fill-mode"],
+      playState: style["animation-play-state"],
+      currentTime: numTime(running[0] ? running[0].currentTime : null),
+      origin: getComputedStyle(el).transformOrigin,
+      transforms: keyframeHas(name, "transform"),
+    };
+    if (dx) elements[i].dx = dx;
+    animIdx.push(i);
+  }
+  if (!animIdx.length) return;
+
+  const transformIdx = animIdx.filter((i) => elements[i].anim.transforms);
+  for (const i of animIdx)
+    nodes[i].style.setProperty("animation", "none", "important");
+  document.documentElement.getBoundingClientRect();
+  for (const i of animIdx)
+    elements[i].baseTransform = getComputedStyle(nodes[i]).transform;
+  for (const i of transformIdx)
+    nodes[i].style.setProperty("transform", "none", "important");
+  document.documentElement.getBoundingClientRect();
+  for (let i = 0; i < nodes.length; i++) {
+    const el = nodes[i];
+    if (!el || !el.getBoundingClientRect) continue;
+    const r = el.getBoundingClientRect();
+    elements[i].baseRect = { x: r.x, y: r.y, w: r.width, h: r.height };
+    if (!elements[i].textRuns) continue;
+    const bases = [];
+    for (let c = el.firstChild; c; c = c.nextSibling) {
+      if (c.nodeType !== 3 || !String(c.nodeValue).trim()) continue;
+      const range = document.createRange();
+      range.selectNodeContents(c);
+      const rr = range.getBoundingClientRect();
+      bases.push({ x: rr.x, y: rr.y, w: rr.width, h: rr.height });
+    }
+    if (bases.length) elements[i].baseRuns = bases;
+  }
+  for (const i of transformIdx) nodes[i].style.removeProperty("transform");
+  for (const i of animIdx) nodes[i].style.removeProperty("animation");
+  };
+
   walk(root, -1);
+  annotateAnimations(nodes, elements);
   return { root: rootSel, count: elements.length, elements };
 }
 
