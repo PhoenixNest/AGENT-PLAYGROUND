@@ -2,7 +2,9 @@
     "name": "OrbitalSalvage.Render",
     "rootNamespace": "OrbitalSalvage.Render",
     "references": [
-        "Unity.TextMeshPro"
+        "Unity.TextMeshPro",
+        "OrbitalSalvage.JsCompat",
+        "OrbitalSalvage.Logic"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
