@@ -34,8 +34,12 @@ namespace OrbitalSalvage.Viewer
         readonly Dictionary<string, string> specs = new Dictionary<string, string>();
         readonly List<HomeChrome> evicted = new List<HomeChrome>(4);
 
+        readonly UiClock clock = new UiClock();
         HomeChrome current;
         string currentId;
+        int pressIndex = -1;
+        string pressCss;
+        string armedTarget;
         Texture2D black;
         GUIStyle hintStyle;
         bool hintVisible = true;
@@ -47,7 +51,9 @@ namespace OrbitalSalvage.Viewer
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
         static void Bootstrap()
         {
-            if (!ShouldStart(Environment.GetCommandLineArgs())) return;
+            var args = Environment.GetCommandLineArgs();
+            Debug.Log("[ParityViewer] bootstrap " + string.Join(" ", args));
+            if (!ShouldStart(args)) return;
             if (FindAnyObjectByType<ParityViewer>() != null) return;
             var go = new GameObject("ParityViewer");
             DontDestroyOnLoad(go);
@@ -99,6 +105,7 @@ namespace OrbitalSalvage.Viewer
 
         void Start()
         {
+            clock.NowSeconds = () => Time.realtimeSinceStartupAsDouble;
             SuppressLegacy();
             string self = SelfTestDirectory(Environment.GetCommandLineArgs());
             if (self != null)
@@ -113,7 +120,9 @@ namespace OrbitalSalvage.Viewer
         void LateUpdate()
         {
             SuppressLegacy();
-            if (!selfTesting) HandleInput();
+            if (selfTesting) return;
+            HandleInput();
+            Tick();
         }
 
         void OnDestroy()
@@ -148,10 +157,27 @@ namespace OrbitalSalvage.Viewer
                 evicted.Clear();
                 cache.Add(stateId, chrome, evicted);
                 for (int i = 0; i < evicted.Count; i++) evicted[i].Dispose();
-                chrome.Draw();
             }
+            bool modal = stateId.StartsWith("modal_", StringComparison.Ordinal);
             current = chrome;
             currentId = stateId;
+            pressIndex = -1;
+            pressCss = null;
+            armedTarget = null;
+            clock.Restart();
+            if (selfTesting) chrome.Draw();
+            else chrome.Draw(0, -1, null, modal, modal);
+        }
+
+        void Tick()
+        {
+            if (current == null || currentId == null) return;
+            double ms = clock.Milliseconds;
+            bool modal = currentId.StartsWith("modal_", StringComparison.Ordinal);
+            bool intro = modal && ms < 400;
+            bool enter = ms < 260;
+            if (!current.Loops && !intro && !enter && pressIndex < 0) return;
+            current.Draw(ms, pressIndex, pressCss, intro, modal);
         }
 
         void HandleInput()
@@ -168,7 +194,41 @@ namespace OrbitalSalvage.Viewer
                 int digit = i == 9 ? 0 : i + 1;
                 Show(ParityPages.Jump(digit));
             }
-            if (PointerDown(out var screen)) Click(screen);
+            if (PointerDown(out var down)) Arm(down);
+            if (PointerUp()) Release();
+        }
+
+        static bool PointerUp()
+        {
+            if (Input.touchCount > 0)
+            {
+                var touch = Input.GetTouch(0);
+                return touch.phase == TouchPhase.Ended || touch.phase == TouchPhase.Canceled;
+            }
+            return Input.GetMouseButtonUp(0);
+        }
+
+        void Arm(Vector2 screen)
+        {
+            if (currentId == null) return;
+            var box = Letterbox(Screen.width, Screen.height);
+            if (!TryCss(box, screen, out double cssX, out double cssY)) return;
+            string spec = Spec(currentId);
+            if (ParityPages.TryPressAt(spec, cssX, cssY, out int index, out string transform))
+            {
+                pressIndex = index;
+                pressCss = transform;
+            }
+            armedTarget = ParityPages.Hit(currentId, spec, cssX, cssY);
+        }
+
+        void Release()
+        {
+            string target = armedTarget;
+            pressIndex = -1;
+            pressCss = null;
+            armedTarget = null;
+            if (target != null) Show(target);
         }
 
         static bool PointerDown(out Vector2 screen)
@@ -191,15 +251,6 @@ namespace OrbitalSalvage.Viewer
             }
             screen = default;
             return false;
-        }
-
-        void Click(Vector2 screen)
-        {
-            if (currentId == null) return;
-            var box = Letterbox(Screen.width, Screen.height);
-            if (!TryCss(box, screen, out double cssX, out double cssY)) return;
-            string target = ParityPages.Hit(currentId, Spec(currentId), cssX, cssY);
-            if (target != null) Show(target);
         }
 
         string Spec(string stateId)
@@ -283,14 +334,19 @@ namespace OrbitalSalvage.Viewer
             Application.targetFrameRate = -1;
             yield return null;
             string error = null;
-            try { Directory.CreateDirectory(dir); }
+            try
+            {
+                Directory.CreateDirectory(dir);
+                File.WriteAllText(Path.Combine(dir, "started.txt"), "ok");
+                Debug.Log("[ParityViewer] selftest start " + dir);
+            }
             catch (Exception ex) { error = ex.ToString(); }
 
             string id = ParityPages.StateIds[0];
             for (int i = 0; i < ParityPages.StateIds.Length && error == null; i++)
             {
                 Show(id);
-                yield return new WaitForEndOfFrame();
+                yield return null;
                 try
                 {
                     if (current == null || current.Target == null)
@@ -301,10 +357,50 @@ namespace OrbitalSalvage.Viewer
                 id = ParityPages.Cycle(id, 1);
             }
 
+            if (error == null) yield return StartCoroutine(WriteHomeTimes(dir));
             if (error != null) Debug.LogError("[ParityViewer] selftest failed: " + error);
             else Debug.Log("[ParityViewer] selftest wrote " + ParityPages.StateIds.Length + " frames to " + dir);
             yield return null;
             if (!Application.isEditor) Application.Quit(error == null ? 0 : 1);
+        }
+
+        IEnumerator WriteHomeTimes(string dir)
+        {
+            Show(ParityPages.HomeId);
+            if (current == null) yield break;
+            double[] marks = { 0, 500, 1000, 2000 };
+            for (int i = 0; i < marks.Length; i++)
+            {
+                current.Draw(marks[i]);
+                File.WriteAllBytes(Path.Combine(dir, "home_t" + marks[i].ToString("0") + ".png"), ReadPng(current.Target));
+                yield return null;
+            }
+            var samples = new double[300];
+            var watch = new System.Diagnostics.Stopwatch();
+            for (int i = 0; i < samples.Length; i++)
+            {
+                watch.Restart();
+                current.Draw(i * 16.0);
+                watch.Stop();
+                samples[i] = watch.Elapsed.TotalMilliseconds;
+                if ((i + 1) % 50 == 0) WriteDrawStats(dir, samples, i + 1, current != null && current.UsesLayerCache);
+                yield return null;
+            }
+            WriteDrawStats(dir, samples, samples.Length, current != null && current.UsesLayerCache);
+        }
+
+        static void WriteDrawStats(string dir, double[] samples, int n, bool cache)
+        {
+            var copy = new double[n];
+            Array.Copy(samples, copy, n);
+            Array.Sort(copy);
+            double sum = 0;
+            for (int i = 0; i < n; i++) sum += copy[i];
+            double avg = sum / n;
+            double p95 = copy[(int)(0.95 * (n - 1))];
+            string text = "avg " + avg.ToString("0.000") + "\np95 " + p95.ToString("0.000") + "\nn " + n + "\ncache " + (cache ? "yes" : "no") + "\n";
+            File.WriteAllText(Path.Combine(dir, "draw-ms.txt"), text);
+            Debug.Log("[ParityViewer] Draw ms n " + n + " avg " + avg.ToString("0.000") + " p95 " + p95.ToString("0.000"));
         }
 
         // Same readback as ParityRenderRig.ReadPng: copy into a Default ARGB32 target, then RGB24 linear EncodeToPNG.

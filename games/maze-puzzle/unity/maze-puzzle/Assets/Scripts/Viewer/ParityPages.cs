@@ -172,15 +172,7 @@ namespace OrbitalSalvage.Viewer
         public static string Hit(string stateId, string specJson, double cssX, double cssY)
         {
             var els = Parse(specJson);
-            int hit = -1;
-            for (int i = els.Count - 1; i >= 0; i--)
-            {
-                var e = els[i];
-                if (!e.Hittable) continue;
-                if (cssX < e.X || cssY < e.Y || cssX >= e.X + e.W || cssY >= e.Y + e.H) continue;
-                hit = i;
-                break;
-            }
+            int hit = Topmost(els, cssX, cssY);
             if (hit < 0) return null;
 
             // The topmost box wins. Children (icons, labels) walk up to the control that navigates.
@@ -191,6 +183,37 @@ namespace OrbitalSalvage.Viewer
                 if (target != null) return target;
             }
             return null;
+        }
+
+        /// <summary>Topmost control under the point that has a CSS <c>:active</c> press transform.</summary>
+        public static bool TryPressAt(string specJson, double cssX, double cssY, out int index, out string transform)
+        {
+            index = -1;
+            transform = null;
+            var els = Parse(specJson);
+            int hit = Topmost(els, cssX, cssY);
+            if (hit < 0) return false;
+            for (int i = hit; i >= 0; i = els[i].Parent)
+            {
+                if (OrbitalSalvage.Render.CssAnimation.TryPress(els[i].Classes, out transform))
+                {
+                    index = i;
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        static int Topmost(List<El> els, double cssX, double cssY)
+        {
+            for (int i = els.Count - 1; i >= 0; i--)
+            {
+                var e = els[i];
+                if (!e.Hittable) continue;
+                if (cssX < e.X || cssY < e.Y || cssX >= e.X + e.W || cssY >= e.Y + e.H) continue;
+                return i;
+            }
+            return -1;
         }
 
         static string Match(string stateId, List<El> els, int index)
