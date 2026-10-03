@@ -17,7 +17,9 @@ namespace OrbitalSalvage.Viewer
     public sealed class ParityViewer : MonoBehaviour
     {
         const string SelfTestFlag = "-parity-viewer-selftest";
+        const string LiveSelfTestFlag = "-parity-live-selftest";
         const string OptOutFlag = "-no-parity-viewer";
+        const double QuotaTrackWidth = 162.328;
 
         static readonly KeyCode[] DigitKeys =
         {
@@ -36,6 +38,9 @@ namespace OrbitalSalvage.Viewer
 
         HomeChrome current;
         string currentId;
+        LiveGameSession session;
+        bool liveVisual = true;
+        string lastQuota;
         Texture2D black;
         GUIStyle hintStyle;
         bool hintVisible = true;
@@ -58,7 +63,7 @@ namespace OrbitalSalvage.Viewer
         public static bool ShouldStart(string[] args)
         {
             if (Array.IndexOf(args, "--parity") >= 0) return false;
-            if (SelfTestDirectory(args) != null) return true;
+            if (SelfTestDirectory(args) != null || LiveSelfTestDirectory(args) != null) return true;
             if (IsOptOut(args)) return false;
 #if UNITY_EDITOR
             if (!UnityEditor.EditorPrefs.GetBool(ParityPages.EnabledPrefKey, true)) return false;
@@ -83,7 +88,17 @@ namespace OrbitalSalvage.Viewer
 
         public static string SelfTestDirectory(string[] args)
         {
-            int i = Array.IndexOf(args, SelfTestFlag);
+            return ArgDirectory(args, SelfTestFlag);
+        }
+
+        public static string LiveSelfTestDirectory(string[] args)
+        {
+            return ArgDirectory(args, LiveSelfTestFlag);
+        }
+
+        static string ArgDirectory(string[] args, string flag)
+        {
+            int i = Array.IndexOf(args, flag);
             if (i < 0 || i + 1 >= args.Length) return null;
             return args[i + 1];
         }
@@ -100,10 +115,20 @@ namespace OrbitalSalvage.Viewer
         void Start()
         {
             SuppressLegacy();
-            string self = SelfTestDirectory(Environment.GetCommandLineArgs());
+            var args = Environment.GetCommandLineArgs();
+            string live = LiveSelfTestDirectory(args);
+            if (live != null)
+            {
+                selfTesting = true;
+                liveVisual = true;
+                StartCoroutine(LiveSelfTest(live));
+                return;
+            }
+            string self = SelfTestDirectory(args);
             if (self != null)
             {
                 selfTesting = true;
+                liveVisual = false;
                 StartCoroutine(SelfTest(self));
                 return;
             }
@@ -113,13 +138,20 @@ namespace OrbitalSalvage.Viewer
         void LateUpdate()
         {
             SuppressLegacy();
-            if (!selfTesting) HandleInput();
+            if (selfTesting) return;
+            HandleInput();
+            TickLive();
         }
 
         void OnDestroy()
         {
             cache.Clear(chrome => chrome.Dispose());
             current = null;
+            if (session != null)
+            {
+                session.Renderer.Dispose();
+                session = null;
+            }
             if (black != null) Destroy(black);
             if (readTex != null) Destroy(readTex);
             if (readRt != null)
@@ -148,27 +180,49 @@ namespace OrbitalSalvage.Viewer
                 evicted.Clear();
                 cache.Add(stateId, chrome, evicted);
                 for (int i = 0; i < evicted.Count; i++) evicted[i].Dispose();
+                if (WantLiveChrome(stateId)) chrome.SkipPlayfield = true;
+                chrome.Draw();
+            }
+            else if (WantLiveChrome(stateId) && !chrome.SkipPlayfield)
+            {
+                chrome.SkipPlayfield = true;
                 chrome.Draw();
             }
             current = chrome;
             currentId = stateId;
+            if (WantLiveChrome(stateId)) EnsureLive(stateId);
+            lastQuota = null;
         }
 
         void HandleInput()
         {
             if (Input.GetKeyDown(KeyCode.F1)) hintVisible = !hintVisible;
             if (Input.GetKeyDown(KeyCode.Escape)) Show(ParityPages.HomeId);
-            if (Input.GetKeyDown(KeyCode.LeftArrow) || Input.GetKeyDown(KeyCode.PageUp))
-                Show(ParityPages.Cycle(currentId, -1));
-            if (Input.GetKeyDown(KeyCode.RightArrow) || Input.GetKeyDown(KeyCode.PageDown))
-                Show(ParityPages.Cycle(currentId, 1));
+            bool playing = currentId == "game_lvl01_t1000ms" && session != null;
+            if (!playing)
+            {
+                if (Input.GetKeyDown(KeyCode.LeftArrow) || Input.GetKeyDown(KeyCode.PageUp))
+                    Show(ParityPages.Cycle(currentId, -1));
+                if (Input.GetKeyDown(KeyCode.RightArrow) || Input.GetKeyDown(KeyCode.PageDown))
+                    Show(ParityPages.Cycle(currentId, 1));
+            }
+            else
+            {
+                if (Input.GetKeyDown(KeyCode.PageUp)) Show(ParityPages.Cycle(currentId, -1));
+                if (Input.GetKeyDown(KeyCode.PageDown)) Show(ParityPages.Cycle(currentId, 1));
+                if (Input.GetKeyDown(KeyCode.A) || Input.GetKeyDown(KeyCode.LeftArrow)) session.KeyDown("a");
+                if (Input.GetKeyDown(KeyCode.D) || Input.GetKeyDown(KeyCode.RightArrow)) session.KeyDown("d");
+                if (Input.GetKeyDown(KeyCode.Space)) session.KeyDown(" ");
+                if (Input.GetKeyDown(KeyCode.R)) session.KeyDown("r");
+            }
             for (int i = 0; i < DigitKeys.Length; i++)
             {
                 if (!Input.GetKeyDown(DigitKeys[i]) && !Input.GetKeyDown(PadKeys[i])) continue;
                 int digit = i == 9 ? 0 : i + 1;
                 Show(ParityPages.Jump(digit));
             }
-            if (PointerDown(out var screen)) Click(screen);
+            if (playing) HandlePlayPointer();
+            else if (PointerDown(out var screen)) Click(screen);
         }
 
         static bool PointerDown(out Vector2 screen)
@@ -198,8 +252,8 @@ namespace OrbitalSalvage.Viewer
             if (currentId == null) return;
             var box = Letterbox(Screen.width, Screen.height);
             if (!TryCss(box, screen, out double cssX, out double cssY)) return;
-            string target = ParityPages.Hit(currentId, Spec(currentId), cssX, cssY);
-            if (target != null) Show(target);
+            var edge = ParityPages.HitEdge(currentId, Spec(currentId), cssX, cssY);
+            if (edge != null) Activate(edge);
         }
 
         string Spec(string stateId)
@@ -250,8 +304,11 @@ namespace OrbitalSalvage.Viewer
             if (black == null || Screen.width < 2 || Screen.height < 2) return;
             var full = new Rect(0, 0, Screen.width, Screen.height);
             GUI.DrawTexture(full, black, ScaleMode.StretchToFill, false);
+            var letter = Letterbox(Screen.width, Screen.height);
+            if (ShowPlayfield && session.Renderer.Target != null)
+                GUI.DrawTexture(letter, session.Renderer.Target, ScaleMode.StretchToFill, true);
             if (current != null && current.Target != null)
-                GUI.DrawTexture(Letterbox(Screen.width, Screen.height), current.Target, ScaleMode.StretchToFill, false);
+                GUI.DrawTexture(letter, current.Target, ScaleMode.StretchToFill, ShowPlayfield);
             if (!hintVisible || selfTesting) return;
             if (hintStyle == null)
             {
@@ -274,6 +331,275 @@ namespace OrbitalSalvage.Viewer
                 var canvas = found[i];
                 if (canvas != null && canvas.enabled) canvas.enabled = false;
             }
+        }
+
+        static bool IsGamePage(string id)
+        {
+            return id == "game_lvl01_t1000ms" || id == "modal_pause"
+                || id == "modal_debrief_exact" || id == "modal_defeat_12_of_20";
+        }
+
+        bool WantLiveChrome(string id)
+        {
+            return liveVisual && IsGamePage(id);
+        }
+
+        bool ShowPlayfield
+        {
+            get { return liveVisual && session != null && IsGamePage(currentId); }
+        }
+
+        void EnsureLive(string stateId)
+        {
+            if (session == null)
+            {
+                session = LiveGameSession.CreatePlay(ParityPages.CssWidth, ParityPages.CssHeight, 1);
+                session.NowMs = () => Time.realtimeSinceStartupAsDouble * 1000.0;
+            }
+            session.IsPaused = stateId != "game_lvl01_t1000ms";
+        }
+
+        void Activate(NavEdge edge)
+        {
+            bool fresh = edge.Id == "btn-home-play" || edge.ClassToken == "level-tile" || edge.ClassToken == "btn-play-daily-tier";
+            bool restart = edge.Id == "btn-pause-restart" || edge.Id == "btn-debrief-replay" || edge.Id == "btn-defeat-retry";
+            if ((fresh || restart) && IsGamePage(edge.TargetId))
+            {
+                if (session == null) EnsureLive(edge.TargetId);
+                else session.Restart();
+            }
+            Show(edge.TargetId);
+        }
+
+        void HandlePlayPointer()
+        {
+            bool down = false, held = false, up = false;
+            Vector2 screen;
+            if (Input.touchCount > 0)
+            {
+                var touch = Input.GetTouch(0);
+                screen = touch.position;
+                down = touch.phase == TouchPhase.Began;
+                held = touch.phase == TouchPhase.Moved || touch.phase == TouchPhase.Stationary;
+                up = touch.phase == TouchPhase.Ended || touch.phase == TouchPhase.Canceled;
+            }
+            else
+            {
+                screen = Input.mousePosition;
+                down = Input.GetMouseButtonDown(0);
+                held = Input.GetMouseButton(0);
+                up = Input.GetMouseButtonUp(0);
+            }
+            var box = Letterbox(Screen.width, Screen.height);
+            if (!TryCss(box, screen, out double cssX, out double cssY))
+            {
+                if (up) session.PointerUp();
+                return;
+            }
+            if (down)
+            {
+                var edge = ParityPages.HitEdge(currentId, Spec(currentId), cssX, cssY);
+                if (edge != null)
+                {
+                    Activate(edge);
+                    return;
+                }
+                session.PointerDown(cssX, 0, ParityPages.CssWidth);
+            }
+            else if (held) session.PointerMove(cssX);
+            if (up) session.PointerUp();
+        }
+
+        void TickLive()
+        {
+            if (!ShowPlayfield) return;
+            session.Update(Time.unscaledDeltaTime);
+            ApplyQuota();
+        }
+
+        void ApplyQuota()
+        {
+            if (current == null || session == null) return;
+            string label = session.QuotaLabel();
+            if (label == lastQuota) return;
+            lastQuota = label;
+            current.TextOverrides["hud-quota-text"] = label;
+            current.WidthOverrides["hud-quota-bar"] = session.QuotaBarWidth(QuotaTrackWidth);
+            current.Draw();
+        }
+
+        IEnumerator LiveSelfTest(string dir)
+        {
+            Application.runInBackground = true;
+            QualitySettings.vSyncCount = 0;
+            Application.targetFrameRate = -1;
+            yield return null;
+            string error = null;
+            try
+            {
+                Directory.CreateDirectory(dir);
+                Show("game_lvl01_t1000ms");
+            }
+            catch (Exception ex) { error = ex.ToString(); }
+            yield return new WaitForEndOfFrame();
+            if (error == null && (session == null || current == null))
+                error = "live session did not start";
+            string stats = null;
+            if (error == null)
+            {
+                try { stats = RunLiveBench(dir); }
+                catch (Exception ex) { error = ex.ToString(); }
+            }
+            if (error != null) UnityEngine.Debug.LogError("[ParityViewer] live selftest failed: " + error);
+            else UnityEngine.Debug.Log("[ParityViewer] live selftest " + stats);
+            yield return null;
+            if (!Application.isEditor) Application.Quit(error == null ? 0 : 1);
+        }
+
+        string RunLiveBench(string dir)
+        {
+            session.FixedStep = true;
+            session.FixedDt = 1.0 / 60.0;
+            double clock = 0;
+            session.NowMs = () => clock;
+            var full = Sample(dir, "full", 1.0, 600, ref clock);
+            var half = Sample(dir, "half", 0.5, 600, ref clock);
+            bool same = Deterministic();
+            string recommended = (full[0] > 12.0 && half[0] < full[0]) ? "0.5" : "1";
+            var inv = System.Globalization.CultureInfo.InvariantCulture;
+            string json = "{\"full\":{\"avg\":" + full[0].ToString("R", inv) + ",\"p95\":" + full[1].ToString("R", inv) + ",\"max\":" + full[2].ToString("R", inv)
+                + "},\"half\":{\"avg\":" + half[0].ToString("R", inv) + ",\"p95\":" + half[1].ToString("R", inv) + ",\"max\":" + half[2].ToString("R", inv)
+                + "},\"frames\":600,\"dt\":" + (1.0 / 60.0).ToString("R", inv) + ",\"deterministic\":" + (same ? "true" : "false")
+                + ",\"recommendedScale\":" + recommended + ",\"physicsSteps\":" + session.PhysicsSteps + "}";
+            File.WriteAllText(Path.Combine(dir, "stats.json"), json);
+            return json;
+        }
+
+        double[] Sample(string dir, string tag, double scale, int frames, ref double clock)
+        {
+            session.Renderer.SetRenderScale(scale);
+            for (int i = 0; i < 20; i++) ScriptedStep(i, ref clock);
+            var samples = new double[frames];
+            var sections = new double[9];
+            double cpuSum = 0, fenceSum = 0;
+            for (int i = 0; i < frames; i++)
+            {
+                var sw = System.Diagnostics.Stopwatch.StartNew();
+                ScriptedStep(i, ref clock);
+                double cpu = sw.Elapsed.TotalMilliseconds;
+                SyncGpu(session.Renderer.Target);
+                sw.Stop();
+                double total = sw.Elapsed.TotalMilliseconds;
+                samples[i] = total;
+                cpuSum += cpu;
+                fenceSum += total - cpu;
+                for (int s = 0; s < 9; s++) sections[s] += GameRenderer.SectionMs[s];
+                if (tag == "full" && (i == 0 || i == 59 || i == 179))
+                    File.WriteAllBytes(Path.Combine(dir, tag + "_f" + (i + 1).ToString() + ".png"), ReadPng(session.Renderer.Target));
+            }
+            if (tag == "full")
+            {
+                var inv = System.Globalization.CultureInfo.InvariantCulture;
+                var sb = new System.Text.StringBuilder();
+                sb.Append("{\"cpuAvg\":").Append((cpuSum / frames).ToString("R", inv));
+                sb.Append(",\"fenceAvg\":").Append((fenceSum / frames).ToString("R", inv));
+                sb.Append(",\"sectionsMs\":[");
+                for (int s = 0; s < 9; s++)
+                {
+                    if (s > 0) sb.Append(',');
+                    sb.Append((sections[s] / frames).ToString("R", inv));
+                }
+                sb.Append("]}");
+                File.WriteAllText(Path.Combine(dir, "sections.json"), sb.ToString());
+            }
+            return Summarize(samples);
+        }
+
+        void ScriptedStep(int i, ref double clock)
+        {
+            clock += 16;
+            if (i == 90)
+            {
+                session.PointerDown(40, 0, 430);
+                session.PointerUp();
+                clock += 100;
+                session.PointerDown(48, 0, 430);
+                session.PointerUp();
+            }
+            if (i % 45 == 0)
+            {
+                session.PointerDown(180, 0, 430);
+                session.PointerMove(240);
+                session.PointerUp();
+            }
+            if (i == 200) session.KeyDown("d");
+            if (i == 400) session.IsPaused = true;
+            if (i == 430) session.IsPaused = false;
+            session.Update(session.FixedDt);
+            ApplyQuota();
+        }
+
+        static double[] Summarize(double[] samples)
+        {
+            double sum = 0, max = 0;
+            for (int i = 0; i < samples.Length; i++)
+            {
+                sum += samples[i];
+                if (samples[i] > max) max = samples[i];
+            }
+            var sorted = (double[])samples.Clone();
+            Array.Sort(sorted);
+            int p = (int)Math.Ceiling(sorted.Length * 0.95) - 1;
+            if (p < 0) p = 0;
+            return new[] { sum / sorted.Length, sorted[p], max };
+        }
+
+        static bool Deterministic()
+        {
+            byte[] a = RunHash();
+            byte[] b = RunHash();
+            if (a.Length != b.Length) return false;
+            for (int i = 0; i < a.Length; i++) if (a[i] != b[i]) return false;
+            return true;
+        }
+
+        static byte[] RunHash()
+        {
+            var run = LiveGameSession.CreatePlay(430, 932, 1);
+            run.FixedStep = true;
+            run.FixedDt = 1.0 / 60.0;
+            for (int i = 0; i < 30; i++) run.Update(run.FixedDt);
+            var png = Encode(run.Renderer.Target);
+            run.Renderer.Dispose();
+            return png;
+        }
+
+        static Texture2D fenceTex;
+
+        static void SyncGpu(RenderTexture rt)
+        {
+            if (rt == null) return;
+            var prev = RenderTexture.active;
+            RenderTexture.active = rt;
+            if (fenceTex == null) fenceTex = new Texture2D(1, 1, TextureFormat.RGBA32, false, true);
+            fenceTex.ReadPixels(new Rect(0, 0, 1, 1), 0, 0, false);
+            RenderTexture.active = prev;
+        }
+
+        static byte[] Encode(RenderTexture source)
+        {
+            var rt = RenderTexture.GetTemporary(source.width, source.height, 0, RenderTextureFormat.ARGB32, RenderTextureReadWrite.Linear);
+            Graphics.Blit(source, rt);
+            var prev = RenderTexture.active;
+            RenderTexture.active = rt;
+            var tex = new Texture2D(source.width, source.height, TextureFormat.RGB24, false, true);
+            tex.ReadPixels(new Rect(0, 0, source.width, source.height), 0, 0, false);
+            tex.Apply(false);
+            RenderTexture.active = prev;
+            RenderTexture.ReleaseTemporary(rt);
+            var bytes = tex.EncodeToPNG();
+            UnityEngine.Object.Destroy(tex);
+            return bytes;
         }
 
         IEnumerator SelfTest(string dir)

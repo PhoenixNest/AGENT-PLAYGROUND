@@ -28,29 +28,40 @@ namespace OrbitalSalvage.Render
         public static bool TryParse(string s, out Rgba c)
         {
             c = Rgba.Black;
-            if (s == null) return false;
+            if (s == null || s.Length == 0) return false;
+            if (s.IndexOf('(') < 0 && Cache.TryGetValue(s, out c)) return true;
+            string raw = s;
             s = s.Trim();
             if (s.Length == 0) return false;
-            if (s[0] == '#') return ParseHex(s, out c);
-            string lower = s.ToLowerInvariant();
-            if (lower == "transparent") { c = Rgba.Transparent; return true; }
-            if (Named.TryGetValue(lower, out uint rgb))
+            bool ok = false;
+            if (s[0] == '#') ok = ParseHex(s, out c);
+            else
             {
-                c = new Rgba(((rgb >> 16) & 255) / 255f, ((rgb >> 8) & 255) / 255f, (rgb & 255) / 255f, 1f);
-                return true;
+                string lower = s.ToLowerInvariant();
+                if (lower == "transparent") { c = Rgba.Transparent; ok = true; }
+                else if (Named.TryGetValue(lower, out uint rgb))
+                {
+                    c = new Rgba(((rgb >> 16) & 255) / 255f, ((rgb >> 8) & 255) / 255f, (rgb & 255) / 255f, 1f);
+                    ok = true;
+                }
+                else
+                {
+                    int paren = lower.IndexOf('(');
+                    if (paren > 0 && lower.EndsWith(")"))
+                    {
+                        string fn = lower.Substring(0, paren).Trim();
+                        string body = lower.Substring(paren + 1, lower.Length - paren - 2);
+                        var parts = Split(body);
+                        if (parts != null && (fn == "rgb" || fn == "rgba")) ok = ParseRgb(parts, out c);
+                        else if (parts != null && (fn == "hsl" || fn == "hsla")) ok = ParseHsl(parts, out c);
+                    }
+                }
             }
-            int paren = lower.IndexOf('(');
-            if (paren > 0 && lower.EndsWith(")"))
-            {
-                string fn = lower.Substring(0, paren).Trim();
-                string body = lower.Substring(paren + 1, lower.Length - paren - 2);
-                var parts = Split(body);
-                if (parts == null) return false;
-                if (fn == "rgb" || fn == "rgba") return ParseRgb(parts, out c);
-                if (fn == "hsl" || fn == "hsla") return ParseHsl(parts, out c);
-            }
-            return false;
+            if (ok && raw.IndexOf('(') < 0 && raw.Length <= 32) Cache[raw] = c;
+            return ok;
         }
+
+        static readonly Dictionary<string, Rgba> Cache = new Dictionary<string, Rgba>(64);
 
         public static Rgba Parse(string s, Rgba fallback) => TryParse(s, out var c) ? c : fallback;
 
