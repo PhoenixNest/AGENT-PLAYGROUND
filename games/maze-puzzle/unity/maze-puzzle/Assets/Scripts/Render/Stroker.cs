@@ -55,12 +55,14 @@ namespace OrbitalSalvage.Render
 
         public void Stroke(IList<Vec2d> input, bool closed, PolygonSet output, double eps, bool allowDot = false)
         {
+            PaintProfile.Begin(PaintProfile.Stroker);
             Dedupe(input, closed, work, eps);
             int n = work.Count;
-            if (n == 0) return;
-            if (n == 1) { if (allowDot) Dot(work[0], output); return; }
+            if (n == 0) { PaintProfile.End(PaintProfile.Stroker); return; }
+            if (n == 1) { if (allowDot) Dot(work[0], output); PaintProfile.End(PaintProfile.Stroker); return; }
             if (closed && n >= 2) StrokeClosed(work, output);
             else StrokeOpen(work, output);
+            PaintProfile.End(PaintProfile.Stroker);
         }
 
         void Dot(Vec2d p, PolygonSet output)

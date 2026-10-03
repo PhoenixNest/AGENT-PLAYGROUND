@@ -76,11 +76,14 @@ namespace OrbitalSalvage.Render
             int sk = (int)Math.Min(0xFFFFFF, Math.Max(1, Math.Round(devScale * 8)));
             int pk = (int)Math.Min(0xFFFFF, Math.Round(px * 64));
             ulong key = ((ulong)Ids[font] << 60) | ((ulong)gid << 44) | ((ulong)pk << 24) | (uint)sk;
-            if (Cache.TryGetValue(key, out var g)) return g;
+            PaintProfile.Begin(PaintProfile.GlyphFlat);
+            if (Cache.TryGetValue(key, out var g)) { PaintProfile.End(PaintProfile.GlyphFlat); return g; }
+            PaintProfile.FlatMisses++;
             ulong rawKey = ((ulong)Ids[font] << 32) | (uint)gid;
             if (!Raw.TryGetValue(rawKey, out var o)) { o = font.Outline(gid); Raw[rawKey] = o; }
             g = Flatten(o, px / font.unitsPerEm, Tolerance / Math.Max(devScale, 1e-6));
             Cache[key] = g;
+            PaintProfile.End(PaintProfile.GlyphFlat);
             return g;
         }
 

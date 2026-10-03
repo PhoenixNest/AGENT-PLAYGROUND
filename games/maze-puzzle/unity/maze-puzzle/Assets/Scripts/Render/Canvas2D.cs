@@ -277,6 +277,7 @@ namespace OrbitalSalvage.Render
 
         static void BuildFillPolygons(PathData p, PolygonSet dst)
         {
+            PaintProfile.Begin(PaintProfile.FillPolys);
             dst.Clear();
             for (int i = 0; i < p.Count; i++)
             {
@@ -285,6 +286,7 @@ namespace OrbitalSalvage.Render
                 dst.Begin();
                 dst.pts.AddRange(s.pts);
             }
+            PaintProfile.End(PaintProfile.FillPolys);
         }
 
         void StrokePath(PathData p)
