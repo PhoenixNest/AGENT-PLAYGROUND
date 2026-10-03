@@ -11,8 +11,9 @@ namespace OrbitalSalvage.Render
     /// <c>tools/parity/web/dump-spec.mjs</c> by <c>web/distill-spec.mjs</c>) with <see cref="Canvas2D"/>: every visible element is a
     /// <see cref="CssBox"/> plus its text runs (outline glyph text) and emoji images, at the rect Chromium reports in CSS px.
     /// The spec carries a rect set per safe-area profile, so zero and iphone differ exactly as measured.
-    /// Deferred (not drawn, listed in <see cref="Deferred"/>): filters, blurred inset shadows, and CSS animations
+    /// Deferred (not drawn, listed in <see cref="Deferred"/>): filters and CSS animations
     /// other than the play-button shine (elements sit at their measured rect; the shine uses its sampled matrix).
+    /// Blurred inset shadows are drawn (cycle 15).
     /// </summary>
     public sealed class HomeChrome : IDisposable
     {

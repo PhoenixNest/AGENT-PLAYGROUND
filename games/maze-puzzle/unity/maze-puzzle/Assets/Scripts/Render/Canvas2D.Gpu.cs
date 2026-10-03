@@ -87,12 +87,29 @@ namespace OrbitalSalvage.Render
             paramBuffer?.Dispose();
             cmd.Release();
             foreach (var c in clipPool) c.Release();
-            foreach (var s in snapshots) UnityEngine.Object.Destroy(s);
+            ReleaseSnapshots();
             target.Release(); accum.Release(); maskA.Release(); maskB.Release();
+        }
+
+        // BackdropBlur snapshots are sampled by draws recorded after that call's Flush.
+        // They must stay alive until the command buffer has executed (EndFrame or Flush).
+        // The next BeginFrame is the first moment they are unused, so release them here
+        // instead of letting the list grow for the life of the canvas.
+        void ReleaseSnapshots()
+        {
+            for (int i = 0; i < snapshots.Count; i++)
+            {
+                var shot = snapshots[i];
+                if (shot == null) continue;
+                if (Application.isPlaying) UnityEngine.Object.Destroy(shot);
+                else UnityEngine.Object.DestroyImmediate(shot);
+            }
+            snapshots.Clear();
         }
 
         public void BeginFrame()
         {
+            ReleaseSnapshots();
             cmd.Clear();
             edgeCount = 0;
             prmCount = 0;
