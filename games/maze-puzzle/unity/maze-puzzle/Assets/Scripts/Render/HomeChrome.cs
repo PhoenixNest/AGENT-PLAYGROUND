@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Text.RegularExpressions;
+using OrbitalSalvage.Logic;
 using UnityEngine;
 
 namespace OrbitalSalvage.Render
@@ -47,6 +48,8 @@ namespace OrbitalSalvage.Render
         readonly List<Dictionary<string, object>> elements;
         /// <summary>When set, the playfield canvas element is not replayed and full-viewport boxes under it are left transparent.</summary>
         public bool SkipPlayfield;
+        /// <summary>Page already drawn underneath a modal. App pages in this spec are skipped so the overlay blurs this texture.</summary>
+        public RenderTexture Underlay;
 
         public struct ToastPaint
         {
@@ -113,6 +116,7 @@ namespace OrbitalSalvage.Render
         bool[] upperOf;
         double[] effBuf;
         bool[] skipBuf;
+        bool[] pageSkip;
         Dictionary<int, int> paintIndex;
         // Graphics.Blit replaced the target, so cached layers used to wipe the frame. BlitLayer now source-overs.
         public static bool UseLayerCache = true;
@@ -178,10 +182,113 @@ namespace OrbitalSalvage.Render
         /// <summary>Replace shop cards with the measured locked / owned / equipped sub-templates, stacked at <paramref name="slotX"/>/<paramref name="slotY"/>.</summary>
         public void StampShopCards(string kinds, double[] slotX, double[] slotY)
         {
+            if (IsItemStamp(kinds))
+            {
+                CardStamp.ApplyTrees(elements, ItemTrees(kinds), slotX, slotY);
+                return;
+            }
             CardStamp.ApplyShop(elements, kinds, ShopTemplates(), slotX, slotY);
         }
 
-        public static double[] ShopCardHeights(string kinds) => CardStamp.Heights(kinds, ShopTemplates());
+        public static double[] ShopCardHeights(string kinds)
+        {
+            if (!IsItemStamp(kinds)) return CardStamp.Heights(kinds, ShopTemplates());
+            var trees = ItemTrees(kinds);
+            if (trees == null) return null;
+            var heights = new double[trees.Count];
+            for (int i = 0; i < trees.Count; i++)
+            {
+                if (trees[i] == null || trees[i].Count == 0) return null;
+                heights[i] = CardStamp.Rect(trees[i][0])[3];
+            }
+            return heights;
+        }
+
+        public string BakedPageId()
+        {
+            for (int i = 0; i < elements.Count; i++)
+            {
+                string id = S(elements[i], "id");
+                string classes = " " + S(elements[i], "c") + " ";
+                if (id.StartsWith("page-", StringComparison.Ordinal) && classes.Contains(" page-active ")) return id;
+            }
+            return "";
+        }
+
+        static bool IsItemStamp(string kinds) => !string.IsNullOrEmpty(kinds) && kinds.IndexOf(':') >= 0;
+
+        static List<List<Dictionary<string, object>>> ItemTrees(string kinds)
+        {
+            var parts = kinds.Split(',');
+            var trees = new List<List<Dictionary<string, object>>>(parts.Length);
+            var pool = new Dictionary<string, List<List<Dictionary<string, object>>>>();
+            for (int i = 0; i < parts.Length; i++)
+            {
+                int colon = parts[i].IndexOf(':');
+                if (colon <= 0) return null;
+                string id = parts[i].Substring(0, colon);
+                string kind = parts[i].Substring(colon + 1);
+                var item = FindCosmetic(id);
+                if (item == null) return null;
+                string bucket = SpecBucket(id);
+                if (!pool.TryGetValue(bucket, out var cards))
+                {
+                    cards = new List<List<Dictionary<string, object>>>();
+                    var specs = SpecsFor(id);
+                    for (int s = 0; s < specs.Length; s++)
+                    {
+                        var els = LoadElements(specs[s]);
+                        if (els == null) continue;
+                        cards.AddRange(CardStamp.ExtractAll(els));
+                    }
+                    pool[bucket] = cards;
+                }
+                var tree = CardStamp.MatchItem(cards, item.Name, kind);
+                if (tree == null) return null;
+                trees.Add(tree);
+            }
+            return trees;
+        }
+
+        static CosmeticItem FindCosmetic(string id)
+        {
+            CosmeticItem[][] tables = { EconomyCatalog.Rings, EconomyCatalog.Singularities, EconomyCatalog.Skyboxes };
+            for (int t = 0; t < tables.Length; t++)
+            {
+                var table = tables[t];
+                for (int i = 0; i < table.Length; i++)
+                    if (table[i].Id == id) return table[i];
+            }
+            return null;
+        }
+
+        static string SpecBucket(string id)
+        {
+            if (id.StartsWith("singularity_", StringComparison.Ordinal)) return "singularities";
+            if (id.StartsWith("skybox_", StringComparison.Ordinal)) return "skyboxes";
+            return "rings";
+        }
+
+        static string[] SpecsFor(string id)
+        {
+            if (id.StartsWith("singularity_", StringComparison.Ordinal))
+                return new[] { "shop_singularities_default", "shop_singularities_mixed" };
+            if (id.StartsWith("skybox_", StringComparison.Ordinal))
+                return new[] { "shop_skyboxes_default", "shop_skyboxes_mixed" };
+            return new[] { "shop_rings_default", "shop_rings_mixed", "shop_gift_claimed" };
+        }
+
+        static List<Dictionary<string, object>> LoadElements(string spec)
+        {
+            var asset = Resources.Load<TextAsset>("Parity/Spec/" + spec + "__zero");
+            if (asset == null) return null;
+            var root = MiniJson.Parse(asset.text) as Dictionary<string, object>;
+            if (root == null || !(root["elements"] is List<object> raw)) return null;
+            var list = new List<Dictionary<string, object>>(raw.Count);
+            for (int i = 0; i < raw.Count; i++)
+                if (raw[i] is Dictionary<string, object> el) list.Add(el);
+            return list;
+        }
 
         static Dictionary<string, List<Dictionary<string, object>>> ShopTemplates()
         {
@@ -324,14 +431,14 @@ namespace OrbitalSalvage.Render
             }
             for (int k = 0; k < n; k++)
             {
-                for (int p = parent[k]; p >= 0; p = parent[p])
+                for (int p = parent[k], hops = 0; p >= 0 && hops < n; p = parent[p], hops++)
                     if (moves[p]) { dynamic[k] = true; break; }
             }
             if (OpacityOverrides.Count > 0 || HiddenIds.Count > 0)
             {
                 for (int k = 0; k < n; k++)
                 {
-                    for (int p = parent[k]; p >= 0; p = parent[p])
+                    for (int p = parent[k], hops = 0; p >= 0 && hops < n; p = parent[p], hops++)
                     {
                         string pid = S(elements[p], "id");
                         if (pid.Length > 0 && (OpacityOverrides.ContainsKey(pid) || HiddenIds.Contains(pid)))
@@ -432,19 +539,30 @@ namespace OrbitalSalvage.Render
             long prof = PaintProfile.Stamp();
             frame = double.IsNaN(timeMs) ? null : CssFrame.Build(elements, timeMs, pinPageEnter, modalIntro, pressed, pressCss, frameSlot);
             if (frame != null) frameSlot = frame;
-            canvas.ExactBackdrop = frame == null;
+            // A live frame used to force the approximate blur. Settled modals (pageEnter already
+            // finished) need the exact readback or the dim behind the card shifts by several levels.
+            canvas.ExactBackdrop = frame == null || !frame.HasMotion;
             bool savedPremul = Canvas2D.GradientInterpolatesPremultiplied;
             Canvas2D.GradientInterpolatesPremultiplied = true; // CSS gradients interpolate premultiplied
             Deferred.Clear(); DrawnBoxes = DrawnRuns = DrawnEmoji = 0;
             try
             {
                 BuildClassText();
-                if (frame != null && UseLayerCache) { PaintProfile.Begin(PaintProfile.Cache); EnsureCache(); PaintProfile.End(PaintProfile.Cache); }
+                bool composite = Underlay != null;
+                if (frame != null && UseLayerCache && !composite) { PaintProfile.Begin(PaintProfile.Cache); EnsureCache(); PaintProfile.End(PaintProfile.Cache); }
                 bool settled = frame != null && !frame.PageTransform && frame.PageOpacity >= 0.999;
-                cacheOn = settled && cacheReady && paintOnlyLayer < 0 && staticLayerCount > 0;
+                cacheOn = !composite && settled && cacheReady && paintOnlyLayer < 0 && staticLayerCount > 0;
                 lastBlit = -2;
                 canvas.BeginFrame();
                 canvas.SetTransform(scale, 0, 0, scale, 0, 0);
+                if (composite)
+                {
+                    canvas.Save();
+                    canvas.SetTransform(scale, 0, 0, scale, 0, 0);
+                    canvas.ImageSmoothingEnabled = false;
+                    canvas.DrawTexture(Underlay, 0, 0, Underlay.width, Underlay.height, 0, 0, cssW, cssH);
+                    canvas.Restore();
+                }
                 if (frame != null && frame.PageTransform && frame.PageRect != null)
                 {
                     var pr = frame.PageRect;
@@ -507,6 +625,8 @@ namespace OrbitalSalvage.Render
             }
             Array.Clear(effBuf, 0, n);
             Array.Clear(skipBuf, 0, n);
+            if (pageSkip == null || pageSkip.Length < n) pageSkip = new bool[n];
+            Array.Clear(pageSkip, 0, n);
             if (specHidden == null)
             {
                 specHidden = new bool[n];
@@ -536,6 +656,21 @@ namespace OrbitalSalvage.Render
                 if (paintOnlyLayer >= 0 && (elementLayer == null || elementLayer[k] != paintOnlyLayer)) continue;
                 int parent = (int)N(e, "p", -1);
                 int pk = parent >= 0 && byIndex.TryGetValue(parent, out var pp) ? pp : -1;
+                bool appPage = (" " + S(e, "c") + " ").Contains(" app-page ");
+                pageSkip[k] = appPage || (pk >= 0 && pageSkip[pk]);
+                if (Underlay != null && S(e, "id") == "mobile-frame")
+                {
+                    // The underlay already includes the plate. Keep it as a visible parent so the modal inherits opacity.
+                    eff[k] = 1;
+                    skip[k] = false;
+                    continue;
+                }
+                if (Underlay != null && pageSkip[k])
+                {
+                    eff[k] = 0;
+                    skip[k] = true;
+                    continue;
+                }
                 double parentOpacity = pk >= 0 ? eff[pk] : 1;
                 bool parentSkipped = pk >= 0 && skip[pk];
 
@@ -800,6 +935,19 @@ namespace OrbitalSalvage.Render
             upperOf[k] = S(e, "tt") == "uppercase";
         }
 
+        string ChildEmoji(Dictionary<string, object> e)
+        {
+            int id = (int)N(e, "i", -1);
+            if (id < 0) return "";
+            for (int i = 0; i < elements.Count; i++)
+            {
+                if ((int)N(elements[i], "p", -2) != id) continue;
+                string mark = S(elements[i], "emoji");
+                if (mark.Length > 0) return mark;
+            }
+            return "";
+        }
+
         static bool Blank(string s)
         {
             for (int i = 0; i < s.Length; i++) if (!char.IsWhiteSpace(s[i])) return false;
@@ -828,6 +976,13 @@ namespace OrbitalSalvage.Render
             string textReplacement = null;
             bool replaceText = textId.Length > 0 && TextOverrides.TryGetValue(textId, out textReplacement);
             if (!replaceText && classText != null && classText.TryGetValue(k, out textReplacement)) replaceText = true;
+            if (replaceText)
+            {
+                // The equipped label is "🍩 DONUT FLOAT" while the spec already paints that emoji as a child image.
+                string mark = ChildEmoji(e);
+                if (mark.Length > 0 && textReplacement.StartsWith(mark, StringComparison.Ordinal))
+                    textReplacement = textReplacement.Substring(mark.Length);
+            }
             for (int ri = 0; ri < runs.Count; ri++)
             {
                 var run = (Dictionary<string, object>)runs[ri];
@@ -878,7 +1033,11 @@ namespace OrbitalSalvage.Render
                         double err = Math.Abs(canvas.MeasureText(cand) - r[2]);
                         if (err < bestErr - 0.01) { bestErr = err; best = cand; }
                     }
-                    lines = WrapToWidth(canvas, best, r[2]).ToArray();
+                    // A captured run is already one line box. Reflowing it against a slightly
+                    // narrower pre-transform width stacks the second word on top of the first.
+                    double fontPx = CssBox.ParseLength(S(e, "fz"));
+                    bool singleLine = fontPx > 0 && r[3] <= fontPx * 1.5 + 2;
+                    lines = singleLine ? new[] { best } : WrapToWidth(canvas, best, r[2]).ToArray();
                     if (!replaceText)
                         laid[slot] = new Laid { font = font, text = text, width = r[2], lines = lines };
                 }
