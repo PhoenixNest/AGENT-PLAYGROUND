@@ -81,6 +81,13 @@ namespace OrbitalSalvage.App.Tests
                 }
                 else Assert.Fail(id + " unknown op " + op);
 
+                JsonValue settle = step.Get("settleMs");
+                if (settle != null && settle.Kind == JsonKind.Number && settle.Number > 0)
+                {
+                    app.Advance(settle.Number);
+                    if (app.CurrentPage == "game") physicsDiverged = true;
+                }
+
                 if (physics != null && app.SectorEpoch != syncedEpoch && app.ActiveSector != null)
                 {
                     syncedEpoch = app.SectorEpoch;

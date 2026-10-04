@@ -939,20 +939,6 @@ namespace OrbitalSalvage.Render
             }
         }
 
-        /// <summary>
-        /// Page-enter at t=0 hides <c>.app-page</c>. Toasts live outside that page, so they stay on the backdrop.
-        /// </summary>
-        public void DrawBackdropToasts()
-        {
-            canvas.BeginFrame();
-            canvas.SetTransform(scale, 0, 0, scale, 0, 0);
-            canvas.GlobalAlpha = 1;
-            canvas.FillStyle = "#1e1b4b";
-            canvas.FillRect(0, 0, cssW, cssH);
-            PaintToasts();
-            canvas.EndFrame();
-        }
-
         public bool PaintPlayfield(Canvas2D dest)
         {
             if (playfield == null || dest == null) return false;

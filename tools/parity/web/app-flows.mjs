@@ -13,8 +13,26 @@ import { launchBrowser, Session } from "./harness.mjs";
 const here = dirname(fileURLToPath(import.meta.url));
 const outDir = join(here, "..", "golden", "app");
 const shotDir = join(here, "..", "out", "app-flows", "web");
+// pageEnter 0.22s, modal overlay 0.25s + card 0.3s, cartoonToast in by 0.39s, loading handoff 0.35s.
+const SETTLE_MS = 400;
+
+async function activeModals(session) {
+  return session.page.evaluate(() =>
+    [...document.querySelectorAll(".modal-overlay.active")].map((e) => e.id).join(","));
+}
 
 async function record(session, trace, step) {
+  const before = await activeModals(session);
+  await session.advance(SETTLE_MS);
+  let settle = SETTLE_MS;
+  // A timer that fires at the end of the settle (defeat is 400ms) adds .active with the
+  // card still at translateY(100%). Give that transition its own 400ms, and record the total.
+  if ((await activeModals(session)) !== before) {
+    await session.advance(SETTLE_MS);
+    settle += SETTLE_MS;
+  }
+  step.settleMs = settle;
+  step.snap = await snap(session);
   trace.push(step);
   await session.page.evaluate(() => window.__parity.waitEmoji());
   const png = await session.page.screenshot({ animations: "allow", caret: "hide" });
