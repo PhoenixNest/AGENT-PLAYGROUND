@@ -43,8 +43,10 @@ namespace OrbitalSalvage.Render
 
         public static Matrix2D Interpolate(string from, string to, double u, double width, double height, double dx)
         {
-            if (u <= 0) return ToMatrix(from, width, height, dx);
-            if (u >= 1) return ToMatrix(to, width, height, dx);
+            // Exact endpoints stay the sampled keyframe. Values outside 0..1 are real:
+            // cubic-bezier overshoot (cartoonToast) must extrapolate, not clamp.
+            if (u == 0) return ToMatrix(from, width, height, dx);
+            if (u == 1) return ToMatrix(to, width, height, dx);
             var a = Parse(from ?? "none", dx);
             var b = Parse(to ?? "none", dx);
             if (a.Count == b.Count && SameKinds(a, b))

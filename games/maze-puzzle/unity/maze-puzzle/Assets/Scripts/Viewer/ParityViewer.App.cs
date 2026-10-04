@@ -148,6 +148,17 @@ namespace OrbitalSalvage.Viewer
                 else if (footer.StartsWith("EQUIPPED", StringComparison.Ordinal)) current.ClassTextOverrides["badge-equipped#" + equipped++] = footer;
                 else current.ClassTextOverrides["btn-buy-item#" + buy++] = footer;
             }
+            current.Toasts.Clear();
+            if (app.Model.Toasts.Count > 0)
+            {
+                for (int i = 0; i < app.Model.Toasts.Count; i++)
+                {
+                    var toast = app.Model.Toasts[i];
+                    double age = app.NowMs - (toast.ExpiresAtMs - AppController.ToastMs);
+                    if (age < 0) age = 0;
+                    current.Toasts.Add(new HomeChrome.ToastPaint { Text = toast.Text, AgeMs = age });
+                }
+            }
             BindModalPlayfield(current);
             if (selfTesting || currentId != null && currentId.StartsWith("loading", StringComparison.Ordinal)) current.Draw();
             else
@@ -238,6 +249,7 @@ namespace OrbitalSalvage.Viewer
             if (error == null) error = AppClick("btn-debrief-next", null, -1);
             if (error == null) yield return StartCoroutine(AppShot(dir, "11_next", steps));
             if (error == null) yield return StartCoroutine(ModalStillProof(dir, steps));
+            if (error == null) yield return StartCoroutine(ToastProof(dir));
 
             try
             {
@@ -367,6 +379,54 @@ namespace OrbitalSalvage.Viewer
             }
             notes.Append('}');
             File.WriteAllText(Path.Combine(dir, "modal-proof.json"), notes.ToString());
+        }
+
+        IEnumerator ToastProof(string dir)
+        {
+            yield return null;
+            HomeChrome chrome = null;
+            try
+            {
+                chrome = HomeChrome.Load("home_default", ParityPages.Profile);
+                WriteToast(dir, chrome, "toast_t0200", 200, "Item Equipped! ✨");
+                WriteToast(dir, chrome, "toast_t1000", 1000, "Item Equipped! ✨");
+                WriteToast(dir, chrome, "toast_t2300", 2300, "Item Equipped! ✨");
+                WriteToast(dir, chrome, "toast_long", 1000, "🎉 All 3 Daily Shifts Cleared! Claim Master Bonus in Daily Tab! 🏆");
+                chrome.Toasts.Clear();
+                chrome.Toasts.Add(new HomeChrome.ToastPaint { Text = "Sound On 🔊", AgeMs = 1500 });
+                chrome.Toasts.Add(new HomeChrome.ToastPaint { Text = "🏆 Trophy: First Nom Nom! (+100 🪙)", AgeMs = 900 });
+                chrome.Draw();
+                File.WriteAllBytes(Path.Combine(dir, "still_toast_stacked.png"), ReadPng(chrome.Target));
+                chrome.Dispose();
+                chrome = HomeChrome.Load("shop_rings_default", ParityPages.Profile);
+                WriteToast(dir, chrome, "shop_buy_success_toast", 1000, "Item Unlocked & Equipped! 🎉");
+                WriteToast(dir, chrome, "shop_equip_toast", 1000, "Item Equipped! ✨");
+                WriteToast(dir, chrome, "shop_claim_gift_toast", 1000, "🎁 Claimed +100 🪙 Janitor Stipend!");
+                WriteToast(dir, chrome, "shop_buy_insufficient_toast", 1000, "Need more gold coins! 🪙");
+                chrome.Dispose();
+                chrome = HomeChrome.Load("daily_master_ready", ParityPages.Profile);
+                WriteToast(dir, chrome, "daily_master_claim_toast", 1000, "🏆 Claimed +300 🪙 Daily Master Bonus!");
+                chrome.Dispose();
+                chrome = HomeChrome.Load("settings_default", ParityPages.Profile);
+                WriteToast(dir, chrome, "settings_reset_confirmed_toast", 1000, "Progress Reset to Day 1! 🧹");
+                Debug.Log("[ParityViewer] toast proof");
+            }
+            catch (Exception ex)
+            {
+                Debug.LogError("[ParityViewer] toast proof " + ex);
+            }
+            finally
+            {
+                if (chrome != null) chrome.Dispose();
+            }
+        }
+
+        void WriteToast(string dir, HomeChrome chrome, string name, double age, string text)
+        {
+            chrome.Toasts.Clear();
+            chrome.Toasts.Add(new HomeChrome.ToastPaint { Text = text, AgeMs = age });
+            chrome.Draw();
+            File.WriteAllBytes(Path.Combine(dir, "still_" + name + ".png"), ReadPng(chrome.Target));
         }
 
         static LiveGameSession StillSession(string id)

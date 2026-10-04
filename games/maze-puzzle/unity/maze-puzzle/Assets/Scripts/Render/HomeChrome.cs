@@ -29,6 +29,15 @@ namespace OrbitalSalvage.Render
         readonly List<Dictionary<string, object>> elements;
         /// <summary>When set, the playfield canvas element is not replayed and full-viewport boxes under it are left transparent.</summary>
         public bool SkipPlayfield;
+
+        public struct ToastPaint
+        {
+            public string Text;
+            public double AgeMs;
+        }
+
+        /// <summary>Toasts painted into #toast-container after the page. Empty leaves the capture pixels unchanged.</summary>
+        public readonly List<ToastPaint> Toasts = new List<ToastPaint>();
         /// <summary>
         /// Live playfield drawn at the canvas element, before later backdrop-filter overlays.
         /// Null keeps the spec's stored stream (or the hole, when <see cref="SkipPlayfield"/> is set).
@@ -337,6 +346,7 @@ namespace OrbitalSalvage.Render
                 if (frame != null && frame.PageOpacity < 0.999) canvas.GlobalAlpha = frame.PageOpacity;
                 BuildClassText();
                 PaintAll();
+                PaintToasts();
                 canvas.EndFrame();
             }
             finally
@@ -821,6 +831,62 @@ namespace OrbitalSalvage.Render
         /// Replay the Chromium canvas dump for this spec into <paramref name="dest"/>.
         /// That dump is the playfield baked into the still; the modal chrome leaves it unpainted when <see cref="SkipPlayfield"/> is set.
         /// </summary>
+        /// <summary>
+        /// Measured rest box of <c>.toast</c> inside <c>#toast-container</c> (top 75, width 360, centered).
+        /// cartoonToast is 2.6s; the controller removes the toast at 2.5s.
+        /// </summary>
+        void PaintToasts()
+        {
+            if (Toasts.Count == 0) return;
+            var keys = CssAnimation.Find("cartoonToast");
+            const double boxX = 35, boxW = 360, gap = 8, padY = 13, lineH = 16, contentW = 322;
+            double y = 75;
+            var border = CssColor.Parse("#1e1b4b", Rgba.Black);
+            var ink = border;
+            canvas.Font = "800 13px Fredoka";
+            for (int i = 0; i < Toasts.Count; i++)
+            {
+                var toast = Toasts[i];
+                string text = toast.Text ?? "";
+                var lines = WrapToWidth(canvas, text, contentW);
+                double h = padY * 2 + lines.Count * lineH;
+                var sample = CssAnimation.Evaluate(toast.AgeMs, 0, 2600, 1, "normal", "forwards", "cubic-bezier(0.34, 1.56, 0.64, 1)", keys, boxW, h, 0);
+                double alpha = sample.Opacity ? sample.OpacityValue : 1;
+                if (alpha > 1) alpha = 1;
+                if (alpha <= 0.001) { y += h + gap; continue; }
+                canvas.Save();
+                if (sample.Transform)
+                {
+                    double cx = boxX + boxW * 0.5, cy = y + h * 0.5;
+                    var m = sample.Matrix;
+                    canvas.Translate(cx, cy);
+                    canvas.Transform(m.a, m.b, m.c, m.d, m.e, m.f);
+                    canvas.Translate(-cx, -cy);
+                }
+                var style = new CssBoxStyle
+                {
+                    x = boxX, y = y, w = boxW, h = h, hasBg = true,
+                    bg = CssColor.Parse("#ffffff", Rgba.Black)
+                };
+                for (int c = 0; c < 4; c++) style.radii[c] = new Vec2d(18, 18);
+                for (int c = 0; c < 4; c++) { style.borderW[c] = 3; style.borderC[c] = border; style.borderOn[c] = true; }
+                style.shadows.AddRange(CssBox.ParseShadows("0 6px 0 #1e1b4b"));
+                CssBox.Draw(canvas, style, alpha);
+                canvas.Font = "800 13px Fredoka";
+                double block = lines.Count * lineH;
+                double top = y + (h - block) * 0.5;
+                for (int li = 0; li < lines.Count; li++)
+                {
+                    double tw = canvas.MeasureText(lines[li]);
+                    double baseline = top + li * lineH + canvas.FontAscent();
+                    CssBox.DrawText(canvas, lines[li], boxX + (boxW - tw) * 0.5, baseline, ink, null, alpha);
+                }
+                canvas.Restore();
+                y += h + gap;
+                DrawnBoxes++;
+            }
+        }
+
         public bool PaintPlayfield(Canvas2D dest)
         {
             if (playfield == null || dest == null) return false;

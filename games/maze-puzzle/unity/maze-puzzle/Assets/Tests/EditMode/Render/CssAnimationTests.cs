@@ -86,6 +86,16 @@ namespace OrbitalSalvage.Render.Tests
         }
 
         [Test]
+        public void OvershootBezier_ExtrapolatesPastTheKeyframe()
+        {
+            // cartoonToast 0% → 15% at 200ms: cubic-bezier(0.34, 1.56, 0.64, 1) yields u ≈ 1.0909.
+            var m = CssTransform.Interpolate("translateY(-16px) scale(0.85)", "translateY(0px) scale(1)", 1.0909, 360, 42, 0);
+            Assert.AreEqual(1.0136, m.a, 1e-3);
+            Assert.AreEqual(1.0136, m.d, 1e-3);
+            Assert.AreEqual(1.454, m.f, 2e-2);
+        }
+
+        [Test]
         public void FloatUpFade_ResolvesCalcVar()
         {
             var m = CssTransform.ToMatrix("translate(calc(-50% + var(--dx, 0px)), calc(-50% - 40px)) scale(0.8)", 20, 20, 12);
