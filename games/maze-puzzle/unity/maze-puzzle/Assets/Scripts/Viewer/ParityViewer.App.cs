@@ -69,7 +69,34 @@ namespace OrbitalSalvage.Viewer
                 if (session != null) app.SetLiveMass(session.CollectedMass, session.SpilledMass);
             };
             app.BeginBoot();
+            if (realtime) WireLiveAudio();
             SyncApp(true);
+        }
+
+        /// <summary>Profile volumes plus physics cues into the DSP player. Parity boots leave <c>Audible</c> null.</summary>
+        void WireLiveAudio()
+        {
+            if (app == null || app.Economy == null || app.Economy.Profile == null || app.Economy.Profile.Settings == null) return;
+            var settings = app.Economy.Profile.Settings;
+            app.Audio.SetSfxVolume(settings.SfxVolume);
+            app.Audio.SetAmbienceVolume(settings.AmbientVolume);
+            if (!settings.SoundEnabled && !app.Audio.IsMuted)
+            {
+                app.Audio.ToggleMute();
+                if (session != null && session.Cues != null) session.Cues.IsMuted = true;
+            }
+            var player = gameObject.GetComponent<WebAudioPlayer>();
+            if (player == null || session == null || session.Cues == null) return;
+            session.Cues.Audible = (name, amount, text) =>
+            {
+                if (name == "spin") player.PlaySpinRatchet(amount);
+                else if (name == "collision") player.PlayDebrisCollision(amount, string.IsNullOrEmpty(text) ? "titanium" : text);
+                else if (name == "swallow") player.PlayDebrisSwallowed();
+                else if (name == "gate") player.PlayGatePass(string.IsNullOrEmpty(text) ? "MULTIPLY" : text, amount);
+                else if (name == "rcs") player.PlayRcsThrust();
+                else if (name == "bumper") player.PlayBumperBounce();
+                else if (name == "hazard") player.PlayHazardExplosion();
+            };
         }
 
         void WireSession()
@@ -708,6 +735,145 @@ namespace OrbitalSalvage.Viewer
                 }
             }
             sb.Append('"');
+        }
+
+        string shipError;
+
+        /// <summary>
+        /// Default boot (real clock, profile, audio) with scripted pointers through <see cref="InjectPointerDown"/>.
+        /// Home, 500 ms later, Play, pause, resume, back home.
+        /// </summary>
+        IEnumerator ShipSelfTest(string dir)
+        {
+            Application.runInBackground = true;
+            shipError = null;
+            bool animated = false;
+            string profilePath = Path.Combine(Application.persistentDataPath, FileProfileStore.FileName);
+            try
+            {
+                Directory.CreateDirectory(dir);
+                BootApp();
+            }
+            catch (Exception ex) { shipError = ex.ToString(); }
+
+            float deadline = Time.realtimeSinceStartup + 25f;
+            while (shipError == null && (app == null || app.CurrentPage != "home"))
+            {
+                if (Time.realtimeSinceStartup > deadline)
+                {
+                    shipError = "home timeout page=" + (app == null ? "null" : app.CurrentPage);
+                    break;
+                }
+                yield return null;
+            }
+
+            if (shipError == null) yield return StartCoroutine(ShipShot(dir, "01_home_a"));
+            byte[] first = shipError == null ? File.ReadAllBytes(Path.Combine(dir, "01_home_a.png")) : null;
+            if (shipError == null) yield return new WaitForSecondsRealtime(0.5f);
+            if (shipError == null) yield return StartCoroutine(ShipShot(dir, "01_home_b"));
+            if (shipError == null)
+            {
+                byte[] second = File.ReadAllBytes(Path.Combine(dir, "01_home_b.png"));
+                animated = first != null && second != null && !BytesEqual(first, second);
+                if (!animated) shipError = "home frames 500ms apart are identical";
+            }
+
+            if (shipError == null) yield return StartCoroutine(TapControl("btn-home-play"));
+            if (shipError == null) yield return StartCoroutine(WaitShip("game", false));
+            if (shipError == null) yield return StartCoroutine(ShipShot(dir, "02_game"));
+            if (shipError == null) yield return StartCoroutine(TapControl("btn-game-pause"));
+            if (shipError == null) yield return StartCoroutine(WaitShip("game", true));
+            if (shipError == null) yield return StartCoroutine(ShipShot(dir, "03_pause"));
+            if (shipError == null) yield return StartCoroutine(TapControl("btn-pause-resume"));
+            if (shipError == null) yield return StartCoroutine(WaitShip("game", false));
+            if (shipError == null) yield return StartCoroutine(ShipShot(dir, "04_resume"));
+            if (shipError == null) yield return StartCoroutine(TapControl("btn-game-to-home"));
+            if (shipError == null) yield return StartCoroutine(WaitShip("home", false));
+            if (shipError == null) yield return StartCoroutine(ShipShot(dir, "05_home"));
+
+            try
+            {
+                if (app != null) app.Economy.SaveProfile();
+                if (File.Exists(profilePath))
+                    File.Copy(profilePath, Path.Combine(dir, "profile.json"), true);
+                else if (shipError == null)
+                    shipError = "profile file missing " + profilePath;
+                var sb = new StringBuilder();
+                sb.Append("{\"ok\":").Append(shipError == null ? "true" : "false");
+                sb.Append(",\"animated\":").Append(animated ? "true" : "false");
+                sb.Append(",\"page\":");
+                Quote(sb, app != null ? app.CurrentPage : "");
+                sb.Append(",\"profile\":");
+                Quote(sb, profilePath);
+                sb.Append(",\"error\":");
+                Quote(sb, shipError);
+                sb.Append('}');
+                File.WriteAllText(Path.Combine(dir, "ship.json"), sb.ToString());
+            }
+            catch (Exception ex)
+            {
+                if (shipError == null) shipError = ex.ToString();
+            }
+
+            if (shipError != null) Debug.LogError("[ParityViewer] ship selftest failed: " + shipError);
+            else Debug.Log("[ParityViewer] ship selftest ok " + dir);
+            yield return null;
+            if (!Application.isEditor) Application.Quit(shipError == null ? 0 : 1);
+        }
+
+        IEnumerator TapControl(string id)
+        {
+            if (currentId == null || app == null)
+            {
+                shipError = "no page for " + id;
+                yield break;
+            }
+            string spec = Spec(currentId);
+            if (!ParityPages.TryCenter(spec, id, out double cssX, out double cssY))
+            {
+                shipError = "no control " + id + " on " + currentId;
+                yield break;
+            }
+            var screen = CssToScreen(PageRect(), cssX, cssY);
+            InjectPointerDown(screen);
+            yield return null;
+            InjectPointerUp();
+            yield return null;
+            yield return null;
+        }
+
+        IEnumerator WaitShip(string page, bool pause)
+        {
+            float deadline = Time.realtimeSinceStartup + 8f;
+            while (Time.realtimeSinceStartup < deadline)
+            {
+                if (app != null && app.CurrentPage == page && app.ModalOpen("modal-pause") == pause)
+                    yield break;
+                yield return null;
+            }
+            shipError = "timeout want " + page + " pause=" + pause + " got " + (app == null ? "null" : app.CurrentPage);
+        }
+
+        IEnumerator ShipShot(string dir, string name)
+        {
+            yield return new WaitForEndOfFrame();
+            try
+            {
+                if (current == null || current.Target == null) throw new InvalidOperationException("no frame " + name);
+                File.WriteAllBytes(Path.Combine(dir, name + ".png"), FramePng());
+                ScreenCapture.CaptureScreenshot(Path.Combine(dir, name + "_window.png"));
+            }
+            catch (Exception ex) { shipError = name + " " + ex.Message; }
+            yield return new WaitForEndOfFrame();
+            yield return null;
+        }
+
+        static bool BytesEqual(byte[] a, byte[] b)
+        {
+            if (a == null || b == null || a.Length != b.Length) return false;
+            for (int i = 0; i < a.Length; i++)
+                if (a[i] != b[i]) return false;
+            return true;
         }
 
         sealed class PlayerClock : IAppClock

@@ -268,15 +268,36 @@ namespace OrbitalSalvage.Viewer
         public static bool TryCenter(string specJson, string id, out double cssX, out double cssY)
         {
             cssX = cssY = 0;
+            if (!TryRect(specJson, id, out double x, out double y, out double w, out double h)) return false;
+            cssX = x + w * 0.5;
+            cssY = y + h * 0.5;
+            return true;
+        }
+
+        public static bool TryRect(string specJson, string id, out double x, out double y, out double w, out double h)
+        {
+            x = y = w = h = 0;
             var els = Parse(specJson);
             for (int i = 0; i < els.Count; i++)
             {
                 if (els[i].Id != id || !els[i].Hittable) continue;
-                cssX = els[i].X + els[i].W * 0.5;
-                cssY = els[i].Y + els[i].H * 0.5;
+                x = els[i].X;
+                y = els[i].Y;
+                w = els[i].W;
+                h = els[i].H;
                 return true;
             }
             return false;
+        }
+
+        /// <summary>Range input 0–100 from a CSS x inside the control's box. Matches the web slider's 0–100.</summary>
+        public static int SliderValue(double cssX, double x, double w)
+        {
+            if (!(w > 0)) return 0;
+            double t = (cssX - x) / w;
+            if (t < 0) t = 0;
+            if (t > 1) t = 1;
+            return (int)Math.Round(t * 100.0);
         }
 
         public static bool TryClassCenter(string specJson, string token, int index, out double cssX, out double cssY)
