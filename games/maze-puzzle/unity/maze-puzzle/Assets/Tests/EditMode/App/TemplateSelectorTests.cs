@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Text;
 using NUnit.Framework;
 using OrbitalSalvage.Render;
 using UnityEngine;
@@ -45,7 +46,7 @@ namespace OrbitalSalvage.App.Tests
             Assert.AreEqual("shop_gift_claimed", TemplateSelector.Select(shop, out _));
             shop.ShopSignature = "ring_donut,ring_spacecat|ring_spacecat";
             Assert.AreEqual("shop_gift_claimed", TemplateSelector.Select(shop, out stamp));
-            Assert.AreEqual("owned,locked,locked,equipped", stamp);
+            Assert.AreEqual("ring_donut:owned,ring_duckie:locked,ring_candyland:locked,ring_spacecat:equipped", stamp);
 
             var sings = Q("shop"); sings.ShopTab = "singularities"; sings.ShopSignature = TemplateSelector.SingsMixed;
             Assert.AreEqual("shop_singularities_mixed", TemplateSelector.Select(sings, out _));
@@ -163,6 +164,40 @@ namespace OrbitalSalvage.App.Tests
                 Assert.That(Math.Abs(r[1] - slots[i].Y), Is.LessThan(0.5));
                 Assert.AreEqual(kinds.Split(',')[i], CardStamp.KindOf(elements, roots[i]));
             }
+        }
+
+        [Test]
+        public void ItemCard_KeepsTheItemWhenTheFooterStateChanges()
+        {
+            var cards = new List<List<Dictionary<string, object>>>();
+            cards.AddRange(CardStamp.ExtractAll(Load("shop_rings_default")));
+            cards.AddRange(CardStamp.ExtractAll(Load("shop_rings_mixed")));
+            var duckie = CardStamp.MatchItem(cards, "Rubber Duckie Floatie", "equipped");
+            Assert.AreEqual("Rubber Duckie Floatie", CardStamp.TitleOf(duckie));
+            Assert.AreEqual("equipped", CardStamp.KindOf(duckie, 0));
+            var candy = CardStamp.MatchItem(cards, "Peppermint Candy Ring", "locked");
+            Assert.AreEqual("Peppermint Candy Ring", CardStamp.TitleOf(candy));
+            Assert.AreEqual("locked", CardStamp.KindOf(candy, 0));
+            Assert.That(FooterText(candy), Does.Contain("1200"));
+            var kitty = CardStamp.MatchItem(cards, "Cosmic Kitty Saucer", "owned");
+            Assert.AreEqual("Cosmic Kitty Saucer", CardStamp.TitleOf(kitty));
+            Assert.AreEqual("owned", CardStamp.KindOf(kitty, 0));
+            Assert.That(FooterText(kitty), Does.Contain("Wear"));
+        }
+
+        static string FooterText(List<Dictionary<string, object>> tree)
+        {
+            var sb = new StringBuilder();
+            for (int i = 0; i < tree.Count; i++)
+            {
+                if (!tree[i].TryGetValue("runs", out var runs) || !(runs is List<object> list)) continue;
+                for (int r = 0; r < list.Count; r++)
+                {
+                    if (list[r] is Dictionary<string, object> run && run.TryGetValue("s", out var s) && s is string text)
+                        sb.Append(text);
+                }
+            }
+            return sb.ToString();
         }
 
         [Test]

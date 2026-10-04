@@ -26,6 +26,7 @@ namespace OrbitalSalvage.Render
         public double[] borderW = new double[4];   // top, right, bottom, left
         public Rgba[] borderC = new Rgba[4];
         public bool[] borderOn = new bool[4];
+        public bool[] borderDashed = new bool[4];
         public readonly List<CssShadow> shadows = new List<CssShadow>();
         internal CanvasGradient[] cachedLayers;
         internal string cachedCss;
@@ -130,6 +131,21 @@ namespace OrbitalSalvage.Render
             return r;
         }
 
+        /// <summary>
+        /// Device-pixel shadow offset that cancels a local-space shift of <paramref name="offX"/>/<paramref name="offY"/>
+        /// and then applies a CSS offset. The off-canvas trick shifts the shape by a local X and must be undone with the
+        /// full linear transform: using only <c>ctm.a</c> drops the shadow by <c>OffCanvas * ctm.b</c> once the element rotates.
+        /// </summary>
+        static void ShadowDevice(Canvas2D c, double cssDx, double cssDy, double offX, double offY, out double devX, out double devY, out double blurScale)
+        {
+            var m = c.CurrentTransform;
+            double lx = cssDx + offX, ly = cssDy + offY;
+            devX = m.a * lx + m.c * ly;
+            devY = m.b * lx + m.d * ly;
+            blurScale = Math.Sqrt(m.a * m.a + m.b * m.b);
+            if (blurScale < 1e-9) blurScale = Math.Abs(m.a);
+        }
+
         static void RRect(Canvas2D c, double x, double y, double w, double h, Vec2d[] r)
         {
             if (w <= 0 || h <= 0) return;
@@ -138,18 +154,146 @@ namespace OrbitalSalvage.Render
             if (square) c.Rect(x, y, w, h); else c.RoundRect(x, y, w, h, r);
         }
 
+        /// <summary>
+        /// Recover the pre-transform ellipse for a computed <c>perspective(d) rotateX(a)</c>.
+        /// The spec stores only the foreshortened AABB; the layout size is the unique ellipse whose projection has that box.
+        /// </summary>
+        public static bool TryPerspectiveDisc(string tf, double x, double y, double w, double h,
+            out double ox, out double oy, out double cos, out double sod, out double halfW, out double halfH)
+        {
+            ox = oy = cos = sod = halfW = halfH = 0;
+            if (string.IsNullOrEmpty(tf) || !tf.StartsWith("matrix3d(", StringComparison.Ordinal) || tf[tf.Length - 1] != ')') return false;
+            var parts = tf.Substring(9, tf.Length - 10).Split(',');
+            if (parts.Length < 16) return false;
+            var m = new double[16];
+            for (int i = 0; i < 16; i++)
+                if (!double.TryParse(parts[i], NumberStyles.Float, CultureInfo.InvariantCulture, out m[i])) return false;
+            // Column-major. perspective(d) * rotateX(a) has no translation and no X scale.
+            if (Math.Abs(m[0] - 1) > 1e-3 || Math.Abs(m[1]) > 1e-3 || Math.Abs(m[4]) > 1e-3) return false;
+            if (Math.Abs(m[12]) > 1e-3 || Math.Abs(m[13]) > 1e-3) return false;
+            cos = m[5];
+            double sin = m[6];
+            sod = -m[7];
+            if (!(sod > 1e-6) || cos < 0.2 || Math.Abs(m[9] + sin) > 2e-2) return false;
+            double A = h * sod;
+            double B = 2 * cos;
+            double disc = B * B + 4 * A * A;
+            if (!(A > 0) || disc <= 0) return false;
+            double u = (-B + Math.Sqrt(disc)) / (2 * A);
+            if (!(u > 0) || u >= 0.9) return false;
+            halfH = u / sod;
+            halfW = w * 0.5 * (1 - u);
+            ox = x + w * 0.5;
+            oy = y + h - halfH * cos / (1 - u);
+            return halfW > 1 && halfH > 1;
+        }
+
+        public static void TracePerspectiveEllipse(Canvas2D c, double ox, double oy, double halfW, double halfH, double cos, double sod, double shiftX, double shiftY)
+        {
+            const int n = 96;
+            for (int i = 0; i < n; i++)
+            {
+                double t = Math.PI * 2 * i / n;
+                double lx = halfW * Math.Cos(t) + shiftX;
+                double ly = halfH * Math.Sin(t) + shiftY;
+                double clipW = 1 - ly * sod;
+                if (clipW < 1e-4) clipW = 1e-4;
+                double sx = ox + lx / clipW;
+                double sy = oy + ly * cos / clipW;
+                if (i == 0) c.MoveTo(sx, sy);
+                else c.LineTo(sx, sy);
+            }
+            c.ClosePath();
+        }
+
+        /// <summary>Outer box-shadows of a perspective disc. The blur stays in screen space; the silhouette is the projected ellipse.</summary>
+        public static void DrawProjectedShadows(Canvas2D c, CssBoxStyle s, double alpha, List<CssShadow> shadows,
+            double ox, double oy, double cos, double sod, double halfW, double halfH)
+        {
+            if (shadows == null || shadows.Count == 0 || alpha <= 0) return;
+            c.Save();
+            c.GlobalAlpha = Math.Min(1, alpha);
+            for (int i = shadows.Count - 1; i >= 0; i--)
+            {
+                var sh = shadows[i];
+                if (sh.inset || sh.color.a <= 0) continue;
+                double pad = sh.blur + sh.spread + Math.Abs(sh.dx) + Math.Abs(sh.dy) + 4;
+                c.Save();
+                c.BeginPath();
+                c.Rect(s.x - pad, s.y - pad, s.w + pad * 2, s.h + pad * 2);
+                TracePerspectiveEllipse(c, ox, oy, halfW, halfH, cos, sod, 0, 0);
+                c.Clip("evenodd");
+                c.FillStyle = "rgba(0,0,0,1)";
+                if (sh.blur <= 0)
+                {
+                    c.SetFill(sh.color);
+                    c.BeginPath();
+                    TracePerspectiveEllipse(c, ox, oy, halfW + sh.spread, halfH + sh.spread, cos, sod, sh.dx, sh.dy);
+                    c.Fill();
+                }
+                else
+                {
+                    c.SetShadow(sh.color);
+                    ShadowDevice(c, sh.dx, sh.dy, OffCanvas, 0, out var devX, out var devY, out var blurScale);
+                    c.ShadowBlur = sh.blur * blurScale;
+                    c.ShadowOffsetX = devX;
+                    c.ShadowOffsetY = devY;
+                    c.BeginPath();
+                    TracePerspectiveEllipse(c, ox - OffCanvas, oy, halfW + sh.spread, halfH + sh.spread, cos, sod, 0, 0);
+                    c.Fill();
+                }
+                c.Restore();
+            }
+            c.Restore();
+        }
+
+        public static void DrawProjectedBorder(Canvas2D c, CssBoxStyle s, double alpha,
+            double ox, double oy, double cos, double sod, double halfW, double halfH)
+        {
+            double bw = s.borderW[0];
+            if (bw <= 0 || alpha <= 0 || s.borderC[0].a <= 0) return;
+            bool dashed = s.borderDashed[0] && s.borderDashed[1] && s.borderDashed[2] && s.borderDashed[3];
+            c.Save();
+            c.GlobalAlpha = Math.Min(1, alpha);
+            if (dashed)
+            {
+                c.StrokeStyle = ToCss(s.borderC[0]);
+                c.LineWidth = bw;
+                c.LineCap = "butt";
+                c.SetLineDash(new[] { bw * 3, bw });
+                c.BeginPath();
+                TracePerspectiveEllipse(c, ox, oy, Math.Max(0.5, halfW - bw * 0.5), Math.Max(0.5, halfH - bw * 0.5), cos, sod, 0, 0);
+                c.Stroke();
+                c.SetLineDash(null);
+            }
+            else if (s.borderOn[0])
+            {
+                c.SetFill(s.borderC[0]);
+                c.BeginPath();
+                TracePerspectiveEllipse(c, ox, oy, halfW, halfH, cos, sod, 0, 0);
+                TracePerspectiveEllipse(c, ox, oy, Math.Max(0.5, halfW - bw), Math.Max(0.5, halfH - bw), cos, sod, 0, 0);
+                c.Fill("evenodd");
+            }
+            c.Restore();
+        }
+
         /// <summary>Draws the box. <paramref name="alpha"/> is the accumulated opacity of the element and its ancestors.</summary>
         public static void Draw(Canvas2D c, CssBoxStyle s, double alpha)
         {
+            Draw(c, s, alpha, true, true);
+        }
+
+        public static void Draw(Canvas2D c, CssBoxStyle s, double alpha, bool outerShadows, bool border)
+        {
             PaintProfile.Begin(PaintProfile.CssBox);
             if (s.w <= 0 || s.h <= 0 || alpha <= 0) { PaintProfile.End(PaintProfile.CssBox); return; }
-            double scale = c.CurrentTransform.a;
             c.Save();
             c.GlobalAlpha = Math.Min(1, alpha);
 
             // Outer shadows are visible only outside the border box. A fill, even a translucent one, composites
             // against the page rather than against this element's own shadow.
             var outer = ResolveRadii(s, 0);
+            if (outerShadows)
             for (int i = s.shadows.Count - 1; i >= 0; i--)
             {
                 var sh = s.shadows[i];
@@ -174,9 +318,10 @@ namespace OrbitalSalvage.Render
                 else
                 {
                     c.SetShadow(sh.color);
-                    c.ShadowBlur = sh.blur * scale;
-                    c.ShadowOffsetX = (sh.dx + OffCanvas) * scale;
-                    c.ShadowOffsetY = sh.dy * scale;
+                    ShadowDevice(c, sh.dx, sh.dy, OffCanvas, 0, out var devX, out var devY, out var blurScale);
+                    c.ShadowBlur = sh.blur * blurScale;
+                    c.ShadowOffsetX = devX;
+                    c.ShadowOffsetY = devY;
                     c.BeginPath();
                     RRect(c, sx - OffCanvas, sy, sw, shh, radii);
                     c.Fill();
@@ -193,23 +338,17 @@ namespace OrbitalSalvage.Render
             }
             if (!string.IsNullOrEmpty(s.bgImage) && s.bgImage != "none")
             {
-                bool same = s.cachedLayers != null && s.cachedCss == s.bgImage && s.cx == s.x && s.cy == s.y && s.cw == s.w && s.ch == s.h;
-                if (!same)
+                var split = SplitTop(s.bgImage);
+                for (int li = split.Count - 1; li >= 0; li--)
                 {
-                    var built = new List<CanvasGradient>();
-                    var split = SplitTop(s.bgImage);
-                    for (int li = split.Count - 1; li >= 0; li--)
+                    if (CssGradient.IsEllipse(split[li]))
                     {
-                        var g = CssGradient.Create(c, split[li], s.x, s.y, s.w, s.h);
-                        if (g != null) built.Add(g);
+                        CssGradient.FillEllipse(c, split[li], s.x, s.y, s.w, s.h, outer);
+                        continue;
                     }
-                    s.cachedLayers = built.ToArray();
-                    s.cachedCss = s.bgImage;
-                    s.cx = s.x; s.cy = s.y; s.cw = s.w; s.ch = s.h;
-                }
-                for (int li = 0; li < s.cachedLayers.Length; li++)
-                {
-                    c.FillStyle = s.cachedLayers[li];
+                    var g = CssGradient.Create(c, split[li], s.x, s.y, s.w, s.h);
+                    if (g == null) continue;
+                    c.FillStyle = g;
                     c.BeginPath();
                     RRect(c, s.x, s.y, s.w, s.h, outer);
                     c.Fill();
@@ -218,7 +357,7 @@ namespace OrbitalSalvage.Render
 
             DrawHardInsets(c, s, outer);
             DrawBlurredInsets(c, s, outer);
-            DrawBorder(c, s, outer);
+            if (border) DrawBorder(c, s, outer);
             c.Restore();
             PaintProfile.End(PaintProfile.CssBox);
         }
@@ -254,7 +393,6 @@ namespace OrbitalSalvage.Render
         /// </summary>
         static void DrawBlurredInsets(Canvas2D c, CssBoxStyle s, Vec2d[] outer)
         {
-            double scale = c.CurrentTransform.a;
             double bt = s.borderOn[0] ? s.borderW[0] : 0, br = s.borderOn[1] ? s.borderW[1] : 0;
             double bb = s.borderOn[2] ? s.borderW[2] : 0, bl = s.borderOn[3] ? s.borderW[3] : 0;
             for (int i = s.shadows.Count - 1; i >= 0; i--)
@@ -281,9 +419,10 @@ namespace OrbitalSalvage.Render
                 c.Clip();
                 c.FillStyle = "rgba(0,0,0,1)";
                 c.SetShadow(sh.color);
-                c.ShadowBlur = sh.blur * scale;
-                c.ShadowOffsetX = OffCanvas * scale;
-                c.ShadowOffsetY = 0;
+                ShadowDevice(c, 0, 0, OffCanvas, 0, out var devX, out var devY, out var blurScale);
+                c.ShadowBlur = sh.blur * blurScale;
+                c.ShadowOffsetX = devX;
+                c.ShadowOffsetY = devY;
                 c.BeginPath();
                 c.Rect(ix - pad - OffCanvas, iy - pad, iw + pad * 2, ih + pad * 2);
                 RRect(c, hx - OffCanvas, hy, hw, hh, hole);
@@ -294,9 +433,28 @@ namespace OrbitalSalvage.Render
 
         static void DrawBorder(Canvas2D c, CssBoxStyle s, Vec2d[] outer)
         {
-            double bt = s.borderOn[0] ? s.borderW[0] : 0, br = s.borderOn[1] ? s.borderW[1] : 0;
-            double bb = s.borderOn[2] ? s.borderW[2] : 0, bl = s.borderOn[3] ? s.borderW[3] : 0;
+            double bt = s.borderOn[0] || s.borderDashed[0] ? s.borderW[0] : 0;
+            double br = s.borderOn[1] || s.borderDashed[1] ? s.borderW[1] : 0;
+            double bb = s.borderOn[2] || s.borderDashed[2] ? s.borderW[2] : 0;
+            double bl = s.borderOn[3] || s.borderDashed[3] ? s.borderW[3] : 0;
             if (bt <= 0 && br <= 0 && bb <= 0 && bl <= 0) return;
+            if (s.borderDashed[0] && s.borderDashed[1] && s.borderDashed[2] && s.borderDashed[3]
+                && bt == br && br == bb && bb == bl && s.borderC[0].a > 0)
+            {
+                // Chromium's dashed stroke is a 3:1 dash/gap in border-width units, centered on the border midline.
+                double bw = bt;
+                c.Save();
+                c.StrokeStyle = ToCss(s.borderC[0]);
+                c.LineWidth = bw;
+                c.LineCap = "butt";
+                c.SetLineDash(new[] { bw * 3, bw });
+                c.BeginPath();
+                c.Ellipse(s.x + s.w * 0.5, s.y + s.h * 0.5, Math.Max(0.5, s.w * 0.5 - bw * 0.5), Math.Max(0.5, s.h * 0.5 - bw * 0.5), 0, 0, Math.PI * 2);
+                c.Stroke();
+                c.SetLineDash(null);
+                c.Restore();
+                return;
+            }
             bool uniform = bt == br && br == bb && bb == bl &&
                 s.borderC[0].r == s.borderC[1].r && s.borderC[0].a == s.borderC[1].a && s.borderC[0].r == s.borderC[2].r && s.borderC[0].r == s.borderC[3].r;
             if (uniform)
@@ -342,7 +500,6 @@ namespace OrbitalSalvage.Render
         public static void DrawText(Canvas2D c, string text, double x, double baseline, Rgba color, List<CssShadow> shadows, double alpha)
         {
             if (string.IsNullOrEmpty(text) || alpha <= 0) return;
-            double scale = c.CurrentTransform.a;
             c.Save();
             c.GlobalAlpha = Math.Min(1, alpha);
             c.TextAlign = "start";
@@ -362,9 +519,10 @@ namespace OrbitalSalvage.Render
                     {
                         c.FillStyle = "rgba(0,0,0,1)";
                         c.SetShadow(sh.color);
-                        c.ShadowBlur = sh.blur * scale;
-                        c.ShadowOffsetX = (sh.dx + OffCanvas) * scale;
-                        c.ShadowOffsetY = sh.dy * scale;
+                        ShadowDevice(c, sh.dx, sh.dy, OffCanvas, 0, out var devX, out var devY, out var blurScale);
+                        c.ShadowBlur = sh.blur * blurScale;
+                        c.ShadowOffsetX = devX;
+                        c.ShadowOffsetY = devY;
                         c.FillText(text, x - OffCanvas, baseline);
                     }
                     c.Restore();
@@ -476,6 +634,110 @@ namespace OrbitalSalvage.Render
             }
             foreach (var s in stops) g.AddColorStop(Math.Min(1, Math.Max(0, s.pos)), s.color);
             return g;
+        }
+
+        /// <summary>A radial gradient whose ending shape is an ellipse (the CSS default). <c>circle</c> stays circular.</summary>
+        public static bool IsEllipse(string css)
+        {
+            if (string.IsNullOrEmpty(css)) return false;
+            css = css.Trim();
+            if (!css.StartsWith("radial-gradient(", StringComparison.Ordinal)) return false;
+            int open = css.IndexOf('(');
+            if (open < 0) return false;
+            string body = css.Substring(open + 1);
+            int comma = body.IndexOf(',');
+            string head = comma >= 0 ? body.Substring(0, comma) : body;
+            if (head.IndexOf("circle", StringComparison.Ordinal) >= 0) return false;
+            // A leading color means the shape was omitted, which defaults to ellipse.
+            if (head.TrimStart().StartsWith("rgb", StringComparison.OrdinalIgnoreCase) || head.TrimStart().StartsWith("#", StringComparison.Ordinal))
+                return true;
+            return head.IndexOf("ellipse", StringComparison.Ordinal) >= 0 || head.IndexOf("at ", StringComparison.Ordinal) >= 0 || head.Trim().Length == 0;
+        }
+
+        /// <summary>
+        /// Fills <paramref name="outer"/> with an elliptical radial gradient. The CTM is scaled to the box so a
+        /// circular gradient becomes the ellipse CSS paints (farthest-corner unless closest-side is named).
+        /// </summary>
+        public static void FillEllipse(Canvas2D c, string css, double x, double y, double w, double h, Vec2d[] outer)
+        {
+            if (w <= 0 || h <= 0) return;
+            int open = css.IndexOf('(');
+            if (open < 0) return;
+            var args = CssBox.SplitTop(css.Substring(open + 1, css.Length - open - 2));
+            if (args.Count < 2) return;
+            string first = args[0];
+            bool firstIsStop = first.StartsWith("rgb", StringComparison.OrdinalIgnoreCase) || first.StartsWith("#");
+            int stopStart = firstIsStop ? 0 : 1;
+            var stops = new List<Stop>();
+            for (int i = stopStart; i < args.Count; i++)
+            {
+                string a = args[i];
+                var st = new Stop();
+                int sp = LastTopSpace(a);
+                string colorText = a, posText = null;
+                if (sp > 0 && (a.EndsWith("%", StringComparison.Ordinal) || a.EndsWith("px", StringComparison.Ordinal)))
+                {
+                    colorText = a.Substring(0, sp); posText = a.Substring(sp + 1);
+                }
+                st.color = CssColor.Parse(colorText, Rgba.Transparent);
+                if (posText != null)
+                {
+                    st.hasPos = true;
+                    st.pos = posText.EndsWith("%", StringComparison.Ordinal) ? CssBox.ParseLength(posText, 100) / 100.0 : double.NaN;
+                }
+                stops.Add(st);
+            }
+            if (stops.Count < 2) return;
+            PlaceStops(stops);
+
+            string head = firstIsStop ? "" : first;
+            // Unit box: the border box is [-0.5, 0.5]. Farthest-corner is the corner radius sqrt(0.5).
+            double radius = head.IndexOf("closest-side", StringComparison.Ordinal) >= 0 ? 0.5 : Math.Sqrt(0.5);
+            double atx = 0, aty = 0;
+            int at = head.IndexOf(" at ", StringComparison.Ordinal);
+            if (at >= 0)
+            {
+                var pr = head.Substring(at + 4).Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+                if (pr.Length >= 1) atx = Position(pr[0], 1) - 0.5;
+                if (pr.Length >= 2) aty = Position(pr[1], 1) - 0.5;
+            }
+
+            c.Save();
+            c.Translate(x + w * 0.5, y + h * 0.5);
+            c.Scale(w, h);
+            var g = c.CreateRadialGradient(atx, aty, 0, atx, aty, radius);
+            foreach (var s in stops) g.AddColorStop(Math.Min(1, Math.Max(0, s.pos)), s.color);
+            c.FillStyle = g;
+            c.BeginPath();
+            if (outer != null && outer.Length >= 4)
+            {
+                var scaled = new Vec2d[4];
+                for (int i = 0; i < 4; i++) scaled[i] = new Vec2d(outer[i].x / w, outer[i].y / h);
+                c.RoundRect(-0.5, -0.5, 1, 1, scaled);
+            }
+            else c.Rect(-0.5, -0.5, 1, 1);
+            c.Fill();
+            c.Restore();
+        }
+
+        static void PlaceStops(List<Stop> stops)
+        {
+            if (!stops[0].hasPos) { var s0 = stops[0]; s0.pos = 0; s0.hasPos = true; stops[0] = s0; }
+            if (!stops[stops.Count - 1].hasPos) { var sl = stops[stops.Count - 1]; sl.pos = 1; sl.hasPos = true; stops[stops.Count - 1] = sl; }
+            double prev = 0;
+            for (int i = 0; i < stops.Count; i++)
+            {
+                if (stops[i].hasPos) { var s = stops[i]; if (double.IsNaN(s.pos)) s.pos = 0; s.pos = Math.Max(s.pos, prev); stops[i] = s; prev = s.pos; }
+            }
+            for (int i = 1; i < stops.Count - 1; i++)
+            {
+                if (stops[i].hasPos) continue;
+                int j = i;
+                while (!stops[j].hasPos) j++;
+                double a0 = stops[i - 1].pos, a1 = stops[j].pos;
+                int n = j - (i - 1);
+                for (int k = i; k < j; k++) { var s = stops[k]; s.pos = a0 + (a1 - a0) * (k - (i - 1)) / n; s.hasPos = true; stops[k] = s; }
+            }
         }
 
         static double Position(string tok, double basis)
