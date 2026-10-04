@@ -442,14 +442,20 @@ namespace OrbitalSalvage.Render
                 && bt == br && br == bb && bb == bl && s.borderC[0].a > 0)
             {
                 // Chromium's dashed stroke is a 3:1 dash/gap in border-width units, centered on the border midline.
+                // Follow the border box. A disc here turns daily-master-box (a wide 14px-radius rect) into an ellipse.
+                // Perspective discs take DrawProjectedBorder instead, so the home pedestal rim is unchanged.
                 double bw = bt;
+                double inset = bw * 0.5;
+                var mid = new Vec2d[4];
+                for (int i = 0; i < 4; i++)
+                    mid[i] = new Vec2d(Math.Max(0, outer[i].x - inset), Math.Max(0, outer[i].y - inset));
                 c.Save();
                 c.StrokeStyle = ToCss(s.borderC[0]);
                 c.LineWidth = bw;
                 c.LineCap = "butt";
                 c.SetLineDash(new[] { bw * 3, bw });
                 c.BeginPath();
-                c.Ellipse(s.x + s.w * 0.5, s.y + s.h * 0.5, Math.Max(0.5, s.w * 0.5 - bw * 0.5), Math.Max(0.5, s.h * 0.5 - bw * 0.5), 0, 0, Math.PI * 2);
+                RRect(c, s.x + inset, s.y + inset, Math.Max(0, s.w - bw), Math.Max(0, s.h - bw), mid);
                 c.Stroke();
                 c.SetLineDash(null);
                 c.Restore();
