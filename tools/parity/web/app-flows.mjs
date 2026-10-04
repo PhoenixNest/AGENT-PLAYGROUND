@@ -108,6 +108,39 @@ async function snap(session) {
       firstLevelCode: app.currentPage === "maps" ? norm((document.querySelector(".level-badge") || {}).textContent) : null,
       dailyDone: app.economy.getDailyShifts().map((s) => !!s.isCompleted),
       nowMs: performance.now(),
+      animMs: (() => {
+        let max = 0;
+        const nodes = document.querySelectorAll(".page-active, .page-active *, .modal-overlay.active, .modal-overlay.active *");
+        nodes.forEach((el) => {
+          if (typeof el.getAnimations !== "function") return;
+          for (const a of el.getAnimations()) {
+            const ct = a.currentTime;
+            let n = 0;
+            if (typeof ct === "number") n = ct;
+            else if (ct && typeof ct.value === "number") n = ct.unit === "s" ? ct.value * 1000 : ct.value;
+            if (n > max) max = n;
+          }
+        });
+        return Math.round(max);
+      })(),
+      anims: (() => {
+        const out = {};
+        const nodes = document.querySelectorAll(".page-active, .page-active *, .modal-overlay.active, .modal-overlay.active *");
+        nodes.forEach((el) => {
+          if (typeof el.getAnimations !== "function") return;
+          for (const a of el.getAnimations()) {
+            const name = a.animationName;
+            if (!name) continue;
+            const ct = a.currentTime;
+            let n = 0;
+            if (typeof ct === "number") n = ct;
+            else if (ct && typeof ct.value === "number") n = ct.unit === "s" ? ct.value * 1000 : ct.value;
+            const rounded = Math.round(n);
+            if (out[name] == null || rounded > out[name]) out[name] = rounded;
+          }
+        });
+        return out;
+      })(),
       randomCalls: window.__parity.randomCalls(),
       epochMs: Date.now(),
       profile: JSON.stringify(app.economy.profile),

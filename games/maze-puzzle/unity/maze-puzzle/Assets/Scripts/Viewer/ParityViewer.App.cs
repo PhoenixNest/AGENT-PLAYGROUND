@@ -23,6 +23,10 @@ namespace OrbitalSalvage.Viewer
         int appliedEpoch = -1;
         string overrideSig = "";
         bool sessionWired;
+        bool flowClockActive;
+        double flowClockMs;
+        HomeChrome underlayChrome;
+        string underlayKey;
 
         void BootApp()
         {
@@ -175,13 +179,54 @@ namespace OrbitalSalvage.Viewer
                 }
             }
             BindModalPlayfield(current);
-            if (selfTesting || currentId != null && currentId.StartsWith("loading", StringComparison.Ordinal)) current.Draw();
+            current.Underlay = null;
+            if (flowClockActive) BindFlowUnderlay(current);
+            if (!flowClockActive && (selfTesting || currentId != null && currentId.StartsWith("loading", StringComparison.Ordinal))) current.Draw();
             else
             {
-                double ms = clock.Milliseconds;
+                double ms = flowClockActive ? flowClockMs : clock.Milliseconds;
                 bool modal = currentId != null && currentId.StartsWith("modal_", StringComparison.Ordinal);
                 current.Draw(ms, pressIndex, pressCss, modal && ms < 400, modal);
             }
+        }
+
+        void BindFlowUnderlay(HomeChrome modalChrome)
+        {
+            if (app == null || modalChrome == null) return;
+            if (app.OpenModals().Count == 0) return;
+            string baked = modalChrome.BakedPageId();
+            string want = "page-" + (app.CurrentPage ?? "");
+            if (baked.Length == 0 || baked == want) return;
+            string underId = app.TemplateWithoutModal(out string stamp);
+            if (string.IsNullOrEmpty(underId)) return;
+            string key = underId + "#" + (stamp ?? "");
+            if (underlayChrome == null || underlayKey != key)
+            {
+                if (underlayChrome != null) underlayChrome.Dispose();
+                underlayChrome = HomeChrome.Load(underId, ParityPages.Profile);
+                underlayKey = key;
+                if (!string.IsNullOrEmpty(stamp)) StampShop(underlayChrome, stamp);
+            }
+            CopyOverrides(modalChrome, underlayChrome);
+            underlayChrome.Toasts.Clear();
+            underlayChrome.Draw(flowClockMs);
+            modalChrome.Underlay = underlayChrome.Target;
+        }
+
+        static void CopyOverrides(HomeChrome from, HomeChrome to)
+        {
+            to.TextOverrides.Clear();
+            foreach (var kv in from.TextOverrides) to.TextOverrides[kv.Key] = kv.Value;
+            to.WidthOverrides.Clear();
+            foreach (var kv in from.WidthOverrides) to.WidthOverrides[kv.Key] = kv.Value;
+            to.WidthPercentOverrides.Clear();
+            foreach (var kv in from.WidthPercentOverrides) to.WidthPercentOverrides[kv.Key] = kv.Value;
+            to.OpacityOverrides.Clear();
+            foreach (var kv in from.OpacityOverrides) to.OpacityOverrides[kv.Key] = kv.Value;
+            to.HiddenIds.Clear();
+            foreach (var id in from.HiddenIds) to.HiddenIds.Add(id);
+            to.ClassTextOverrides.Clear();
+            foreach (var kv in from.ClassTextOverrides) to.ClassTextOverrides[kv.Key] = kv.Value;
         }
 
         /// <summary>Same hit-test path as a pointer click, in CSS pixels of the current template.</summary>
@@ -251,6 +296,23 @@ namespace OrbitalSalvage.Viewer
                         JsonValue settle = step.Get("settleMs");
                         if (settle != null && settle.Kind == JsonKind.Number && settle.Number > 0)
                             app.Advance(settle.Number);
+                        JsonValue snap = step.Get("snap");
+                        JsonValue anim = snap != null ? snap.Get("animMs") : null;
+                        flowClockActive = anim != null && anim.Kind == JsonKind.Number;
+                        if (flowClockActive) flowClockMs = anim.Number;
+                        CssAnimation.Running = null;
+                        JsonValue anims = snap != null ? snap.Get("anims") : null;
+                        if (anims != null && anims.Kind == JsonKind.Object && anims.Count > 0)
+                        {
+                            var map = new Dictionary<string, double>(anims.Count);
+                            for (int a = 0; a < anims.Members.Count; a++)
+                            {
+                                var mem = anims.Members[a];
+                                if (mem.Value != null && mem.Value.Kind == JsonKind.Number)
+                                    map[mem.Key] = mem.Value.Number;
+                            }
+                            if (map.Count > 0) CssAnimation.Running = map;
+                        }
                         SyncApp(true);
                         string name = id + "_" + (i + 1).ToString("00") + ".png";
                         File.WriteAllBytes(Path.Combine(dir, name), FramePng());

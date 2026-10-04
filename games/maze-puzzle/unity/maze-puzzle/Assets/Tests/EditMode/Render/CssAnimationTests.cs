@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using NUnit.Framework;
 
 namespace OrbitalSalvage.Render.Tests
@@ -125,6 +126,58 @@ namespace OrbitalSalvage.Render.Tests
             Assert.AreEqual(0.5, sample.OpacityValue, 1e-9);
             sample = CssAnimation.Evaluate(100, 1000, 2500, 0, "normal", "none", "linear", set, 10, 10, 0);
             Assert.IsFalse(sample.Opacity);
+        }
+
+        [Test]
+        public void CapturedChild_UnbakesTheAncestorTransform()
+        {
+            CssAnimation.Running = null;
+            Assert.IsNotNull(CssAnimation.Find("ringFloat"));
+            var parent = new Dictionary<string, object>
+            {
+                { "i", 0d }, { "p", -1d }, { "c", "floater" },
+                { "r", new List<object> { 0d, -10d, 100d, 100d } },
+                { "br", new List<object> { 0d, 0d, 100d, 100d } },
+                { "tf", "matrix(1, 0, 0, 1, 0, -10)" },
+                { "am", new Dictionary<string, object> {
+                    { "n", "ringFloat" }, { "du", 3200d }, { "ea", "ease-in-out" }, { "dl", 0d },
+                    { "it", 0d }, { "di", "alternate" }, { "fi", "none" }, { "ct", 242d }, { "xf", 1d }
+                } }
+            };
+            var child = new Dictionary<string, object>
+            {
+                { "i", 1d }, { "p", 0d }, { "c", "pe" },
+                { "r", new List<object> { 10d, 10d, 8d, 8d } }
+            };
+            var frame = CssFrame.Build(new[] { parent, child }, 242, false, false, -1, null);
+            Assert.IsTrue(frame.Tree[1]);
+            Assert.AreEqual(20, frame.Local[1][1], 0.2, "translateY(-10) baked into the child rect lifts back to layout y");
+            Assert.AreEqual(10, frame.Local[1][0], 0.2);
+        }
+
+        [Test]
+        public void RunningClock_LeavesAnimationsThatAreNotInTheMap()
+        {
+            CssAnimation.Running = new Dictionary<string, double> { { "pageEnter", 220 } };
+            try
+            {
+                var parent = new Dictionary<string, object>
+                {
+                    { "i", 0d }, { "p", -1d }, { "c", "floater" },
+                    { "r", new List<object> { 0d, 0d, 40d, 40d } },
+                    { "am", new Dictionary<string, object> {
+                        { "n", "ringFloat" }, { "du", 3200d }, { "ea", "ease-in-out" }, { "dl", 0d },
+                        { "it", 0d }, { "di", "alternate" }, { "fi", "none" }, { "ct", 0d }, { "xf", 1d }
+                    } }
+                };
+                var frame = CssFrame.Build(new[] { parent }, 220, false, false, -1, null);
+                Assert.IsFalse(frame.Live[0]);
+                Assert.IsFalse(frame.Tree[0]);
+            }
+            finally
+            {
+                CssAnimation.Running = null;
+            }
         }
 
         [Test]
