@@ -33,6 +33,7 @@ async function record(session, trace, step) {
   }
   step.settleMs = settle;
   step.snap = await snap(session);
+  step.play = await session.page.evaluate(() => window.__parity.takePlay());
   trace.push(step);
   await session.page.evaluate(() => window.__parity.waitEmoji());
   const png = await session.page.screenshot({ animations: "allow", caret: "hide" });
@@ -360,6 +361,7 @@ async function main() {
     for (const flow of FLOWS) {
       if (only && !only.has(flow.id)) continue;
       const session = new Session(browser, { profile: "zero", stateId: flow.id });
+      session.extraInit = "window.__PARITY_GAME_SYNC = { frames: [], inputs: [], lastT: null };";
       const trace = [];
       const started = Date.now();
       await flow.run(session, trace);

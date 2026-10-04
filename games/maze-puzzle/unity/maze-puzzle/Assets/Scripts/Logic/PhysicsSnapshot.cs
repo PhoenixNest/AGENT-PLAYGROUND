@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 
 namespace OrbitalSalvage.Logic
 {
@@ -214,6 +215,32 @@ namespace OrbitalSalvage.Logic
                 case "volatile": return "#ef4444";
                 case "magnetic": return "#a855f7";
                 default: return "#38bdf8";
+            }
+        }
+
+        /// <summary>FNV-1a 64 of <see cref="Capture"/>, little-endian IEEE doubles. Same bytes as <c>tools/parity/web/game-sync.mjs</c>.</summary>
+        public static string Hash(PhysicsEngine e)
+        {
+            return HashDoubles(Capture(e));
+        }
+
+        public static string HashDoubles(double[] values)
+        {
+            unchecked
+            {
+                ulong hash = 14695981039346656037UL;
+                const ulong prime = 1099511628211UL;
+                for (int i = 0; i < values.Length; i++)
+                {
+                    byte[] bytes = BitConverter.GetBytes(values[i]);
+                    if (!BitConverter.IsLittleEndian) Array.Reverse(bytes);
+                    for (int b = 0; b < 8; b++)
+                    {
+                        hash ^= bytes[b];
+                        hash *= prime;
+                    }
+                }
+                return hash.ToString("x16", CultureInfo.InvariantCulture);
             }
         }
 

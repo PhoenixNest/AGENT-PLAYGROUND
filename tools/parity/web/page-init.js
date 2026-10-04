@@ -875,6 +875,107 @@
     };
   };
 
+  // Game-page rAF log for Unity lockstep. Installed only when app-flows set the flag
+  // before this script (clock init already replaced requestAnimationFrame).
+  const stateCode = (state) =>
+    state === "IN_RING" ? 0 : state === "FALLING" ? 1 : state === "INGESTING" ? 2 : 3;
+  const typeCode = (type) =>
+    type === "titanium" ? 0 : type === "solar" ? 1 : type === "volatile" ? 2 : type === "magnetic" ? 3 : 4;
+  const capturePhysics = (p) => {
+    const v = [
+      p.ringAngle, p.angularVelocity, p.innerRingAngle, p.rcsBoostTimer, p.lastRatchetAngle,
+      p.rcsThrusting ? 1 : 0, p.rcsDirection, p.nextDebrisId, p.debrisList.length,
+      p.oneWayFlaps.length, p.deflectorPins.length, p.gates.length,
+    ];
+    for (const d of p.debrisList) {
+      v.push(d.id, d.x, d.y, d.vx, d.vy, d.radius, d.mass, d.weight, stateCode(d.state), d.ingestProgress, d.gateCooldown, typeCode(d.type));
+    }
+    for (const f of p.oneWayFlaps) v.push(f.swing, f.swingVel);
+    for (const pin of p.deflectorPins) v.push(pin.hitTimer);
+    for (const g of p.gates) {
+      const ids = [...(g.processedDebris || [])].sort((a, b) => a - b);
+      v.push(ids.length);
+      for (const id of ids) v.push(id);
+    }
+    return v;
+  };
+  const hashDoubles = (values) => {
+    let h = 14695981039346656037n;
+    const prime = 1099511628211n;
+    const mask = 0xffffffffffffffffn;
+    const buf = new ArrayBuffer(8);
+    const view = new DataView(buf);
+    const bytes = new Uint8Array(buf);
+    for (const d of values) {
+      view.setFloat64(0, Number(d), true);
+      for (let i = 0; i < 8; i++) {
+        h ^= BigInt(bytes[i]);
+        h = (h * prime) & mask;
+      }
+    }
+    return h.toString(16).padStart(16, "0");
+  };
+  P.takePlay = () => {
+    const bucket = window.__PARITY_GAME_SYNC;
+    if (!bucket) return null;
+    const frames = bucket.frames.splice(0, bucket.frames.length);
+    const inputs = bucket.inputs.splice(0, bucket.inputs.length);
+    const physics = window.app && window.app.physics;
+    let physicsTicks = 0;
+    for (const frame of frames) if (frame.sim) physicsTicks++;
+    return {
+      frames,
+      inputs,
+      hash: physics ? hashDoubles(capturePhysics(physics)) : null,
+      physicsTicks,
+      renderFrames: frames.length,
+    };
+  };
+  const bucket = window.__PARITY_GAME_SYNC;
+  if (bucket) {
+    bucket.frames = bucket.frames || [];
+    bucket.inputs = bucket.inputs || [];
+    const origRaf = window.requestAnimationFrame;
+    window.requestAnimationFrame = (cb) => origRaf((t) => {
+      const app = window.app;
+      const onGame = !!(app && app.currentPage === "game");
+      const paused = !!(app && app.isPaused);
+      const prev = bucket.lastT;
+      bucket.lastT = t;
+      cb(t);
+      if (!onGame || prev == null) return;
+      bucket.frames.push({ dt: t - prev, sim: !paused });
+    });
+    const note = (input) => {
+      input.at = bucket.frames.length;
+      bucket.inputs.push(input);
+    };
+    window.addEventListener("pointerdown", (e) => {
+      if (!window.app || window.app.currentPage !== "game") return;
+      const canvas = document.getElementById("game-canvas");
+      if (!canvas || (e.target !== canvas && !canvas.contains(e.target))) return;
+      const r = canvas.getBoundingClientRect();
+      note({ kind: "down", x: e.clientX, y: e.clientY, left: r.left, width: r.width });
+    }, true);
+    window.addEventListener("pointermove", (e) => {
+      if (!window.app || window.app.currentPage !== "game" || !window.app.isDragging) return;
+      const canvas = document.getElementById("game-canvas");
+      if (!canvas) return;
+      note({ kind: "move", x: e.clientX, y: e.clientY });
+    }, true);
+    window.addEventListener("pointerup", () => {
+      if (!window.app || window.app.currentPage !== "game") return;
+      if (!bucket.inputs.length || bucket.inputs[bucket.inputs.length - 1].kind === "up") return;
+      note({ kind: "up" });
+    }, true);
+    window.addEventListener("keydown", (e) => {
+      if (!window.app || window.app.currentPage !== "game") return;
+      const tag = e.target && e.target.tagName;
+      if (tag === "INPUT" || tag === "TEXTAREA") return;
+      note({ kind: "key", key: e.key });
+    }, true);
+  }
+
   P.assertBooted = () => ({
     lastTime: window.app && window.app.lastTime,
     perf: performance.now(),

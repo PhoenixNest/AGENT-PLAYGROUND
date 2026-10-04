@@ -267,6 +267,12 @@ namespace OrbitalSalvage.Viewer
         void BindModalPlayfield(HomeChrome chrome)
         {
             if (chrome == null) return;
+            if (flowCapture && app != null && app.CurrentPage == "game" && session != null && session.Renderer != null && session.Renderer.Target != null)
+            {
+                chrome.SkipPlayfield = true;
+                chrome.ExternalPlayfield = session.Renderer.Target;
+                return;
+            }
             bool modal = currentId != null && currentId.StartsWith("modal_", StringComparison.Ordinal) && IsGamePage(currentId);
             if (!modal || session == null || session.Renderer == null || session.Renderer.Target == null)
             {

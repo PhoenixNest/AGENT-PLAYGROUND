@@ -32,6 +32,41 @@ namespace OrbitalSalvage.Render.Tests
         }
 
         [Test]
+        public void PausedWebFrameRendersWithoutSteppingPhysics()
+        {
+            int steps = _session.PhysicsSteps;
+            int frames = _session.RenderFrames;
+            _session.StepWebFrame(0.016, false);
+            Assert.AreEqual(steps, _session.PhysicsSteps);
+            Assert.AreEqual(frames + 1, _session.RenderFrames);
+        }
+
+        [Test]
+        public void BoundBootMatchesWebSectorZeroSpawn()
+        {
+            JsRandom.Global.Reset(JsRandom.DefaultSeed);
+            var economy = new EconomyManager(new MemoryKeyValueStore(), new FixedWallClock(0));
+            var session = LiveGameSession.CreateBound(economy, 430, 932);
+            try
+            {
+                Assert.AreEqual(215, session.Physics.Center.X, 0);
+                Assert.AreEqual(354.16, session.Physics.Center.Y, 1e-9);
+                Assert.AreEqual(215, session.Physics.BlackHole.X, 0);
+                Assert.AreEqual(708.32, session.Physics.BlackHole.Y, 1e-9);
+                Assert.AreEqual(11, session.Physics.DebrisList.Count);
+                var d = session.Physics.DebrisList[0];
+                Assert.AreEqual(237.67067744939985, d.X, 0);
+                Assert.AreEqual(250.60372610393105, d.Y, 0);
+                Assert.AreEqual(1.966082425788045, d.Vx, 0);
+                Assert.AreEqual(0.035724048502743244, d.Vy, 0);
+            }
+            finally
+            {
+                session.Renderer.Dispose();
+            }
+        }
+
+        [Test]
         public void VictoryFiresOnceWhenCollectedMassReachesQuota()
         {
             int wins = 0;
@@ -131,6 +166,39 @@ namespace OrbitalSalvage.Render.Tests
             t = 20100;
             _session.PointerDown(320, 0, 430);
             Assert.AreEqual(0, _session.Physics.AngularVelocity, 1e-9);
+        }
+
+        [Test]
+        public void ReplayAudioClockMatchesWebCollisionCooldown()
+        {
+            JsRandom.Global.Reset(JsRandom.DefaultSeed);
+            var economy = new EconomyManager(new MemoryKeyValueStore(), new FixedWallClock(0));
+            var session = LiveGameSession.CreateBound(economy, 430, 932);
+            try
+            {
+                double now = 5000;
+                session.NowMs = () => now;
+                session.Cues.PublicInit();
+                long baseline = JsRandom.Global.CallCount;
+                session.AdvanceReplayAudio(16);
+                session.Cues.PlayDebrisCollision(1, "titanium");
+                Assert.AreEqual(baseline, JsRandom.Global.CallCount, "16ms is inside the 48ms cooldown");
+                session.AdvanceReplayAudio(32);
+                session.Cues.PlayDebrisCollision(1, "titanium");
+                Assert.AreEqual(baseline + 1, JsRandom.Global.CallCount, "48ms cooldown elapsed draws one frequency");
+                session.AdvanceReplayAudio(16);
+                session.Cues.PlayDebrisCollision(1, "titanium");
+                Assert.AreEqual(baseline + 1, JsRandom.Global.CallCount, "next 16ms is still inside the cooldown");
+                session.FinishReplayAudio();
+                now = 9000;
+                session.AdvanceReplayAudio(16);
+                session.Cues.PlayDebrisCollision(1, "titanium");
+                Assert.AreEqual(baseline + 1, JsRandom.Global.CallCount, "a pre-replay app-clock jump does not open the cooldown");
+            }
+            finally
+            {
+                session.Renderer.Dispose();
+            }
         }
     }
 }
