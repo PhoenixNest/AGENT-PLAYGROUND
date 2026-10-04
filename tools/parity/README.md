@@ -1,6 +1,19 @@
 # Web-to-Unity pixel parity tooling
 
-`SPEC.md` is the binding contract (v1.3). This file only says how to run things. Everything below runs from `tools/parity` in PowerShell on Windows.
+`SPEC.md` is the binding contract (v1.6). This file only says how to run things. Everything below runs from `tools/parity` in PowerShell on Windows.
+
+Measured on this machine on 2026-10-04 (D3D11, RTX 4060 Laptop, windowed). These are harness numbers, not a claim that UI restoration is finished.
+
+| Check | Result |
+| --- | --- |
+| 11 stills, zero profile, bar 99.0% / SSIM 0.985 | 5 pass: loading 99.55/0.9908, game 99.51/0.9919, pause 99.25/0.9877, settings 99.20/0.9890, debrief 99.05/0.9856. 6 fail: trophy 98.80/0.9815, skies 98.72/0.9782, home 98.67/0.9799, daily 98.05/0.9706, hats 98.01/0.9649, donuts 97.78/0.9614. Game SHA256 `38730953997DE30D033C10E6CFF0B9AE2E47FBAB1671D07178039B484609A12A`, pause `CE4A6AE83A5563E98F7F722334E17A7FC06FA1375C26390A9714FC838FEE7078`. |
+| Gameplay streams | 30/30 byte-identical, live `GameRenderer` vs `StreamPlayer` replay (`LiveConformance.Export`). |
+| Controller goldens | 9/9 `AppFlowTests.Flow_MatchesWeb` (inside EditMode 380/380). |
+| Flow shots | 55 steps, 6 at the bar, 0 BLANK (`score_flows.py`). |
+| HomeChrome.Draw | 1 run, n=20, avg 3.049 ms, p95 4.409 ms. |
+| Live frame (600 steps, scale 1) | avg 9.38 ms, p95 14.32 ms (fence included). |
+
+The default player (Editor Play and `Builds/Play`, no flags) boots `ParityViewer` → `AppHost`/`AppController` with pointer input, a wall clock, `FileProfileStore`, and the DSP player. `--parity` and the parity self-test flags keep the frozen clock and silent audio. Landscape keeps the 430×932 page letterboxed. Not verified on a phone.
 
 ## Setup
 
