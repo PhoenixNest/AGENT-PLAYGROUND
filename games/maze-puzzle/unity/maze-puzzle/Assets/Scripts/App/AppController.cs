@@ -943,7 +943,13 @@ namespace OrbitalSalvage.App
             foreach (var kv in _elements) Model.Elements[kv.Key] = kv.Value;
         }
 
-        string ChooseTemplate(bool canMaster, out string cardStamp)
+        /// <summary>Page spec for the current controller state, ignoring a modal that has not transitioned in yet.</summary>
+        public string TemplateWithoutModal(out string cardStamp)
+        {
+            return ChooseTemplate(Economy.CanClaimDailyMasterBonus(), out cardStamp, true);
+        }
+
+        string ChooseTemplate(bool canMaster, out string cardStamp, bool suppressModal = false)
         {
             var current = CurrentWorld();
             int worldDone = 0;
@@ -963,11 +969,14 @@ namespace OrbitalSalvage.App
             double quota = ActiveSector != null ? ActiveSector.Quota : 30;
             var settings = Economy.Profile.Settings;
             string modal = "";
-            if (_modals.Contains("modal-debrief")) modal = "debrief";
-            else if (_modals.Contains("modal-defeat")) modal = "defeat";
-            else if (_modals.Contains("modal-pause")) modal = "pause";
-            else if (_modals.Contains("modal-privacy")) modal = "privacy";
-            else if (_modals.Contains("modal-reset-confirm")) modal = "reset";
+            if (!suppressModal)
+            {
+                if (_modals.Contains("modal-debrief")) modal = "debrief";
+                else if (_modals.Contains("modal-defeat")) modal = "defeat";
+                else if (_modals.Contains("modal-pause")) modal = "pause";
+                else if (_modals.Contains("modal-privacy")) modal = "privacy";
+                else if (_modals.Contains("modal-reset-confirm")) modal = "reset";
+            }
             var query = new TemplateQuery
             {
                 Page = CurrentPage ?? "",
