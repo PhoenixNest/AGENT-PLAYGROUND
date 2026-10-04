@@ -21,6 +21,7 @@ namespace OrbitalSalvage.App
         public const double DebriefDelayMs = 600;
         public const double DefeatDelayMs = 400;
         public const double HintMs = 3500;
+        public const double HintFadeMs = 400;
         public const double MasterToastDelayMs = 1200;
         public const double BackupProgress = 0.70;
         public const double QuotaTrackWidth = 162.328;
@@ -110,6 +111,9 @@ namespace OrbitalSalvage.App
         public bool IsLevelFailed { get; private set; }
         public bool UsedBackupPod { get; private set; }
         public bool HintHidden { get; private set; }
+        double _hintShownAt = double.NaN;
+        /// <summary>Milliseconds since the game page was shown, or -1 before that. The gesture hint uses this clock.</summary>
+        public double HintAgeMs => double.IsNaN(_hintShownAt) ? -1 : NowMs - _hintShownAt;
         public double NowMs { get; private set; }
         public double EpochMs { get; private set; }
         public string TemplateId { get; private set; }
@@ -568,12 +572,14 @@ namespace OrbitalSalvage.App
 
         public void ShowPage(string pageId)
         {
+            bool enterGame = pageId == "game" && CurrentPage != "game";
             CurrentPage = pageId;
             RefreshCredits();
             if (pageId == "home") RefreshHome();
             else if (pageId == "game")
             {
                 LayoutRequested = true;
+                if (enterGame) _hintShownAt = NowMs;
                 After(HintMs, DismissHint);
             }
             Rebuild();
@@ -996,7 +1002,7 @@ namespace OrbitalSalvage.App
                 Text("loading-tip-text", _loadingTip);
                 WidthPercent("loading-bar-fill", _progress);
             }
-            if (HintHidden) Hide("gesture-hint");
+            if (HintHidden && HintAgeMs >= HintMs + HintFadeMs) Hide("gesture-hint");
             Skin("home-diorama-ring", Equipped("ring"));
             Skin("home-diorama-nibbles", Equipped("singularity"));
 

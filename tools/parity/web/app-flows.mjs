@@ -109,6 +109,27 @@ async function snap(session) {
       firstLevelCode: app.currentPage === "maps" ? norm((document.querySelector(".level-badge") || {}).textContent) : null,
       dailyDone: app.economy.getDailyShifts().map((s) => !!s.isCompleted),
       nowMs: performance.now(),
+      render: (() => {
+        const hint = document.getElementById("gesture-hint");
+        const hand = hint && hint.querySelector(".hand-swipe-anim");
+        const box = (el) => {
+          if (!el) return null;
+          const r = el.getBoundingClientRect();
+          const anim = el.getAnimations()[0];
+          return {
+            x: r.x, y: r.y, w: r.width, h: r.height,
+            opacity: getComputedStyle(el).opacity,
+            transform: getComputedStyle(el).transform,
+            anim: anim ? anim.currentTime : null,
+          };
+        };
+        const renderer = app.renderer;
+        return {
+          cosmicTime: renderer ? renderer.cosmicTime : null,
+          hint: box(hint),
+          hand: box(hand),
+        };
+      })(),
       randomCalls: window.__parity.randomCalls(),
       epochMs: Date.now(),
       profile: JSON.stringify(app.economy.profile),
