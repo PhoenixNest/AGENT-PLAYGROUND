@@ -17,20 +17,61 @@ namespace OrbitalSalvage.Render
     /// </summary>
     public sealed class HomeChrome : IDisposable
     {
-        public static bool Applies(string stateId) =>
-            stateId == "home_default" || stateId == "maps_world_1_fresh" || stateId == "daily_default"
-            || stateId == "shop_rings_default" || stateId == "shop_singularities_default" || stateId == "shop_skyboxes_default"
-            || stateId == "achievements_none" || stateId == "settings_default" || stateId == "game_lvl01_t1000ms"
-            || stateId == "modal_pause" || stateId == "modal_debrief_exact" || stateId == "modal_defeat_12_of_20"
-            || stateId == "loading_t0500" || stateId == "daily_master_ready";
+        public static bool Applies(string stateId)
+        {
+            if (string.IsNullOrEmpty(stateId)) return false;
+            switch (stateId)
+            {
+                case "home_default":
+                case "maps_world_1_fresh":
+                case "daily_default":
+                case "shop_rings_default":
+                case "shop_singularities_default":
+                case "shop_skyboxes_default":
+                case "achievements_none":
+                case "settings_default":
+                case "game_lvl01_t1000ms":
+                case "modal_pause":
+                case "modal_debrief_exact":
+                case "modal_defeat_12_of_20":
+                case "loading_t0500":
+                case "daily_master_ready":
+                    return true;
+            }
+            if (stateId.IndexOf('/') >= 0 || stateId.IndexOf('\\') >= 0 || stateId.IndexOf('#') >= 0) return false;
+            return Resources.Load<TextAsset>("Parity/Spec/" + stateId + "__zero") != null;
+        }
 
         readonly Canvas2D canvas;
         readonly StreamPlayer playfield;
         readonly List<Dictionary<string, object>> elements;
         /// <summary>When set, the playfield canvas element is not replayed and full-viewport boxes under it are left transparent.</summary>
         public bool SkipPlayfield;
+
+        public struct ToastPaint
+        {
+            public string Text;
+            public double AgeMs;
+        }
+
+        /// <summary>Toasts painted into #toast-container after the page. Empty leaves the capture pixels unchanged.</summary>
+        public readonly List<ToastPaint> Toasts = new List<ToastPaint>();
+        /// <summary>
+        /// Live playfield drawn at the canvas element, before later backdrop-filter overlays.
+        /// Null keeps the spec's stored stream (or the hole, when <see cref="SkipPlayfield"/> is set).
+        /// </summary>
+        public RenderTexture ExternalPlayfield;
         public readonly Dictionary<string, string> TextOverrides = new Dictionary<string, string>();
         public readonly Dictionary<string, double> WidthOverrides = new Dictionary<string, double>();
+        /// <summary>Element id to a width as a percent of its parent. Applied only when the key is present.</summary>
+        public readonly Dictionary<string, double> WidthPercentOverrides = new Dictionary<string, double>();
+        /// <summary>Element id to an extra opacity multiplier.</summary>
+        public readonly Dictionary<string, double> OpacityOverrides = new Dictionary<string, double>();
+        /// <summary>Element ids skipped, with their descendants.</summary>
+        public readonly HashSet<string> HiddenIds = new HashSet<string>();
+        /// <summary>Class token plus document ordinal, <c>btn-buy-item#0</c>, replaces that element's first text run.</summary>
+        public readonly Dictionary<string, string> ClassTextOverrides = new Dictionary<string, string>();
+        Dictionary<int, string> classText;
         readonly double scale;
         readonly int cssW, cssH;
         public readonly string Profile;
@@ -132,6 +173,40 @@ namespace OrbitalSalvage.Render
             return chrome;
         }
 
+        static Dictionary<string, List<Dictionary<string, object>>> shopTemplates;
+
+        /// <summary>Replace shop cards with the measured locked / owned / equipped sub-templates, stacked at <paramref name="slotX"/>/<paramref name="slotY"/>.</summary>
+        public void StampShopCards(string kinds, double[] slotX, double[] slotY)
+        {
+            CardStamp.ApplyShop(elements, kinds, ShopTemplates(), slotX, slotY);
+        }
+
+        public static double[] ShopCardHeights(string kinds) => CardStamp.Heights(kinds, ShopTemplates());
+
+        static Dictionary<string, List<Dictionary<string, object>>> ShopTemplates()
+        {
+            if (shopTemplates != null) return shopTemplates;
+            shopTemplates = new Dictionary<string, List<Dictionary<string, object>>>();
+            TakeKind(shopTemplates, "shop_rings_default", "equipped");
+            TakeKind(shopTemplates, "shop_rings_default", "locked");
+            TakeKind(shopTemplates, "shop_rings_mixed", "owned");
+            return shopTemplates;
+        }
+
+        static void TakeKind(Dictionary<string, List<Dictionary<string, object>>> into, string spec, string kind)
+        {
+            if (into.ContainsKey(kind)) return;
+            var asset = Resources.Load<TextAsset>("Parity/Spec/" + spec + "__zero");
+            if (asset == null) return;
+            var root = MiniJson.Parse(asset.text) as Dictionary<string, object>;
+            if (root == null || !(root["elements"] is List<object> raw)) return;
+            var list = new List<Dictionary<string, object>>(raw.Count);
+            for (int i = 0; i < raw.Count; i++)
+                if (raw[i] is Dictionary<string, object> el) list.Add(el);
+            var tree = CardStamp.Extract(list, kind);
+            if (tree != null) into[kind] = tree;
+        }
+
         public void Dispose()
         {
             if (layerTex != null)
@@ -197,6 +272,10 @@ namespace OrbitalSalvage.Render
             var sb = new System.Text.StringBuilder();
             foreach (var kv in TextOverrides) sb.Append('\n').Append(kv.Key).Append('=').Append(kv.Value);
             foreach (var kv in WidthOverrides) sb.Append('\n').Append(kv.Key).Append('#').Append(kv.Value.ToString(CultureInfo.InvariantCulture));
+            foreach (var kv in WidthPercentOverrides) sb.Append('\n').Append(kv.Key).Append('%').Append(kv.Value.ToString(CultureInfo.InvariantCulture));
+            foreach (var kv in OpacityOverrides) sb.Append('\n').Append(kv.Key).Append('@').Append(kv.Value.ToString(CultureInfo.InvariantCulture));
+            foreach (var id in HiddenIds) sb.Append('\n').Append('!').Append(id);
+            foreach (var kv in ClassTextOverrides) sb.Append('\n').Append(kv.Key).Append('=').Append(kv.Value);
             return sb.ToString();
         }
 
@@ -204,6 +283,7 @@ namespace OrbitalSalvage.Render
         {
             // Quota text/width and the live playfield hole change which elements may be baked.
             string key = OverrideKey();
+            if (ExternalPlayfield != null) key += "\n~ext";
             if (cacheReady && (cachedSkip != SkipPlayfield || cachedOverrides != key)) DropLayerCache();
             if (cacheReady) return;
             cachedSkip = SkipPlayfield;
@@ -235,11 +315,32 @@ namespace OrbitalSalvage.Render
                 }
                 if (shine) moves[k] = true;
                 dynamic[k] = shine || backdrop || anim;
+                string id = S(e, "id");
+                if (id.Length > 0 && (WidthPercentOverrides.ContainsKey(id) || OpacityOverrides.ContainsKey(id) || HiddenIds.Contains(id)))
+                    dynamic[k] = true;
+                if (classText != null && classText.ContainsKey(k)) dynamic[k] = true;
+                // A live texture must be sampled by later backdrop-filter overlays every frame.
+                if (ExternalPlayfield != null && S(e, "t") == "canvas") dynamic[k] = true;
             }
             for (int k = 0; k < n; k++)
             {
                 for (int p = parent[k]; p >= 0; p = parent[p])
                     if (moves[p]) { dynamic[k] = true; break; }
+            }
+            if (OpacityOverrides.Count > 0 || HiddenIds.Count > 0)
+            {
+                for (int k = 0; k < n; k++)
+                {
+                    for (int p = parent[k]; p >= 0; p = parent[p])
+                    {
+                        string pid = S(elements[p], "id");
+                        if (pid.Length > 0 && (OpacityOverrides.ContainsKey(pid) || HiddenIds.Contains(pid)))
+                        {
+                            dynamic[k] = true;
+                            break;
+                        }
+                    }
+                }
             }
             bool seenDynamic = false;
             for (int k = 0; k < n; k++)
@@ -337,6 +438,7 @@ namespace OrbitalSalvage.Render
             Deferred.Clear(); DrawnBoxes = DrawnRuns = DrawnEmoji = 0;
             try
             {
+                BuildClassText();
                 if (frame != null && UseLayerCache) { PaintProfile.Begin(PaintProfile.Cache); EnsureCache(); PaintProfile.End(PaintProfile.Cache); }
                 bool settled = frame != null && !frame.PageTransform && frame.PageOpacity >= 0.999;
                 cacheOn = settled && cacheReady && paintOnlyLayer < 0 && staticLayerCount > 0;
@@ -354,6 +456,7 @@ namespace OrbitalSalvage.Render
                 }
                 if (frame != null && frame.PageOpacity < 0.999) canvas.GlobalAlpha = frame.PageOpacity;
                 PaintAll();
+                PaintToasts();
                 canvas.EndFrame();
             }
             finally
@@ -362,6 +465,33 @@ namespace OrbitalSalvage.Render
                 Canvas2D.GradientInterpolatesPremultiplied = savedPremul;
                 frame = null;
                 PaintProfile.AddWall(PaintProfile.Stamp() - prof);
+            }
+        }
+
+        void BuildClassText()
+        {
+            classText = null;
+            if (ClassTextOverrides.Count == 0) return;
+            classText = new Dictionary<int, string>();
+            var count = new Dictionary<string, int>();
+            for (int k = 0; k < elements.Count; k++)
+            {
+                string classes = S(elements[k], "c");
+                if (classes.Length == 0) continue;
+                int i = 0;
+                while (i < classes.Length)
+                {
+                    while (i < classes.Length && classes[i] == ' ') i++;
+                    int start = i;
+                    while (i < classes.Length && classes[i] != ' ') i++;
+                    if (i <= start) continue;
+                    string token = classes.Substring(start, i - start);
+                    int n;
+                    count.TryGetValue(token, out n);
+                    string key = token + "#" + n.ToString(CultureInfo.InvariantCulture);
+                    count[token] = n + 1;
+                    if (ClassTextOverrides.TryGetValue(key, out var text)) classText[k] = text;
+                }
             }
         }
 
@@ -420,6 +550,15 @@ namespace OrbitalSalvage.Render
 
             if (S(e, "t") == "canvas")
             {
+                if (ExternalPlayfield != null)
+                {
+                    canvas.Save();
+                    canvas.SetTransform(scale, 0, 0, scale, 0, 0);
+                    canvas.ImageSmoothingEnabled = false;
+                    canvas.DrawTexture(ExternalPlayfield, 0, 0, ExternalPlayfield.width, ExternalPlayfield.height, 0, 0, cssW, cssH);
+                    canvas.Restore();
+                    continue;
+                }
                 if (SkipPlayfield) continue;
                 if (OmitCached(k)) continue;
                 if (playfield != null)
@@ -442,11 +581,14 @@ namespace OrbitalSalvage.Render
                     continue;
                 }
 
+                string eid = S(e, "id");
                 double opacity = frame != null && !double.IsNaN(frame.Opacity[k]) ? frame.Opacity[k] : N(e, "o", 1);
+                if (eid.Length > 0 && OpacityOverrides.Count > 0 && OpacityOverrides.TryGetValue(eid, out double opacityMul)) opacity *= opacityMul;
                 eff[k] = parentOpacity * opacity;
                 skip[k] = parentSkipped;
                 if (parentSkipped) continue;
                 if (specHidden[k]) { skip[k] = true; continue; }
+                if (eid.Length > 0 && HiddenIds.Count > 0 && HiddenIds.Contains(eid)) { skip[k] = true; continue; }
                 if (OmitCached(k)) continue;
                 bool moving = Motion(k);
                 if (moving) BeginMotion(k);
@@ -522,6 +664,15 @@ namespace OrbitalSalvage.Render
             if (!flat) UnrotateCircle(e, r);
             string widthId = S(e, "id");
             if (widthId.Length > 0 && WidthOverrides.TryGetValue(widthId, out double widthOverride)) r[2] = widthOverride;
+            else if (widthId.Length > 0 && WidthPercentOverrides.Count > 0 && WidthPercentOverrides.TryGetValue(widthId, out double widthPct))
+            {
+                var parent = ParentOf(e);
+                if (parent != null)
+                {
+                    var pr = Rect(parent);
+                    r[2] = pr[2] * widthPct / 100.0;
+                }
+            }
             double tilt = flat ? 0 : InheritedTilt(e, r);
             if (r[2] <= 0 || r[3] <= 0) { PaintProfile.End(PaintProfile.PaintBox); return; }
             var prep = PrepareBox(e, r[2], r[3]);
@@ -676,6 +827,7 @@ namespace OrbitalSalvage.Render
             string textId = S(e, "id");
             string textReplacement = null;
             bool replaceText = textId.Length > 0 && TextOverrides.TryGetValue(textId, out textReplacement);
+            if (!replaceText && classText != null && classText.TryGetValue(k, out textReplacement)) replaceText = true;
             for (int ri = 0; ri < runs.Count; ri++)
             {
                 var run = (Dictionary<string, object>)runs[ri];
@@ -890,6 +1042,75 @@ namespace OrbitalSalvage.Render
                 && double.TryParse(parts[3], NumberStyles.Float, CultureInfo.InvariantCulture, out d)
                 && double.TryParse(parts[4], NumberStyles.Float, CultureInfo.InvariantCulture, out e)
                 && double.TryParse(parts[5], NumberStyles.Float, CultureInfo.InvariantCulture, out f);
+        }
+
+        /// <summary>
+        /// Replay the Chromium canvas dump for this spec into <paramref name="dest"/>.
+        /// That dump is the playfield baked into the still; the modal chrome leaves it unpainted when <see cref="SkipPlayfield"/> is set.
+        /// </summary>
+        /// <summary>
+        /// Measured rest box of <c>.toast</c> inside <c>#toast-container</c> (top 75, width 360, centered).
+        /// cartoonToast is 2.6s; the controller removes the toast at 2.5s.
+        /// </summary>
+        void PaintToasts()
+        {
+            if (Toasts.Count == 0) return;
+            var keys = CssAnimation.Find("cartoonToast");
+            const double boxX = 35, boxW = 360, gap = 8, padY = 13, lineH = 16, contentW = 322;
+            double y = 75;
+            var border = CssColor.Parse("#1e1b4b", Rgba.Black);
+            var ink = border;
+            canvas.Font = "800 13px Fredoka";
+            for (int i = 0; i < Toasts.Count; i++)
+            {
+                var toast = Toasts[i];
+                string text = toast.Text ?? "";
+                var lines = WrapToWidth(canvas, text, contentW);
+                double h = padY * 2 + lines.Count * lineH;
+                var sample = CssAnimation.Evaluate(toast.AgeMs, 0, 2600, 1, "normal", "forwards", "cubic-bezier(0.34, 1.56, 0.64, 1)", keys, boxW, h, 0);
+                double alpha = sample.Opacity ? sample.OpacityValue : 1;
+                if (alpha > 1) alpha = 1;
+                if (alpha <= 0.001) { y += h + gap; continue; }
+                canvas.Save();
+                if (sample.Transform)
+                {
+                    double cx = boxX + boxW * 0.5, cy = y + h * 0.5;
+                    var m = sample.Matrix;
+                    canvas.Translate(cx, cy);
+                    canvas.Transform(m.a, m.b, m.c, m.d, m.e, m.f);
+                    canvas.Translate(-cx, -cy);
+                }
+                var style = new CssBoxStyle
+                {
+                    x = boxX, y = y, w = boxW, h = h, hasBg = true,
+                    bg = CssColor.Parse("#ffffff", Rgba.Black)
+                };
+                for (int c = 0; c < 4; c++) style.radii[c] = new Vec2d(18, 18);
+                for (int c = 0; c < 4; c++) { style.borderW[c] = 3; style.borderC[c] = border; style.borderOn[c] = true; }
+                style.shadows.AddRange(CssBox.ParseShadows("0 6px 0 #1e1b4b"));
+                CssBox.Draw(canvas, style, alpha);
+                canvas.Font = "800 13px Fredoka";
+                double block = lines.Count * lineH;
+                double top = y + (h - block) * 0.5;
+                for (int li = 0; li < lines.Count; li++)
+                {
+                    double tw = canvas.MeasureText(lines[li]);
+                    double baseline = top + li * lineH + canvas.FontAscent();
+                    CssBox.DrawText(canvas, lines[li], boxX + (boxW - tw) * 0.5, baseline, ink, null, alpha);
+                }
+                canvas.Restore();
+                y += h + gap;
+                DrawnBoxes++;
+            }
+        }
+
+        public bool PaintPlayfield(Canvas2D dest)
+        {
+            if (playfield == null || dest == null) return false;
+            dest.BeginFrame();
+            playfield.Play(dest);
+            dest.EndFrame();
+            return true;
         }
 
         void DrawEmoji(Dictionary<string, object> e, int k, double alpha)

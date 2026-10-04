@@ -15,11 +15,12 @@ namespace OrbitalSalvage.Viewer
     /// <c>NO_PARITY_VIEWER</c> / <c>-no-parity-viewer</c> environment variable).
     /// Keys: Left/Right or PageUp/PageDown cycle, 1-9 and 0 jump, Esc returns home, F1 toggles the hint.
     /// </summary>
-    public sealed class ParityViewer : MonoBehaviour
+    public sealed partial class ParityViewer : MonoBehaviour
     {
         const string SelfTestFlag = "-parity-viewer-selftest";
         const string LiveSelfTestFlag = "-parity-live-selftest";
         const string PerfFlag = "-parity-perf";
+        const string AppSelfTestFlag = "-parity-app-selftest";
         const string OptOutFlag = "-no-parity-viewer";
         const double QuotaTrackWidth = 162.328;
 
@@ -41,6 +42,7 @@ namespace OrbitalSalvage.Viewer
         readonly UiClock clock = new UiClock();
         HomeChrome current;
         string currentId;
+        string shownKey;
         LiveGameSession session;
         bool liveVisual = true;
         string lastQuota;
@@ -71,7 +73,7 @@ namespace OrbitalSalvage.Viewer
         public static bool ShouldStart(string[] args)
         {
             if (Array.IndexOf(args, "--parity") >= 0) return false;
-            if (SelfTestDirectory(args) != null || LiveSelfTestDirectory(args) != null || PerfScenario(args) != null) return true;
+            if (SelfTestDirectory(args) != null || LiveSelfTestDirectory(args) != null || PerfScenario(args) != null || AppSelfTestDirectory(args) != null) return true;
             if (IsOptOut(args)) return false;
 #if UNITY_EDITOR
             if (!UnityEditor.EditorPrefs.GetBool(ParityPages.EnabledPrefKey, true)) return false;
@@ -119,6 +121,11 @@ namespace OrbitalSalvage.Viewer
             return args[i + 2];
         }
 
+        public static string AppSelfTestDirectory(string[] args)
+        {
+            return ArgDirectory(args, AppSelfTestFlag);
+        }
+
         static string ArgDirectory(string[] args, string flag)
         {
             int i = Array.IndexOf(args, flag);
@@ -163,13 +170,30 @@ namespace OrbitalSalvage.Viewer
                 StartCoroutine(SelfTest(self));
                 return;
             }
-            Show(ParityPages.HomeId);
+            string flowDir = ArgDirectory(args, "-parity-app-flows");
+            if (flowDir != null)
+            {
+                selfTesting = true;
+                liveVisual = true;
+                StartCoroutine(FlowShots(flowDir));
+                return;
+            }
+            string appDir = AppSelfTestDirectory(args);
+            if (appDir != null)
+            {
+                selfTesting = true;
+                liveVisual = true;
+                StartCoroutine(AppSelfTest(appDir));
+                return;
+            }
+            BootApp();
         }
 
         void LateUpdate()
         {
             SuppressLegacy();
             if (selfTesting) return;
+            if (app != null) SyncApp();
             HandleInput();
             Tick();
             TickLive();
@@ -194,15 +218,20 @@ namespace OrbitalSalvage.Viewer
         }
 
         /// <summary>Same entry the keyboard, the mouse, and the player self-test use.</summary>
-        public void Show(string stateId)
+        public void Show(string stateId) => Show(stateId, null);
+
+        /// <summary>Load <paramref name="stateId"/>. When <paramref name="cardKinds"/> is set, shop cards are instanced from the measured sub-templates.</summary>
+        public void Show(string stateId, string cardKinds)
         {
-            if (!ParityPages.IsState(stateId)) return;
-            if (currentId == stateId && current != null) return;
-            if (!cache.TryGet(stateId, out var chrome))
+            string key = string.IsNullOrEmpty(cardKinds) ? stateId : stateId + "#" + cardKinds;
+            if (!ParityPages.IsState(stateId) && !HomeChrome.Applies(stateId)) return;
+            if (shownKey == key && current != null) return;
+            if (!cache.TryGet(key, out var chrome))
             {
                 try
                 {
                     chrome = HomeChrome.Load(stateId, ParityPages.Profile);
+                    if (!string.IsNullOrEmpty(cardKinds)) StampShop(chrome, cardKinds);
                 }
                 catch (Exception ex)
                 {
@@ -210,7 +239,7 @@ namespace OrbitalSalvage.Viewer
                     return;
                 }
                 evicted.Clear();
-                cache.Add(stateId, chrome, evicted);
+                cache.Add(key, chrome, evicted);
                 for (int i = 0; i < evicted.Count; i++) evicted[i].Dispose();
                 if (WantLiveChrome(stateId)) chrome.SkipPlayfield = true;
             }
@@ -219,14 +248,35 @@ namespace OrbitalSalvage.Viewer
             bool modal = stateId.StartsWith("modal_", StringComparison.Ordinal);
             current = chrome;
             currentId = stateId;
+            shownKey = key;
             if (WantLiveChrome(stateId)) EnsureLive(stateId);
             lastQuota = null;
             pressIndex = -1;
             pressCss = null;
             armedEdge = null;
             clock.Restart();
+            BindModalPlayfield(chrome);
             if (selfTesting) chrome.Draw();
             else chrome.Draw(0, -1, null, modal, modal);
+        }
+
+        /// <summary>
+        /// Modal overlays blur whatever is already on the canvas. Draw the live playfield at the
+        /// canvas element so that blur matches the still, instead of blurring an empty hole.
+        /// </summary>
+        void BindModalPlayfield(HomeChrome chrome)
+        {
+            if (chrome == null) return;
+            bool modal = currentId != null && currentId.StartsWith("modal_", StringComparison.Ordinal) && IsGamePage(currentId);
+            if (!modal || session == null || session.Renderer == null || session.Renderer.Target == null)
+            {
+                chrome.ExternalPlayfield = null;
+                return;
+            }
+            session.IsPaused = true;
+            if (session.RenderFrames == 0) session.Update(RecordedFrameDriver.FrameDt);
+            chrome.ExternalPlayfield = session.Renderer.Target;
+            chrome.SkipPlayfield = false;
         }
 
         void Tick()
@@ -237,37 +287,47 @@ namespace OrbitalSalvage.Viewer
             bool intro = modal && ms < 400;
             bool enter = ms < 260;
             if (!current.Loops && !intro && !enter && pressIndex < 0) return;
+            BindModalPlayfield(current);
             current.Draw(ms, pressIndex, pressCss, intro, modal);
         }
 
         void HandleInput()
         {
             if (Input.GetKeyDown(KeyCode.F1)) hintVisible = !hintVisible;
-            if (Input.GetKeyDown(KeyCode.Escape)) Show(ParityPages.HomeId);
-            bool playing = currentId == "game_lvl01_t1000ms" && session != null;
-            if (!playing)
+            if (Input.GetKeyDown(KeyCode.F2)) debugNav = !debugNav;
+            if (debugNav)
             {
+                if (Input.GetKeyDown(KeyCode.Escape)) Show(ParityPages.HomeId);
                 if (Input.GetKeyDown(KeyCode.LeftArrow) || Input.GetKeyDown(KeyCode.PageUp))
                     Show(ParityPages.Cycle(currentId, -1));
                 if (Input.GetKeyDown(KeyCode.RightArrow) || Input.GetKeyDown(KeyCode.PageDown))
                     Show(ParityPages.Cycle(currentId, 1));
+                for (int i = 0; i < DigitKeys.Length; i++)
+                {
+                    if (!Input.GetKeyDown(DigitKeys[i]) && !Input.GetKeyDown(PadKeys[i])) continue;
+                    int digit = i == 9 ? 0 : i + 1;
+                    Show(ParityPages.Jump(digit));
+                }
             }
-            else
+            else if (app != null)
             {
-                if (Input.GetKeyDown(KeyCode.PageUp)) Show(ParityPages.Cycle(currentId, -1));
-                if (Input.GetKeyDown(KeyCode.PageDown)) Show(ParityPages.Cycle(currentId, 1));
-                if (Input.GetKeyDown(KeyCode.A) || Input.GetKeyDown(KeyCode.LeftArrow)) session.KeyDown("a");
-                if (Input.GetKeyDown(KeyCode.D) || Input.GetKeyDown(KeyCode.RightArrow)) session.KeyDown("d");
-                if (Input.GetKeyDown(KeyCode.Space)) session.KeyDown(" ");
-                if (Input.GetKeyDown(KeyCode.R)) session.KeyDown("r");
+                if (Input.GetKeyDown(KeyCode.A)) app.KeyDown("a");
+                if (Input.GetKeyDown(KeyCode.D)) app.KeyDown("d");
+                if (Input.GetKeyDown(KeyCode.LeftArrow)) app.KeyDown("ArrowLeft");
+                if (Input.GetKeyDown(KeyCode.RightArrow)) app.KeyDown("ArrowRight");
+                if (Input.GetKeyDown(KeyCode.Space)) app.KeyDown(" ");
+                if (Input.GetKeyDown(KeyCode.R)) app.KeyDown("r");
+                if (Input.GetKeyDown(KeyCode.Escape)) app.KeyDown("Escape");
+                if (session != null && app.CurrentPage == "game" && !app.IsPaused)
+                {
+                    if (Input.GetKeyDown(KeyCode.A) || Input.GetKeyDown(KeyCode.LeftArrow)) session.KeyDown("a");
+                    if (Input.GetKeyDown(KeyCode.D) || Input.GetKeyDown(KeyCode.RightArrow)) session.KeyDown("d");
+                    if (Input.GetKeyDown(KeyCode.Space)) session.KeyDown(" ");
+                }
             }
-            for (int i = 0; i < DigitKeys.Length; i++)
-            {
-                if (!Input.GetKeyDown(DigitKeys[i]) && !Input.GetKeyDown(PadKeys[i])) continue;
-                int digit = i == 9 ? 0 : i + 1;
-                Show(ParityPages.Jump(digit));
-            }
-            if (playing) HandlePlayPointer();
+            bool playing = app != null && app.CurrentPage == "game" && session != null && !app.ModalOpen("modal-pause")
+                && !app.ModalOpen("modal-debrief") && !app.ModalOpen("modal-defeat");
+            if (playing && !debugNav) HandlePlayPointer();
             else
             {
                 if (PointerDown(out var down)) Arm(down);
@@ -296,16 +356,31 @@ namespace OrbitalSalvage.Viewer
                 pressIndex = index;
                 pressCss = transform;
             }
-            armedEdge = ParityPages.HitEdge(currentId, spec, cssX, cssY);
+            if (debugNav || app == null)
+                armedEdge = ParityPages.HitEdge(currentId, spec, cssX, cssY);
+            else
+                armedControl = ParityPages.TryHitControl(spec, cssX, cssY, out armedHit);
         }
 
         void Release()
         {
             var edge = armedEdge;
+            bool control = armedControl;
+            var hit = armedHit;
             pressIndex = -1;
             pressCss = null;
             armedEdge = null;
-            if (edge != null) Activate(edge);
+            armedControl = false;
+            if (debugNav)
+            {
+                if (edge != null) Activate(edge);
+                return;
+            }
+            if (control && app != null)
+            {
+                if (!string.IsNullOrEmpty(hit.Id)) app.Click(hit.Id);
+                else if (!string.IsNullOrEmpty(hit.ClassToken)) app.ClickClass(hit.ClassToken, hit.ClassIndex);
+            }
         }
 
         static bool PointerDown(out Vector2 screen)
@@ -409,7 +484,7 @@ namespace OrbitalSalvage.Viewer
 
         static bool IsGamePage(string id)
         {
-            return id == "game_lvl01_t1000ms" || id == "modal_pause"
+            return id == "game_lvl01_t1000ms" || id == "game_daily_bronze_t1000" || id == "modal_pause"
                 || id == "modal_debrief_exact" || id == "modal_defeat_12_of_20";
         }
 
@@ -472,10 +547,11 @@ namespace OrbitalSalvage.Viewer
             }
             if (down)
             {
-                var edge = ParityPages.HitEdge(currentId, Spec(currentId), cssX, cssY);
-                if (edge != null)
+                string spec = Spec(currentId);
+                if (app != null && ParityPages.TryHitControl(spec, cssX, cssY, out var hit))
                 {
-                    Activate(edge);
+                    if (!string.IsNullOrEmpty(hit.Id)) app.Click(hit.Id);
+                    else if (!string.IsNullOrEmpty(hit.ClassToken)) app.ClickClass(hit.ClassToken, hit.ClassIndex);
                     return;
                 }
                 session.PointerDown(cssX, 0, ParityPages.CssWidth);
@@ -487,7 +563,12 @@ namespace OrbitalSalvage.Viewer
         void TickLive()
         {
             if (!ShowPlayfield) return;
+            // Pause freezes via the controller. Debrief and defeat keep the web clock running, but the
+            // stills are one frozen canvas; hold that frame while a modal covers the playfield.
+            bool modal = currentId != null && currentId.StartsWith("modal_", StringComparison.Ordinal);
+            session.IsPaused = (app != null && app.IsPaused) || modal;
             session.Update(Time.unscaledDeltaTime);
+            if (app != null) app.SetLiveMass(session.CollectedMass, session.SpilledMass);
             ApplyQuota();
         }
 
@@ -499,6 +580,7 @@ namespace OrbitalSalvage.Viewer
             lastQuota = label;
             current.TextOverrides["hud-quota-text"] = label;
             current.WidthOverrides["hud-quota-bar"] = session.QuotaBarWidth(QuotaTrackWidth);
+            BindModalPlayfield(current);
             if (selfTesting) current.Draw();
             else
             {
