@@ -212,6 +212,32 @@ namespace OrbitalSalvage.Render
         public double PageOpacity = 1;
         public Matrix2D PageMatrix = Matrix2D.Identity;
         public double[] PageRect;
+        public Dictionary<int, int> IndexMap;
+        public readonly List<int> Chain = new List<int>(8);
+
+        public void ResetMotion()
+        {
+            HasMotion = false;
+            PageTransform = false;
+            PageOpacity = 1;
+            PageMatrix = Matrix2D.Identity;
+            PageRect = null;
+            PressRoot = -1;
+            PressMatrix = Matrix2D.Identity;
+            for (int i = 0; i < Opacity.Length; i++)
+            {
+                Opacity[i] = double.NaN;
+                Shadow[i] = null;
+                Border[i] = null;
+                Own[i] = false;
+                Live[i] = false;
+                Tree[i] = false;
+                Shine[i] = false;
+                ExtraY[i] = 0;
+                OriginX[i] = double.NaN;
+                OriginY[i] = double.NaN;
+            }
+        }
 
         CssFrame(int n)
         {
@@ -232,12 +258,22 @@ namespace OrbitalSalvage.Render
             for (int i = 0; i < n; i++) { Opacity[i] = double.NaN; OriginX[i] = double.NaN; OriginY[i] = double.NaN; }
         }
 
-        public static CssFrame Build(IList<Dictionary<string, object>> elements, double timeMs, bool pinPageEnter, bool modalIntro, int pressIndex, string pressCss)
+        public static CssFrame Build(IList<Dictionary<string, object>> elements, double timeMs, bool pinPageEnter, bool modalIntro, int pressIndex, string pressCss, CssFrame reuse = null)
         {
             int n = elements.Count;
-            var frame = new CssFrame(n);
-            var byIndex = new Dictionary<int, int>();
-            for (int k = 0; k < n; k++) byIndex[SpecInt(elements[k], "i", k)] = k;
+            CssFrame frame;
+            if (reuse != null && reuse.Opacity != null && reuse.Opacity.Length == n)
+            {
+                frame = reuse;
+                frame.ResetMotion();
+            }
+            else frame = new CssFrame(n);
+            if (frame.IndexMap == null)
+            {
+                frame.IndexMap = new Dictionary<int, int>(n);
+                for (int k = 0; k < n; k++) frame.IndexMap[SpecInt(elements[k], "i", k)] = k;
+            }
+            var byIndex = frame.IndexMap;
 
             for (int k = 0; k < n; k++)
             {
@@ -298,9 +334,9 @@ namespace OrbitalSalvage.Render
                 }
                 frame.Tree[k] = under;
                 if (!under) continue;
-                frame.Local[k] = CopyRect(elements[k], elements[k].ContainsKey("br") ? "br" : "r");
+                if (frame.Local[k] == null) frame.Local[k] = CopyRect(elements[k], elements[k].ContainsKey("br") ? "br" : "r");
                 if (frame.Local[k] != null) OriginOf(elements[k], frame.Local[k][2], frame.Local[k][3], out frame.OriginX[k], out frame.OriginY[k]);
-                frame.Runs[k] = CopyRuns(elements[k], true);
+                if (frame.Runs[k] == null) frame.Runs[k] = CopyRuns(elements[k], true);
                 frame.HasMotion = true;
             }
 
@@ -350,18 +386,18 @@ namespace OrbitalSalvage.Render
 
         public void ApplyMotion(Canvas2D canvas, int index)
         {
-            var chain = new List<int>();
+            Chain.Clear();
             for (int p = index; p >= 0; p = Parent[p])
-                if (Live[p]) chain.Add(p);
-            for (int i = chain.Count - 1; i >= 0; i--)
+                if (Live[p]) Chain.Add(p);
+            for (int i = Chain.Count - 1; i >= 0; i--)
             {
-                var r = Local[chain[i]];
+                var r = Local[Chain[i]];
                 if (r == null) continue;
-                double ox = OriginX[chain[i]], oy = OriginY[chain[i]];
+                double ox = OriginX[Chain[i]], oy = OriginY[Chain[i]];
                 if (double.IsNaN(ox)) ox = r[2] * 0.5;
                 if (double.IsNaN(oy)) oy = r[3] * 0.5;
-                double cx = r[0] + ox, cy = r[1] + oy + ExtraY[chain[i]];
-                var m = Matrix[chain[i]];
+                double cx = r[0] + ox, cy = r[1] + oy + ExtraY[Chain[i]];
+                var m = Matrix[Chain[i]];
                 canvas.Translate(cx, cy);
                 canvas.Transform(m.a, m.b, m.c, m.d, m.e, m.f);
                 canvas.Translate(-cx, -cy);

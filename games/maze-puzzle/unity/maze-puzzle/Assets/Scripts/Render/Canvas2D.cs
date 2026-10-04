@@ -22,11 +22,16 @@ namespace OrbitalSalvage.Render
 
         public void AddColorStop(double offset, string color)
         {
-            if (!(offset >= 0 && offset <= 1)) return;
             if (!CssColor.TryParse(color, out var c)) return;
+            AddColorStop(offset, c);
+        }
+
+        public void AddColorStop(double offset, Rgba color)
+        {
+            if (!(offset >= 0 && offset <= 1)) return;
             int at = stops.Count;
             while (at > 0 && stops[at - 1].Key > offset) at--;
-            stops.Insert(at, new KeyValuePair<float, Rgba>((float)offset, c));
+            stops.Insert(at, new KeyValuePair<float, Rgba>((float)offset, color));
         }
     }
 
@@ -124,10 +129,19 @@ namespace OrbitalSalvage.Render
         {
             set
             {
-                if (value is string s) { if (CssColor.TryParse(s, out var c)) { state.fillColor = c; state.fillGrad = null; } }
+                if (value is string s) { if (CssColor.TryParse(s, out var c)) SetFill(c); }
                 else if (value is CanvasGradient g) { state.fillGrad = g; }
+                else if (value is Rgba c) SetFill(c);
             }
         }
+
+        public void SetFill(Rgba color)
+        {
+            state.fillColor = color;
+            state.fillGrad = null;
+        }
+
+        public void SetShadow(Rgba color) { state.shadowColor = color; }
 
         public object StrokeStyle
         {
