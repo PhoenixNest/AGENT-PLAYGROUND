@@ -31,6 +31,15 @@ namespace OrbitalSalvage.Render
         public bool SkipPlayfield;
         public readonly Dictionary<string, string> TextOverrides = new Dictionary<string, string>();
         public readonly Dictionary<string, double> WidthOverrides = new Dictionary<string, double>();
+        /// <summary>Element id to a width as a percent of its parent. Applied only when the key is present.</summary>
+        public readonly Dictionary<string, double> WidthPercentOverrides = new Dictionary<string, double>();
+        /// <summary>Element id to an extra opacity multiplier.</summary>
+        public readonly Dictionary<string, double> OpacityOverrides = new Dictionary<string, double>();
+        /// <summary>Element ids skipped, with their descendants.</summary>
+        public readonly HashSet<string> HiddenIds = new HashSet<string>();
+        /// <summary>Class token plus document ordinal, <c>btn-buy-item#0</c>, replaces that element's first text run.</summary>
+        public readonly Dictionary<string, string> ClassTextOverrides = new Dictionary<string, string>();
+        Dictionary<int, string> classText;
         readonly double scale;
         readonly int cssW, cssH;
         public readonly string Profile;
@@ -163,6 +172,10 @@ namespace OrbitalSalvage.Render
             var sb = new System.Text.StringBuilder();
             foreach (var kv in TextOverrides) sb.Append('\n').Append(kv.Key).Append('=').Append(kv.Value);
             foreach (var kv in WidthOverrides) sb.Append('\n').Append(kv.Key).Append('#').Append(kv.Value.ToString(CultureInfo.InvariantCulture));
+            foreach (var kv in WidthPercentOverrides) sb.Append('\n').Append(kv.Key).Append('%').Append(kv.Value.ToString(CultureInfo.InvariantCulture));
+            foreach (var kv in OpacityOverrides) sb.Append('\n').Append(kv.Key).Append('@').Append(kv.Value.ToString(CultureInfo.InvariantCulture));
+            foreach (var id in HiddenIds) sb.Append('\n').Append('!').Append(id);
+            foreach (var kv in ClassTextOverrides) sb.Append('\n').Append(kv.Key).Append('=').Append(kv.Value);
             return sb.ToString();
         }
 
@@ -317,6 +330,7 @@ namespace OrbitalSalvage.Render
                     canvas.Translate(-cx, -cy);
                 }
                 if (frame != null && frame.PageOpacity < 0.999) canvas.GlobalAlpha = frame.PageOpacity;
+                BuildClassText();
                 PaintAll();
                 canvas.EndFrame();
             }
@@ -326,6 +340,33 @@ namespace OrbitalSalvage.Render
                 Canvas2D.GradientInterpolatesPremultiplied = savedPremul;
                 frame = null;
                 PaintProfile.AddWall(PaintProfile.Stamp() - prof);
+            }
+        }
+
+        void BuildClassText()
+        {
+            classText = null;
+            if (ClassTextOverrides.Count == 0) return;
+            classText = new Dictionary<int, string>();
+            var count = new Dictionary<string, int>();
+            for (int k = 0; k < elements.Count; k++)
+            {
+                string classes = S(elements[k], "c");
+                if (classes.Length == 0) continue;
+                int i = 0;
+                while (i < classes.Length)
+                {
+                    while (i < classes.Length && classes[i] == ' ') i++;
+                    int start = i;
+                    while (i < classes.Length && classes[i] != ' ') i++;
+                    if (i <= start) continue;
+                    string token = classes.Substring(start, i - start);
+                    int n;
+                    count.TryGetValue(token, out n);
+                    string key = token + "#" + n.ToString(CultureInfo.InvariantCulture);
+                    count[token] = n + 1;
+                    if (ClassTextOverrides.TryGetValue(key, out var text)) classText[k] = text;
+                }
             }
         }
 
@@ -389,11 +430,14 @@ namespace OrbitalSalvage.Render
                 }
 
                 string classes = " " + S(e, "c") + " ";
+                string eid = S(e, "id");
                 double opacity = frame != null && !double.IsNaN(frame.Opacity[k]) ? frame.Opacity[k] : N(e, "o", 1);
+                if (eid.Length > 0 && OpacityOverrides.Count > 0 && OpacityOverrides.TryGetValue(eid, out double opacityMul)) opacity *= opacityMul;
                 eff[k] = parentOpacity * opacity;
                 skip[k] = parentSkipped;
                 if (parentSkipped) continue;
                 if (N(e, "v", 1) == 0 || S(e, "vis") == "hidden" || classes.Contains(" page-hidden ")) { skip[k] = true; continue; }
+                if (eid.Length > 0 && HiddenIds.Count > 0 && HiddenIds.Contains(eid)) { skip[k] = true; continue; }
                 if (OmitCached(k)) continue;
                 bool moving = Motion(k);
                 if (moving) BeginMotion(k);
@@ -461,6 +505,15 @@ namespace OrbitalSalvage.Render
             if (!flat) UnrotateCircle(e, r);
             string widthId = S(e, "id");
             if (widthId.Length > 0 && WidthOverrides.TryGetValue(widthId, out double widthOverride)) r[2] = widthOverride;
+            else if (widthId.Length > 0 && WidthPercentOverrides.Count > 0 && WidthPercentOverrides.TryGetValue(widthId, out double widthPct))
+            {
+                var parent = ParentOf(e);
+                if (parent != null)
+                {
+                    var pr = Rect(parent);
+                    r[2] = pr[2] * widthPct / 100.0;
+                }
+            }
             double tilt = flat ? 0 : InheritedTilt(e, r);
             if (r[2] <= 0 || r[3] <= 0) { PaintProfile.End(PaintProfile.PaintBox); return; }
             var prep = PrepareBox(e, r[2], r[3]);
@@ -561,6 +614,7 @@ namespace OrbitalSalvage.Render
             string textId = S(e, "id");
             string textReplacement = null;
             bool replaceText = textId.Length > 0 && TextOverrides.TryGetValue(textId, out textReplacement);
+            if (!replaceText && classText != null && classText.TryGetValue(k, out textReplacement)) replaceText = true;
             for (int ri = 0; ri < runs.Count; ri++)
             {
                 var run = (Dictionary<string, object>)runs[ri];
