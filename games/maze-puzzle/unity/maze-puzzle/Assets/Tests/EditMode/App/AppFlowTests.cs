@@ -19,6 +19,26 @@ namespace OrbitalSalvage.App.Tests
                 yield return Path.GetFileNameWithoutExtension(file);
         }
 
+        [Test]
+        public void ReplayPlay_StepsEachRecordedFrame()
+        {
+            JsRandom.Global.Reset(JsRandom.DefaultSeed);
+            var app = new AppController(new MemoryProfileStore(), new ManualAppClock(0, 0));
+            var session = LiveGameSession.CreateBound(app.Economy, 430, 932);
+            try
+            {
+                app.Playfield = new FlowPlayfield(session);
+                JsonValue play = JsonParser.Parse("{\"frames\":[{\"dt\":16,\"sim\":true},{\"dt\":16,\"sim\":false},{\"dt\":16,\"sim\":true}]}");
+                app.ReplayPlay(play);
+                Assert.AreEqual(2, session.PhysicsSteps);
+                Assert.AreEqual(3, session.RenderFrames);
+            }
+            finally
+            {
+                session.Renderer.Dispose();
+            }
+        }
+
         [TestCaseSource(nameof(FlowIds))]
         public void Flow_MatchesWeb(string id)
         {
@@ -33,22 +53,33 @@ namespace OrbitalSalvage.App.Tests
             double epoch0 = first.Get("epochMs").Number - first.Get("nowMs").Number;
             var clock = new ManualAppClock(0, epoch0);
             AppController app = null;
-            PhysicsEngine physics = null;
+            LiveGameSession session = null;
             int syncedEpoch = -1;
             bool physicsDiverged = false;
-            var sectors = MazeLevelBuilder.GetSectors();
-
+            try
+            {
             for (int i = 0; i < trace.Count; i++)
             {
                 JsonValue step = trace[i];
                 string op = step.Get("op").String;
                 if (op == "boot" || op == "bootHome")
                 {
-                    physics = AlignBootRandom();
+                    if (session != null) session.Renderer.Dispose();
+                    JsRandom.Global.Reset(JsRandom.DefaultSeed);
                     clock = new ManualAppClock(0, epoch0);
                     app = new AppController(new MemoryProfileStore(), clock);
-                    app.AdoptSector(sectors[0]);
-                    app.BackupDeployed += () => physics.SpawnBackupScrap(8);
+                    session = LiveGameSession.CreateBound(app.Economy, 430, 932);
+                    var bound = session;
+                    bound.NowMs = () => app.NowMs;
+                    app.NotifyAudioInit = () => { if (bound.Cues != null) bound.Cues.PublicInit(); };
+                    app.NotifyAudioMute = () => { if (bound.Cues != null) bound.Cues.IsMuted = app.Audio.IsMuted; };
+                    app.Playfield = new FlowPlayfield(bound);
+                    app.AfterPlayFrame = () => app.SetLiveMass(bound.CollectedMass, bound.SpilledMass);
+                    app.AdoptSector(session.ActiveSector);
+                    app.BackupDeployed += () => bound.Physics.SpawnBackupScrap(8);
+                    session.OnVictory += stats => app.PresentSessionVictory(stats.CollectedMass, stats.Payout, session.RecentUnlocks);
+                    session.OnDefeat += stats => app.PresentSessionDefeat(stats.CollectedMass, stats.SpilledMass);
+                    session.OnSwallow += _ => app.ShowToastsFor(session.RecentUnlocks);
                     syncedEpoch = app.SectorEpoch;
                     app.BeginBoot();
                     if (op == "bootHome")
@@ -81,33 +112,64 @@ namespace OrbitalSalvage.App.Tests
                 }
                 else Assert.Fail(id + " unknown op " + op);
 
+                SyncSession(app, session, ref syncedEpoch);
+                JsonValue play = step.Get("play");
+                bool replayed = play != null && play.Kind == JsonKind.Object;
+                if (replayed)
+                {
+                    string actual = app.ReplayPlay(play);
+                    JsonValue expect = play.Get("hash");
+                    if (expect != null && expect.Kind == JsonKind.String)
+                        Assert.AreEqual(expect.String, actual, id + " step " + i + " play hash");
+                }
                 JsonValue settle = step.Get("settleMs");
                 if (settle != null && settle.Kind == JsonKind.Number && settle.Number > 0)
                 {
                     app.Advance(settle.Number);
-                    if (app.CurrentPage == "game") physicsDiverged = true;
+                    if (!replayed && app.CurrentPage == "game") physicsDiverged = true;
                 }
+                else if (!replayed && op == "advance" && app.CurrentPage == "game") physicsDiverged = true;
 
-                if (physics != null && app.SectorEpoch != syncedEpoch && app.ActiveSector != null)
-                {
-                    syncedEpoch = app.SectorEpoch;
-                    var hole = physics.BlackHole;
-                    physics.InitSector(app.ActiveSector, physics.Center, new Vec2(hole.X, hole.Y));
-                }
-                Compare(id, i, op, app, step.Get("snap"), physicsDiverged);
+                Compare(id, i, op, app, step.Get("snap"), replayed ? false : physicsDiverged);
+            }
+            }
+            finally
+            {
+                if (session != null) session.Renderer.Dispose();
             }
         }
 
-        static PhysicsEngine AlignBootRandom()
+        static void SyncSession(AppController app, LiveGameSession session, ref int syncedEpoch)
         {
-            JsRandom.Global.Reset(JsRandom.DefaultSeed);
-            var renderer = new GameRenderer(430, 932, 3);
-            renderer.Dispose();
-            var physics = new PhysicsEngine(new ParityAudioCues(() => 0));
-            var sectors = MazeLevelBuilder.GetSectors();
-            var bh = physics.BlackHole;
-            physics.InitSector(sectors[0], physics.Center, new Vec2(bh.X, bh.Y));
-            return physics;
+            if (session == null || app == null) return;
+            if (app.SectorEpoch != syncedEpoch && app.ActiveSector != null)
+            {
+                session.LoadSector(app.ActiveSector);
+                syncedEpoch = app.SectorEpoch;
+            }
+            session.CollectedMass = app.CollectedMass;
+            session.SpilledMass = app.SpilledMass;
+            session.IsLevelCleared = app.IsLevelCleared;
+            session.IsLevelFailed = app.IsLevelFailed;
+            session.IsPaused = app.IsPaused;
+            session.UsedBackupPod = app.UsedBackupPod;
+        }
+
+        sealed class FlowPlayfield : IFixedPlayfield
+        {
+            readonly LiveGameSession _session;
+            public FlowPlayfield(LiveGameSession session) { _session = session; }
+            public void Step(double dtSeconds, bool simulate)
+            {
+                _session.AdvanceReplayAudio(dtSeconds * 1000.0);
+                _session.StepWebFrame(dtSeconds, simulate);
+            }
+            public void FinishReplay() { _session.FinishReplayAudio(); }
+            public void PointerDown(double clientX, double canvasLeft, double canvasWidth) { _session.PointerDown(clientX, canvasLeft, canvasWidth); }
+            public void PointerMove(double clientX) { _session.PointerMove(clientX); }
+            public void PointerUp() { _session.PointerUp(); }
+            public void KeyDown(string key) { _session.KeyDown(key); }
+            public string StateHash() { return _session.StateHash(); }
         }
 
         static void Compare(string flow, int index, string op, AppController app, JsonValue snap, bool physicsDiverged)

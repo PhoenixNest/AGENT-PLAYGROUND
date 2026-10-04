@@ -21,6 +21,7 @@ namespace OrbitalSalvage.App
         public const double DebriefDelayMs = 600;
         public const double DefeatDelayMs = 400;
         public const double HintMs = 3500;
+        public const double HintFadeMs = 400;
         public const double MasterToastDelayMs = 1200;
         public const double BackupProgress = 0.70;
         public const double QuotaTrackWidth = 162.328;
@@ -110,6 +111,9 @@ namespace OrbitalSalvage.App
         public bool IsLevelFailed { get; private set; }
         public bool UsedBackupPod { get; private set; }
         public bool HintHidden { get; private set; }
+        double _hintShownAt = double.NaN;
+        /// <summary>Milliseconds since the game page was shown, or -1 before that. The gesture hint uses this clock.</summary>
+        public double HintAgeMs => double.IsNaN(_hintShownAt) ? -1 : NowMs - _hintShownAt;
         public double NowMs { get; private set; }
         public double EpochMs { get; private set; }
         public string TemplateId { get; private set; }
@@ -146,6 +150,12 @@ namespace OrbitalSalvage.App
         public IAppAudio Audio { get { return _audio; } }
         public readonly List<int> Haptics = new List<int>();
         public Action BackupDeployed;
+        public IFixedPlayfield Playfield;
+        public Action AfterPlayFrame;
+        /// <summary>Fires with each web <c>audio.publicInit()</c> so the playfield cue clock starts.</summary>
+        public Action NotifyAudioInit;
+        /// <summary>Copies mute onto the playfield cues after init or a mute toggle.</summary>
+        public Action NotifyAudioMute;
 
         /// <summary>Web constructor already rolled sector 0. Record it without rolling again.</summary>
         public void AdoptSector(SectorConfig sector)
@@ -181,6 +191,56 @@ namespace OrbitalSalvage.App
             Rebuild();
         }
 
+        /// <summary>
+        /// Step the bound playfield through the frames the web ran for this trace step.
+        /// Returns the physics state hash afterwards, or null when the step has no play record.
+        /// </summary>
+        public string ReplayPlay(JsonValue play)
+        {
+            if (play == null || play.Kind != JsonKind.Object) return null;
+            if (Playfield == null) throw new InvalidOperationException("ReplayPlay without a playfield");
+            JsonValue frames = play.Get("frames");
+            JsonValue inputs = play.Get("inputs");
+            int n = frames == null || frames.Kind != JsonKind.Array ? 0 : frames.Count;
+            int cursor = 0;
+            int inputCount = inputs == null || inputs.Kind != JsonKind.Array ? 0 : inputs.Count;
+            try
+            {
+                for (int i = 0; i < n; i++)
+                {
+                    while (cursor < inputCount && (int)inputs[cursor].Get("at").Number == i)
+                    {
+                        ApplyPlayInput(inputs[cursor]);
+                        cursor++;
+                    }
+                    JsonValue frame = frames[i];
+                    double dtMs = frame.Get("dt").Number;
+                    bool sim = frame.Get("sim").Kind != JsonKind.Bool || frame.Get("sim").Bool;
+                    Playfield.Step(dtMs / 1000.0, sim);
+                    if (AfterPlayFrame != null) AfterPlayFrame();
+                }
+            }
+            finally
+            {
+                Playfield.FinishReplay();
+            }
+            return Playfield.StateHash();
+        }
+
+        void ApplyPlayInput(JsonValue input)
+        {
+            string kind = input.Get("kind").String;
+            if (kind == "down")
+            {
+                double left = input.Get("left") != null && input.Get("left").Kind == JsonKind.Number ? input.Get("left").Number : 0;
+                double width = input.Get("width") != null && input.Get("width").Kind == JsonKind.Number ? input.Get("width").Number : 430;
+                Playfield.PointerDown(input.Get("x").Number, left, width);
+            }
+            else if (kind == "move") Playfield.PointerMove(input.Get("x").Number);
+            else if (kind == "up") Playfield.PointerUp();
+            else if (kind == "key") Playfield.KeyDown(input.Get("key").String);
+        }
+
         /// <summary>Viewer frame. <paramref name="nowMs"/> and <paramref name="epochMs"/> are absolute.</summary>
         public void CatchUp(double nowMs, double epochMs)
         {
@@ -194,34 +254,46 @@ namespace OrbitalSalvage.App
             Rebuild();
         }
 
+        void TouchAudio()
+        {
+            _audio.PublicInit();
+            if (NotifyAudioInit != null) NotifyAudioInit();
+            if (NotifyAudioMute != null) NotifyAudioMute();
+        }
+
+        void PublishMute()
+        {
+            if (NotifyAudioMute != null) NotifyAudioMute();
+        }
+
         public void Click(string id)
         {
             if (string.IsNullOrEmpty(id)) return;
             switch (id)
             {
                 case "btn-home-play":
-                    _audio.PublicInit();
+                    TouchAudio();
                     ShowPage("game");
                     break;
                 case "btn-open-maps-page":
-                    _audio.PublicInit();
+                    TouchAudio();
                     ShowPage("maps");
                     break;
                 case "btn-open-shop-page":
-                    _audio.PublicInit();
+                    TouchAudio();
                     ShowPage("shop");
                     break;
                 case "btn-open-daily-shift":
-                    _audio.PublicInit();
+                    TouchAudio();
                     ShowPage("daily");
                     break;
                 case "btn-open-trophies-page":
-                    _audio.PublicInit();
+                    TouchAudio();
                     ShowPage("achievements");
                     break;
                 case "btn-open-settings-page":
                 case "btn-home-settings":
-                    _audio.PublicInit();
+                    TouchAudio();
                     ShowPage("settings");
                     break;
                 case "btn-home-audio":
@@ -380,14 +452,14 @@ namespace OrbitalSalvage.App
             if (id == "settings-sfx-slider")
             {
                 Economy.Profile.Settings.SfxVolume = value;
-                _audio.PublicInit();
+                TouchAudio();
                 _audio.SetSfxVolume(value);
                 Economy.SaveProfile();
             }
             else if (id == "settings-ambience-slider")
             {
                 Economy.Profile.Settings.AmbientVolume = value;
-                _audio.PublicInit();
+                TouchAudio();
                 _audio.SetAmbienceVolume(value);
                 Economy.SaveProfile();
             }
@@ -398,6 +470,7 @@ namespace OrbitalSalvage.App
         {
             Economy.Profile.Settings.SoundEnabled = enabled;
             if (_audio.IsMuted == enabled) _audio.ToggleMute();
+            PublishMute();
             Economy.SaveProfile();
             Rebuild();
         }
@@ -411,7 +484,7 @@ namespace OrbitalSalvage.App
 
         public void KeyDown(string key)
         {
-            _audio.PublicInit();
+            TouchAudio();
             DismissHint();
             if (key == "r" || key == "R") RestartSector();
             else if (key == "Escape" && CurrentPage == "game") ExitGameToHome();
@@ -499,12 +572,14 @@ namespace OrbitalSalvage.App
 
         public void ShowPage(string pageId)
         {
+            bool enterGame = pageId == "game" && CurrentPage != "game";
             CurrentPage = pageId;
             RefreshCredits();
             if (pageId == "home") RefreshHome();
             else if (pageId == "game")
             {
                 LayoutRequested = true;
+                if (enterGame) _hintShownAt = NowMs;
                 After(HintMs, DismissHint);
             }
             Rebuild();
@@ -655,7 +730,7 @@ namespace OrbitalSalvage.App
         {
             if (!Economy.CanClaimDailyGift()) return;
             if (!Economy.ClaimDailyGift(100)) return;
-            try { _audio.PublicInit(); _audio.PlayBoosterPass(); } catch (Exception) { }
+            try { TouchAudio(); _audio.PlayBoosterPass(); } catch (Exception) { }
             Haptic(40);
             RefreshCredits();
             ShowToast("🎁 Claimed +100 🪙 Janitor Stipend!");
@@ -665,7 +740,7 @@ namespace OrbitalSalvage.App
         void ClaimMasterBonus()
         {
             if (!Economy.ClaimDailyMasterBonus(300)) return;
-            try { _audio.PublicInit(); _audio.PlayBoosterPass(); } catch (Exception) { }
+            try { TouchAudio(); _audio.PlayBoosterPass(); } catch (Exception) { }
             Haptic(50);
             RefreshCredits();
             ShowToast("🏆 Claimed +300 🪙 Daily Master Bonus!");
@@ -717,8 +792,9 @@ namespace OrbitalSalvage.App
 
         void ToggleHudMute()
         {
-            _audio.PublicInit();
+            TouchAudio();
             bool muted = _audio.ToggleMute();
+            PublishMute();
             Economy.Profile.Settings.SoundEnabled = !muted;
             Economy.SaveProfile();
             SoundIcon = muted ? "🔇" : "🔊";
@@ -728,8 +804,9 @@ namespace OrbitalSalvage.App
 
         void TogglePauseSound()
         {
-            _audio.PublicInit();
+            TouchAudio();
             bool muted = _audio.ToggleMute();
+            PublishMute();
             Economy.Profile.Settings.SoundEnabled = !muted;
             Economy.SaveProfile();
             SoundIcon = muted ? "🔇" : "🔊";
@@ -738,7 +815,7 @@ namespace OrbitalSalvage.App
 
         void PokeMascot()
         {
-            try { _audio.PublicInit(); _audio.PlayBoosterPass(); } catch (Exception) { }
+            try { TouchAudio(); _audio.PlayBoosterPass(); } catch (Exception) { }
             Haptic(30);
             _faceHold = "🥰";
             _faceHoldUntil = NowMs + 600;
@@ -925,7 +1002,7 @@ namespace OrbitalSalvage.App
                 Text("loading-tip-text", _loadingTip);
                 WidthPercent("loading-bar-fill", _progress);
             }
-            if (HintHidden) Hide("gesture-hint");
+            if (HintHidden && HintAgeMs >= HintMs + HintFadeMs) Hide("gesture-hint");
             Skin("home-diorama-ring", Equipped("ring"));
             Skin("home-diorama-nibbles", Equipped("singularity"));
 

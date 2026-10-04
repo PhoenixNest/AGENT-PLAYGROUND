@@ -112,18 +112,63 @@ namespace OrbitalSalvage.Render
         }
 
         /// <summary>
-        /// Web boot order: starfield random, then sector 0 at the default center (no layout yet).
-        /// The caller resets <see cref="JsRandom.Global"/> first. Layout is applied later, on the game page.
+        /// Web constructor order: starfield random, <c>initLayout</c>, then sector 0 at that center.
+        /// The caller resets <see cref="JsRandom.Global"/> first. A later game-page layout call
+        /// repeats the same center and does not respawn debris.
         /// </summary>
         public static LiveGameSession CreateBound(EconomyManager economy, double cssW, double cssH)
         {
             var renderer = new GameRenderer(cssW, cssH, 3);
-            var audio = new ParityAudioCues(() => 0);
+            LiveGameSession session = null;
+            var audio = new ParityAudioCues(() => session.AudioNowMs());
             var physics = new PhysicsEngine(audio);
-            var session = new LiveGameSession(physics, renderer, economy);
+            session = new LiveGameSession(physics, renderer, economy);
+            session.Cues = audio;
+            session.ApplyLayout(cssW, cssH);
             var sectors = MazeLevelBuilder.GetSectors();
             session.LoadSector(sectors[0]);
             return session;
+        }
+
+        public ParityAudioCues Cues { get; private set; }
+
+        double _audioOrigin;
+        double _replayLeadMs;
+        bool _replayAudio;
+        bool _audioOriginSet;
+
+        /// <summary>
+        /// Web <c>currentTime</c> follows rAF timestamps, and each recorded dt is the gap from the
+        /// previous rAF. The first burst anchors to <see cref="NowMs"/> (the click instant). Later
+        /// bursts continue from the last frame, so an <c>Advance</c> that runs before the replay
+        /// cannot shift the 48ms collision cooldown.
+        /// </summary>
+        public double AudioNowMs()
+        {
+            if (_replayAudio) return _audioOrigin + _replayLeadMs;
+            return _audioOriginSet ? _audioOrigin : NowMs();
+        }
+
+        public void AdvanceReplayAudio(double dtMs)
+        {
+            if (!_replayAudio)
+            {
+                if (!_audioOriginSet) _audioOrigin = NowMs();
+                _replayLeadMs = 0;
+                _replayAudio = true;
+            }
+            _replayLeadMs += dtMs;
+        }
+
+        public void FinishReplayAudio()
+        {
+            if (_replayAudio)
+            {
+                _audioOrigin += _replayLeadMs;
+                _audioOriginSet = true;
+            }
+            _replayAudio = false;
+            _replayLeadMs = 0;
         }
 
         public void ApplyLayout(double w, double h)
@@ -156,6 +201,20 @@ namespace OrbitalSalvage.Render
         public void Restart()
         {
             if (ActiveSector != null) LoadSector(ActiveSector);
+        }
+
+        /// <summary>One Chromium rAF while the game page is showing. <paramref name="simulate"/> is false when the pause modal is up; the renderer still advances.</summary>
+        public void StepWebFrame(double dtSeconds, bool simulate)
+        {
+            bool was = IsPaused;
+            IsPaused = !simulate;
+            Update(dtSeconds);
+            IsPaused = was;
+        }
+
+        public string StateHash()
+        {
+            return PhysicsSnapshot.Hash(Physics);
         }
 
         public void Update(double dt)

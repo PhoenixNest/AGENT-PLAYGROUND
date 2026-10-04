@@ -27,6 +27,8 @@ namespace OrbitalSalvage.Viewer
         double flowClockMs;
         HomeChrome underlayChrome;
         string underlayKey;
+        bool flowCapture;
+        readonly List<string> playMismatches = new List<string>();
 
         void BootApp()
         {
@@ -49,9 +51,23 @@ namespace OrbitalSalvage.Viewer
             if (session != null) session.Renderer.Dispose();
             session = LiveGameSession.CreateBound(app.Economy, ParityPages.CssWidth, ParityPages.CssHeight);
             session.NowMs = () => app.NowMs;
+            app.NotifyAudioInit = () =>
+            {
+                if (session != null && session.Cues != null) session.Cues.PublicInit();
+            };
+            app.NotifyAudioMute = () =>
+            {
+                if (session != null && session.Cues != null) session.Cues.IsMuted = app.Audio.IsMuted;
+            };
             app.AdoptSector(session.ActiveSector);
             appliedEpoch = app.SectorEpoch;
+            sessionWired = false;
             WireSession();
+            app.Playfield = new BoundPlayfield(session);
+            app.AfterPlayFrame = () =>
+            {
+                if (session != null) app.SetLiveMass(session.CollectedMass, session.SpilledMass);
+            };
             app.BeginBoot();
             SyncApp(true);
         }
@@ -130,6 +146,25 @@ namespace OrbitalSalvage.Viewer
             SyncApp(false);
         }
 
+        /// <summary>Copy the controller's sector, layout, and win flags onto the session before replay.</summary>
+        void SyncPlayfield()
+        {
+            if (app == null || session == null) return;
+            if (app.ConsumeLayoutRequest())
+                session.ApplyLayout(ParityPages.CssWidth, ParityPages.CssHeight);
+            if (app.SectorEpoch != appliedEpoch && app.ActiveSector != null)
+            {
+                session.LoadSector(app.ActiveSector);
+                appliedEpoch = app.SectorEpoch;
+            }
+            session.CollectedMass = app.CollectedMass;
+            session.SpilledMass = app.SpilledMass;
+            session.IsLevelCleared = app.IsLevelCleared;
+            session.IsLevelFailed = app.IsLevelFailed;
+            session.IsPaused = app.IsPaused;
+            session.UsedBackupPod = app.UsedBackupPod;
+        }
+
         void ApplyOverrides(bool forceDraw)
         {
             if (current == null || app == null) return;
@@ -181,6 +216,7 @@ namespace OrbitalSalvage.Viewer
             BindModalPlayfield(current);
             current.Underlay = null;
             if (flowClockActive) BindFlowUnderlay(current);
+            if (flowCapture && app != null) current.PoseGestureHint(app.HintAgeMs);
             if (!flowClockActive && (selfTesting || currentId != null && currentId.StartsWith("loading", StringComparison.Ordinal))) current.Draw();
             else
             {
@@ -248,6 +284,8 @@ namespace OrbitalSalvage.Viewer
         IEnumerator FlowShots(string dir)
         {
             yield return null;
+            flowCapture = true;
+            playMismatches.Clear();
             Directory.CreateDirectory(dir);
             string golden = Path.GetFullPath(Path.Combine(dir, "..", "..", "..", "golden", "app"));
             int written = 0;
@@ -293,6 +331,22 @@ namespace OrbitalSalvage.Viewer
                             app.SetSlider("settings-sfx-slider", (int)step.Get("sfx").Number);
                             app.SetSlider("settings-ambience-slider", (int)step.Get("ambience").Number);
                         }
+                        SyncPlayfield();
+                        JsonValue play = step.Get("play");
+                        if (play != null && play.Kind == JsonKind.Object)
+                        {
+                            string actual = app.ReplayPlay(play);
+                            JsonValue expect = play.Get("hash");
+                            int ticks = play.Get("physicsTicks") != null && play.Get("physicsTicks").Kind == JsonKind.Number
+                                ? (int)play.Get("physicsTicks").Number : -1;
+                            string line = id + "_" + (i + 1).ToString("00")
+                                + " ticks " + ticks
+                                + " hash " + (actual ?? "")
+                                + (expect != null && expect.Kind == JsonKind.String && actual != expect.String ? " EXPECT " + expect.String : " ok");
+                            playMismatches.Add(line);
+                            if (expect != null && expect.Kind == JsonKind.String && actual != expect.String && error == null)
+                                error = "play hash " + line;
+                        }
                         JsonValue settle = step.Get("settleMs");
                         if (settle != null && settle.Kind == JsonKind.Number && settle.Number > 0)
                             app.Advance(settle.Number);
@@ -325,7 +379,18 @@ namespace OrbitalSalvage.Viewer
                 error = ex.ToString();
                 Debug.LogError("[ParityViewer] flow shots " + ex);
             }
-            File.WriteAllText(Path.Combine(dir, "flows.json"), "{\"ok\":" + (error == null ? "true" : "false") + ",\"steps\":" + written + ",\"error\":\"" + (error ?? "").Replace("\\", "\\\\").Replace("\"", "'") + "\"}");
+            var hashLog = new StringBuilder();
+            hashLog.Append("{\"ok\":").Append(error == null ? "true" : "false");
+            hashLog.Append(",\"steps\":").Append(written);
+            hashLog.Append(",\"error\":\"").Append((error ?? "").Replace("\\", "\\\\").Replace("\"", "'")).Append('"');
+            hashLog.Append(",\"play\":[");
+            for (int h = 0; h < playMismatches.Count; h++)
+            {
+                if (h > 0) hashLog.Append(',');
+                hashLog.Append('"').Append(playMismatches[h].Replace("\\", "\\\\").Replace("\"", "'")).Append('"');
+            }
+            hashLog.Append("]}");
+            File.WriteAllText(Path.Combine(dir, "flows.json"), hashLog.ToString());
             if (!Application.isEditor) Application.Quit(error == null ? 0 : 1);
         }
 
@@ -460,9 +525,12 @@ namespace OrbitalSalvage.Viewer
         {
             if (current.ExternalPlayfield == null && ShowPlayfield && session != null && session.Renderer != null && session.Renderer.Target != null)
             {
-                bool modal = currentId != null && currentId.StartsWith("modal_", StringComparison.Ordinal);
-                session.IsPaused = (app != null && app.IsPaused) || modal;
-                if (session.RenderFrames == 0) session.Update(RecordedFrameDriver.FrameDt);
+                if (!flowCapture)
+                {
+                    bool modal = currentId != null && currentId.StartsWith("modal_", StringComparison.Ordinal);
+                    session.IsPaused = (app != null && app.IsPaused) || modal;
+                    if (session.RenderFrames == 0) session.Update(RecordedFrameDriver.FrameDt);
+                }
                 return PlayfieldComposite.Png(session.Renderer.Target, current.Target, ReadPng);
             }
             return ReadPng(current.Target);
@@ -689,6 +757,23 @@ namespace OrbitalSalvage.Viewer
             public void PlayDefeatSound() { player.PlayDefeatSound(); }
             public void PlayBackupPodSound() { player.PlayBackupPodSound(); }
             public void PlayDebrisSwallowed() { player.PlayDebrisSwallowed(); }
+        }
+
+        sealed class BoundPlayfield : IFixedPlayfield
+        {
+            readonly LiveGameSession _session;
+            public BoundPlayfield(LiveGameSession session) { _session = session; }
+            public void Step(double dtSeconds, bool simulate)
+            {
+                _session.AdvanceReplayAudio(dtSeconds * 1000.0);
+                _session.StepWebFrame(dtSeconds, simulate);
+            }
+            public void FinishReplay() { _session.FinishReplayAudio(); }
+            public void PointerDown(double clientX, double canvasLeft, double canvasWidth) { _session.PointerDown(clientX, canvasLeft, canvasWidth); }
+            public void PointerMove(double clientX) { _session.PointerMove(clientX); }
+            public void PointerUp() { _session.PointerUp(); }
+            public void KeyDown(string key) { _session.KeyDown(key); }
+            public string StateHash() { return _session.StateHash(); }
         }
     }
 }
