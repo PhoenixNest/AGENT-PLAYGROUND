@@ -80,6 +80,18 @@ namespace OrbitalSalvage.App
         public void SetItem(string key, string value) { _store.SetItem(key, value); }
     }
 
+    /// <summary>The live playfield the controller steps in lockstep with a recorded web trace.</summary>
+    public interface IFixedPlayfield
+    {
+        void Step(double dtSeconds, bool simulate);
+        void FinishReplay();
+        void PointerDown(double clientX, double canvasLeft, double canvasWidth);
+        void PointerMove(double clientX);
+        void PointerUp();
+        void KeyDown(string key);
+        string StateHash();
+    }
+
     public interface IAppClock
     {
         double NowMs { get; set; }

@@ -33,6 +33,7 @@ async function record(session, trace, step) {
   }
   step.settleMs = settle;
   step.snap = await snap(session);
+  step.play = await session.page.evaluate(() => window.__parity.takePlay());
   trace.push(step);
   await session.page.evaluate(() => window.__parity.waitEmoji());
   const png = await session.page.screenshot({ animations: "allow", caret: "hide" });
@@ -140,6 +141,27 @@ async function snap(session) {
           }
         });
         return out;
+      })(),
+      render: (() => {
+        const hint = document.getElementById("gesture-hint");
+        const hand = hint && hint.querySelector(".hand-swipe-anim");
+        const box = (el) => {
+          if (!el) return null;
+          const r = el.getBoundingClientRect();
+          const anim = el.getAnimations()[0];
+          return {
+            x: r.x, y: r.y, w: r.width, h: r.height,
+            opacity: getComputedStyle(el).opacity,
+            transform: getComputedStyle(el).transform,
+            anim: anim ? anim.currentTime : null,
+          };
+        };
+        const renderer = app.renderer;
+        return {
+          cosmicTime: renderer ? renderer.cosmicTime : null,
+          hint: box(hint),
+          hand: box(hand),
+        };
       })(),
       randomCalls: window.__parity.randomCalls(),
       epochMs: Date.now(),
@@ -393,6 +415,7 @@ async function main() {
     for (const flow of FLOWS) {
       if (only && !only.has(flow.id)) continue;
       const session = new Session(browser, { profile: "zero", stateId: flow.id });
+      session.extraInit = "window.__PARITY_GAME_SYNC = { frames: [], inputs: [], lastT: null };";
       const trace = [];
       const started = Date.now();
       await flow.run(session, trace);
