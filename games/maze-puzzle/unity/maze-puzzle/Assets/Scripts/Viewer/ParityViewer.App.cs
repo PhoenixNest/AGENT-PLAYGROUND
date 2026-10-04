@@ -351,11 +351,14 @@ namespace OrbitalSalvage.Viewer
                         if (settle != null && settle.Kind == JsonKind.Number && settle.Number > 0)
                             app.Advance(settle.Number);
                         JsonValue snap = step.Get("snap");
+                        // Home and loading sample each animation at its own clock. The live game page does not:
+                        // PoseGestureHint owns #gesture-hint, and sampling handSwipe here overwrites that pose.
+                        bool liveGame = app.CurrentPage == "game";
                         JsonValue anim = snap != null ? snap.Get("animMs") : null;
-                        flowClockActive = anim != null && anim.Kind == JsonKind.Number;
+                        flowClockActive = !liveGame && anim != null && anim.Kind == JsonKind.Number;
                         if (flowClockActive) flowClockMs = anim.Number;
                         CssAnimation.Running = null;
-                        JsonValue anims = snap != null ? snap.Get("anims") : null;
+                        JsonValue anims = !liveGame && snap != null ? snap.Get("anims") : null;
                         if (anims != null && anims.Kind == JsonKind.Object && anims.Count > 0)
                         {
                             var map = new Dictionary<string, double>(anims.Count);
