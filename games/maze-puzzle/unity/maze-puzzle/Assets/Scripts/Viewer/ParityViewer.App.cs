@@ -148,6 +148,7 @@ namespace OrbitalSalvage.Viewer
                 else if (footer.StartsWith("EQUIPPED", StringComparison.Ordinal)) current.ClassTextOverrides["badge-equipped#" + equipped++] = footer;
                 else current.ClassTextOverrides["btn-buy-item#" + buy++] = footer;
             }
+            BindModalPlayfield(current);
             if (selfTesting || currentId != null && currentId.StartsWith("loading", StringComparison.Ordinal)) current.Draw();
             else
             {
@@ -236,6 +237,7 @@ namespace OrbitalSalvage.Viewer
             if (error == null) yield return StartCoroutine(AppShot(dir, "10_debrief", steps));
             if (error == null) error = AppClick("btn-debrief-next", null, -1);
             if (error == null) yield return StartCoroutine(AppShot(dir, "11_next", steps));
+            if (error == null) yield return StartCoroutine(ModalStillProof(dir, steps));
 
             try
             {
@@ -288,13 +290,108 @@ namespace OrbitalSalvage.Viewer
             try
             {
                 if (current == null || current.Target == null) throw new InvalidOperationException("no frame " + name);
-                File.WriteAllBytes(Path.Combine(dir, name + ".png"), ReadPng(current.Target));
+                File.WriteAllBytes(Path.Combine(dir, name + ".png"), FramePng());
                 WriteStep(steps, name);
             }
             catch (Exception ex)
             {
                 Debug.LogError("[ParityViewer] shot " + name + " " + ex.Message);
             }
+        }
+
+        /// <summary>Chrome with the live playfield under a SkipPlayfield hole. Other pages stay chrome-only.</summary>
+        byte[] FramePng()
+        {
+            if (current.ExternalPlayfield == null && ShowPlayfield && session != null && session.Renderer != null && session.Renderer.Target != null)
+            {
+                bool modal = currentId != null && currentId.StartsWith("modal_", StringComparison.Ordinal);
+                session.IsPaused = (app != null && app.IsPaused) || modal;
+                if (session.RenderFrames == 0) session.Update(RecordedFrameDriver.FrameDt);
+                return PlayfieldComposite.Png(session.Renderer.Target, current.Target, ReadPng);
+            }
+            return ReadPng(current.Target);
+        }
+
+        /// <summary>
+        /// Pause, debrief, and defeat at the still pose: measured chrome with the canvas hole,
+        /// and the Chromium playfield dump for that spec composited underneath.
+        /// A second PNG uses a live session stepped on the screenshot timeline.
+        /// </summary>
+        IEnumerator ModalStillProof(string dir, List<string> steps)
+        {
+            yield return null;
+            string[] ids = { "modal_pause", "modal_debrief_exact", "modal_defeat_12_of_20" };
+            var notes = new StringBuilder();
+            notes.Append('{');
+            for (int i = 0; i < ids.Length; i++)
+            {
+                string id = ids[i];
+                HomeChrome chrome = null;
+                Canvas2D field = null;
+                LiveGameSession live = null;
+                try
+                {
+                    chrome = HomeChrome.Load(id, ParityPages.Profile);
+                    field = new Canvas2D(chrome.PixelWidth, chrome.PixelHeight);
+                    if (!chrome.PaintPlayfield(field)) throw new InvalidOperationException("no playfield " + id);
+                    // Blit the still's canvas before the overlay so backdrop-filter blurs the playfield, not the hole.
+                    chrome.ExternalPlayfield = field.Target;
+                    chrome.SkipPlayfield = false;
+                    chrome.Draw();
+                    File.WriteAllBytes(Path.Combine(dir, "still_" + id + ".png"), ReadPng(chrome.Target));
+                    live = StillSession(id);
+                    chrome.ExternalPlayfield = live.Renderer.Target;
+                    chrome.Draw();
+                    File.WriteAllBytes(Path.Combine(dir, "live_" + id + ".png"), ReadPng(chrome.Target));
+                    chrome.ExternalPlayfield = null;
+                    chrome.Draw();
+                    File.WriteAllBytes(Path.Combine(dir, "full_" + id + ".png"), ReadPng(chrome.Target));
+                    if (i > 0) notes.Append(',');
+                    notes.Append('"').Append(id).Append("\":\"ok\"");
+                    Debug.Log("[ParityViewer] modal proof " + id);
+                    WriteStep(steps, "still_" + id);
+                }
+                catch (Exception ex)
+                {
+                    Debug.LogError("[ParityViewer] modal proof " + id + " " + ex);
+                    if (i > 0) notes.Append(',');
+                    notes.Append('"').Append(id).Append("\":\"error\"");
+                }
+                finally
+                {
+                    if (live != null) live.Renderer.Dispose();
+                    if (field != null) field.Dispose();
+                    if (chrome != null) chrome.Dispose();
+                }
+                yield return null;
+            }
+            notes.Append('}');
+            File.WriteAllText(Path.Combine(dir, "modal-proof.json"), notes.ToString());
+        }
+
+        static LiveGameSession StillSession(string id)
+        {
+            var session = RecordedFrameDriver.Create(1);
+            int play = 400 / 16;
+            for (int i = 0; i < play; i++) session.Update(RecordedFrameDriver.FrameDt);
+            if (id == "modal_pause") session.IsPaused = true;
+            else if (id == "modal_debrief_exact")
+            {
+                session.CollectedMass = 20;
+                session.IsLevelCleared = true;
+            }
+            else
+            {
+                session.CollectedMass = 12;
+                session.SpilledMass = 4;
+                session.IsLevelFailed = true;
+            }
+            int settleMs = id == "modal_pause" ? 300 : id == "modal_debrief_exact" ? 900 : 700;
+            int frames = settleMs / 16;
+            for (int i = 0; i < frames; i++) session.Update(RecordedFrameDriver.FrameDt);
+            int rem = settleMs - frames * 16;
+            if (rem > 0) session.Update(rem / 1000.0);
+            return session;
         }
 
         void WriteStep(List<string> steps, string name)

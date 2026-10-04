@@ -216,8 +216,28 @@ namespace OrbitalSalvage.Viewer
             pressCss = null;
             armedEdge = null;
             clock.Restart();
+            BindModalPlayfield(chrome);
             if (selfTesting) chrome.Draw();
             else chrome.Draw(0, -1, null, modal, modal);
+        }
+
+        /// <summary>
+        /// Modal overlays blur whatever is already on the canvas. Draw the live playfield at the
+        /// canvas element so that blur matches the still, instead of blurring an empty hole.
+        /// </summary>
+        void BindModalPlayfield(HomeChrome chrome)
+        {
+            if (chrome == null) return;
+            bool modal = currentId != null && currentId.StartsWith("modal_", StringComparison.Ordinal) && IsGamePage(currentId);
+            if (!modal || session == null || session.Renderer == null || session.Renderer.Target == null)
+            {
+                chrome.ExternalPlayfield = null;
+                return;
+            }
+            session.IsPaused = true;
+            if (session.RenderFrames == 0) session.Update(RecordedFrameDriver.FrameDt);
+            chrome.ExternalPlayfield = session.Renderer.Target;
+            chrome.SkipPlayfield = false;
         }
 
         void Tick()
@@ -228,6 +248,7 @@ namespace OrbitalSalvage.Viewer
             bool intro = modal && ms < 400;
             bool enter = ms < 260;
             if (!current.Loops && !intro && !enter && pressIndex < 0) return;
+            BindModalPlayfield(current);
             current.Draw(ms, pressIndex, pressCss, intro, modal);
         }
 
@@ -503,7 +524,10 @@ namespace OrbitalSalvage.Viewer
         void TickLive()
         {
             if (!ShowPlayfield) return;
-            if (app != null) session.IsPaused = app.IsPaused;
+            // Pause freezes via the controller. Debrief and defeat keep the web clock running, but the
+            // stills are one frozen canvas; hold that frame while a modal covers the playfield.
+            bool modal = currentId != null && currentId.StartsWith("modal_", StringComparison.Ordinal);
+            session.IsPaused = (app != null && app.IsPaused) || modal;
             session.Update(Time.unscaledDeltaTime);
             if (app != null) app.SetLiveMass(session.CollectedMass, session.SpilledMass);
             ApplyQuota();
@@ -517,6 +541,7 @@ namespace OrbitalSalvage.Viewer
             lastQuota = label;
             current.TextOverrides["hud-quota-text"] = label;
             current.WidthOverrides["hud-quota-bar"] = session.QuotaBarWidth(QuotaTrackWidth);
+            BindModalPlayfield(current);
             if (selfTesting) current.Draw();
             else
             {

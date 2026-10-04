@@ -29,6 +29,11 @@ namespace OrbitalSalvage.Render
         readonly List<Dictionary<string, object>> elements;
         /// <summary>When set, the playfield canvas element is not replayed and full-viewport boxes under it are left transparent.</summary>
         public bool SkipPlayfield;
+        /// <summary>
+        /// Live playfield drawn at the canvas element, before later backdrop-filter overlays.
+        /// Null keeps the spec's stored stream (or the hole, when <see cref="SkipPlayfield"/> is set).
+        /// </summary>
+        public RenderTexture ExternalPlayfield;
         public readonly Dictionary<string, string> TextOverrides = new Dictionary<string, string>();
         public readonly Dictionary<string, double> WidthOverrides = new Dictionary<string, double>();
         /// <summary>Element id to a width as a percent of its parent. Applied only when the key is present.</summary>
@@ -407,6 +412,15 @@ namespace OrbitalSalvage.Render
 
             if (S(e, "t") == "canvas")
             {
+                if (ExternalPlayfield != null)
+                {
+                    canvas.Save();
+                    canvas.SetTransform(scale, 0, 0, scale, 0, 0);
+                    canvas.ImageSmoothingEnabled = false;
+                    canvas.DrawTexture(ExternalPlayfield, 0, 0, ExternalPlayfield.width, ExternalPlayfield.height, 0, 0, cssW, cssH);
+                    canvas.Restore();
+                    continue;
+                }
                 if (SkipPlayfield) continue;
                 if (OmitCached(k)) continue;
                 if (playfield != null)
@@ -801,6 +815,19 @@ namespace OrbitalSalvage.Render
                 && double.TryParse(parts[3], NumberStyles.Float, CultureInfo.InvariantCulture, out d)
                 && double.TryParse(parts[4], NumberStyles.Float, CultureInfo.InvariantCulture, out e)
                 && double.TryParse(parts[5], NumberStyles.Float, CultureInfo.InvariantCulture, out f);
+        }
+
+        /// <summary>
+        /// Replay the Chromium canvas dump for this spec into <paramref name="dest"/>.
+        /// That dump is the playfield baked into the still; the modal chrome leaves it unpainted when <see cref="SkipPlayfield"/> is set.
+        /// </summary>
+        public bool PaintPlayfield(Canvas2D dest)
+        {
+            if (playfield == null || dest == null) return false;
+            dest.BeginFrame();
+            playfield.Play(dest);
+            dest.EndFrame();
+            return true;
         }
 
         void DrawEmoji(Dictionary<string, object> e, int k, double alpha)
