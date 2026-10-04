@@ -851,7 +851,20 @@ namespace OrbitalSalvage.Render
                 canvas.Rotate(tilt);
                 canvas.Translate(-cx, -cy);
             }
+            bool beam = element && (" " + S(e, "c") + " ").Contains(" pedestal-glow-beam ");
+            if (beam)
+            {
+                canvas.Save();
+                canvas.BeginPath();
+                canvas.MoveTo(style.x + style.w * 0.15, style.y);
+                canvas.LineTo(style.x + style.w * 0.85, style.y);
+                canvas.LineTo(style.x + style.w, style.y + style.h);
+                canvas.LineTo(style.x, style.y + style.h);
+                canvas.ClosePath();
+                canvas.Clip();
+            }
             CssBox.Draw(canvas, style, alpha);
+            if (beam) canvas.Restore();
             if (tilt != 0) canvas.Restore();
             if (savedBorder != null) Array.Copy(savedBorder, style.borderC, 4);
             if (savedShadow != null)
@@ -879,8 +892,9 @@ namespace OrbitalSalvage.Render
                 {
                     style.borderW[i] = CssBox.ParseLength(bw[i]);
                     style.borderOn[i] = style.borderW[i] > 0 && i < bs.Count && bs[i] == "solid";
+                    style.borderDashed[i] = style.borderW[i] > 0 && i < bs.Count && bs[i] == "dashed";
                     style.borderC[i] = CssColor.Parse(i < bc.Count ? bc[i] : "", Rgba.Transparent);
-                    if (style.borderOn[i]) prep.any = true;
+                    if (style.borderOn[i] || style.borderDashed[i]) prep.any = true;
                 }
                 style.shadows.AddRange(CssBox.ParseShadows(S(e, "sh")));
                 foreach (var sh in style.shadows)
