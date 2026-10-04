@@ -21,6 +21,7 @@ namespace OrbitalSalvage.Viewer
         const string LiveSelfTestFlag = "-parity-live-selftest";
         const string PerfFlag = "-parity-perf";
         const string AppSelfTestFlag = "-parity-app-selftest";
+        const string ShipSelfTestFlag = "-ship-selftest";
         const string OptOutFlag = "-no-parity-viewer";
         const double QuotaTrackWidth = 162.328;
 
@@ -53,6 +54,9 @@ namespace OrbitalSalvage.Viewer
         GUIStyle hintStyle;
         bool hintVisible = true;
         bool selfTesting;
+        bool shipTesting;
+        string dragSlider;
+        readonly Queue<PointerInject> pointerInject = new Queue<PointerInject>();
         GameObject eventSystem;
         RenderTexture readRt;
         Texture2D readTex;
@@ -73,7 +77,7 @@ namespace OrbitalSalvage.Viewer
         public static bool ShouldStart(string[] args)
         {
             if (Array.IndexOf(args, "--parity") >= 0) return false;
-            if (SelfTestDirectory(args) != null || LiveSelfTestDirectory(args) != null || PerfScenario(args) != null || AppSelfTestDirectory(args) != null) return true;
+            if (SelfTestDirectory(args) != null || LiveSelfTestDirectory(args) != null || PerfScenario(args) != null || AppSelfTestDirectory(args) != null || ShipSelfTestDirectory(args) != null) return true;
             if (IsOptOut(args)) return false;
 #if UNITY_EDITOR
             if (!UnityEditor.EditorPrefs.GetBool(ParityPages.EnabledPrefKey, true)) return false;
@@ -124,6 +128,23 @@ namespace OrbitalSalvage.Viewer
         public static string AppSelfTestDirectory(string[] args)
         {
             return ArgDirectory(args, AppSelfTestFlag);
+        }
+
+        public static string ShipSelfTestDirectory(string[] args)
+        {
+            return ArgDirectory(args, ShipSelfTestFlag);
+        }
+
+        /// <summary>True when a flag-free launch runs the Canvas2D app instead of a parity capture.</summary>
+        public static bool ProductBoot(string[] args)
+        {
+            if (args == null) args = new string[0];
+            if (Array.IndexOf(args, "--parity") >= 0) return false;
+            if (SelfTestDirectory(args) != null || LiveSelfTestDirectory(args) != null || PerfScenario(args) != null || AppSelfTestDirectory(args) != null) return false;
+            if (Array.IndexOf(args, "-parity-app-flows") >= 0) return false;
+            if (ShipSelfTestDirectory(args) != null) return true;
+            if (IsOptOut(args)) return false;
+            return true;
         }
 
         static string ArgDirectory(string[] args, string flag)
@@ -186,13 +207,22 @@ namespace OrbitalSalvage.Viewer
                 StartCoroutine(AppSelfTest(appDir));
                 return;
             }
+            string shipDir = ShipSelfTestDirectory(args);
+            if (shipDir != null)
+            {
+                selfTesting = true;
+                shipTesting = true;
+                liveVisual = true;
+                StartCoroutine(ShipSelfTest(shipDir));
+                return;
+            }
             BootApp();
         }
 
         void LateUpdate()
         {
             SuppressLegacy();
-            if (selfTesting) return;
+            if (selfTesting && !shipTesting) return;
             if (app != null) SyncApp();
             HandleInput();
             Tick();
@@ -338,12 +368,36 @@ namespace OrbitalSalvage.Viewer
             }
             bool playing = app != null && app.CurrentPage == "game" && session != null && !app.ModalOpen("modal-pause")
                 && !app.ModalOpen("modal-debrief") && !app.ModalOpen("modal-defeat");
-            if (playing && !debugNav) HandlePlayPointer();
+            if (pointerInject.Count > 0)
+            {
+                var injected = pointerInject.Dequeue();
+                if (injected.Up) Release();
+                else Arm(injected.Screen);
+            }
+            else if (playing && !debugNav) HandlePlayPointer();
             else
             {
                 if (PointerDown(out var down)) Arm(down);
+                if (!string.IsNullOrEmpty(dragSlider) && PointerHeld(out var held)) DragSlider(held);
                 if (PointerUp()) Release();
             }
+        }
+
+        struct PointerInject
+        {
+            public bool Up;
+            public Vector2 Screen;
+        }
+
+        /// <summary>Same Arm/Release path a real pointer uses. Screen origin is bottom-left, as <c>Input.mousePosition</c>.</summary>
+        public void InjectPointerDown(Vector2 screenBottomLeft)
+        {
+            pointerInject.Enqueue(new PointerInject { Up = false, Screen = screenBottomLeft });
+        }
+
+        public void InjectPointerUp()
+        {
+            pointerInject.Enqueue(new PointerInject { Up = true });
         }
 
         static bool PointerUp()
@@ -356,10 +410,22 @@ namespace OrbitalSalvage.Viewer
             return Input.GetMouseButtonUp(0);
         }
 
+        static bool PointerHeld(out Vector2 screen)
+        {
+            if (Input.touchCount > 0)
+            {
+                var touch = Input.GetTouch(0);
+                screen = touch.position;
+                return touch.phase == TouchPhase.Moved || touch.phase == TouchPhase.Stationary;
+            }
+            screen = Input.mousePosition;
+            return Input.GetMouseButton(0);
+        }
+
         void Arm(Vector2 screen)
         {
             if (currentId == null) return;
-            var box = Letterbox(Screen.width, Screen.height);
+            var box = PageRect();
             if (!TryCss(box, screen, out double cssX, out double cssY)) return;
             string spec = Spec(currentId);
             if (ParityPages.TryPressAt(spec, cssX, cssY, out int index, out string transform))
@@ -367,10 +433,33 @@ namespace OrbitalSalvage.Viewer
                 pressIndex = index;
                 pressCss = transform;
             }
+            dragSlider = null;
             if (debugNav || app == null)
                 armedEdge = ParityPages.HitEdge(currentId, spec, cssX, cssY);
             else
+            {
                 armedControl = ParityPages.TryHitControl(spec, cssX, cssY, out armedHit);
+                if (armedControl && (armedHit.Id == "settings-sfx-slider" || armedHit.Id == "settings-ambience-slider"))
+                {
+                    dragSlider = armedHit.Id;
+                    ApplySlider(spec, cssX);
+                }
+            }
+        }
+
+        void DragSlider(Vector2 screen)
+        {
+            if (app == null || currentId == null) return;
+            var box = PageRect();
+            if (!TryCss(box, screen, out double cssX, out _)) return;
+            ApplySlider(Spec(currentId), cssX);
+        }
+
+        void ApplySlider(string spec, double cssX)
+        {
+            if (app == null || string.IsNullOrEmpty(dragSlider)) return;
+            if (!ParityPages.TryRect(spec, dragSlider, out double x, out _, out double w, out _)) return;
+            app.SetSlider(dragSlider, ParityPages.SliderValue(cssX, x, w));
         }
 
         void Release()
@@ -382,6 +471,7 @@ namespace OrbitalSalvage.Viewer
             pressCss = null;
             armedEdge = null;
             armedControl = false;
+            dragSlider = null;
             if (debugNav)
             {
                 if (edge != null) Activate(edge);
@@ -425,27 +515,55 @@ namespace OrbitalSalvage.Viewer
             return json;
         }
 
-        /// <summary>Centered 430:932 rect. y is the bottom in screen pixels; for a centered box that equals the GUI top.</summary>
+        /// <summary>Centered 430:932 rect in a full window. y is the bottom in screen pixels.</summary>
         public static Rect Letterbox(int screenW, int screenH)
         {
+            return FitPage(new Rect(0f, 0f, screenW, screenH));
+        }
+
+        /// <summary>
+        /// Scale the 430×932 portrait page into <paramref name="fit"/> (the window, or <see cref="Screen.safeArea"/>).
+        /// Landscape keeps this portrait page and letterboxes it; there is no separate landscape layout.
+        /// The painter raster is the spec viewport (its scale is the capture device pixel ratio) stretched into this rect.
+        /// </summary>
+        public static Rect FitPage(Rect fit)
+        {
             float aspect = ParityPages.CssWidth / (float)ParityPages.CssHeight;
-            float sa = screenW / (float)Mathf.Max(1, screenH);
+            float fw = Mathf.Max(1f, fit.width);
+            float fh = Mathf.Max(1f, fit.height);
+            float sa = fw / fh;
             float dw, dh, dx, dy;
             if (sa > aspect)
             {
-                dh = screenH;
+                dh = fh;
                 dw = dh * aspect;
-                dx = (screenW - dw) * 0.5f;
-                dy = 0f;
+                dx = fit.x + (fw - dw) * 0.5f;
+                dy = fit.y;
             }
             else
             {
-                dw = screenW;
+                dw = fw;
                 dh = dw / aspect;
-                dx = 0f;
-                dy = (screenH - dh) * 0.5f;
+                dx = fit.x;
+                dy = fit.y + (fh - dh) * 0.5f;
             }
             return new Rect(dx, dy, dw, dh);
+        }
+
+        /// <summary>Page rect for this frame: the portrait page fitted inside the device safe area.</summary>
+        public static Rect PageRect()
+        {
+            Rect safe = Screen.safeArea;
+            if (safe.width < 8f || safe.height < 8f)
+                safe = new Rect(0f, 0f, Screen.width, Screen.height);
+            return FitPage(safe);
+        }
+
+        public static Vector2 CssToScreen(Rect box, double cssX, double cssY)
+        {
+            float x = box.x + (float)(cssX / ParityPages.CssWidth * box.width);
+            float y = box.y + box.height - (float)(cssY / ParityPages.CssHeight * box.height);
+            return new Vector2(x, y);
         }
 
         public static bool TryCss(Rect box, Vector2 screenBottomLeft, out double cssX, out double cssY)
@@ -464,7 +582,7 @@ namespace OrbitalSalvage.Viewer
             if (black == null || Screen.width < 2 || Screen.height < 2) return;
             var full = new Rect(0, 0, Screen.width, Screen.height);
             GUI.DrawTexture(full, black, ScaleMode.StretchToFill, false);
-            var letter = Letterbox(Screen.width, Screen.height);
+            var letter = PageRect();
             if (ShowPlayfield && session.Renderer.Target != null)
                 GUI.DrawTexture(letter, session.Renderer.Target, ScaleMode.StretchToFill, true);
             if (current != null && current.Target != null)
@@ -550,7 +668,7 @@ namespace OrbitalSalvage.Viewer
                 held = Input.GetMouseButton(0);
                 up = Input.GetMouseButtonUp(0);
             }
-            var box = Letterbox(Screen.width, Screen.height);
+            var box = PageRect();
             if (!TryCss(box, screen, out double cssX, out double cssY))
             {
                 if (up) session.PointerUp();

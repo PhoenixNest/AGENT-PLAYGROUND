@@ -8,13 +8,12 @@ using UnityEngine;
 namespace OrbitalSalvage.Render
 {
     /// <summary>
-    /// Draws the home screen from the web's measured layout (<c>Resources/Parity/Spec/home__&lt;profile&gt;.json</c>, distilled from
-    /// <c>tools/parity/web/dump-spec.mjs</c> by <c>web/distill-spec.mjs</c>) with <see cref="Canvas2D"/>: every visible element is a
-    /// <see cref="CssBox"/> plus its text runs (outline glyph text) and emoji images, at the rect Chromium reports in CSS px.
-    /// The spec carries a rect set per safe-area profile, so zero and iphone differ exactly as measured.
-    /// Deferred (not drawn, listed in <see cref="Deferred"/>): filters and CSS animations
-    /// other than the play-button shine (elements sit at their measured rect; the shine uses its sampled matrix).
-    /// Blurred inset shadows are drawn (cycle 15).
+    /// Draws a painted page from the web's measured layout (<c>Resources/Parity/Spec/&lt;state&gt;__&lt;profile&gt;.json</c>)
+    /// with <see cref="Canvas2D"/>: visible elements are <see cref="CssBox"/>es, outline glyph text, and emoji images at the
+    /// CSS rects Chromium reported. The spec's viewport scale is the capture device pixel ratio. The shipping player
+    /// (<c>ParityViewer</c>) letterboxes that raster into the window safe area; this type does not do window fit.
+    /// Infinite CSS animations set <see cref="Loops"/> and are sampled from the draw clock. Strict still parity is not
+    /// finished: several pages sit under the 99.0% / 0.985 bar, mostly on text-edge coverage.
     /// </summary>
     public sealed class HomeChrome : IDisposable
     {

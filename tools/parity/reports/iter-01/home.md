@@ -1,17 +1,16 @@
 # iter-01: home_default from the web's measured layout
 
-The home screen (`home_default`, both profiles) is drawn by `HomeChrome` + `CssBox` (Canvas2D, outline text) from the layout Chromium measured, instead of the legacy UI. Other states keep the legacy UI.
+The home screen (`home_default`) is drawn by `HomeChrome` + `CssBox` (Canvas2D, outline text) from the layout Chromium measured. The legacy uGUI stack is retired. The shipping player (`ParityViewer`) uses this painter for every page it owns. Re-measured 2026-10-04, zero profile, SPEC section 2 bar (99.0% / SSIM 0.985): home is **98.67% / 0.9799** (fail). The miss is mostly text-edge coverage (Chromium DirectWrite vs the painter's exact-area coverage). This is not a completed UI restoration.
 
 Pipeline: `node web/dump-spec.mjs --only home` (the dump entry is named `home`; `--only` already filters by entry) -> `out/web/spec/home__<profile>.json` -> `node web/distill-spec.mjs --page home` -> `Assets/Resources/Parity/Spec/home__<profile>.json` -> `HomeChrome.Draw()` at scale 3 into a 1290 x 2796 canvas -> `Graphics.CopyTexture` into the parity render target that `ReadPng` reads. `ParityRunner.Capture` deactivates `AppRoot/Page_Home` for this state.
 
 ## Result (diff.py, SPEC section 2 bar: 99.0 % pixels, SSIM 0.985)
 
-| state | profile | pixels % (within 16) | SSIM |
-|---|---|---:|---:|
-| home_default | zero | 93.22 | 0.9602 |
-| home_default | iphone | 93.31 | 0.9604 |
+| state | profile | pixels % (within 16) | SSIM | bar |
+|---|---|---:|---:|---|
+| home_default | zero | 98.67 | 0.9799 | fail (re-measured 2026-10-04; game and pause SHA256 unchanged from the baseline stills) |
 
-Not a pass, and not expected to be: the diorama, pedestal and CSS animations are deferred. Sub-regions (pixels % within 16):
+The 93% figures from the first paint are superseded. Sub-regions below are from that first pass, not re-cut on 2026-10-04:
 
 | region | zero | iphone |
 |---|---:|---:|
@@ -33,7 +32,7 @@ The first capture had no blank frame, wrong page, flipped y or visible legacy UI
 - backdrop-filter (launch console, dock): only the translucent background colour is drawn.
 - filter: drop-shadow (the 6 background debris emoji, star) and blur.
 - Inset box-shadows (diorama ring, pedestal).
-- CSS animations in general: elements are drawn once at the rect measured at the capture time (sunburst rotation, ring float, nibbles idle, tag pulse).
+- CSS animations: infinite animations set `Loops` and are sampled from the draw clock. The region table above is from the first paint, before that sampling. Text-edge coverage is still the main miss on the 2026-10-04 home still (98.67% / 0.9799).
 - Elliptical radial gradients (only circle is implemented), element transforms other than the rect they produce.
 
 ## Files
