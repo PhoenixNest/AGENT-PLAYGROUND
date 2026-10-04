@@ -146,6 +146,14 @@ namespace OrbitalSalvage.Viewer
                 StartCoroutine(SelfTest(self));
                 return;
             }
+            string flowDir = ArgDirectory(args, "-parity-app-flows");
+            if (flowDir != null)
+            {
+                selfTesting = true;
+                liveVisual = true;
+                StartCoroutine(FlowShots(flowDir));
+                return;
+            }
             string appDir = AppSelfTestDirectory(args);
             if (appDir != null)
             {
@@ -452,7 +460,7 @@ namespace OrbitalSalvage.Viewer
 
         static bool IsGamePage(string id)
         {
-            return id == "game_lvl01_t1000ms" || id == "modal_pause"
+            return id == "game_lvl01_t1000ms" || id == "game_daily_bronze_t1000" || id == "modal_pause"
                 || id == "modal_debrief_exact" || id == "modal_defeat_12_of_20";
         }
 

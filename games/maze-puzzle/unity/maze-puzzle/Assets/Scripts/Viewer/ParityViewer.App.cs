@@ -200,6 +200,255 @@ namespace OrbitalSalvage.Viewer
             SyncApp(true);
         }
 
+        double pageShownAt;
+        double modalShownAt;
+        string flowPage = "";
+        string flowModal = "";
+        byte[] blankFlowPng;
+
+        IEnumerator FlowShots(string dir)
+        {
+            yield return null;
+            Directory.CreateDirectory(dir);
+            string golden = Path.GetFullPath(Path.Combine(dir, "..", "..", "..", "golden", "app"));
+            int written = 0;
+            string error = null;
+            try
+            {
+                var files = Directory.GetFiles(golden, "*.json");
+                Array.Sort(files, StringComparer.Ordinal);
+                foreach (string file in files)
+                {
+                    JsonValue root = JsonParser.Parse(File.ReadAllText(file));
+                    string id = root.Get("id").String;
+                    JsonValue trace = root.Get("trace");
+                    JsonValue first = trace[0].Get("snap");
+                    double epoch0 = first.Get("epochMs").Number - first.Get("nowMs").Number;
+                    for (int i = 0; i < trace.Count; i++)
+                    {
+                        JsonValue step = trace[i];
+                        string op = step.Get("op").String;
+                        if (op == "boot" || op == "bootHome")
+                        {
+                            BootApp(new ManualAppClock(0, epoch0), true, false);
+                            ResetFlowClock();
+                            if (op == "bootHome")
+                            {
+                                int guard = 0;
+                                while (app.CurrentPage != "home" && guard++ < 2000)
+                                {
+                                    app.Advance(16);
+                                    NoteFlowClock();
+                                }
+                                AdvanceFlow(240);
+                            }
+                        }
+                        else if (op == "advance") AdvanceFlow(step.Get("ms").Number);
+                        else if (op == "click")
+                        {
+                            JsonValue idNode = step.Get("id");
+                            if (idNode != null && idNode.Kind == JsonKind.String) app.Click(idNode.String);
+                            else app.ClickClass(step.Get("token").String, (int)step.Get("index").Number);
+                            NoteFlowClock();
+                        }
+                        else if (op == "forceWin")
+                        {
+                            app.ForceVictory(step.Get("collectedMass").Number);
+                            NoteFlowClock();
+                        }
+                        else if (op == "forceLose")
+                        {
+                            app.ForceDefeat(step.Get("collectedMass").Number, step.Get("spilledMass").Number);
+                            NoteFlowClock();
+                        }
+                        else if (op == "settings")
+                        {
+                            app.SetSoundEnabled(step.Get("sound").Bool);
+                            app.SetHaptics(step.Get("haptics").Bool);
+                            app.SetSlider("settings-sfx-slider", (int)step.Get("sfx").Number);
+                            app.SetSlider("settings-ambience-slider", (int)step.Get("ambience").Number);
+                            NoteFlowClock();
+                        }
+                        SyncApp(true);
+                        string name = id + "_" + (i + 1).ToString("00") + ".png";
+                        File.WriteAllBytes(Path.Combine(dir, name), FlowFrame());
+                        written++;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                error = ex.ToString();
+                Debug.LogError("[ParityViewer] flow shots " + ex);
+            }
+            File.WriteAllText(Path.Combine(dir, "flows.json"), "{\"ok\":" + (error == null ? "true" : "false") + ",\"steps\":" + written + ",\"error\":\"" + (error ?? "").Replace("\\", "\\\\").Replace("\"", "'") + "\"}");
+            if (!Application.isEditor) Application.Quit(error == null ? 0 : 1);
+        }
+
+        void ResetFlowClock()
+        {
+            flowPage = app.CurrentPage ?? "";
+            flowModal = FlowModalKey();
+            pageShownAt = app.NowMs;
+            modalShownAt = app.NowMs;
+        }
+
+        void NoteFlowClock()
+        {
+            string page = app.CurrentPage ?? "";
+            string modal = FlowModalKey();
+            if (page != flowPage)
+            {
+                flowPage = page;
+                pageShownAt = app.NowMs;
+            }
+            if (modal != flowModal)
+            {
+                flowModal = modal;
+                modalShownAt = app.NowMs;
+            }
+        }
+
+        void AdvanceFlow(double ms)
+        {
+            double left = ms;
+            while (left > 0.0001)
+            {
+                double step = left > 16 ? 16 : left;
+                app.Advance(step);
+                left -= step;
+                NoteFlowClock();
+            }
+        }
+
+        string FlowModalKey()
+        {
+            var open = app.OpenModals();
+            if (open.Count == 0) return "";
+            var sb = new StringBuilder();
+            for (int i = 0; i < open.Count; i++)
+            {
+                if (i > 0) sb.Append(',');
+                sb.Append(open[i]);
+            }
+            return sb.ToString();
+        }
+
+        /// <summary>
+        /// Web screenshots are taken on the harness clock. pageEnter (0.22s) is still at opacity 0
+        /// until time advances, and a modal opened at the end of an advance is still at its
+        /// transition start (overlay opacity 0, card translateY(100%)).
+        /// </summary>
+        byte[] FlowFrame()
+        {
+            double pageAge = app.NowMs - pageShownAt;
+            if (pageAge < 0) pageAge = 0;
+            if (pageAge < 1)
+            {
+                if (current != null) current.DrawBackdropToasts();
+                return current != null && current.Target != null ? ReadPng(current.Target) : BlankFlowPng();
+            }
+            double modalAge = app.NowMs - modalShownAt;
+            if (app.OpenModals().Count > 0 && modalAge < 24)
+            {
+                string stamp;
+                string pageId = app.TemplateWithoutModal(out stamp);
+                Show(pageId, stamp);
+                ApplyOverrides(true);
+            }
+            byte[] png = FramePng();
+            if (pageAge < 220) png = PageEnterPng(pageAge / 220.0);
+            return png;
+        }
+
+        byte[] BlankFlowPng()
+        {
+            if (blankFlowPng != null) return blankFlowPng;
+            const int w = 1290;
+            const int h = 2796;
+            var tex = new Texture2D(w, h, TextureFormat.RGB24, false, true) { hideFlags = HideFlags.HideAndDontSave };
+            var px = new Color32[w * h];
+            var bg = new Color32(30, 27, 75, 255);
+            for (int i = 0; i < px.Length; i++) px[i] = bg;
+            tex.SetPixels32(px);
+            tex.Apply(false);
+            blankFlowPng = tex.EncodeToPNG();
+            Destroy(tex);
+            return blankFlowPng;
+        }
+
+        byte[] PageEnterPng(double linearT)
+        {
+            if (readTex == null) return FramePng();
+            float eased = EaseOut((float)linearT);
+            float scale = Mathf.Lerp(0.96f, 1f, eased);
+            float ty = Mathf.Lerp(8f, 0f, eased) * (readTex.height / 932f);
+            int w = readTex.width;
+            int h = readTex.height;
+            Color32[] src = readTex.GetPixels32();
+            var dst = new Color32[src.Length];
+            var bg = new Color32(30, 27, 75, 255);
+            float cx = (w - 1) * 0.5f;
+            float cy = (h - 1) * 0.5f;
+            float inv = scale > 0.0001f ? 1f / scale : 1f;
+            for (int y = 0; y < h; y++)
+            {
+                int cssY = h - 1 - y;
+                float ly = (cssY - cy) * inv - ty;
+                int sy = (int)Math.Round(cy + ly);
+                int row = y * w;
+                for (int x = 0; x < w; x++)
+                {
+                    float sx = cx + (x - cx) * inv;
+                    int ix = (int)Math.Round(sx);
+                    Color32 sample = bg;
+                    if (ix >= 0 && ix < w && sy >= 0 && sy < h)
+                    {
+                        int texY = h - 1 - sy;
+                        sample = src[texY * w + ix];
+                    }
+                    dst[row + x] = Blend(sample, bg, eased);
+                }
+            }
+            readTex.SetPixels32(dst);
+            readTex.Apply(false);
+            return readTex.EncodeToPNG();
+        }
+
+        static Color32 Blend(Color32 sample, Color32 bg, float opacity)
+        {
+            float t = opacity;
+            if (t < 0) t = 0;
+            if (t > 1) t = 1;
+            return new Color32(
+                (byte)(sample.r * t + bg.r * (1f - t) + 0.5f),
+                (byte)(sample.g * t + bg.g * (1f - t) + 0.5f),
+                (byte)(sample.b * t + bg.b * (1f - t) + 0.5f),
+                255);
+        }
+
+        /// <summary>CSS ease-out, cubic-bezier(0, 0, 0.58, 1).</summary>
+        static float EaseOut(float t)
+        {
+            if (t <= 0) return 0;
+            if (t >= 1) return 1;
+            float lo = 0, hi = 1, u = t;
+            for (int i = 0; i < 14; i++)
+            {
+                float x = Bezier(u, 0f, 0.58f);
+                if (x < t) lo = u;
+                else hi = u;
+                u = (lo + hi) * 0.5f;
+            }
+            return Bezier(u, 0f, 1f);
+        }
+
+        static float Bezier(float u, float c1, float c2)
+        {
+            float o = 1f - u;
+            return 3f * o * o * u * c1 + 3f * o * u * u * c2 + u * u * u;
+        }
+
         IEnumerator AppSelfTest(string dir)
         {
             Application.runInBackground = true;

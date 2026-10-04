@@ -12,6 +12,15 @@ import { launchBrowser, Session } from "./harness.mjs";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const outDir = join(here, "..", "golden", "app");
+const shotDir = join(here, "..", "out", "app-flows", "web");
+
+async function record(session, trace, step) {
+  trace.push(step);
+  await session.page.evaluate(() => window.__parity.waitEmoji());
+  const png = await session.page.screenshot({ animations: "allow", caret: "hide" });
+  const name = `${session.stateId}_${String(trace.length).padStart(2, "0")}.png`;
+  writeFileSync(join(shotDir, name), png);
+}
 
 const norm = (s) => (s == null ? "" : String(s).replace(/\s+/g, " ").trim());
 
@@ -132,11 +141,11 @@ export const FLOWS = [
     id: "boot_home",
     async run(session, trace) {
       await session.boot({ completeLoading: false });
-      trace.push({ op: "boot", snap: await snap(session) });
+      await record(session, trace, { op: "boot", snap: await snap(session) });
       for (let i = 0; i < 30; i++) {
         if ((await session.page.evaluate(() => window.app.currentPage)) === "home") break;
         await session.advance(240);
-        trace.push({ op: "advance", ms: 240, snap: await snap(session) });
+        await record(session, trace, { op: "advance", ms: 240, snap: await snap(session) });
       }
     },
   },
@@ -144,84 +153,84 @@ export const FLOWS = [
     id: "shop_buy",
     async run(session, trace) {
       await bootHome(session);
-      trace.push({ op: "bootHome", snap: await snap(session) });
+      await record(session, trace, { op: "bootHome", snap: await snap(session) });
       const quota = await session.page.evaluate(() => window.app.activeSector.quota);
       await forceWin(session, quota);
-      trace.push({ op: "forceWin", collectedMass: quota, snap: await snap(session) });
+      await record(session, trace, { op: "forceWin", collectedMass: quota, snap: await snap(session) });
       await session.advance(600);
-      trace.push({ op: "advance", ms: 600, snap: await snap(session) });
+      await record(session, trace, { op: "advance", ms: 600, snap: await snap(session) });
       await clickSel(session, "#btn-debrief-next");
-      trace.push({ op: "click", selector: "#btn-debrief-next", snap: await snap(session) });
+      await record(session, trace, { op: "click", selector: "#btn-debrief-next", snap: await snap(session) });
       await clickSel(session, "#btn-open-shop-page");
-      trace.push({ op: "click", selector: "#btn-open-shop-page", snap: await snap(session) });
+      await record(session, trace, { op: "click", selector: "#btn-open-shop-page", snap: await snap(session) });
       await clickSel(session, ".btn-buy-item", 0);
-      trace.push({ op: "click", selector: ".btn-buy-item", index: 0, snap: await snap(session) });
+      await record(session, trace, { op: "click", selector: ".btn-buy-item", index: 0, snap: await snap(session) });
     },
   },
   {
     id: "shop_equip",
     async run(session, trace) {
       await bootHome(session);
-      trace.push({ op: "bootHome", snap: await snap(session) });
+      await record(session, trace, { op: "bootHome", snap: await snap(session) });
       const mass = await session.page.evaluate(() => window.app.activeSector.quota + 250);
       await forceWin(session, mass);
-      trace.push({ op: "forceWin", collectedMass: mass, snap: await snap(session) });
+      await record(session, trace, { op: "forceWin", collectedMass: mass, snap: await snap(session) });
       await session.advance(600);
-      trace.push({ op: "advance", ms: 600, snap: await snap(session) });
+      await record(session, trace, { op: "advance", ms: 600, snap: await snap(session) });
       await clickSel(session, "#btn-debrief-next");
-      trace.push({ op: "click", selector: "#btn-debrief-next", snap: await snap(session) });
+      await record(session, trace, { op: "click", selector: "#btn-debrief-next", snap: await snap(session) });
       await clickSel(session, "#btn-open-shop-page");
-      trace.push({ op: "click", selector: "#btn-open-shop-page", snap: await snap(session) });
+      await record(session, trace, { op: "click", selector: "#btn-open-shop-page", snap: await snap(session) });
       await clickSel(session, ".tab-btn", 1);
-      trace.push({ op: "click", selector: ".tab-btn", index: 1, snap: await snap(session) });
+      await record(session, trace, { op: "click", selector: ".tab-btn", index: 1, snap: await snap(session) });
       await clickSel(session, ".btn-buy-item", 0);
-      trace.push({ op: "click", selector: ".btn-buy-item", index: 0, snap: await snap(session) });
+      await record(session, trace, { op: "click", selector: ".btn-buy-item", index: 0, snap: await snap(session) });
       await clickSel(session, ".btn-equip-item", 0);
-      trace.push({ op: "click", selector: ".btn-equip-item", index: 0, snap: await snap(session) });
+      await record(session, trace, { op: "click", selector: ".btn-equip-item", index: 0, snap: await snap(session) });
     },
   },
   {
     id: "claim_gift",
     async run(session, trace) {
       await bootHome(session);
-      trace.push({ op: "bootHome", snap: await snap(session) });
+      await record(session, trace, { op: "bootHome", snap: await snap(session) });
       await clickSel(session, "#btn-open-shop-page");
-      trace.push({ op: "click", selector: "#btn-open-shop-page", snap: await snap(session) });
+      await record(session, trace, { op: "click", selector: "#btn-open-shop-page", snap: await snap(session) });
       await clickSel(session, "#btn-claim-daily-gift");
-      trace.push({ op: "click", selector: "#btn-claim-daily-gift", snap: await snap(session) });
+      await record(session, trace, { op: "click", selector: "#btn-claim-daily-gift", snap: await snap(session) });
     },
   },
   {
     id: "daily_chain",
     async run(session, trace) {
       await bootHome(session);
-      trace.push({ op: "bootHome", snap: await snap(session) });
+      await record(session, trace, { op: "bootHome", snap: await snap(session) });
       await clickSel(session, "#btn-open-daily-shift");
-      trace.push({ op: "click", selector: "#btn-open-daily-shift", snap: await snap(session) });
+      await record(session, trace, { op: "click", selector: "#btn-open-daily-shift", snap: await snap(session) });
       await clickSel(session, ".btn-play-daily-tier", 0);
-      trace.push({ op: "click", selector: ".btn-play-daily-tier", index: 0, snap: await snap(session) });
+      await record(session, trace, { op: "click", selector: ".btn-play-daily-tier", index: 0, snap: await snap(session) });
       for (let i = 0; i < 3; i++) {
         const mass = await session.page.evaluate(() => window.app.activeSector.quota);
         await forceWin(session, mass);
-        trace.push({ op: "forceWin", collectedMass: mass, snap: await snap(session) });
+        await record(session, trace, { op: "forceWin", collectedMass: mass, snap: await snap(session) });
         await session.advance(600);
-        trace.push({ op: "advance", ms: 600, snap: await snap(session) });
+        await record(session, trace, { op: "advance", ms: 600, snap: await snap(session) });
         await clickSel(session, "#btn-debrief-next");
-        trace.push({ op: "click", selector: "#btn-debrief-next", snap: await snap(session) });
+        await record(session, trace, { op: "click", selector: "#btn-debrief-next", snap: await snap(session) });
       }
       await session.advance(1200);
-      trace.push({ op: "advance", ms: 1200, snap: await snap(session) });
+      await record(session, trace, { op: "advance", ms: 1200, snap: await snap(session) });
       await clickSel(session, "#btn-claim-master-bonus");
-      trace.push({ op: "click", selector: "#btn-claim-master-bonus", snap: await snap(session) });
+      await record(session, trace, { op: "click", selector: "#btn-claim-master-bonus", snap: await snap(session) });
     },
   },
   {
     id: "settings_reset",
     async run(session, trace) {
       await bootHome(session);
-      trace.push({ op: "bootHome", snap: await snap(session) });
+      await record(session, trace, { op: "bootHome", snap: await snap(session) });
       await clickSel(session, "#btn-home-settings");
-      trace.push({ op: "click", selector: "#btn-home-settings", snap: await snap(session) });
+      await record(session, trace, { op: "click", selector: "#btn-home-settings", snap: await snap(session) });
       await session.page.evaluate(() => {
         const sound = document.getElementById("settings-sound-toggle");
         sound.checked = false;
@@ -237,7 +246,7 @@ export const FLOWS = [
         amb.dispatchEvent(new Event("input", { bubbles: true }));
       });
       await session.endOp();
-      trace.push({
+      await record(session, trace, {
         op: "settings",
         sound: false,
         haptics: false,
@@ -246,66 +255,66 @@ export const FLOWS = [
         snap: await snap(session),
       });
       await clickSel(session, "#btn-reset-game-data");
-      trace.push({ op: "click", selector: "#btn-reset-game-data", snap: await snap(session) });
+      await record(session, trace, { op: "click", selector: "#btn-reset-game-data", snap: await snap(session) });
       await clickSel(session, "#btn-confirm-reset");
-      trace.push({ op: "click", selector: "#btn-confirm-reset", snap: await snap(session) });
+      await record(session, trace, { op: "click", selector: "#btn-confirm-reset", snap: await snap(session) });
     },
   },
   {
     id: "maps_start",
     async run(session, trace) {
       await bootHome(session);
-      trace.push({ op: "bootHome", snap: await snap(session) });
+      await record(session, trace, { op: "bootHome", snap: await snap(session) });
       await clickSel(session, "#btn-open-maps-page");
-      trace.push({ op: "click", selector: "#btn-open-maps-page", snap: await snap(session) });
+      await record(session, trace, { op: "click", selector: "#btn-open-maps-page", snap: await snap(session) });
       await clickSel(session, ".world-tab-btn", 2);
-      trace.push({ op: "click", selector: ".world-tab-btn", index: 2, snap: await snap(session) });
+      await record(session, trace, { op: "click", selector: ".world-tab-btn", index: 2, snap: await snap(session) });
       await clickSel(session, ".world-tab-btn", 0);
-      trace.push({ op: "click", selector: ".world-tab-btn", index: 0, snap: await snap(session) });
+      await record(session, trace, { op: "click", selector: ".world-tab-btn", index: 0, snap: await snap(session) });
       await clickSel(session, ".level-tile", 3);
-      trace.push({ op: "click", selector: ".level-tile", index: 3, snap: await snap(session) });
+      await record(session, trace, { op: "click", selector: ".level-tile", index: 3, snap: await snap(session) });
     },
   },
   {
     id: "level_win",
     async run(session, trace) {
       await bootHome(session);
-      trace.push({ op: "bootHome", snap: await snap(session) });
+      await record(session, trace, { op: "bootHome", snap: await snap(session) });
       await clickSel(session, "#btn-home-play");
-      trace.push({ op: "click", selector: "#btn-home-play", snap: await snap(session) });
+      await record(session, trace, { op: "click", selector: "#btn-home-play", snap: await snap(session) });
       const mass = await session.page.evaluate(() => window.app.activeSector.quota + 5);
       await forceWin(session, mass);
-      trace.push({ op: "forceWin", collectedMass: mass, snap: await snap(session) });
+      await record(session, trace, { op: "forceWin", collectedMass: mass, snap: await snap(session) });
       await session.advance(600);
-      trace.push({ op: "advance", ms: 600, snap: await snap(session) });
+      await record(session, trace, { op: "advance", ms: 600, snap: await snap(session) });
       await clickSel(session, "#btn-debrief-next");
-      trace.push({ op: "click", selector: "#btn-debrief-next", snap: await snap(session) });
+      await record(session, trace, { op: "click", selector: "#btn-debrief-next", snap: await snap(session) });
     },
   },
   {
     id: "defeat_backup",
     async run(session, trace) {
       await bootHome(session);
-      trace.push({ op: "bootHome", snap: await snap(session) });
+      await record(session, trace, { op: "bootHome", snap: await snap(session) });
       await clickSel(session, "#btn-home-play");
-      trace.push({ op: "click", selector: "#btn-home-play", snap: await snap(session) });
+      await record(session, trace, { op: "click", selector: "#btn-home-play", snap: await snap(session) });
       const masses = await session.page.evaluate(() => {
         const quota = window.app.activeSector.quota;
         return { collected: Math.ceil(quota * 0.7), spilled: 9 };
       });
       await forceLose(session, masses.collected, masses.spilled);
-      trace.push({
+      await record(session, trace, {
         op: "forceLose",
         collectedMass: masses.collected,
         spilledMass: masses.spilled,
         snap: await snap(session),
       });
       await session.advance(400);
-      trace.push({ op: "advance", ms: 400, snap: await snap(session) });
+      await record(session, trace, { op: "advance", ms: 400, snap: await snap(session) });
       await clickSel(session, "#btn-defeat-backup");
-      trace.push({ op: "click", selector: "#btn-defeat-backup", snap: await snap(session) });
+      await record(session, trace, { op: "click", selector: "#btn-defeat-backup", snap: await snap(session) });
       await forceLose(session, masses.collected, masses.spilled);
-      trace.push({
+      await record(session, trace, {
         op: "forceLose",
         collectedMass: masses.collected,
         spilledMass: masses.spilled,
@@ -327,6 +336,7 @@ async function main() {
   const onlyArg = process.argv.indexOf("--only");
   const only = onlyArg >= 0 ? new Set(process.argv[onlyArg + 1].split(",")) : null;
   mkdirSync(outDir, { recursive: true });
+  mkdirSync(shotDir, { recursive: true });
   const browser = await launchBrowser();
   try {
     for (const flow of FLOWS) {
