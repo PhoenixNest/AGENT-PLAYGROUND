@@ -40,6 +40,7 @@ namespace OrbitalSalvage.Viewer
         readonly UiClock clock = new UiClock();
         HomeChrome current;
         string currentId;
+        string shownKey;
         LiveGameSession session;
         bool liveVisual = true;
         string lastQuota;
@@ -185,15 +186,20 @@ namespace OrbitalSalvage.Viewer
         }
 
         /// <summary>Same entry the keyboard, the mouse, and the player self-test use.</summary>
-        public void Show(string stateId)
+        public void Show(string stateId) => Show(stateId, null);
+
+        /// <summary>Load <paramref name="stateId"/>. When <paramref name="cardKinds"/> is set, shop cards are instanced from the measured sub-templates.</summary>
+        public void Show(string stateId, string cardKinds)
         {
+            string key = string.IsNullOrEmpty(cardKinds) ? stateId : stateId + "#" + cardKinds;
             if (!ParityPages.IsState(stateId) && !HomeChrome.Applies(stateId)) return;
-            if (currentId == stateId && current != null) return;
-            if (!cache.TryGet(stateId, out var chrome))
+            if (shownKey == key && current != null) return;
+            if (!cache.TryGet(key, out var chrome))
             {
                 try
                 {
                     chrome = HomeChrome.Load(stateId, ParityPages.Profile);
+                    if (!string.IsNullOrEmpty(cardKinds)) StampShop(chrome, cardKinds);
                 }
                 catch (Exception ex)
                 {
@@ -201,7 +207,7 @@ namespace OrbitalSalvage.Viewer
                     return;
                 }
                 evicted.Clear();
-                cache.Add(stateId, chrome, evicted);
+                cache.Add(key, chrome, evicted);
                 for (int i = 0; i < evicted.Count; i++) evicted[i].Dispose();
                 if (WantLiveChrome(stateId)) chrome.SkipPlayfield = true;
             }
@@ -210,6 +216,7 @@ namespace OrbitalSalvage.Viewer
             bool modal = stateId.StartsWith("modal_", StringComparison.Ordinal);
             current = chrome;
             currentId = stateId;
+            shownKey = key;
             if (WantLiveChrome(stateId)) EnsureLive(stateId);
             lastQuota = null;
             pressIndex = -1;

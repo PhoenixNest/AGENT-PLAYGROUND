@@ -82,6 +82,21 @@ namespace OrbitalSalvage.Viewer
             };
         }
 
+        static void StampShop(HomeChrome chrome, string kinds)
+        {
+            var heights = HomeChrome.ShopCardHeights(kinds);
+            if (heights == null) return;
+            var slots = CardInstancer.StackShop(heights);
+            var xs = new double[slots.Length];
+            var ys = new double[slots.Length];
+            for (int i = 0; i < slots.Length; i++)
+            {
+                xs[i] = slots[i].X;
+                ys[i] = slots[i].Y;
+            }
+            chrome.StampShopCards(kinds, xs, ys);
+        }
+
         void SyncApp(bool forceDraw)
         {
             if (app == null) return;
@@ -102,7 +117,7 @@ namespace OrbitalSalvage.Viewer
             }
             if (session != null) session.IsPaused = app.IsPaused;
             string template = app.TemplateId;
-            if (!string.IsNullOrEmpty(template) && template != currentId) Show(template);
+            if (!string.IsNullOrEmpty(template)) Show(template, app.CardStamp);
             ApplyOverrides(forceDraw);
         }
 

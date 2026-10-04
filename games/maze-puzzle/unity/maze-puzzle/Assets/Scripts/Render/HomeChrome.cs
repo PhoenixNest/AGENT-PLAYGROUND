@@ -17,12 +17,30 @@ namespace OrbitalSalvage.Render
     /// </summary>
     public sealed class HomeChrome : IDisposable
     {
-        public static bool Applies(string stateId) =>
-            stateId == "home_default" || stateId == "maps_world_1_fresh" || stateId == "daily_default"
-            || stateId == "shop_rings_default" || stateId == "shop_singularities_default" || stateId == "shop_skyboxes_default"
-            || stateId == "achievements_none" || stateId == "settings_default" || stateId == "game_lvl01_t1000ms"
-            || stateId == "modal_pause" || stateId == "modal_debrief_exact" || stateId == "modal_defeat_12_of_20"
-            || stateId == "loading_t0500" || stateId == "daily_master_ready";
+        public static bool Applies(string stateId)
+        {
+            if (string.IsNullOrEmpty(stateId)) return false;
+            switch (stateId)
+            {
+                case "home_default":
+                case "maps_world_1_fresh":
+                case "daily_default":
+                case "shop_rings_default":
+                case "shop_singularities_default":
+                case "shop_skyboxes_default":
+                case "achievements_none":
+                case "settings_default":
+                case "game_lvl01_t1000ms":
+                case "modal_pause":
+                case "modal_debrief_exact":
+                case "modal_defeat_12_of_20":
+                case "loading_t0500":
+                case "daily_master_ready":
+                    return true;
+            }
+            if (stateId.IndexOf('/') >= 0 || stateId.IndexOf('\\') >= 0 || stateId.IndexOf('#') >= 0) return false;
+            return Resources.Load<TextAsset>("Parity/Spec/" + stateId + "__zero") != null;
+        }
 
         readonly Canvas2D canvas;
         readonly StreamPlayer playfield;
@@ -122,6 +140,40 @@ namespace OrbitalSalvage.Render
                 if (N(am, "it", 1) <= 0) chrome.Loops = true;
             }
             return chrome;
+        }
+
+        static Dictionary<string, List<Dictionary<string, object>>> shopTemplates;
+
+        /// <summary>Replace shop cards with the measured locked / owned / equipped sub-templates, stacked at <paramref name="slotX"/>/<paramref name="slotY"/>.</summary>
+        public void StampShopCards(string kinds, double[] slotX, double[] slotY)
+        {
+            CardStamp.ApplyShop(elements, kinds, ShopTemplates(), slotX, slotY);
+        }
+
+        public static double[] ShopCardHeights(string kinds) => CardStamp.Heights(kinds, ShopTemplates());
+
+        static Dictionary<string, List<Dictionary<string, object>>> ShopTemplates()
+        {
+            if (shopTemplates != null) return shopTemplates;
+            shopTemplates = new Dictionary<string, List<Dictionary<string, object>>>();
+            TakeKind(shopTemplates, "shop_rings_default", "equipped");
+            TakeKind(shopTemplates, "shop_rings_default", "locked");
+            TakeKind(shopTemplates, "shop_rings_mixed", "owned");
+            return shopTemplates;
+        }
+
+        static void TakeKind(Dictionary<string, List<Dictionary<string, object>>> into, string spec, string kind)
+        {
+            if (into.ContainsKey(kind)) return;
+            var asset = Resources.Load<TextAsset>("Parity/Spec/" + spec + "__zero");
+            if (asset == null) return;
+            var root = MiniJson.Parse(asset.text) as Dictionary<string, object>;
+            if (root == null || !(root["elements"] is List<object> raw)) return;
+            var list = new List<Dictionary<string, object>>(raw.Count);
+            for (int i = 0; i < raw.Count; i++)
+                if (raw[i] is Dictionary<string, object> el) list.Add(el);
+            var tree = CardStamp.Extract(list, kind);
+            if (tree != null) into[kind] = tree;
         }
 
         public void Dispose()

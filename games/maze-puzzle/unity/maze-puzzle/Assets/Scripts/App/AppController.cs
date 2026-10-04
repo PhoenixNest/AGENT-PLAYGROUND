@@ -113,6 +113,8 @@ namespace OrbitalSalvage.App
         public double NowMs { get; private set; }
         public double EpochMs { get; private set; }
         public string TemplateId { get; private set; }
+        /// <summary>Comma-separated shop card kinds when no distilled spec matches this inventory. Empty when the spec is exact.</summary>
+        public string CardStamp { get; private set; }
         public bool LayoutRequested { get; private set; }
 
         public string CreditText { get; private set; }
@@ -927,7 +929,9 @@ namespace OrbitalSalvage.App
             Skin("home-diorama-ring", Equipped("ring"));
             Skin("home-diorama-nibbles", Equipped("singularity"));
 
-            TemplateId = ChooseTemplate(canMaster);
+            string stamp;
+            TemplateId = ChooseTemplate(canMaster, out stamp);
+            CardStamp = stamp;
             Model.PageId = CurrentPage;
             Model.TemplateId = TemplateId;
             Model.Modals.Clear();
@@ -939,26 +943,68 @@ namespace OrbitalSalvage.App
             foreach (var kv in _elements) Model.Elements[kv.Key] = kv.Value;
         }
 
-        string ChooseTemplate(bool canMaster)
+        string ChooseTemplate(bool canMaster, out string cardStamp)
         {
-            if (_modals.Contains("modal-debrief")) return "modal_debrief_exact";
-            if (_modals.Contains("modal-defeat")) return "modal_defeat_12_of_20";
-            if (_modals.Contains("modal-pause")) return "modal_pause";
-            switch (CurrentPage)
+            var current = CurrentWorld();
+            int worldDone = 0;
+            int worldTotal = current.LevelRangeEnd - current.LevelRangeStart + 1;
+            var completed = Economy.Profile.CompletedSectors ?? new List<string>();
+            for (int level = current.LevelRangeStart; level <= current.LevelRangeEnd; level++)
             {
-                case "loading": return "loading_t0500";
-                case "home": return "home_default";
-                case "maps": return "maps_world_1_fresh";
-                case "daily": return canMaster ? "daily_master_ready" : "daily_default";
-                case "shop":
-                    if (StoreTab == "singularities") return "shop_singularities_default";
-                    if (StoreTab == "skyboxes") return "shop_skyboxes_default";
-                    return "shop_rings_default";
-                case "achievements": return "achievements_none";
-                case "settings": return "settings_default";
-                case "game": return "game_lvl01_t1000ms";
-                default: return "home_default";
+                int idx = level - 1;
+                if (idx >= 0 && idx < Sectors.Count && completed.Contains(Sectors[idx].Id)) worldDone++;
             }
+            bool through44 = true;
+            for (int n = 1; n <= 44; n++)
+                if (!completed.Contains("level_" + n)) { through44 = false; break; }
+            if (through44 && completed.Contains("level_45")) through44 = false;
+            int cleared = 0;
+            for (int i = 0; i < DailyDone.Count; i++) if (DailyDone[i]) cleared++;
+            double quota = ActiveSector != null ? ActiveSector.Quota : 30;
+            var settings = Economy.Profile.Settings;
+            string modal = "";
+            if (_modals.Contains("modal-debrief")) modal = "debrief";
+            else if (_modals.Contains("modal-defeat")) modal = "defeat";
+            else if (_modals.Contains("modal-pause")) modal = "pause";
+            else if (_modals.Contains("modal-privacy")) modal = "privacy";
+            else if (_modals.Contains("modal-reset-confirm")) modal = "reset";
+            var query = new TemplateQuery
+            {
+                Page = CurrentPage ?? "",
+                Modal = modal,
+                WorldIndex = WorldIndex,
+                ActiveWorld = ActiveSector != null && ActiveSector.WorldIndex.HasValue ? (int)ActiveSector.WorldIndex.Value : WorldIndex,
+                WorldDone = worldDone,
+                WorldTotal = worldTotal,
+                Levels1Through44 = through44,
+                ShopTab = StoreTab ?? "rings",
+                ShopSignature = ShopSignature(),
+                GiftClaimed = !Economy.CanClaimDailyGift(),
+                DailyCleared = cleared,
+                MasterReady = canMaster,
+                MasterClaimed = Economy.IsDailyMasterClaimed(),
+                SoundOn = settings == null || settings.SoundEnabled,
+                HapticsOn = settings == null || settings.HapticsEnabled,
+                SlidersDefault = settings == null || (Math.Abs(settings.SfxVolume - 80) < 0.01 && Math.Abs(settings.AmbientVolume - 70) < 0.01),
+                DebriefDaily = ActiveSector != null && !string.IsNullOrEmpty(ActiveSector.DailyTier),
+                DebriefSurplus = ActiveSector != null && CollectedMass > ActiveSector.Quota,
+                DefeatUsed = UsedBackupPod,
+                DefeatRatio = CollectedMass / Math.Max(1, quota),
+                AchievementsUnlocked = Economy.Profile.Achievements != null ? Economy.Profile.Achievements.Count : 0,
+                AchievementsTotal = EconomyCatalog.Achievements.Length,
+                GameDaily = ActiveSector != null && !string.IsNullOrEmpty(ActiveSector.DailyTier)
+            };
+            return TemplateSelector.Select(query, out cardStamp);
+        }
+
+        string ShopSignature()
+        {
+            var items = EconomyCatalog.Category(StoreTab);
+            if (items == null) return "";
+            var owned = new List<string>();
+            for (int i = 0; i < items.Length; i++)
+                if (Economy.IsUnlocked(StoreTab, items[i].Id)) owned.Add(items[i].Id);
+            return TemplateSelector.Signature(owned, Equipped(Economy.NormalizeCategory(StoreTab).Singular));
         }
 
         WorldInfo CurrentWorld()
