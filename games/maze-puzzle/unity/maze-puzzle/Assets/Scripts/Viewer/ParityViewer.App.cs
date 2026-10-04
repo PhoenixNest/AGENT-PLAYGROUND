@@ -210,6 +210,7 @@ namespace OrbitalSalvage.Viewer
                 }
             }
             BindModalPlayfield(current);
+            if (flowCapture && app != null) current.PoseGestureHint(app.HintAgeMs);
             if (selfTesting || currentId != null && currentId.StartsWith("loading", StringComparison.Ordinal)) current.Draw();
             else
             {

@@ -1113,6 +1113,191 @@ namespace OrbitalSalvage.Render
             return true;
         }
 
+        sealed class HintBake
+        {
+            public Dictionary<string, object> Hint, Hand, Text, Emoji, Run;
+            public int TextIndex = -1, EmojiIndex = -1;
+            public double Opacity;
+            public string HintTf, HandTf, TextFz, Shadow;
+            public List<string> Border, Radius;
+            public double[] HintR, HandR, TextR, EmojiR, RunR;
+        }
+
+        HintBake hintBake;
+        bool hintDirty;
+
+        /// <summary>
+        /// Paint #gesture-hint at <paramref name="ageMs"/> since the game page was shown.
+        /// The spec stores the dismissed pose. Age below 0 leaves that pose alone.
+        /// </summary>
+        public void PoseGestureHint(double ageMs)
+        {
+            if (hintBake == null) hintBake = CaptureHint();
+            if (hintBake == null) return;
+            if (ageMs < 0 || !TryMatrix(hintBake.HintTf, out double a, out _, out _, out _, out double tx, out double ty))
+            {
+                RestoreHint();
+                return;
+            }
+            if (!TryMatrix(hintBake.HandTf, out double ha, out double hb, out _, out _, out double htx, out _))
+            {
+                RestoreHint();
+                return;
+            }
+            var pose = GestureHintPose.At(
+                ageMs, cssW, cssH,
+                new GestureHintPose.Box(hintBake.HintR[0], hintBake.HintR[1], hintBake.HintR[2], hintBake.HintR[3]),
+                a, tx, ty,
+                new GestureHintPose.Box(ReadBr(hintBake.Hand)[0], ReadBr(hintBake.Hand)[1], ReadBr(hintBake.Hand)[2], ReadBr(hintBake.Hand)[3]),
+                ha, hb, htx,
+                new GestureHintPose.Box(hintBake.TextR[0], hintBake.TextR[1], hintBake.TextR[2], hintBake.TextR[3]),
+                new GestureHintPose.Box(hintBake.EmojiR[0], hintBake.EmojiR[1], hintBake.EmojiR[2], hintBake.EmojiR[3]));
+            if (!pose.Live)
+            {
+                RestoreHint();
+                return;
+            }
+            SetRect(hintBake.Hint, pose.Card.X, pose.Card.Y, pose.Card.W, pose.Card.H);
+            SetRect(hintBake.Hand, pose.Hand.X, pose.Hand.Y, pose.Hand.W, pose.Hand.H);
+            SetRect(hintBake.Text, pose.Text.X, pose.Text.Y, pose.Text.W, pose.Text.H);
+            SetRect(hintBake.Run, pose.Text.X, pose.Text.Y, pose.Text.W, pose.Text.H);
+            SetRect(hintBake.Emoji, pose.Emoji.X, pose.Emoji.Y, pose.Emoji.W, pose.Emoji.H);
+            hintBake.Hint["o"] = pose.Opacity;
+            hintBake.Hint["tf"] = GestureHintPose.Matrix(pose.Scale, 0, 0, pose.Scale, pose.CardTx, pose.CardTy);
+            hintBake.Hand["tf"] = GestureHintPose.Matrix(pose.HandA, pose.HandB, pose.HandC, pose.HandD, pose.HandTx, pose.HandTy);
+            double font = ParsePx(hintBake.TextFz) * pose.Scale;
+            hintBake.Text["fz"] = font.ToString("0.####", CultureInfo.InvariantCulture) + "px";
+            WritePxList(hintBake.Hint, "bw", hintBake.Border, pose.Scale);
+            WritePxList(hintBake.Hint, "rad", hintBake.Radius, pose.Scale);
+            hintBake.Hint["sh"] = ScaleShadow(hintBake.Shadow, pose.Scale);
+            if (fontOf != null && hintBake.TextIndex >= 0 && hintBake.TextIndex < fontOf.Length) fontOf[hintBake.TextIndex] = null;
+            prepared.Remove(hintBake.Hint);
+            hintDirty = true;
+            DropLayerCache();
+        }
+
+        HintBake CaptureHint()
+        {
+            Dictionary<string, object> hint = null;
+            int hintI = -1;
+            for (int k = 0; k < elements.Count; k++)
+            {
+                if (S(elements[k], "id") != "gesture-hint") continue;
+                hint = elements[k];
+                hintI = (int)N(hint, "i", -1);
+                break;
+            }
+            if (hint == null || hintI < 0) return null;
+            Dictionary<string, object> hand = null, text = null;
+            int textIndex = -1;
+            for (int k = 0; k < elements.Count; k++)
+            {
+                if ((int)N(elements[k], "p", -1) != hintI) continue;
+                string cls = S(elements[k], "c");
+                if (cls.IndexOf("hand-swipe-anim", StringComparison.Ordinal) >= 0) hand = elements[k];
+                else if (cls.IndexOf("hint-text", StringComparison.Ordinal) >= 0) { text = elements[k]; textIndex = k; }
+            }
+            if (hand == null || text == null || !text.TryGetValue("runs", out var rv) || !(rv is List<object> runs) || runs.Count == 0)
+                return null;
+            var run = runs[0] as Dictionary<string, object>;
+            if (run == null) return null;
+            int handI = (int)N(hand, "i", -1);
+            Dictionary<string, object> emoji = null;
+            int emojiIndex = -1;
+            for (int k = 0; k < elements.Count; k++)
+            {
+                if ((int)N(elements[k], "p", -1) != handI) continue;
+                if (!elements[k].ContainsKey("emoji")) continue;
+                emoji = elements[k];
+                emojiIndex = k;
+                break;
+            }
+            if (emoji == null) return null;
+            return new HintBake
+            {
+                Hint = hint, Hand = hand, Text = text, Emoji = emoji, Run = run,
+                TextIndex = textIndex, EmojiIndex = emojiIndex,
+                Opacity = N(hint, "o", 1),
+                HintTf = S(hint, "tf"),
+                HandTf = S(hand, "tf"),
+                TextFz = S(text, "fz"),
+                Shadow = S(hint, "sh"),
+                Border = Strs(hint, "bw"),
+                Radius = Strs(hint, "rad"),
+                HintR = CopyBox(hint), HandR = CopyBox(hand), TextR = CopyBox(text), EmojiR = CopyBox(emoji), RunR = CopyBox(run),
+            };
+        }
+
+        void RestoreHint()
+        {
+            if (!hintDirty || hintBake == null || hintBake.HintR == null) return;
+            SetRect(hintBake.Hint, hintBake.HintR[0], hintBake.HintR[1], hintBake.HintR[2], hintBake.HintR[3]);
+            SetRect(hintBake.Hand, hintBake.HandR[0], hintBake.HandR[1], hintBake.HandR[2], hintBake.HandR[3]);
+            SetRect(hintBake.Text, hintBake.TextR[0], hintBake.TextR[1], hintBake.TextR[2], hintBake.TextR[3]);
+            SetRect(hintBake.Run, hintBake.RunR[0], hintBake.RunR[1], hintBake.RunR[2], hintBake.RunR[3]);
+            SetRect(hintBake.Emoji, hintBake.EmojiR[0], hintBake.EmojiR[1], hintBake.EmojiR[2], hintBake.EmojiR[3]);
+            hintBake.Hint["o"] = hintBake.Opacity;
+            hintBake.Hint["tf"] = hintBake.HintTf;
+            hintBake.Hand["tf"] = hintBake.HandTf;
+            hintBake.Text["fz"] = hintBake.TextFz;
+            WritePxList(hintBake.Hint, "bw", hintBake.Border, 1);
+            WritePxList(hintBake.Hint, "rad", hintBake.Radius, 1);
+            hintBake.Hint["sh"] = hintBake.Shadow;
+            if (fontOf != null && hintBake.TextIndex >= 0 && hintBake.TextIndex < fontOf.Length) fontOf[hintBake.TextIndex] = null;
+            prepared.Remove(hintBake.Hint);
+            hintDirty = false;
+            DropLayerCache();
+        }
+
+        static double[] ReadBr(Dictionary<string, object> e)
+        {
+            if (e != null && e.TryGetValue("br", out var v) && v is List<object> l && l.Count >= 4)
+                return new[] { (double)l[0], (double)l[1], (double)l[2], (double)l[3] };
+            return CopyBox(e);
+        }
+
+        static double[] CopyBox(Dictionary<string, object> e)
+        {
+            var l = (List<object>)e["r"];
+            return new[] { (double)l[0], (double)l[1], (double)l[2], (double)l[3] };
+        }
+
+        void SetRect(Dictionary<string, object> e, double x, double y, double w, double h)
+        {
+            if (e == null || !e.TryGetValue("r", out var v) || !(v is List<object> l) || l.Count < 4) return;
+            l[0] = x; l[1] = y; l[2] = w; l[3] = h;
+            if (rects.TryGetValue(e, out var cached))
+            {
+                cached[0] = x; cached[1] = y; cached[2] = w; cached[3] = h;
+            }
+        }
+
+        static double ParsePx(string css)
+        {
+            if (string.IsNullOrEmpty(css) || !css.EndsWith("px", StringComparison.Ordinal)) return 0;
+            return double.TryParse(css.Substring(0, css.Length - 2), NumberStyles.Float, CultureInfo.InvariantCulture, out var n) ? n : 0;
+        }
+
+        static void WritePxList(Dictionary<string, object> e, string key, List<string> original, double scale)
+        {
+            if (original == null || !e.TryGetValue(key, out var v) || !(v is List<object> l)) return;
+            for (int i = 0; i < l.Count && i < original.Count; i++)
+            {
+                double n = ParsePx(original[i]);
+                l[i] = (n * scale).ToString("0.####", CultureInfo.InvariantCulture) + "px";
+            }
+        }
+
+        static string ScaleShadow(string shadow, double scale)
+        {
+            if (string.IsNullOrEmpty(shadow) || Math.Abs(scale - 1) < 1e-9) return shadow;
+            return Regex.Replace(shadow, @"-?\d*\.?\d+px", m =>
+            {
+                double n = ParsePx(m.Value);
+                return (n * scale).ToString("0.####", CultureInfo.InvariantCulture) + "px";
+            });
+        }
+
         void DrawEmoji(Dictionary<string, object> e, int k, double alpha)
         {
             var r = ElementRect(e, k, true);
@@ -1120,6 +1305,20 @@ namespace OrbitalSalvage.Render
             var img = CanvasEmoji.Get(S(e, "emoji"));
             if (img == null) return;
             canvas.Save();
+            double tilt = 0;
+            for (var cur = e; cur != null; cur = ParentOf(cur))
+            {
+                if (S(cur, "c").IndexOf("hand-swipe-anim", StringComparison.Ordinal) < 0) continue;
+                tilt = InheritedTilt(e, r);
+                break;
+            }
+            if (tilt != 0)
+            {
+                double cx = r[0] + r[2] * 0.5, cy = r[1] + r[3] * 0.5;
+                canvas.Translate(cx, cy);
+                canvas.Rotate(tilt);
+                canvas.Translate(-cx, -cy);
+            }
             canvas.GlobalAlpha = Math.Min(1, alpha);
             canvas.DrawImage(img, r[0], r[1], r[2], r[3]);
             canvas.Restore();
