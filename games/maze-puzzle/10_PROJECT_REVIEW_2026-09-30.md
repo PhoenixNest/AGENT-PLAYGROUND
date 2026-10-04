@@ -7,6 +7,9 @@
 - **Reviewer:** Lead reviewer with parallel reader agents
 - **Document Version:** 1.0.1 (docs re-verification after parallel agent updates)
 - **Purpose:** Record an independent repository and project review of the web prototype and Unity port, reconcile overstated parity claims, list findings with verified working-tree status, and recommend prioritized next steps.
+
+**2026-10-04 note.** This review describes the uGUI port as it stood on 2026-09-30. That shell (`UIManager` and the Physics2D scene) has been removed. The game that launches is the Canvas2D `AppController`. The scores and "uncommitted fixes" below are not the current tree. Current harness numbers are in `09` and `tools/parity/README.md`. Strict still parity is not finished, and nothing here was checked on a device.
+
 - **Companion Documents:**
   - [`01_REFERENCE_GAME_ANALYSIS.md`](./01_REFERENCE_GAME_ANALYSIS.md)
   - [`02_APP_STORE_SIMILARITY_AND_GUIDELINE_4_3.md`](./02_APP_STORE_SIMILARITY_AND_GUIDELINE_4_3.md)
