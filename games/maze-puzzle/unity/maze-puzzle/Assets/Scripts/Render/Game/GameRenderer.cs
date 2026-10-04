@@ -55,6 +55,9 @@ namespace OrbitalSalvage.Render
         public static readonly double[] SectionMs = new double[9];
 
         Canvas2D _canvas;
+        CanvasGradient skyGrad;
+        string skyGradKey;
+        double skyGradW, skyGradH;
         public bool RenderToCanvas = true;
 
         public Canvas2D Canvas => _canvas;
@@ -379,11 +382,18 @@ namespace OrbitalSalvage.Render
 
         void RenderCartoonSky(Canvas2D ctx, CosmeticItem skyboxSkin)
         {
-            var grad = ctx.CreateLinearGradient(0, 0, 0, Height);
-            grad.AddColorStop(0, GameDraw.SkyStop(skyboxSkin, 0, "#1e1b4b"));
-            grad.AddColorStop(0.5, GameDraw.SkyStop(skyboxSkin, 1, "#312e81"));
-            grad.AddColorStop(1, GameDraw.SkyStop(skyboxSkin, 2, "#4338ca"));
-            ctx.FillStyle = grad;
+            string key = skyboxSkin != null ? skyboxSkin.Id : "";
+            if (skyGrad == null || skyGradKey != key || skyGradW != Width || skyGradH != Height)
+            {
+                skyGrad = ctx.CreateLinearGradient(0, 0, 0, Height);
+                skyGrad.AddColorStop(0, GameDraw.SkyStop(skyboxSkin, 0, "#1e1b4b"));
+                skyGrad.AddColorStop(0.5, GameDraw.SkyStop(skyboxSkin, 1, "#312e81"));
+                skyGrad.AddColorStop(1, GameDraw.SkyStop(skyboxSkin, 2, "#4338ca"));
+                skyGradKey = key;
+                skyGradW = Width;
+                skyGradH = Height;
+            }
+            ctx.FillStyle = skyGrad;
             ctx.FillRect(0, 0, Width, Height);
 
             for (int i = 0; i < Planets.Count; i++)

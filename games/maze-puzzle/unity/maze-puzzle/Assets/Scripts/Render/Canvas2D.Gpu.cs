@@ -23,6 +23,8 @@ namespace OrbitalSalvage.Render
         static readonly int IdAccum = Shader.PropertyToID("_C2D_Accum");
         static readonly int IdMask = Shader.PropertyToID("_C2D_Mask");
         static readonly int IdClipTex = Shader.PropertyToID("_C2D_ClipTex");
+        static readonly int IdLayerTex = Shader.PropertyToID("_C2D_Layer");
+        static readonly float[] gradOff = new float[8];
 
         readonly RenderTexture target;
         readonly RenderTexture accum;
@@ -132,7 +134,7 @@ namespace OrbitalSalvage.Render
 
         public void EndFrame() { Submit(false); }
 
-        /// <summary>Source-over a straight-alpha texture onto the frame. Recorded in order with the other draws.</summary>
+        /// <summary>Source-over a premultiplied texture onto the frame. Recorded in order with the other draws.</summary>
         public void BlitLayer(Texture tex)
         {
             if (tex == null || state.globalAlpha <= 0) return;
@@ -144,8 +146,12 @@ namespace OrbitalSalvage.Render
                 matLayer = new Material(sh) { hideFlags = HideFlags.HideAndDontSave };
             }
             PaintProfile.Begin(PaintProfile.Blit);
-            matLayer.SetFloat("_Alpha", (float)state.globalAlpha);
-            cmd.Blit(tex, target, matLayer);
+            int pb = NewParams();
+            prm[pb + IdxRect] = new Vector4(0, 0, Width, Height);
+            prm[pb + IdxAlpha] = new Vector4((float)state.globalAlpha, 0, 0, 0);
+            cmd.SetRenderTarget(target);
+            cmd.SetGlobalTexture(IdLayerTex, tex);
+            Draw(matLayer, 0, 6, pb);
             PaintProfile.End(PaintProfile.Blit);
         }
 
@@ -643,15 +649,15 @@ namespace OrbitalSalvage.Render
                 }
             }
             prm[pb + IdxAlpha] = new Vector4(alpha, kind, GradientInterpolatesPremultiplied ? 1f : 0f, n);
-            var offs = new float[8];
+            Array.Clear(gradOff, 0, 8);
             for (int i = 0; i < n; i++)
             {
                 var s = grad.stops[i];
                 prm[pb + IdxGcol + i] = new Vector4(s.Value.r, s.Value.g, s.Value.b, s.Value.a);
-                offs[i] = s.Key;
+                gradOff[i] = s.Key;
             }
-            prm[pb + IdxGoff] = new Vector4(offs[0], offs[1], offs[2], offs[3]);
-            prm[pb + IdxGoff + 1] = new Vector4(offs[4], offs[5], offs[6], offs[7]);
+            prm[pb + IdxGoff] = new Vector4(gradOff[0], gradOff[1], gradOff[2], gradOff[3]);
+            prm[pb + IdxGoff + 1] = new Vector4(gradOff[4], gradOff[5], gradOff[6], gradOff[7]);
             return true;
         }
 

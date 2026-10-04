@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using OrbitalSalvage.Render;
 using UnityEngine;
@@ -18,6 +19,7 @@ namespace OrbitalSalvage.Viewer
     {
         const string SelfTestFlag = "-parity-viewer-selftest";
         const string LiveSelfTestFlag = "-parity-live-selftest";
+        const string PerfFlag = "-parity-perf";
         const string OptOutFlag = "-no-parity-viewer";
         const double QuotaTrackWidth = 162.328;
 
@@ -69,7 +71,7 @@ namespace OrbitalSalvage.Viewer
         public static bool ShouldStart(string[] args)
         {
             if (Array.IndexOf(args, "--parity") >= 0) return false;
-            if (SelfTestDirectory(args) != null || LiveSelfTestDirectory(args) != null) return true;
+            if (SelfTestDirectory(args) != null || LiveSelfTestDirectory(args) != null || PerfScenario(args) != null) return true;
             if (IsOptOut(args)) return false;
 #if UNITY_EDITOR
             if (!UnityEditor.EditorPrefs.GetBool(ParityPages.EnabledPrefKey, true)) return false;
@@ -102,6 +104,21 @@ namespace OrbitalSalvage.Viewer
             return ArgDirectory(args, LiveSelfTestFlag);
         }
 
+        /// <summary><c>-parity-perf &lt;home|live|fps-home|fps-game&gt; &lt;dir&gt;</c></summary>
+        public static string PerfScenario(string[] args)
+        {
+            int i = Array.IndexOf(args, PerfFlag);
+            if (i < 0 || i + 1 >= args.Length) return null;
+            return args[i + 1];
+        }
+
+        public static string PerfDirectory(string[] args)
+        {
+            int i = Array.IndexOf(args, PerfFlag);
+            if (i < 0 || i + 2 >= args.Length) return null;
+            return args[i + 2];
+        }
+
         static string ArgDirectory(string[] args, string flag)
         {
             int i = Array.IndexOf(args, flag);
@@ -123,6 +140,13 @@ namespace OrbitalSalvage.Viewer
             clock.NowSeconds = () => Time.realtimeSinceStartupAsDouble;
             SuppressLegacy();
             var args = Environment.GetCommandLineArgs();
+            string perfScenario = PerfScenario(args);
+            if (perfScenario != null)
+            {
+                selfTesting = true;
+                StartCoroutine(PerfTest(perfScenario, PerfDirectory(args)));
+                return;
+            }
             string live = LiveSelfTestDirectory(args);
             if (live != null)
             {
@@ -484,6 +508,112 @@ namespace OrbitalSalvage.Viewer
             }
         }
 
+        IEnumerator PerfTest(string scenario, string dir)
+        {
+            Application.runInBackground = true;
+            QualitySettings.vSyncCount = 0;
+            Application.targetFrameRate = -1;
+            yield return null;
+            string error = null;
+            try
+            {
+                if (string.IsNullOrEmpty(dir)) throw new InvalidOperationException("perf directory missing");
+                Directory.CreateDirectory(dir);
+                File.WriteAllText(Path.Combine(dir, "device.txt"),
+                    SystemInfo.graphicsDeviceType + "\n" + SystemInfo.graphicsDeviceName + "\n");
+                Debug.Log("[ParityViewer] perf " + scenario + " " + SystemInfo.graphicsDeviceType + " -> " + dir);
+            }
+            catch (Exception ex) { error = ex.ToString(); }
+
+            if (error == null && scenario == "home")
+            {
+                liveVisual = false;
+                yield return StartCoroutine(WriteHomeTimes(dir));
+                if (current == null) error = "home chrome did not load";
+            }
+            else if (error == null && scenario == "live")
+            {
+                liveVisual = true;
+                try { Show("game_lvl01_t1000ms"); }
+                catch (Exception ex) { error = ex.ToString(); }
+                yield return new WaitForEndOfFrame();
+                if (error == null && (session == null || current == null)) error = "live session did not start";
+                if (error == null)
+                {
+                    string stats = null;
+                    try { stats = RunLiveBench(dir); }
+                    catch (Exception ex) { error = ex.ToString(); }
+                    if (error == null) Debug.Log("[ParityViewer] perf live " + stats);
+                }
+            }
+            else if (error == null && (scenario == "fps-home" || scenario == "fps-game"))
+            {
+                yield return StartCoroutine(MeasurePresented(dir, scenario == "fps-game"));
+            }
+            else if (error == null)
+                error = "unknown perf scenario " + scenario;
+
+            if (error != null) Debug.LogError("[ParityViewer] perf failed: " + error);
+            else Debug.Log("[ParityViewer] perf " + scenario + " ok");
+            yield return null;
+            if (!Application.isEditor) Application.Quit(error == null ? 0 : 1);
+        }
+
+        IEnumerator MeasurePresented(string dir, bool game)
+        {
+            liveVisual = game;
+            Show(game ? "game_lvl01_t1000ms" : ParityPages.HomeId);
+            yield return null;
+            if (game && session != null)
+            {
+                session.FixedStep = false;
+                session.NowMs = () => Time.realtimeSinceStartupAsDouble * 1000.0;
+            }
+            double clock = 240;
+            double started = Time.realtimeSinceStartupAsDouble;
+            var samples = new List<double>(900);
+            while (Time.realtimeSinceStartupAsDouble - started < 10.0)
+            {
+                double dt = Time.unscaledDeltaTime;
+                if (dt < 0) dt = 0;
+                if (game)
+                {
+                    if (session != null) session.Update(dt);
+                    ApplyQuota();
+                }
+                else if (current != null)
+                {
+                    clock += dt * 1000.0;
+                    current.Draw(clock);
+                }
+                yield return null;
+                double presented = Time.unscaledDeltaTime;
+                if (presented > 0) samples.Add(presented);
+            }
+            if (samples.Count > 2) samples.RemoveAt(0);
+            double sum = 0, max = 0;
+            for (int i = 0; i < samples.Count; i++)
+            {
+                sum += samples[i];
+                if (samples[i] > max) max = samples[i];
+            }
+            double avg = samples.Count > 0 ? sum / samples.Count : 0;
+            var sorted = samples.ToArray();
+            Array.Sort(sorted);
+            int p = sorted.Length == 0 ? 0 : (int)Math.Ceiling(sorted.Length * 0.95) - 1;
+            if (p < 0) p = 0;
+            double p95 = sorted.Length == 0 ? 0 : sorted[p];
+            var inv = CultureInfo.InvariantCulture;
+            string json = "{\"frames\":" + samples.Count
+                + ",\"seconds\":" + (Time.realtimeSinceStartupAsDouble - started).ToString("R", inv)
+                + ",\"avgFps\":" + (avg > 0 ? 1.0 / avg : 0).ToString("R", inv)
+                + ",\"frameAvgMs\":" + (avg * 1000.0).ToString("R", inv)
+                + ",\"frameP95Ms\":" + (p95 * 1000.0).ToString("R", inv)
+                + ",\"frameMaxMs\":" + (max * 1000.0).ToString("R", inv) + "}";
+            File.WriteAllText(Path.Combine(dir, "fps.json"), json);
+            Debug.Log("[ParityViewer] perf fps " + json);
+        }
+
         IEnumerator LiveSelfTest(string dir)
         {
             Application.runInBackground = true;
@@ -518,20 +648,23 @@ namespace OrbitalSalvage.Viewer
             session.FixedDt = 1.0 / 60.0;
             double clock = 0;
             session.NowMs = () => clock;
-            var full = Sample(dir, "full", 1.0, 600, ref clock);
-            var half = Sample(dir, "half", 0.5, 600, ref clock);
+            var full = Sample(dir, "full", 1.0, 600, ref clock, out double fullCpu, out double fullFence);
+            var half = Sample(dir, "half", 0.5, 600, ref clock, out double halfCpu, out double halfFence);
             bool same = Deterministic();
             string recommended = (full[0] > 12.0 && half[0] < full[0]) ? "0.5" : "1";
-            var inv = System.Globalization.CultureInfo.InvariantCulture;
+            var inv = CultureInfo.InvariantCulture;
             string json = "{\"full\":{\"avg\":" + full[0].ToString("R", inv) + ",\"p95\":" + full[1].ToString("R", inv) + ",\"max\":" + full[2].ToString("R", inv)
+                + ",\"noFenceAvg\":" + fullCpu.ToString("R", inv) + ",\"fenceAvg\":" + fullFence.ToString("R", inv)
                 + "},\"half\":{\"avg\":" + half[0].ToString("R", inv) + ",\"p95\":" + half[1].ToString("R", inv) + ",\"max\":" + half[2].ToString("R", inv)
+                + ",\"noFenceAvg\":" + halfCpu.ToString("R", inv) + ",\"fenceAvg\":" + halfFence.ToString("R", inv)
                 + "},\"frames\":600,\"dt\":" + (1.0 / 60.0).ToString("R", inv) + ",\"deterministic\":" + (same ? "true" : "false")
-                + ",\"recommendedScale\":" + recommended + ",\"physicsSteps\":" + session.PhysicsSteps + "}";
+                + ",\"recommendedScale\":" + recommended + ",\"physicsSteps\":" + session.PhysicsSteps
+                + ",\"device\":\"" + SystemInfo.graphicsDeviceType + "\"}";
             File.WriteAllText(Path.Combine(dir, "stats.json"), json);
             return json;
         }
 
-        double[] Sample(string dir, string tag, double scale, int frames, ref double clock)
+        double[] Sample(string dir, string tag, double scale, int frames, ref double clock, out double cpuAvg, out double fenceAvg)
         {
             session.Renderer.SetRenderScale(scale);
             for (int i = 0; i < 20; i++) ScriptedStep(i, ref clock);
@@ -553,12 +686,14 @@ namespace OrbitalSalvage.Viewer
                 if (tag == "full" && (i == 0 || i == 59 || i == 179))
                     File.WriteAllBytes(Path.Combine(dir, tag + "_f" + (i + 1).ToString() + ".png"), ReadPng(session.Renderer.Target));
             }
+            cpuAvg = cpuSum / frames;
+            fenceAvg = fenceSum / frames;
             if (tag == "full")
             {
-                var inv = System.Globalization.CultureInfo.InvariantCulture;
+                var inv = CultureInfo.InvariantCulture;
                 var sb = new System.Text.StringBuilder();
-                sb.Append("{\"cpuAvg\":").Append((cpuSum / frames).ToString("R", inv));
-                sb.Append(",\"fenceAvg\":").Append((fenceSum / frames).ToString("R", inv));
+                sb.Append("{\"cpuAvg\":").Append(cpuAvg.ToString("R", inv));
+                sb.Append(",\"fenceAvg\":").Append(fenceAvg.ToString("R", inv));
                 sb.Append(",\"sectionsMs\":[");
                 for (int s = 0; s < 9; s++)
                 {
@@ -710,6 +845,7 @@ namespace OrbitalSalvage.Viewer
             var watch = new System.Diagnostics.Stopwatch();
             PaintProfile.Enabled = true;
             PaintProfile.Reset();
+            long mem0 = GC.GetTotalMemory(false);
             for (int i = 0; i < samples.Length; i++)
             {
                 watch.Restart();
@@ -718,14 +854,15 @@ namespace OrbitalSalvage.Viewer
                 samples[i] = watch.Elapsed.TotalMilliseconds;
                 yield return null;
             }
+            long mem1 = GC.GetTotalMemory(false);
             PaintProfile.Enabled = false;
-            WriteDrawStats(dir, samples, samples.Length, current != null && current.UsesLayerCache);
+            WriteDrawStats(dir, samples, samples.Length, current != null && current.UsesLayerCache, mem1 - mem0);
             string table = PaintProfile.Report(samples.Length);
             File.WriteAllText(Path.Combine(dir, "paint-profile.txt"), table);
             Debug.Log("[ParityViewer] paint profile\n" + table);
         }
 
-        static void WriteDrawStats(string dir, double[] samples, int n, bool cache)
+        static void WriteDrawStats(string dir, double[] samples, int n, bool cache, long gcBytes = 0)
         {
             var copy = new double[n];
             Array.Copy(samples, copy, n);
@@ -734,9 +871,9 @@ namespace OrbitalSalvage.Viewer
             for (int i = 0; i < n; i++) sum += copy[i];
             double avg = sum / n;
             double p95 = copy[(int)(0.95 * (n - 1))];
-            string text = "avg " + avg.ToString("0.000") + "\np95 " + p95.ToString("0.000") + "\nn " + n + "\ncache " + (cache ? "yes" : "no") + "\n";
+            string text = "avg " + avg.ToString("0.000") + "\np95 " + p95.ToString("0.000") + "\nn " + n + "\ncache " + (cache ? "yes" : "no") + "\ngcBytes " + gcBytes + "\n";
             File.WriteAllText(Path.Combine(dir, "draw-ms.txt"), text);
-            Debug.Log("[ParityViewer] Draw ms n " + n + " avg " + avg.ToString("0.000") + " p95 " + p95.ToString("0.000"));
+            Debug.Log("[ParityViewer] Draw ms n " + n + " avg " + avg.ToString("0.000") + " p95 " + p95.ToString("0.000") + " cache " + (cache ? "yes" : "no"));
         }
 
         // Same readback as ParityRenderRig.ReadPng: copy into a Default ARGB32 target, then RGB24 linear EncodeToPNG.

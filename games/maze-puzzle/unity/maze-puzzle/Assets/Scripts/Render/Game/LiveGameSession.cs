@@ -33,6 +33,7 @@ namespace OrbitalSalvage.Render
         public readonly PhysicsEngine Physics;
         public readonly GameRenderer Renderer;
         public readonly EconomyManager Economy;
+        readonly RenderProgress progress = new RenderProgress();
 
         public SectorConfig ActiveSector;
         public double CollectedMass;
@@ -167,11 +168,9 @@ namespace OrbitalSalvage.Render
             if (ForceRcs) Physics.RcsThrusting = true;
             if (RenderEnabled)
             {
-                Renderer.Render(Physics, Economy, step, new RenderProgress
-                {
-                    CollectedMass = CollectedMass,
-                    Quota = ActiveSector != null ? ActiveSector.Quota : 30
-                });
+                progress.CollectedMass = CollectedMass;
+                progress.Quota = ActiveSector != null ? ActiveSector.Quota : 30;
+                Renderer.Render(Physics, Economy, step, progress);
             }
             RenderFrames++;
         }
