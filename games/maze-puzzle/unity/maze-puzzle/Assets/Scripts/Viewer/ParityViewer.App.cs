@@ -1,0 +1,393 @@
+using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.IO;
+using System.Text;
+using OrbitalSalvage.App;
+using OrbitalSalvage.AudioDsp;
+using OrbitalSalvage.JsCompat;
+using OrbitalSalvage.Logic;
+using OrbitalSalvage.Render;
+using UnityEngine;
+
+namespace OrbitalSalvage.Viewer
+{
+    public sealed partial class ParityViewer
+    {
+        AppController app;
+        IAppClock appClock;
+        bool followClock = true;
+        bool debugNav;
+        bool armedControl;
+        ParityPages.ControlHit armedHit;
+        int appliedEpoch = -1;
+        string overrideSig = "";
+        bool sessionWired;
+
+        void BootApp()
+        {
+            var clock = new PlayerClock();
+            BootApp(clock, false, true);
+        }
+
+        void BootApp(IAppClock clock, bool resetProfile, bool realtime)
+        {
+            followClock = realtime;
+            appClock = clock;
+            if (resetProfile)
+            {
+                string path = Path.Combine(Application.persistentDataPath, FileProfileStore.FileName);
+                if (File.Exists(path)) File.Delete(path);
+            }
+            JsRandom.Global.Reset(JsRandom.DefaultSeed);
+            var store = new FileProfileStore(Application.persistentDataPath);
+            app = new AppController(store, clock, new PlayerAudio(gameObject));
+            if (session != null) session.Renderer.Dispose();
+            session = LiveGameSession.CreateBound(app.Economy, ParityPages.CssWidth, ParityPages.CssHeight);
+            session.NowMs = () => app.NowMs;
+            app.AdoptSector(session.ActiveSector);
+            appliedEpoch = app.SectorEpoch;
+            WireSession();
+            app.BeginBoot();
+            SyncApp(true);
+        }
+
+        void WireSession()
+        {
+            if (session == null || sessionWired) return;
+            sessionWired = true;
+            session.OnVictory += stats =>
+            {
+                if (app == null) return;
+                app.PresentSessionVictory(stats.CollectedMass, stats.Payout, session.RecentUnlocks);
+            };
+            session.OnDefeat += stats =>
+            {
+                if (app == null) return;
+                app.PresentSessionDefeat(stats.CollectedMass, stats.SpilledMass);
+            };
+            session.OnSwallow += _ =>
+            {
+                if (app == null) return;
+                app.ShowToastsFor(session.RecentUnlocks);
+                if (app.Audio != null) app.Audio.PlayDebrisSwallowed();
+            };
+            session.OnBoostCue += _ =>
+            {
+                if (app != null && app.Audio != null) app.Audio.PlayBoosterPass();
+            };
+            app.BackupDeployed += () =>
+            {
+                if (session != null) session.Physics.SpawnBackupScrap(8);
+            };
+        }
+
+        void SyncApp(bool forceDraw)
+        {
+            if (app == null) return;
+            if (followClock && appClock is PlayerClock player)
+            {
+                player.Read();
+                app.CatchUp(player.NowMs, player.EpochMs);
+            }
+            if (session != null && app.ConsumeLayoutRequest())
+                session.ApplyLayout(ParityPages.CssWidth, ParityPages.CssHeight);
+            if (session != null && app.SectorEpoch != appliedEpoch && app.ActiveSector != null)
+            {
+                session.LoadSector(app.ActiveSector);
+                session.IsLevelCleared = app.IsLevelCleared;
+                session.IsLevelFailed = app.IsLevelFailed;
+                session.UsedBackupPod = app.UsedBackupPod;
+                appliedEpoch = app.SectorEpoch;
+            }
+            if (session != null) session.IsPaused = app.IsPaused;
+            string template = app.TemplateId;
+            if (!string.IsNullOrEmpty(template) && template != currentId) Show(template);
+            ApplyOverrides(forceDraw);
+        }
+
+        void SyncApp()
+        {
+            SyncApp(false);
+        }
+
+        void ApplyOverrides(bool forceDraw)
+        {
+            if (current == null || app == null) return;
+            var sig = new StringBuilder();
+            sig.Append(app.TemplateId).Append('|').Append(app.CurrentPage).Append('|').Append(app.CreditText)
+                .Append('|').Append(app.QuotaText).Append('|').Append(app.LoadingBar).Append('|').Append(app.LoadingTip);
+            foreach (var kv in app.Model.Elements)
+            {
+                sig.Append('\n').Append(kv.Key).Append('=').Append(kv.Value.Text).Append('#').Append(kv.Value.WidthPx)
+                    .Append('%').Append(kv.Value.WidthPercent).Append('!').Append(kv.Value.Visible);
+            }
+            string text = sig.ToString();
+            if (!forceDraw && text == overrideSig) return;
+            overrideSig = text;
+            current.TextOverrides.Clear();
+            current.WidthOverrides.Clear();
+            current.WidthPercentOverrides.Clear();
+            current.OpacityOverrides.Clear();
+            current.HiddenIds.Clear();
+            current.ClassTextOverrides.Clear();
+            foreach (var kv in app.Model.Elements)
+            {
+                var o = kv.Value;
+                if (o.HasText && o.Text != null) current.TextOverrides[kv.Key] = o.Text;
+                if (o.WidthPx.HasValue) current.WidthOverrides[kv.Key] = o.WidthPx.Value;
+                if (o.WidthPercent.HasValue) current.WidthPercentOverrides[kv.Key] = o.WidthPercent.Value;
+                if (o.Opacity.HasValue) current.OpacityOverrides[kv.Key] = o.Opacity.Value;
+                if (o.Visible == false) current.HiddenIds.Add(kv.Key);
+            }
+            int buy = 0, wear = 0, equipped = 0;
+            for (int i = 0; i < app.ShopFooters.Count; i++)
+            {
+                string footer = app.ShopFooters[i];
+                if (footer == "Wear") current.ClassTextOverrides["btn-equip-item#" + wear++] = footer;
+                else if (footer.StartsWith("EQUIPPED", StringComparison.Ordinal)) current.ClassTextOverrides["badge-equipped#" + equipped++] = footer;
+                else current.ClassTextOverrides["btn-buy-item#" + buy++] = footer;
+            }
+            if (selfTesting || currentId != null && currentId.StartsWith("loading", StringComparison.Ordinal)) current.Draw();
+            else
+            {
+                double ms = clock.Milliseconds;
+                bool modal = currentId != null && currentId.StartsWith("modal_", StringComparison.Ordinal);
+                current.Draw(ms, pressIndex, pressCss, modal && ms < 400, modal);
+            }
+        }
+
+        /// <summary>Same hit-test path as a pointer click, in CSS pixels of the current template.</summary>
+        public void ClickCss(double cssX, double cssY)
+        {
+            if (currentId == null) return;
+            string spec = Spec(currentId);
+            if (ParityPages.TryPressAt(spec, cssX, cssY, out int index, out string transform))
+            {
+                pressIndex = index;
+                pressCss = transform;
+            }
+            armedControl = ParityPages.TryHitControl(spec, cssX, cssY, out armedHit);
+            armedEdge = null;
+            Release();
+            SyncApp(true);
+        }
+
+        IEnumerator AppSelfTest(string dir)
+        {
+            Application.runInBackground = true;
+            QualitySettings.vSyncCount = 0;
+            Application.targetFrameRate = -1;
+            string error = null;
+            var steps = new List<string>();
+            yield return null;
+            try
+            {
+                Directory.CreateDirectory(dir);
+                var manual = new ManualAppClock(0, DateTimeOffset.UtcNow.ToUnixTimeMilliseconds());
+                BootApp(manual, true, false);
+            }
+            catch (Exception ex) { error = ex.ToString(); }
+
+            if (error == null) yield return StartCoroutine(AppShot(dir, "01_loading", steps));
+            int guard = 0;
+            while (error == null && app != null && app.CurrentPage != "home" && guard++ < 40)
+            {
+                try { app.Advance(AppController.BootIntervalMs); SyncApp(true); }
+                catch (Exception ex) { error = ex.ToString(); break; }
+            }
+            if (error == null) yield return StartCoroutine(AppShot(dir, "02_home", steps));
+            if (error == null) error = AppClick("btn-open-shop-page", null, -1);
+            if (error == null) yield return StartCoroutine(AppShot(dir, "03_shop", steps));
+            string creditsBefore = "";
+            if (error == null)
+            {
+                // The next ring costs 500 and a fresh profile has 250. The grant is only so the buy can succeed.
+                try { app.Economy.AddCredits(250); app.SyncEconomyDisplay(); SyncApp(true); creditsBefore = app.CreditText; }
+                catch (Exception ex) { error = ex.ToString(); }
+            }
+            if (error == null) error = AppClick(null, "btn-buy-item", 0);
+            if (error == null) yield return StartCoroutine(AppShot(dir, "04_bought", steps));
+            string creditsAfter = app != null ? app.CreditText : "";
+            if (error == null && creditsBefore == creditsAfter)
+                error = "credits did not change after buy (" + creditsBefore + ")";
+            if (error == null) error = AppClick("btn-back-shop", null, -1);
+            if (error == null) yield return StartCoroutine(AppShot(dir, "05_back", steps));
+            if (error == null) error = AppClick("btn-open-maps-page", null, -1);
+            if (error == null) yield return StartCoroutine(AppShot(dir, "06_maps", steps));
+            if (error == null) error = AppClick(null, "level-tile", 0);
+            if (error == null) yield return StartCoroutine(AppShot(dir, "07_level", steps));
+            if (error == null) error = AppClick("btn-game-pause", null, -1);
+            if (error == null) yield return StartCoroutine(AppShot(dir, "08_pause", steps));
+            if (error == null) error = AppClick("btn-pause-resume", null, -1);
+            if (error == null) yield return StartCoroutine(AppShot(dir, "09_resume", steps));
+            if (error == null)
+            {
+                try
+                {
+                    double quota = app.ActiveSector != null ? app.ActiveSector.Quota : 30;
+                    app.ForceVictory(quota + 2);
+                    if (session != null) session.IsLevelCleared = true;
+                    app.Advance(AppController.DebriefDelayMs);
+                    SyncApp(true);
+                }
+                catch (Exception ex) { error = ex.ToString(); }
+            }
+            if (error == null) yield return StartCoroutine(AppShot(dir, "10_debrief", steps));
+            if (error == null) error = AppClick("btn-debrief-next", null, -1);
+            if (error == null) yield return StartCoroutine(AppShot(dir, "11_next", steps));
+
+            try
+            {
+                var sb = new StringBuilder();
+                sb.Append("{\"ok\":").Append(error == null ? "true" : "false");
+                sb.Append(",\"error\":");
+                Quote(sb, error);
+                sb.Append(",\"creditsBefore\":");
+                Quote(sb, creditsBefore);
+                sb.Append(",\"creditsAfter\":");
+                Quote(sb, creditsAfter);
+                sb.Append(",\"steps\":[");
+                for (int i = 0; i < steps.Count; i++)
+                {
+                    if (i > 0) sb.Append(',');
+                    sb.Append(steps[i]);
+                }
+                sb.Append("]}");
+                File.WriteAllText(Path.Combine(dir, "selftest.json"), sb.ToString());
+            }
+            catch (Exception ex)
+            {
+                if (error == null) error = ex.ToString();
+            }
+            if (error != null) Debug.LogError("[ParityViewer] app selftest failed: " + error);
+            else Debug.Log("[ParityViewer] app selftest ok credits " + creditsBefore + " -> " + creditsAfter);
+            yield return null;
+            if (!Application.isEditor) Application.Quit(error == null ? 0 : 1);
+        }
+
+        string AppClick(string id, string token, int index)
+        {
+            try
+            {
+                string spec = Spec(currentId);
+                double x, y;
+                bool found = id != null
+                    ? ParityPages.TryCenter(spec, id, out x, out y)
+                    : ParityPages.TryClassCenter(spec, token, index, out x, out y);
+                if (!found) return "no control " + (id ?? token) + " on " + currentId;
+                ClickCss(x, y);
+                return null;
+            }
+            catch (Exception ex) { return ex.ToString(); }
+        }
+
+        IEnumerator AppShot(string dir, string name, List<string> steps)
+        {
+            yield return new WaitForEndOfFrame();
+            try
+            {
+                if (current == null || current.Target == null) throw new InvalidOperationException("no frame " + name);
+                File.WriteAllBytes(Path.Combine(dir, name + ".png"), ReadPng(current.Target));
+                WriteStep(steps, name);
+            }
+            catch (Exception ex)
+            {
+                Debug.LogError("[ParityViewer] shot " + name + " " + ex.Message);
+            }
+        }
+
+        void WriteStep(List<string> steps, string name)
+        {
+            var sb = new StringBuilder();
+            sb.Append("{\"name\":");
+            Quote(sb, name);
+            sb.Append(",\"page\":");
+            Quote(sb, app.CurrentPage);
+            sb.Append(",\"template\":");
+            Quote(sb, app.TemplateId);
+            sb.Append(",\"credits\":");
+            Quote(sb, app.CreditText);
+            sb.Append(",\"sector\":");
+            Quote(sb, app.ActiveSector != null ? app.ActiveSector.Id : "");
+            sb.Append(",\"paused\":").Append(app.IsPaused ? "true" : "false");
+            sb.Append(",\"modals\":[");
+            var modals = app.OpenModals();
+            for (int i = 0; i < modals.Count; i++)
+            {
+                if (i > 0) sb.Append(',');
+                Quote(sb, modals[i]);
+            }
+            sb.Append("]}");
+            steps.Add(sb.ToString());
+        }
+
+        static void Quote(StringBuilder sb, string value)
+        {
+            sb.Append('"');
+            if (value != null)
+            {
+                for (int i = 0; i < value.Length; i++)
+                {
+                    char c = value[i];
+                    if (c == '\\' || c == '"') sb.Append('\\');
+                    if (c == '\n') sb.Append("\\n");
+                    else sb.Append(c);
+                }
+            }
+            sb.Append('"');
+        }
+
+        sealed class PlayerClock : IAppClock
+        {
+            readonly double origin;
+            readonly double epoch0;
+            public double NowMs { get; set; }
+            public double EpochMs { get; set; }
+
+            public PlayerClock()
+            {
+                origin = Time.realtimeSinceStartupAsDouble;
+                epoch0 = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+                NowMs = 0;
+                EpochMs = epoch0;
+            }
+
+            public void Read()
+            {
+                NowMs = (Time.realtimeSinceStartupAsDouble - origin) * 1000.0;
+                EpochMs = epoch0 + NowMs;
+            }
+        }
+
+        sealed class PlayerAudio : IAppAudio
+        {
+            readonly WebAudioPlayer player;
+            bool muted;
+
+            public PlayerAudio(GameObject host)
+            {
+                player = host.GetComponent<WebAudioPlayer>();
+                if (player == null) player = host.AddComponent<WebAudioPlayer>();
+            }
+
+            public bool IsMuted { get { return muted; } }
+            public void PublicInit() { player.PublicInit(); }
+
+            public bool ToggleMute()
+            {
+                muted = !muted;
+                player.ToggleMute();
+                return muted;
+            }
+
+            public void SetSfxVolume(double volume) { player.SetSfxVolume(volume); }
+            public void SetAmbienceVolume(double volume) { player.SetAmbienceVolume(volume); }
+            public void PlayBoosterPass() { player.PlayBoosterPass(); }
+            public void PlayVictoryFanfare() { player.PlayVictoryFanfare(); }
+            public void PlayDefeatSound() { player.PlayDefeatSound(); }
+            public void PlayBackupPodSound() { player.PlayBackupPodSound(); }
+            public void PlayDebrisSwallowed() { player.PlayDebrisSwallowed(); }
+        }
+    }
+}
