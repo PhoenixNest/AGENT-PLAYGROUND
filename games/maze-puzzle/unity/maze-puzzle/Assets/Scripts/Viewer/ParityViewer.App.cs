@@ -787,7 +787,9 @@ namespace OrbitalSalvage.Viewer
             if (shipError == null) yield return StartCoroutine(TapControl("btn-pause-resume"));
             if (shipError == null) yield return StartCoroutine(WaitShip("game", false));
             if (shipError == null) yield return StartCoroutine(ShipShot(dir, "04_resume"));
-            if (shipError == null) yield return StartCoroutine(TapControl("btn-game-to-home"));
+            if (shipError == null) yield return StartCoroutine(TapControl("btn-game-pause"));
+            if (shipError == null) yield return StartCoroutine(WaitShip("game", true));
+            if (shipError == null) yield return StartCoroutine(TapControl("btn-pause-home"));
             if (shipError == null) yield return StartCoroutine(WaitShip("home", false));
             if (shipError == null) yield return StartCoroutine(ShipShot(dir, "05_home"));
 
