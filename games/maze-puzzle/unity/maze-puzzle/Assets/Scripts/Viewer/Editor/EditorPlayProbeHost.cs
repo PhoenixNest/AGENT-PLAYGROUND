@@ -87,11 +87,10 @@ namespace OrbitalSalvage.Viewer.Editor
             var window = EditorWindow.GetWindow(gvType, false, "Game", true);
             var selected = gvType.GetProperty("selectedSizeIndex", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
             if (selected != null) selected.SetValue(window, index, null);
-            else
-            {
-                var cb = gvType.GetMethod("SizeSelectionCallback", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
-                cb.Invoke(window, new object[] { index, null });
-            }
+            var cb = gvType.GetMethod("SizeSelectionCallback", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+            if (cb != null) cb.Invoke(window, new object[] { index, null });
+            window.minSize = new Vector2(Mathf.Min(width, 900), Mathf.Min(height, 1200));
+            window.position = new Rect(0, 0, Mathf.Min(width, 900), Mathf.Min(height, 1200));
             window.Repaint();
             Debug.Log("[EditorPlayProbe] game view size index " + index + " " + label);
         }

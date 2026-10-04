@@ -348,9 +348,16 @@ namespace OrbitalSalvage.Render
         {
             if (layerTex != null)
                 for (int i = 0; i < layerTex.Length; i++)
-                    if (layerTex[i] != null) UnityEngine.Object.Destroy(layerTex[i]);
+                    DestroyObject(layerTex[i]);
             playfield?.Dispose();
             canvas.Dispose();
+        }
+
+        static void DestroyObject(UnityEngine.Object obj)
+        {
+            if (obj == null) return;
+            if (Application.isPlaying) UnityEngine.Object.Destroy(obj);
+            else UnityEngine.Object.DestroyImmediate(obj);
         }
 
         // ---- spec access ---------------------------------------------------------------------------------
@@ -398,7 +405,7 @@ namespace OrbitalSalvage.Render
         {
             if (layerTex != null)
                 for (int i = 0; i < layerTex.Length; i++)
-                    if (layerTex[i] != null) UnityEngine.Object.Destroy(layerTex[i]);
+                    DestroyObject(layerTex[i]);
             layerTex = null;
             layerImg = null;
             elementLayer = null;
