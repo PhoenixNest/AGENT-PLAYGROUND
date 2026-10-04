@@ -27,6 +27,9 @@ namespace OrbitalSalvage.Render
         public Rgba[] borderC = new Rgba[4];
         public bool[] borderOn = new bool[4];
         public readonly List<CssShadow> shadows = new List<CssShadow>();
+        internal CanvasGradient[] cachedLayers;
+        internal string cachedCss;
+        internal double cx, cy, cw, ch;
     }
 
     /// <summary>
@@ -87,12 +90,16 @@ namespace OrbitalSalvage.Render
 
         static bool IsColorToken(string t) => t.StartsWith("rgb", StringComparison.OrdinalIgnoreCase) || t.StartsWith("#") || t == "transparent" || char.IsLetter(t[0]) && CssColor.TryParse(t, out _);
 
-        /// <summary>Parses <c>color dx dy [blur [spread]] [inset]</c> layers (box-shadow) or <c>color dx dy [blur]</c> (text-shadow).</summary>
+        static readonly Dictionary<string, List<CssShadow>> shadowCache = new Dictionary<string, List<CssShadow>>();
+        static readonly List<CssShadow> NoShadows = new List<CssShadow>();
+
+        /// <summary>Parses <c>color dx dy [blur [spread]] [inset]</c> layers (box-shadow) or <c>color dx dy [blur]</c> (text-shadow). The returned list is shared and must not be mutated.</summary>
         public static List<CssShadow> ParseShadows(string css)
         {
             PaintProfile.Begin(PaintProfile.ParseShadows);
+            if (string.IsNullOrWhiteSpace(css) || css == "none") { PaintProfile.End(PaintProfile.ParseShadows); return NoShadows; }
+            if (shadowCache.TryGetValue(css, out var cached)) { PaintProfile.End(PaintProfile.ParseShadows); return cached; }
             var list = new List<CssShadow>();
-            if (string.IsNullOrWhiteSpace(css) || css == "none") { PaintProfile.End(PaintProfile.ParseShadows); return list; }
             foreach (var layer in SplitTop(css))
             {
                 var sh = new CssShadow { color = Rgba.Black };
@@ -109,6 +116,7 @@ namespace OrbitalSalvage.Render
                 if (nums.Count > 3) sh.spread = nums[3];
                 list.Add(sh);
             }
+            shadowCache[css] = list;
             PaintProfile.End(PaintProfile.ParseShadows);
             return list;
         }
@@ -158,14 +166,14 @@ namespace OrbitalSalvage.Render
                 c.FillStyle = "rgba(0,0,0,1)";
                 if (sh.blur <= 0)
                 {
-                    c.FillStyle = ToCss(sh.color);
+                    c.SetFill(sh.color);
                     c.BeginPath();
                     RRect(c, sx + sh.dx, sy + sh.dy, sw, shh, radii);
                     c.Fill();
                 }
                 else
                 {
-                    c.ShadowColor = ToCss(sh.color);
+                    c.SetShadow(sh.color);
                     c.ShadowBlur = sh.blur * scale;
                     c.ShadowOffsetX = (sh.dx + OffCanvas) * scale;
                     c.ShadowOffsetY = sh.dy * scale;
@@ -178,20 +186,30 @@ namespace OrbitalSalvage.Render
             }
             if (s.hasBg && s.bg.a > 0)
             {
-                c.FillStyle = ToCss(s.bg);
+                c.SetFill(s.bg);
                 c.BeginPath();
                 RRect(c, s.x, s.y, s.w, s.h, outer);
                 c.Fill();
             }
             if (!string.IsNullOrEmpty(s.bgImage) && s.bgImage != "none")
             {
-                // Computed background-image is a comma-separated list. The first layer is painted on top.
-                var layers = SplitTop(s.bgImage);
-                for (int li = layers.Count - 1; li >= 0; li--)
+                bool same = s.cachedLayers != null && s.cachedCss == s.bgImage && s.cx == s.x && s.cy == s.y && s.cw == s.w && s.ch == s.h;
+                if (!same)
                 {
-                    var g = CssGradient.Create(c, layers[li], s.x, s.y, s.w, s.h);
-                    if (g == null) continue;
-                    c.FillStyle = g;
+                    var built = new List<CanvasGradient>();
+                    var split = SplitTop(s.bgImage);
+                    for (int li = split.Count - 1; li >= 0; li--)
+                    {
+                        var g = CssGradient.Create(c, split[li], s.x, s.y, s.w, s.h);
+                        if (g != null) built.Add(g);
+                    }
+                    s.cachedLayers = built.ToArray();
+                    s.cachedCss = s.bgImage;
+                    s.cx = s.x; s.cy = s.y; s.cw = s.w; s.ch = s.h;
+                }
+                for (int li = 0; li < s.cachedLayers.Length; li++)
+                {
+                    c.FillStyle = s.cachedLayers[li];
                     c.BeginPath();
                     RRect(c, s.x, s.y, s.w, s.h, outer);
                     c.Fill();
@@ -221,7 +239,7 @@ namespace OrbitalSalvage.Render
                 c.BeginPath();
                 RRect(c, ix, iy, iw, ih, inner);
                 c.Clip();
-                c.FillStyle = ToCss(sh.color);
+                c.SetFill(sh.color);
                 c.BeginPath();
                 RRect(c, ix, iy, iw, ih, inner);
                 RRect(c, ix + sh.dx, iy + sh.dy, iw, ih, inner);
@@ -262,7 +280,7 @@ namespace OrbitalSalvage.Render
                 RRect(c, ix, iy, iw, ih, inner);
                 c.Clip();
                 c.FillStyle = "rgba(0,0,0,1)";
-                c.ShadowColor = ToCss(sh.color);
+                c.SetShadow(sh.color);
                 c.ShadowBlur = sh.blur * scale;
                 c.ShadowOffsetX = OffCanvas * scale;
                 c.ShadowOffsetY = 0;
@@ -286,7 +304,7 @@ namespace OrbitalSalvage.Render
                 if (s.borderC[0].a <= 0) return;
                 var inner = new Vec2d[4];
                 for (int i = 0; i < 4; i++) inner[i] = new Vec2d(Math.Max(0, outer[i].x - bl), Math.Max(0, outer[i].y - bt));
-                c.FillStyle = ToCss(s.borderC[0]);
+                c.SetFill(s.borderC[0]);
                 c.BeginPath();
                 RRect(c, s.x, s.y, s.w, s.h, outer);
                 RRect(c, s.x + bl, s.y + bt, s.w - bl - br, s.h - bt - bb, inner);
@@ -297,7 +315,7 @@ namespace OrbitalSalvage.Render
             void Strip(int side, double x, double y, double w, double h)
             {
                 if (w <= 0 || h <= 0 || s.borderC[side].a <= 0) return;
-                c.FillStyle = ToCss(s.borderC[side]);
+                c.SetFill(s.borderC[side]);
                 c.FillRect(x, y, w, h);
             }
             Strip(0, s.x, s.y, s.w, bt);
@@ -337,13 +355,13 @@ namespace OrbitalSalvage.Render
                     c.Save();
                     if (sh.blur <= 0)
                     {
-                        c.FillStyle = ToCss(sh.color);
+                        c.SetFill(sh.color);
                         c.FillText(text, x + sh.dx, baseline + sh.dy);
                     }
                     else
                     {
                         c.FillStyle = "rgba(0,0,0,1)";
-                        c.ShadowColor = ToCss(sh.color);
+                        c.SetShadow(sh.color);
                         c.ShadowBlur = sh.blur * scale;
                         c.ShadowOffsetX = (sh.dx + OffCanvas) * scale;
                         c.ShadowOffsetY = sh.dy * scale;
@@ -351,7 +369,7 @@ namespace OrbitalSalvage.Render
                     }
                     c.Restore();
                 }
-            c.FillStyle = ToCss(color);
+            c.SetFill(color);
             c.FillText(text, x, baseline);
             c.Restore();
         }
@@ -456,7 +474,7 @@ namespace OrbitalSalvage.Render
                 int n = j - (i - 1);
                 for (int k = i; k < j; k++) { var s = stops[k]; s.pos = a0 + (a1 - a0) * (k - (i - 1)) / n; s.hasPos = true; stops[k] = s; }
             }
-            foreach (var s in stops) g.AddColorStop(Math.Min(1, Math.Max(0, s.pos)), CssBox.ToCss(s.color));
+            foreach (var s in stops) g.AddColorStop(Math.Min(1, Math.Max(0, s.pos)), s.color);
             return g;
         }
 

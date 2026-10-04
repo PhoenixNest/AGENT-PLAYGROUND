@@ -49,7 +49,39 @@ namespace OrbitalSalvage.Render
         bool cacheOn;
         int paintOnlyLayer = -1;
         int lastBlit = -2;
-        // Blit of cached layers replaced the frame with empty gray. Keep the builder, do not composite.
+        CssFrame frameSlot;
+        readonly Dictionary<Dictionary<string, object>, double[]> rects = new Dictionary<Dictionary<string, object>, double[]>();
+        readonly double[] rectScratch = new double[4];
+        readonly double[] runScratch = new double[4];
+        sealed class Laid
+        {
+            public string font, text;
+            public double width;
+            public string[] lines;
+        }
+
+        readonly Dictionary<int, Laid> laid = new Dictionary<int, Laid>();
+        readonly Dictionary<Dictionary<string, object>, string> collapsed = new Dictionary<Dictionary<string, object>, string>();
+        readonly Dictionary<Dictionary<string, object>, string> collapsedUpper = new Dictionary<Dictionary<string, object>, string>();
+        bool[] specHidden;
+        bool[] isShine;
+        string[] fontOf;
+        double[] letterOf;
+        Rgba[] colorOf;
+        List<CssShadow>[] shadowOf;
+        bool[] upperOf;
+        double[] effBuf;
+        bool[] skipBuf;
+        Dictionary<int, int> paintIndex;
+        // Graphics.Blit replaced the target, so cached layers used to wipe the frame. BlitLayer now source-overs.
+        public static bool UseLayerCache = true;
+
+        static HomeChrome()
+        {
+            var args = Environment.GetCommandLineArgs();
+            if (Array.IndexOf(args, "-parity-no-layer-cache") >= 0) UseLayerCache = false;
+        }
+
         sealed class PreparedBox
         {
             public CssBoxStyle style;
@@ -60,8 +92,7 @@ namespace OrbitalSalvage.Render
 
         readonly Dictionary<Dictionary<string, object>, PreparedBox> prepared = new Dictionary<Dictionary<string, object>, PreparedBox>();
 
-        static readonly bool UseLayerCache = false;
-        /// <summary>True after a live draw has cached static runs. Full home paint measured about 800 ms.</summary>
+        /// <summary>True after a live draw has cached static runs.</summary>
         public bool UsesLayerCache => UseLayerCache && cacheReady && staticLayerCount > 0;
         bool cachedSkip;
         string cachedOverrides = "";
@@ -120,10 +151,13 @@ namespace OrbitalSalvage.Render
             return r[0] <= 1 && r[1] <= 1 && r[2] >= cssW - 1 && r[3] >= cssH - 1;
         }
 
-        static double[] Rect(Dictionary<string, object> e)
+        double[] Rect(Dictionary<string, object> e)
         {
+            if (rects.TryGetValue(e, out var cached)) return cached;
             var l = (List<object>)e["r"];
-            return new[] { (double)l[0], (double)l[1], (double)l[2], (double)l[3] };
+            var r = new[] { (double)l[0], (double)l[1], (double)l[2], (double)l[3] };
+            rects[e] = r;
+            return r;
         }
         static List<string> Strs(Dictionary<string, object> e, string key)
         {
@@ -295,7 +329,8 @@ namespace OrbitalSalvage.Render
         public void Draw(double timeMs, int pressed, string pressCss, bool modalIntro, bool pinPageEnter)
         {
             long prof = PaintProfile.Stamp();
-            frame = double.IsNaN(timeMs) ? null : CssFrame.Build(elements, timeMs, pinPageEnter, modalIntro, pressed, pressCss);
+            frame = double.IsNaN(timeMs) ? null : CssFrame.Build(elements, timeMs, pinPageEnter, modalIntro, pressed, pressCss, frameSlot);
+            if (frame != null) frameSlot = frame;
             canvas.ExactBackdrop = frame == null;
             bool savedPremul = Canvas2D.GradientInterpolatesPremultiplied;
             Canvas2D.GradientInterpolatesPremultiplied = true; // CSS gradients interpolate premultiplied
@@ -303,7 +338,8 @@ namespace OrbitalSalvage.Render
             try
             {
                 if (frame != null && UseLayerCache) { PaintProfile.Begin(PaintProfile.Cache); EnsureCache(); PaintProfile.End(PaintProfile.Cache); }
-                cacheOn = frame != null && cacheReady && paintOnlyLayer < 0;
+                bool settled = frame != null && !frame.PageTransform && frame.PageOpacity >= 0.999;
+                cacheOn = settled && cacheReady && paintOnlyLayer < 0 && staticLayerCount > 0;
                 lastBlit = -2;
                 canvas.BeginFrame();
                 canvas.SetTransform(scale, 0, 0, scale, 0, 0);
@@ -332,10 +368,29 @@ namespace OrbitalSalvage.Render
         void PaintAll()
         {
             int n = elements.Count;
-            var eff = new double[n];
-            var skip = new bool[n];
-            var byIndex = new Dictionary<int, int>();
-            for (int k = 0; k < n; k++) byIndex[(int)N(elements[k], "i", k)] = k;
+            if (effBuf == null || effBuf.Length < n)
+            {
+                effBuf = new double[n];
+                skipBuf = new bool[n];
+                paintIndex = new Dictionary<int, int>(n);
+                for (int k = 0; k < n; k++) paintIndex[(int)N(elements[k], "i", k)] = k;
+            }
+            Array.Clear(effBuf, 0, n);
+            Array.Clear(skipBuf, 0, n);
+            if (specHidden == null)
+            {
+                specHidden = new bool[n];
+                isShine = new bool[n];
+                for (int k = 0; k < n; k++)
+                {
+                    string classes = " " + S(elements[k], "c") + " ";
+                    specHidden[k] = N(elements[k], "v", 1) == 0 || S(elements[k], "vis") == "hidden" || classes.Contains(" page-hidden ");
+                    isShine[k] = classes.Contains(" play-btn-glow ");
+                }
+            }
+            var eff = effBuf;
+            var skip = skipBuf;
+            var byIndex = paintIndex;
             if (paintOnlyLayer >= 0 && baseOpacity != null)
                 for (int k = 0; k < n; k++) eff[k] = baseOpacity[k];
             int playfieldIndex = -1;
@@ -356,11 +411,10 @@ namespace OrbitalSalvage.Render
 
                 if (SkipPlayfield && playfieldIndex >= 0 && k < playfieldIndex && CoversViewport(e))
                 {
-                    string coverClasses = " " + S(e, "c") + " ";
                     eff[k] = parentOpacity * N(e, "o", 1);
                     skip[k] = parentSkipped;
                     if (parentSkipped) continue;
-                    if (N(e, "v", 1) == 0 || S(e, "vis") == "hidden" || coverClasses.Contains(" page-hidden ")) { skip[k] = true; continue; }
+                    if (specHidden[k]) { skip[k] = true; continue; }
                     continue;
                 }
 
@@ -388,16 +442,15 @@ namespace OrbitalSalvage.Render
                     continue;
                 }
 
-                string classes = " " + S(e, "c") + " ";
                 double opacity = frame != null && !double.IsNaN(frame.Opacity[k]) ? frame.Opacity[k] : N(e, "o", 1);
                 eff[k] = parentOpacity * opacity;
                 skip[k] = parentSkipped;
                 if (parentSkipped) continue;
-                if (N(e, "v", 1) == 0 || S(e, "vis") == "hidden" || classes.Contains(" page-hidden ")) { skip[k] = true; continue; }
+                if (specHidden[k]) { skip[k] = true; continue; }
                 if (OmitCached(k)) continue;
                 bool moving = Motion(k);
                 if (moving) BeginMotion(k);
-                if (classes.Contains(" play-btn-glow ")) { PaintShine(e, pk, eff[k], k); if (moving) canvas.Restore(); continue; }
+                if (isShine[k]) { PaintShine(e, pk, eff[k], k); if (moving) canvas.Restore(); continue; }
                 // matrix3d discs are painted in their measured (already foreshortened) box.
 
                 if (S(e, "bf") != "" && S(e, "bf") != "none")
@@ -443,12 +496,20 @@ namespace OrbitalSalvage.Render
 
         double[] ElementRect(Dictionary<string, object> e, int k, bool element)
         {
-            double[] r;
-            if (element && frame != null && frame.Tree[k] && frame.Local[k] != null)
-                r = new[] { frame.Local[k][0], frame.Local[k][1], frame.Local[k][2], frame.Local[k][3] };
-            else r = Rect(e);
-            if (element && frame != null && Math.Abs(frame.ExtraY[k]) > 1e-6) r[1] += frame.ExtraY[k];
-            return r;
+            double[] src;
+            if (element && frame != null && frame.Tree[k] && frame.Local[k] != null) src = frame.Local[k];
+            else src = Rect(e);
+            rectScratch[0] = src[0];
+            rectScratch[1] = src[1];
+            rectScratch[2] = src[2];
+            rectScratch[3] = src[3];
+            if (element && frame != null && Math.Abs(frame.ExtraY[k]) > 1e-6) rectScratch[1] += frame.ExtraY[k];
+            return rectScratch;
+        }
+
+        bool Outside(double[] r, double reach)
+        {
+            return r[0] > cssW + reach || r[1] > cssH + reach || r[0] + r[2] < -reach || r[1] + r[3] < -reach;
         }
 
         void PaintBox(Dictionary<string, object> e, int k, double alpha, bool element)
@@ -464,6 +525,19 @@ namespace OrbitalSalvage.Render
             double tilt = flat ? 0 : InheritedTilt(e, r);
             if (r[2] <= 0 || r[3] <= 0) { PaintProfile.End(PaintProfile.PaintBox); return; }
             var prep = PrepareBox(e, r[2], r[3]);
+            bool moving = frame != null && (frame.PageTransform || (element && frame.Tree[k]));
+            if (!moving)
+            {
+                double reach = 64;
+                var shadows = prep.style.shadows;
+                for (int i = 0; i < shadows.Count; i++)
+                {
+                    var sh = shadows[i];
+                    double need = sh.blur + Math.Abs(sh.spread) + Math.Abs(sh.dx) + Math.Abs(sh.dy) + 8;
+                    if (need > reach) reach = need;
+                }
+                if (Outside(r, reach)) { PaintProfile.End(PaintProfile.PaintBox); return; }
+            }
             var style = prep.style;
             style.x = r[0]; style.y = r[1]; style.w = r[2]; style.h = r[3];
             bool borderOverride = element && frame != null && frame.Border[k] != null;
@@ -539,6 +613,14 @@ namespace OrbitalSalvage.Render
 
         static readonly Regex Spaces = new Regex(@"\s+", RegexOptions.Compiled);
 
+        string Collapse(Dictionary<string, object> run)
+        {
+            if (collapsed.TryGetValue(run, out var s)) return s;
+            s = Spaces.Replace(S(run, "s"), " ");
+            collapsed[run] = s;
+            return s;
+        }
+
         static string FontFamily(string ff)
         {
             if (string.IsNullOrEmpty(ff)) return "Fredoka";
@@ -547,16 +629,49 @@ namespace OrbitalSalvage.Render
             return first;
         }
 
+        void EnsureRunStyle(Dictionary<string, object> e, int k)
+        {
+            if (fontOf == null)
+            {
+                int n = elements.Count;
+                fontOf = new string[n];
+                letterOf = new double[n];
+                colorOf = new Rgba[n];
+                shadowOf = new List<CssShadow>[n];
+                upperOf = new bool[n];
+            }
+            if (fontOf[k] != null) return;
+            string family = FontFamily(S(e, "ff"));
+            fontOf[k] = S(e, "fw") + " " + S(e, "fz") + " " + family;
+            letterOf[k] = CssBox.ParseLength(S(e, "ls"));
+            colorOf[k] = CssColor.Parse(S(e, "col"), Rgba.Black);
+            shadowOf[k] = CssBox.ParseShadows(S(e, "ts"));
+            upperOf[k] = S(e, "tt") == "uppercase";
+        }
+
+        static bool Blank(string s)
+        {
+            for (int i = 0; i < s.Length; i++) if (!char.IsWhiteSpace(s[i])) return false;
+            return true;
+        }
+
         void PaintRuns(Dictionary<string, object> e, int k, double alpha)
         {
             if (!e.TryGetValue("runs", out var rv) || !(rv is List<object> runs) || runs.Count == 0) return;
             PaintProfile.Begin(PaintProfile.PaintRuns);
-            string family = FontFamily(S(e, "ff"));
-            string font = S(e, "fw") + " " + S(e, "fz") + " " + family;
-            double ls = CssBox.ParseLength(S(e, "ls"));
-            var color = CssColor.Parse(S(e, "col"), Rgba.Black);
-            var shadows = CssBox.ParseShadows(S(e, "ts"));
-            bool upper = S(e, "tt") == "uppercase";
+            EnsureRunStyle(e, k);
+            string font = fontOf[k];
+            double ls = letterOf[k];
+            var color = colorOf[k];
+            var shadows = shadowOf[k];
+            bool upper = upperOf[k];
+            double textReach = 48;
+            for (int i = 0; i < shadows.Count; i++)
+            {
+                var sh = shadows[i];
+                double need = sh.blur + Math.Abs(sh.dx) + Math.Abs(sh.dy) + 8;
+                if (need > textReach) textReach = need;
+            }
 
             string textId = S(e, "id");
             string textReplacement = null;
@@ -564,34 +679,62 @@ namespace OrbitalSalvage.Render
             for (int ri = 0; ri < runs.Count; ri++)
             {
                 var run = (Dictionary<string, object>)runs[ri];
-                string text = replaceText && ri == 0 ? textReplacement : Spaces.Replace(S(run, "s"), " ");
-                if (replaceText && ri > 0) continue;
-                if (upper) text = text.ToUpperInvariant();
-                double[] r;
+                string text;
+                if (replaceText && ri == 0) text = upper ? textReplacement.ToUpperInvariant() : textReplacement;
+                else if (replaceText) continue;
+                else if (upper)
+                {
+                    if (!collapsedUpper.TryGetValue(run, out text))
+                    {
+                        text = Collapse(run).ToUpperInvariant();
+                        collapsedUpper[run] = text;
+                    }
+                }
+                else text = Collapse(run);
+                double[] src;
                 if (frame != null && frame.Tree[k] && frame.Runs[k] != null && ri < frame.Runs[k].Length && frame.Runs[k][ri] != null)
-                    r = new[] { frame.Runs[k][ri][0], frame.Runs[k][ri][1], frame.Runs[k][ri][2], frame.Runs[k][ri][3] };
-                else r = Rect(run);
+                    src = frame.Runs[k][ri];
+                else src = Rect(run);
+                runScratch[0] = src[0];
+                runScratch[1] = src[1];
+                runScratch[2] = src[2];
+                runScratch[3] = src[3];
+                var r = runScratch;
                 if (frame != null && Math.Abs(frame.ExtraY[k]) > 1e-6) r[1] += frame.ExtraY[k];
-                if (text.Trim().Length == 0) continue;
+                if (Blank(text)) continue;
+                bool movingText = frame != null && (frame.PageTransform || frame.Tree[k]);
+                if (!movingText && Outside(r, textReach)) continue;
                 PaintProfile.Runs++;
 
                 canvas.Save();
                 canvas.Font = font;
                 canvas.LetterSpacing = ls;
-                // The range rect only covers the laid-out characters: collapsed edge whitespace is not part of it.
-                string best = text; double bestErr = double.MaxValue;
-                string[] candidates = { text, text.TrimStart(), text.TrimEnd(), text.Trim() };
-                foreach (var cand in candidates)
+                int slot = k * 16 + ri;
+                string[] lines;
+                if (!replaceText && laid.TryGetValue(slot, out var lay) && lay.font == font && lay.text == text && Math.Abs(lay.width - r[2]) < 0.05)
+                    lines = lay.lines;
+                else
                 {
-                    double err = Math.Abs(canvas.MeasureText(cand) - r[2]);
-                    if (err < bestErr - 0.01) { bestErr = err; best = cand; }
+                    string best = text;
+                    double bestErr = double.MaxValue;
+                    string trimStart = text.TrimStart();
+                    string trimEnd = text.TrimEnd();
+                    string trimBoth = text.Trim();
+                    string[] candidates = { text, trimStart, trimEnd, trimBoth };
+                    foreach (var cand in candidates)
+                    {
+                        double err = Math.Abs(canvas.MeasureText(cand) - r[2]);
+                        if (err < bestErr - 0.01) { bestErr = err; best = cand; }
+                    }
+                    lines = WrapToWidth(canvas, best, r[2]).ToArray();
+                    if (!replaceText)
+                        laid[slot] = new Laid { font = font, text = text, width = r[2], lines = lines };
                 }
-                var lines = WrapToWidth(canvas, best, r[2]);
-                double lineH = lines.Count > 1 ? r[3] / lines.Count : 0;
-                for (int i = 0; i < lines.Count; i++)
+                double lineH = lines.Length > 1 ? r[3] / lines.Length : 0;
+                for (int i = 0; i < lines.Length; i++)
                 {
                     // The run rect's top is the first em box, the same origin a single line uses.
-                    double baseline = r[1] + (lines.Count > 1 ? i * lineH : 0) + canvas.FontAscent();
+                    double baseline = r[1] + (lines.Length > 1 ? i * lineH : 0) + canvas.FontAscent();
                     CssBox.DrawText(canvas, lines[i], r[0], baseline, color, shadows, alpha);
                     DrawnRuns++;
                 }
