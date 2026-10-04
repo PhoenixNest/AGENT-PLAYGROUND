@@ -20,12 +20,19 @@ namespace OrbitalSalvage.Render.Tests
                 for (int i = 0; i < 45; i++) chrome.Draw(900.0 + i * 40.0);
 
                 var liveBg = Sample(chrome, 20, 200);
-                var liveFace = Sample(chrome, 215, 431);
                 Assert.Less(Mathf.Abs(liveBg.r - frozenBg.r), 48, "live bg r " + liveBg);
                 Assert.Less(Mathf.Abs(liveBg.g - frozenBg.g), 48, "live bg g " + liveBg);
                 Assert.Less(Mathf.Abs(liveBg.b - frozenBg.b), 48, "live bg b " + liveBg);
-                Assert.Greater(liveFace.r, 180, "live hero face drifted off the sphere: " + liveFace);
-                Assert.Less(liveFace.b, 140, "live hero is the blue sphere: " + liveFace);
+                // The idle pose shifts the face by a few pixels, so the captured centre can land on an eye.
+                // A yellow texel anywhere in the hero box means the face is still on the sphere.
+                bool face = false;
+                for (int y = 400; y <= 460 && !face; y += 2)
+                    for (int x = 185; x <= 245 && !face; x += 2)
+                    {
+                        var c = Sample(chrome, x, y);
+                        if (c.r > 200 && c.g > 140 && c.b < 120) face = true;
+                    }
+                Assert.IsTrue(face, "live hero face left the sphere");
             }
             finally
             {
