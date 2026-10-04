@@ -36,6 +36,11 @@ namespace OrbitalSalvage.Logic
         public List<string> CueLog = new List<string>();
         public bool RecordCues = true;
         public Action<string> CueSink;
+        /// <summary>
+        /// Live-player hook. Stays null on parity and self-test paths, so those keep this stub's
+        /// RNG draws and stay silent. Invoked only after a cue passes init, mute, and cooldown.
+        /// </summary>
+        public Action<string, double, string> Audible;
 
         private JsRandom Rng
         {
@@ -72,6 +77,11 @@ namespace OrbitalSalvage.Logic
             if (CueSink != null) CueSink(line);
         }
 
+        void Heard(string name, double amount, string text)
+        {
+            if (Audible != null) Audible(name, amount, text);
+        }
+
         private static string H(double d)
         {
             return BitConverter.DoubleToInt64Bits(d).ToString("x16");
@@ -84,6 +94,7 @@ namespace OrbitalSalvage.Logic
             double now = CurrentTime;
             if (now - LastRatchetTime < RatchetCooldown) return;
             LastRatchetTime = now;
+            Heard("spin", pitchMultiplier, null);
         }
 
         public void PlayDebrisCollision(double intensity, string debrisType)
@@ -94,6 +105,7 @@ namespace OrbitalSalvage.Logic
             if (now - LastCollisionTime < CollisionCooldown) return;
             LastCollisionTime = now;
             Rng.NextDouble("audio.collision");
+            Heard("collision", intensity, debrisType);
         }
 
         public void PlayDebrisSwallowed()
@@ -101,6 +113,7 @@ namespace OrbitalSalvage.Logic
             Record("playDebrisSwallowed", "");
             if (Blocked()) return;
             LastSwallowTime = CurrentTime;
+            Heard("swallow", 0, null);
         }
 
         public void PlayGatePass(string gateType, double value)
@@ -110,6 +123,7 @@ namespace OrbitalSalvage.Logic
             double now = CurrentTime;
             if (now - LastGatePassTime < GatePassCooldown) return;
             LastGatePassTime = now;
+            Heard("gate", value, gateType);
         }
 
         public void PlayRcsThrust()
@@ -124,6 +138,7 @@ namespace OrbitalSalvage.Logic
             {
                 Rng.NextDouble("audio.rcsNoise");
             }
+            Heard("rcs", 0, null);
         }
 
         public void PlayBumperBounce()
@@ -134,11 +149,13 @@ namespace OrbitalSalvage.Logic
             if (now - LastBumperTime < BumperCooldown) return;
             LastBumperTime = now;
             Rng.NextDouble("audio.bumper");
+            Heard("bumper", 0, null);
         }
 
         public void PlayHazardExplosion()
         {
             Record("playHazardExplosion", "");
+            if (!Blocked()) Heard("hazard", 0, null);
         }
 
         public double[] CaptureState()
