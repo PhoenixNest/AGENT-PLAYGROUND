@@ -728,7 +728,6 @@ namespace OrbitalSalvage.Render
                 bool moving = Motion(k);
                 if (moving) BeginMotion(k);
                 if (isShine[k]) { PaintShine(e, pk, eff[k], k); if (moving) canvas.Restore(); continue; }
-                // matrix3d discs are painted in their measured (already foreshortened) box.
 
                 if (S(e, "bf") != "" && S(e, "bf") != "none")
                 {
@@ -863,7 +862,21 @@ namespace OrbitalSalvage.Render
                 canvas.ClosePath();
                 canvas.Clip();
             }
-            CssBox.Draw(canvas, style, alpha);
+            // matrix3d discs are stored as their foreshortened AABB. Paint the pre-transform ellipse through perspective * rotateX.
+            double pox = 0, poy = 0, pcos = 0, psod = 0, phw = 0, phh = 0;
+            bool persp = element && CssBox.TryPerspectiveDisc(S(e, "tf"), style.x, style.y, style.w, style.h, out pox, out poy, out pcos, out psod, out phw, out phh);
+            if (persp)
+            {
+                CssBox.DrawProjectedShadows(canvas, style, alpha, style.shadows, pox, poy, pcos, psod, phw, phh);
+                canvas.Save();
+                canvas.BeginPath();
+                CssBox.TracePerspectiveEllipse(canvas, pox, poy, phw, phh, pcos, psod, 0, 0);
+                canvas.Clip();
+                CssBox.Draw(canvas, style, alpha, false, false);
+                CssBox.DrawProjectedBorder(canvas, style, alpha, pox, poy, pcos, psod, phw, phh);
+                canvas.Restore();
+            }
+            else CssBox.Draw(canvas, style, alpha);
             if (beam) canvas.Restore();
             if (tilt != 0) canvas.Restore();
             if (savedBorder != null) Array.Copy(savedBorder, style.borderC, 4);

@@ -154,8 +154,136 @@ namespace OrbitalSalvage.Render
             if (square) c.Rect(x, y, w, h); else c.RoundRect(x, y, w, h, r);
         }
 
+        /// <summary>
+        /// Recover the pre-transform ellipse for a computed <c>perspective(d) rotateX(a)</c>.
+        /// The spec stores only the foreshortened AABB; the layout size is the unique ellipse whose projection has that box.
+        /// </summary>
+        public static bool TryPerspectiveDisc(string tf, double x, double y, double w, double h,
+            out double ox, out double oy, out double cos, out double sod, out double halfW, out double halfH)
+        {
+            ox = oy = cos = sod = halfW = halfH = 0;
+            if (string.IsNullOrEmpty(tf) || !tf.StartsWith("matrix3d(", StringComparison.Ordinal) || tf[tf.Length - 1] != ')') return false;
+            var parts = tf.Substring(9, tf.Length - 10).Split(',');
+            if (parts.Length < 16) return false;
+            var m = new double[16];
+            for (int i = 0; i < 16; i++)
+                if (!double.TryParse(parts[i], NumberStyles.Float, CultureInfo.InvariantCulture, out m[i])) return false;
+            // Column-major. perspective(d) * rotateX(a) has no translation and no X scale.
+            if (Math.Abs(m[0] - 1) > 1e-3 || Math.Abs(m[1]) > 1e-3 || Math.Abs(m[4]) > 1e-3) return false;
+            if (Math.Abs(m[12]) > 1e-3 || Math.Abs(m[13]) > 1e-3) return false;
+            cos = m[5];
+            double sin = m[6];
+            sod = -m[7];
+            if (!(sod > 1e-6) || cos < 0.2 || Math.Abs(m[9] + sin) > 2e-2) return false;
+            double A = h * sod;
+            double B = 2 * cos;
+            double disc = B * B + 4 * A * A;
+            if (!(A > 0) || disc <= 0) return false;
+            double u = (-B + Math.Sqrt(disc)) / (2 * A);
+            if (!(u > 0) || u >= 0.9) return false;
+            halfH = u / sod;
+            halfW = w * 0.5 * (1 - u);
+            ox = x + w * 0.5;
+            oy = y + h - halfH * cos / (1 - u);
+            return halfW > 1 && halfH > 1;
+        }
+
+        public static void TracePerspectiveEllipse(Canvas2D c, double ox, double oy, double halfW, double halfH, double cos, double sod, double shiftX, double shiftY)
+        {
+            const int n = 96;
+            for (int i = 0; i < n; i++)
+            {
+                double t = Math.PI * 2 * i / n;
+                double lx = halfW * Math.Cos(t) + shiftX;
+                double ly = halfH * Math.Sin(t) + shiftY;
+                double clipW = 1 - ly * sod;
+                if (clipW < 1e-4) clipW = 1e-4;
+                double sx = ox + lx / clipW;
+                double sy = oy + ly * cos / clipW;
+                if (i == 0) c.MoveTo(sx, sy);
+                else c.LineTo(sx, sy);
+            }
+            c.ClosePath();
+        }
+
+        /// <summary>Outer box-shadows of a perspective disc. The blur stays in screen space; the silhouette is the projected ellipse.</summary>
+        public static void DrawProjectedShadows(Canvas2D c, CssBoxStyle s, double alpha, List<CssShadow> shadows,
+            double ox, double oy, double cos, double sod, double halfW, double halfH)
+        {
+            if (shadows == null || shadows.Count == 0 || alpha <= 0) return;
+            c.Save();
+            c.GlobalAlpha = Math.Min(1, alpha);
+            for (int i = shadows.Count - 1; i >= 0; i--)
+            {
+                var sh = shadows[i];
+                if (sh.inset || sh.color.a <= 0) continue;
+                double pad = sh.blur + sh.spread + Math.Abs(sh.dx) + Math.Abs(sh.dy) + 4;
+                c.Save();
+                c.BeginPath();
+                c.Rect(s.x - pad, s.y - pad, s.w + pad * 2, s.h + pad * 2);
+                TracePerspectiveEllipse(c, ox, oy, halfW, halfH, cos, sod, 0, 0);
+                c.Clip("evenodd");
+                c.FillStyle = "rgba(0,0,0,1)";
+                if (sh.blur <= 0)
+                {
+                    c.SetFill(sh.color);
+                    c.BeginPath();
+                    TracePerspectiveEllipse(c, ox, oy, halfW + sh.spread, halfH + sh.spread, cos, sod, sh.dx, sh.dy);
+                    c.Fill();
+                }
+                else
+                {
+                    c.SetShadow(sh.color);
+                    ShadowDevice(c, sh.dx, sh.dy, OffCanvas, 0, out var devX, out var devY, out var blurScale);
+                    c.ShadowBlur = sh.blur * blurScale;
+                    c.ShadowOffsetX = devX;
+                    c.ShadowOffsetY = devY;
+                    c.BeginPath();
+                    TracePerspectiveEllipse(c, ox - OffCanvas, oy, halfW + sh.spread, halfH + sh.spread, cos, sod, 0, 0);
+                    c.Fill();
+                }
+                c.Restore();
+            }
+            c.Restore();
+        }
+
+        public static void DrawProjectedBorder(Canvas2D c, CssBoxStyle s, double alpha,
+            double ox, double oy, double cos, double sod, double halfW, double halfH)
+        {
+            double bw = s.borderW[0];
+            if (bw <= 0 || alpha <= 0 || s.borderC[0].a <= 0) return;
+            bool dashed = s.borderDashed[0] && s.borderDashed[1] && s.borderDashed[2] && s.borderDashed[3];
+            c.Save();
+            c.GlobalAlpha = Math.Min(1, alpha);
+            if (dashed)
+            {
+                c.StrokeStyle = ToCss(s.borderC[0]);
+                c.LineWidth = bw;
+                c.LineCap = "butt";
+                c.SetLineDash(new[] { bw * 3, bw });
+                c.BeginPath();
+                TracePerspectiveEllipse(c, ox, oy, Math.Max(0.5, halfW - bw * 0.5), Math.Max(0.5, halfH - bw * 0.5), cos, sod, 0, 0);
+                c.Stroke();
+                c.SetLineDash(null);
+            }
+            else if (s.borderOn[0])
+            {
+                c.SetFill(s.borderC[0]);
+                c.BeginPath();
+                TracePerspectiveEllipse(c, ox, oy, halfW, halfH, cos, sod, 0, 0);
+                TracePerspectiveEllipse(c, ox, oy, Math.Max(0.5, halfW - bw), Math.Max(0.5, halfH - bw), cos, sod, 0, 0);
+                c.Fill("evenodd");
+            }
+            c.Restore();
+        }
+
         /// <summary>Draws the box. <paramref name="alpha"/> is the accumulated opacity of the element and its ancestors.</summary>
         public static void Draw(Canvas2D c, CssBoxStyle s, double alpha)
+        {
+            Draw(c, s, alpha, true, true);
+        }
+
+        public static void Draw(Canvas2D c, CssBoxStyle s, double alpha, bool outerShadows, bool border)
         {
             PaintProfile.Begin(PaintProfile.CssBox);
             if (s.w <= 0 || s.h <= 0 || alpha <= 0) { PaintProfile.End(PaintProfile.CssBox); return; }
@@ -165,6 +293,7 @@ namespace OrbitalSalvage.Render
             // Outer shadows are visible only outside the border box. A fill, even a translucent one, composites
             // against the page rather than against this element's own shadow.
             var outer = ResolveRadii(s, 0);
+            if (outerShadows)
             for (int i = s.shadows.Count - 1; i >= 0; i--)
             {
                 var sh = s.shadows[i];
@@ -228,7 +357,7 @@ namespace OrbitalSalvage.Render
 
             DrawHardInsets(c, s, outer);
             DrawBlurredInsets(c, s, outer);
-            DrawBorder(c, s, outer);
+            if (border) DrawBorder(c, s, outer);
             c.Restore();
             PaintProfile.End(PaintProfile.CssBox);
         }
