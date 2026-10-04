@@ -345,10 +345,14 @@ namespace OrbitalSalvage.Render
                 frame.Tree[k] = under;
                 if (!under) continue;
                 bool hasBase = elements[k].ContainsKey("br");
-                if (frame.Local[k] == null) frame.Local[k] = CopyRect(elements[k], hasBase ? "br" : "r");
-                // A captured rect already includes ancestor transforms. Descendants that have no layout box
-                // would otherwise be transformed a second time. Lift them back to the ancestor's layout space.
-                if (!hasBase && frame.Local[k] != null) UnbakeCaptured(elements, frame, k);
+                // Local is kept across frames. Unbake once, from the captured rect. Doing it again
+                // walks the same inverse and the child drifts (the hero face leaves the sphere,
+                // and a debris sprite's box grows until it covers the page).
+                if (frame.Local[k] == null)
+                {
+                    frame.Local[k] = CopyRect(elements[k], hasBase ? "br" : "r");
+                    if (!hasBase && frame.Local[k] != null) UnbakeCaptured(elements, frame, k);
+                }
                 if (frame.Local[k] != null) OriginOf(elements[k], frame.Local[k][2], frame.Local[k][3], out frame.OriginX[k], out frame.OriginY[k]);
                 if (frame.Runs[k] == null) frame.Runs[k] = CopyRuns(elements[k], true);
                 frame.HasMotion = true;

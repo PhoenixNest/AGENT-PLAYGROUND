@@ -32,6 +32,7 @@ namespace OrbitalSalvage.Viewer
 
         void BootApp()
         {
+            if (!selfTesting) ConfigurePresentation();
             var clock = new PlayerClock();
             BootApp(clock, false, true);
         }
