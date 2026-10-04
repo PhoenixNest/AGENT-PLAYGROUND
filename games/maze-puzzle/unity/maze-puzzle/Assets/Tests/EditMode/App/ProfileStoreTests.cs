@@ -38,9 +38,12 @@ namespace OrbitalSalvage.App.Tests
             Assert.AreEqual(1_700_000_000_000, app.EpochMs, 0.001);
             app.Advance(240);
             Assert.AreEqual(240, app.NowMs, 0.001);
-            app.CatchUp(500, clock.EpochMs + 500);
+            Assert.AreEqual(1_700_000_000_240d, app.EpochMs, 0.001);
+            app.CatchUp(500, 1_800_000_000_000d);
             Assert.AreEqual(500, app.NowMs, 0.001);
-            Assert.AreEqual(clock.EpochMs + 500, app.EpochMs, 0.001);
+            Assert.AreEqual(1_800_000_000_260d, app.EpochMs, 0.001);
+            Assert.AreEqual(500, clock.NowMs, 0.001);
+            Assert.AreEqual(app.EpochMs, clock.EpochMs, 0.001);
         }
     }
 }
