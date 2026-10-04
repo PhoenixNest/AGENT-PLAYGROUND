@@ -203,6 +203,11 @@ namespace OrbitalSalvage.Viewer
         {
             cache.Clear(chrome => chrome.Dispose());
             current = null;
+            if (underlayChrome != null)
+            {
+                underlayChrome.Dispose();
+                underlayChrome = null;
+            }
             if (session != null)
             {
                 session.Renderer.Dispose();

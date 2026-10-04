@@ -13,6 +13,12 @@ namespace OrbitalSalvage.Render
     {
         static Dictionary<string, KeyframeSet> library;
 
+        /// <summary>
+        /// When set, only these animation names are sampled, each at its own currentTime.
+        /// Names absent from the map keep the captured pose. Null samples every animation at the frame clock.
+        /// </summary>
+        public static Dictionary<string, double> Running;
+
         public static void SetLibrary(Dictionary<string, KeyframeSet> sets) { library = sets; }
 
         public static KeyframeSet Find(string name)
@@ -286,6 +292,10 @@ namespace OrbitalSalvage.Render
                 string name = SpecStr(am, "n");
                 var set = CssAnimation.Find(name);
                 double when = timeMs;
+                if (CssAnimation.Running != null)
+                {
+                    if (name.Length == 0 || !CssAnimation.Running.TryGetValue(name, out when)) continue;
+                }
                 if (pinPageEnter && name == "pageEnter")
                     when = SpecNum(am, "dl") + Math.Max(1, SpecNum(am, "du"));
                 double w = 0, h = 0;
@@ -328,13 +338,17 @@ namespace OrbitalSalvage.Render
             for (int k = 0; k < n; k++)
             {
                 bool under = false;
-                for (int p = k; p >= 0; p = frame.Parent[p])
+                for (int p = k, hops = 0; p >= 0 && hops < n; p = frame.Parent[p], hops++)
                 {
                     if (frame.Live[p]) { under = true; break; }
                 }
                 frame.Tree[k] = under;
                 if (!under) continue;
-                if (frame.Local[k] == null) frame.Local[k] = CopyRect(elements[k], elements[k].ContainsKey("br") ? "br" : "r");
+                bool hasBase = elements[k].ContainsKey("br");
+                if (frame.Local[k] == null) frame.Local[k] = CopyRect(elements[k], hasBase ? "br" : "r");
+                // A captured rect already includes ancestor transforms. Descendants that have no layout box
+                // would otherwise be transformed a second time. Lift them back to the ancestor's layout space.
+                if (!hasBase && frame.Local[k] != null) UnbakeCaptured(elements, frame, k);
                 if (frame.Local[k] != null) OriginOf(elements[k], frame.Local[k][2], frame.Local[k][3], out frame.OriginX[k], out frame.OriginY[k]);
                 if (frame.Runs[k] == null) frame.Runs[k] = CopyRuns(elements[k], true);
                 frame.HasMotion = true;
@@ -359,7 +373,7 @@ namespace OrbitalSalvage.Render
                     for (int k = 0; k < n; k++)
                     {
                         bool inside = false;
-                        for (int p = k; p >= 0; p = frame.Parent[p]) if (p == card) { inside = true; break; }
+                        for (int p = k, hops = 0; p >= 0 && hops < n; p = frame.Parent[p], hops++) if (p == card) { inside = true; break; }
                         if (inside) frame.ExtraY[k] = dy;
                     }
                     frame.HasMotion = Math.Abs(dy) > 0.2 || uo < 0.999;
@@ -380,14 +394,14 @@ namespace OrbitalSalvage.Render
         public bool Pressed(int index)
         {
             if (PressRoot < 0) return false;
-            for (int p = index; p >= 0; p = Parent[p]) if (p == PressRoot) return true;
+            for (int p = index, hops = 0; p >= 0 && hops < Parent.Length; p = Parent[p], hops++) if (p == PressRoot) return true;
             return false;
         }
 
         public void ApplyMotion(Canvas2D canvas, int index)
         {
             Chain.Clear();
-            for (int p = index; p >= 0; p = Parent[p])
+            for (int p = index, hops = 0; p >= 0 && hops < Parent.Length; p = Parent[p], hops++)
                 if (Live[p]) Chain.Add(p);
             for (int i = Chain.Count - 1; i >= 0; i--)
             {
@@ -413,6 +427,44 @@ namespace OrbitalSalvage.Render
             canvas.Translate(cx, cy);
             canvas.Transform(PressMatrix.a, PressMatrix.b, PressMatrix.c, PressMatrix.d, PressMatrix.e, PressMatrix.f);
             canvas.Translate(-cx, -cy);
+        }
+
+        static void UnbakeCaptured(IList<Dictionary<string, object>> elements, CssFrame frame, int index)
+        {
+            frame.Chain.Clear();
+            for (int p = frame.Parent[index], hops = 0; p >= 0 && hops < frame.Parent.Length; p = frame.Parent[p], hops++)
+                if (frame.Live[p]) frame.Chain.Add(p);
+            var rect = frame.Local[index];
+            for (int i = frame.Chain.Count - 1; i >= 0; i--)
+            {
+                int a = frame.Chain[i];
+                var box = frame.Local[a];
+                if (box == null) box = CopyRect(elements[a], elements[a].ContainsKey("br") ? "br" : "r");
+                if (box == null || box[2] <= 0 || box[3] <= 0) continue;
+                var m = CssTransform.ToMatrix(SpecStr(elements[a], "tf"), box[2], box[3], SpecNum(elements[a], "dx"));
+                if (!m.IsInvertible || NearlyIdentity(m)) continue;
+                OriginOf(elements[a], box[2], box[3], out var ox, out var oy);
+                ox += box[0];
+                oy += box[1];
+                var inv = m.Inverse();
+                double minX = double.MaxValue, minY = double.MaxValue, maxX = double.MinValue, maxY = double.MinValue;
+                double x0 = rect[0], y0 = rect[1], x1 = x0 + rect[2], y1 = y0 + rect[3];
+                for (int c = 0; c < 4; c++)
+                {
+                    double x = (c & 1) == 0 ? x0 : x1;
+                    double y = (c & 2) == 0 ? y0 : y1;
+                    var pt = inv.Apply(x - ox, y - oy);
+                    double px = pt.x + ox, py = pt.y + oy;
+                    if (px < minX) minX = px;
+                    if (py < minY) minY = py;
+                    if (px > maxX) maxX = px;
+                    if (py > maxY) maxY = py;
+                }
+                rect[0] = minX;
+                rect[1] = minY;
+                rect[2] = maxX - minX;
+                rect[3] = maxY - minY;
+            }
         }
 
         static bool NearlyIdentity(Matrix2D m)

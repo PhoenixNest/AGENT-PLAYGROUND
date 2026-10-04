@@ -161,9 +161,8 @@ namespace OrbitalSalvage.App
             for (int i = 0; i < catalog.Length; i++)
             {
                 if (i > 0) sb.Append(',');
-                if (catalog[i] == equipped) sb.Append("equipped");
-                else if (have.Contains(catalog[i])) sb.Append("owned");
-                else sb.Append("locked");
+                string kind = catalog[i] == equipped ? "equipped" : have.Contains(catalog[i]) ? "owned" : "locked";
+                sb.Append(catalog[i]).Append(':').Append(kind);
             }
             return sb.ToString();
         }
