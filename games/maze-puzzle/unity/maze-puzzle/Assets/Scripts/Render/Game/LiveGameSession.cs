@@ -54,6 +54,8 @@ namespace OrbitalSalvage.Render
         public Action<GameStats> OnDefeat;
         public Action<Debris> OnSwallow;
         public Action<double, double> OnQuotaChanged;
+        public Action<double> OnBoostCue;
+        public List<Achievement> RecentUnlocks = new List<Achievement>();
 
         bool _dragging;
         double _lastPointerX;
@@ -88,11 +90,16 @@ namespace OrbitalSalvage.Render
 
         public static LiveGameSession CreatePlay(double cssW, double cssH, int sectorNumber)
         {
-            JsRandom.Global.Reset(JsRandom.DefaultSeed);
+            return CreatePlay(cssW, cssH, sectorNumber, null, true);
+        }
+
+        public static LiveGameSession CreatePlay(double cssW, double cssH, int sectorNumber, EconomyManager economy, bool resetRandom)
+        {
+            if (resetRandom) JsRandom.Global.Reset(JsRandom.DefaultSeed);
             var renderer = new GameRenderer(cssW, cssH, 3);
             var audio = new ParityAudioCues(() => 0);
             var physics = new PhysicsEngine(audio);
-            var economy = new EconomyManager(new MemoryKeyValueStore(), new FixedWallClock(0));
+            if (economy == null) economy = new EconomyManager(new MemoryKeyValueStore(), new FixedWallClock(0));
             var session = new LiveGameSession(physics, renderer, economy);
             session.ApplyLayout(cssW, cssH);
             var sectors = MazeLevelBuilder.GetSectors();
@@ -100,6 +107,21 @@ namespace OrbitalSalvage.Render
             if (index < 0) index = 0;
             if (index >= sectors.Count) index = sectors.Count - 1;
             session.LoadSector(sectors[index]);
+            return session;
+        }
+
+        /// <summary>
+        /// Web boot order: starfield random, then sector 0 at the default center (no layout yet).
+        /// The caller resets <see cref="JsRandom.Global"/> first. Layout is applied later, on the game page.
+        /// </summary>
+        public static LiveGameSession CreateBound(EconomyManager economy, double cssW, double cssH)
+        {
+            var renderer = new GameRenderer(cssW, cssH, 3);
+            var audio = new ParityAudioCues(() => 0);
+            var physics = new PhysicsEngine(audio);
+            var session = new LiveGameSession(physics, renderer, economy);
+            var sectors = MazeLevelBuilder.GetSectors();
+            session.LoadSector(sectors[0]);
             return session;
         }
 
@@ -255,7 +277,7 @@ namespace OrbitalSalvage.Render
             int word = (int)JsMath.Floor(JsRandom.Global.NextDouble() * NomWords.Length);
             Renderer.AddFloatingText(Physics.BlackHole.X, Physics.BlackHole.Y - 32, NomWords[word], "#fde047");
             Renderer.AddPopRing(Physics.BlackHole.X, Physics.BlackHole.Y, 46, "#facc15");
-            Economy.RecordDebrisSwallowed(1);
+            RecentUnlocks = Economy.RecordDebrisSwallowed(1);
             if (OnSwallow != null) OnSwallow(d);
             if (!IsLevelCleared && ActiveSector != null && CollectedMass >= ActiveSector.Quota)
                 HandleVictory();
@@ -291,6 +313,7 @@ namespace OrbitalSalvage.Render
             Renderer.AddBoostShockwave(cx, cy, rOut, "#38bdf8");
             string label = dir > 0 ? "TURBO! ⏩" : "⏪ TURBO!";
             Renderer.AddFloatingText(cx, cy - rOut * 0.4, label, "#38bdf8");
+            if (OnBoostCue != null) OnBoostCue(dir);
         }
 
         void HandleVictory()
@@ -304,7 +327,7 @@ namespace OrbitalSalvage.Render
                 Economy.RecordSectorCompleted(ActiveSector.Id);
             bool daily = ActiveSector != null && ActiveSector.IsDaily == true;
             string tier = ActiveSector != null && !string.IsNullOrEmpty(ActiveSector.DailyTier) ? ActiveSector.DailyTier : "silver";
-            Economy.RecordContractComplete(daily, tier);
+            RecentUnlocks = Economy.RecordContractComplete(daily, tier);
             if (OnVictory != null) OnVictory(MakeStats(payout));
         }
 

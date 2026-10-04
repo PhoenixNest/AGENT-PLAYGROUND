@@ -211,6 +211,93 @@ namespace OrbitalSalvage.Viewer
             return false;
         }
 
+        public struct ControlHit
+        {
+            public string Id;
+            public string ClassToken;
+            public int ClassIndex;
+        }
+
+        static readonly HashSet<string> InteractiveIds = new HashSet<string>
+        {
+            "btn-home-play", "btn-open-maps-page", "btn-open-shop-page", "btn-open-daily-shift",
+            "btn-open-trophies-page", "btn-home-settings", "btn-open-settings-page", "btn-home-audio",
+            "btn-toggle-audio", "btn-back-maps", "btn-back-daily", "btn-back-shop", "btn-back-achievements",
+            "btn-back-settings", "btn-game-to-home", "btn-game-restart", "btn-game-pause",
+            "btn-pause-resume", "btn-close-pause", "btn-pause-restart", "btn-pause-sound",
+            "btn-pause-maps", "btn-pause-home", "btn-debrief-replay", "btn-debrief-next",
+            "btn-defeat-retry", "btn-defeat-home", "btn-defeat-backup", "btn-claim-daily-gift",
+            "btn-claim-master-bonus", "btn-open-privacy", "btn-close-privacy", "btn-dismiss-privacy",
+            "btn-reset-game-data", "btn-cancel-reset", "btn-confirm-reset", "home-mascot-stage",
+            "home-diorama-nibbles", "settings-sound-toggle", "settings-haptics-toggle",
+            "settings-sfx-slider", "settings-ambience-slider"
+        };
+
+        static readonly string[] InteractiveClasses =
+        {
+            "tab-btn", "btn-buy-item", "btn-equip-item", "level-tile", "world-tab-btn", "btn-play-daily-tier"
+        };
+
+        /// <summary>Topmost interactive control under the point. The viewer dispatches this to <c>AppController</c>.</summary>
+        public static bool TryHitControl(string specJson, double cssX, double cssY, out ControlHit hit)
+        {
+            hit = default;
+            var els = Parse(specJson);
+            int top = Topmost(els, cssX, cssY);
+            if (top < 0) return false;
+            for (int i = top; i >= 0; i = els[i].Parent)
+            {
+                if (!string.IsNullOrEmpty(els[i].Id) && InteractiveIds.Contains(els[i].Id))
+                {
+                    hit.Id = els[i].Id;
+                    hit.ClassIndex = -1;
+                    return true;
+                }
+                for (int c = 0; c < InteractiveClasses.Length; c++)
+                {
+                    if (!HasToken(els[i].Classes, InteractiveClasses[c])) continue;
+                    hit.ClassToken = InteractiveClasses[c];
+                    hit.ClassIndex = Ordinal(els, i, InteractiveClasses[c]);
+                    hit.Id = null;
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        public static bool TryCenter(string specJson, string id, out double cssX, out double cssY)
+        {
+            cssX = cssY = 0;
+            var els = Parse(specJson);
+            for (int i = 0; i < els.Count; i++)
+            {
+                if (els[i].Id != id || !els[i].Hittable) continue;
+                cssX = els[i].X + els[i].W * 0.5;
+                cssY = els[i].Y + els[i].H * 0.5;
+                return true;
+            }
+            return false;
+        }
+
+        public static bool TryClassCenter(string specJson, string token, int index, out double cssX, out double cssY)
+        {
+            cssX = cssY = 0;
+            var els = Parse(specJson);
+            int seen = 0;
+            for (int i = 0; i < els.Count; i++)
+            {
+                if (!HasToken(els[i].Classes, token) || !els[i].Hittable) continue;
+                if (seen == index)
+                {
+                    cssX = els[i].X + els[i].W * 0.5;
+                    cssY = els[i].Y + els[i].H * 0.5;
+                    return true;
+                }
+                seen++;
+            }
+            return false;
+        }
+
         static int Topmost(List<El> els, double cssX, double cssY)
         {
             for (int i = els.Count - 1; i >= 0; i--)

@@ -1,4 +1,7 @@
+using System.IO;
+using OrbitalSalvage.App;
 using UnityEditor;
+using UnityEngine;
 
 namespace OrbitalSalvage.Viewer.Editor
 {
@@ -21,5 +24,13 @@ namespace OrbitalSalvage.Viewer.Editor
         }
 
         static bool Enabled => EditorPrefs.GetBool(ParityPages.EnabledPrefKey, true);
+
+        [MenuItem("Orbital Salvage/Parity Viewer/Reset Profile", false, 201)]
+        static void ResetProfile()
+        {
+            string path = Path.Combine(Application.persistentDataPath, FileProfileStore.FileName);
+            if (File.Exists(path)) File.Delete(path);
+            Debug.Log("[ParityViewer] reset profile " + path);
+        }
     }
 }
