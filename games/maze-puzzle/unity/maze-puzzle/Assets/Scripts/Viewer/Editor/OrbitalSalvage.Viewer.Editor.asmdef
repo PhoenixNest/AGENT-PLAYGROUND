@@ -2,7 +2,8 @@
     "name": "OrbitalSalvage.Viewer.Editor",
     "rootNamespace": "OrbitalSalvage.Viewer.Editor",
     "references": [
-        "OrbitalSalvage.Viewer"
+        "OrbitalSalvage.Viewer",
+        "OrbitalSalvage.App"
     ],
     "includePlatforms": [
         "Editor"
