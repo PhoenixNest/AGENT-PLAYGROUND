@@ -50,6 +50,10 @@ namespace OrbitalSalvage.Render
 
         public static long Stamp() => Enabled ? Stopwatch.GetTimestamp() : 0;
 
+        public static long WallTicks => wall;
+
+        public static long StageTicks(int id) => ticks[id];
+
         public static void AddWall(long dt) { if (Enabled) wall += dt; }
 
         public static void Begin(int id)

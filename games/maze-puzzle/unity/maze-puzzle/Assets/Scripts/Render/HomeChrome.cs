@@ -42,7 +42,7 @@ namespace OrbitalSalvage.Render
             return Resources.Load<TextAsset>("Parity/Spec/" + stateId + "__zero") != null;
         }
 
-        readonly Canvas2D canvas;
+        Canvas2D canvas;
         readonly StreamPlayer playfield;
         readonly List<Dictionary<string, object>> elements;
         /// <summary>When set, the playfield canvas element is not replayed and full-viewport boxes under it are left transparent.</summary>
@@ -74,7 +74,7 @@ namespace OrbitalSalvage.Render
         /// <summary>Class token plus document ordinal, <c>btn-buy-item#0</c>, replaces that element's first text run.</summary>
         public readonly Dictionary<string, string> ClassTextOverrides = new Dictionary<string, string>();
         Dictionary<int, string> classText;
-        readonly double scale;
+        double scale;
         readonly int cssW, cssH;
         public readonly string Profile;
         public readonly Dictionary<string, int> Deferred = new Dictionary<string, int>();
@@ -120,6 +120,18 @@ namespace OrbitalSalvage.Render
         // Graphics.Blit replaced the target, so cached layers used to wipe the frame. BlitLayer now source-overs.
         public static bool UseLayerCache = true;
 
+        /// <summary>Diagnostic only. -1 paints every element. Never set on the parity path.</summary>
+        public static int DebugStopAfter = -1;
+
+        /// <summary>Diagnostic only. Build a live frame but do not apply per-element motion.</summary>
+        public static bool DebugFreezeMotion;
+
+        /// <summary>Diagnostic only. Force the exact backdrop readback on a live frame.</summary>
+        public static bool DebugExactBackdrop;
+
+        /// <summary>Product path only. Skips backdrop-filter blurs at the lowest raster tier. Parity leaves this false.</summary>
+        public static bool SimplifyEffects;
+
         static HomeChrome()
         {
             var args = Environment.GetCommandLineArgs();
@@ -144,6 +156,25 @@ namespace OrbitalSalvage.Render
         public RenderTexture Target => canvas.Target;
         public int PixelWidth => canvas.Width;
         public int PixelHeight => canvas.Height;
+        public double RasterScale => scale;
+
+        /// <summary>
+        /// Replace the device raster. CSS layout stays at the spec viewport; only the CTM scale changes.
+        /// Drops the layer cache because those textures are device-sized. Parity never calls this.
+        /// </summary>
+        public void ResizeRaster(double newScale)
+        {
+            if (newScale < 1) newScale = 1;
+            if (newScale > 3) newScale = 3;
+            if (Math.Abs(newScale - scale) < 0.05) return;
+            int w = Math.Max(1, (int)Math.Round(cssW * newScale));
+            int h = Math.Max(1, (int)Math.Round(cssH * newScale));
+            var next = new Canvas2D(w, h);
+            canvas.Dispose();
+            canvas = next;
+            scale = newScale;
+            DropLayerCache();
+        }
 
         HomeChrome(string profile, Canvas2D canvas, StreamPlayer playfield, List<Dictionary<string, object>> elements, int cssW, int cssH, double scale)
         {
@@ -361,6 +392,8 @@ namespace OrbitalSalvage.Render
             return true;
         }
 
+        public void InvalidateLayerCache() => DropLayerCache();
+
         void DropLayerCache()
         {
             if (layerTex != null)
@@ -540,7 +573,7 @@ namespace OrbitalSalvage.Render
             if (frame != null) frameSlot = frame;
             // A live frame used to force the approximate blur. Settled modals (pageEnter already
             // finished) need the exact readback or the dim behind the card shifts by several levels.
-            canvas.ExactBackdrop = frame == null || !frame.HasMotion;
+            canvas.ExactBackdrop = DebugExactBackdrop || frame == null || !frame.HasMotion;
             bool savedPremul = Canvas2D.GradientInterpolatesPremultiplied;
             Canvas2D.GradientInterpolatesPremultiplied = true; // CSS gradients interpolate premultiplied
             Deferred.Clear(); DrawnBoxes = DrawnRuns = DrawnEmoji = 0;
@@ -550,7 +583,7 @@ namespace OrbitalSalvage.Render
                 bool composite = Underlay != null;
                 if (frame != null && UseLayerCache && !composite) { PaintProfile.Begin(PaintProfile.Cache); EnsureCache(); PaintProfile.End(PaintProfile.Cache); }
                 bool settled = frame != null && !frame.PageTransform && frame.PageOpacity >= 0.999;
-                cacheOn = !composite && settled && cacheReady && paintOnlyLayer < 0 && staticLayerCount > 0;
+                cacheOn = UseLayerCache && !composite && settled && cacheReady && paintOnlyLayer < 0 && staticLayerCount > 0;
                 lastBlit = -2;
                 canvas.BeginFrame();
                 canvas.SetTransform(scale, 0, 0, scale, 0, 0);
@@ -651,6 +684,7 @@ namespace OrbitalSalvage.Render
 
             for (int k = 0; k < n; k++)
             {
+                if (DebugStopAfter >= 0 && k > DebugStopAfter) break;
                 var e = elements[k];
                 if (paintOnlyLayer >= 0 && (elementLayer == null || elementLayer[k] != paintOnlyLayer)) continue;
                 int parent = (int)N(e, "p", -1);
@@ -728,7 +762,7 @@ namespace OrbitalSalvage.Render
                 if (moving) BeginMotion(k);
                 if (isShine[k]) { PaintShine(e, pk, eff[k], k); if (moving) canvas.Restore(); continue; }
 
-                if (S(e, "bf") != "" && S(e, "bf") != "none")
+                if (!SimplifyEffects && S(e, "bf") != "" && S(e, "bf") != "none")
                 {
                     var m = System.Text.RegularExpressions.Regex.Match(S(e, "bf"), @"blur\(([^)]+)\)");
                     if (m.Success && eff[k] > 0.001)
@@ -751,7 +785,7 @@ namespace OrbitalSalvage.Render
             }
         }
 
-        bool Motion(int k) => frame != null && !frame.Shine[k] && (frame.Tree[k] || frame.Pressed(k));
+        bool Motion(int k) => !DebugFreezeMotion && frame != null && !frame.Shine[k] && (frame.Tree[k] || frame.Pressed(k));
 
         void BeginMotion(int k)
         {
