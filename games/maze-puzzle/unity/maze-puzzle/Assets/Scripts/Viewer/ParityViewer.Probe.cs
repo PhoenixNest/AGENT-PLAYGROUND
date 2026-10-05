@@ -22,8 +22,12 @@ namespace OrbitalSalvage.Viewer
         IEnumerator EditorPlayProbe(string dir)
         {
             Application.runInBackground = true;
-            ApplyProbeGameView();
-            for (int i = 0; i < 8; i++) yield return null;
+            for (int i = 0; i < 30; i++)
+            {
+                ApplyProbeGameView();
+                yield return null;
+                if (Screen.width >= 1200 && Screen.height >= 2500) break;
+            }
             PaintProfile.Enabled = true;
             PaintProfile.Reset();
             string error = null;
@@ -295,36 +299,12 @@ namespace OrbitalSalvage.Viewer
             if (ih >= 0 && ih + 1 < args.Length) int.TryParse(args[ih + 1], out h);
             try
             {
-                var editorType = Type.GetType("UnityEditor.Editor, UnityEditor");
-                if (editorType == null) return;
-                var editorAsm = editorType.Assembly;
-                var sizesType = editorAsm.GetType("UnityEditor.GameViewSizes");
-                var singleton = editorAsm.GetType("UnityEditor.ScriptableSingleton`1");
-                var single = singleton.MakeGenericType(sizesType);
-                var instance = single.GetProperty("instance").GetValue(null, null);
-                var groupEnum = editorAsm.GetType("UnityEditor.GameViewSizeGroupType");
-                var standalone = Enum.Parse(groupEnum, "Standalone");
-                var group = instance.GetType().GetMethod("GetGroup").Invoke(instance, new[] { standalone });
-                var sizeType = editorAsm.GetType("UnityEditor.GameViewSize");
-                var kindEnum = editorAsm.GetType("UnityEditor.GameViewSizeType");
-                var ctor = sizeType.GetConstructor(new[] { kindEnum, typeof(int), typeof(int), typeof(string) });
-                var size = ctor.Invoke(new object[] { Enum.Parse(kindEnum, "FixedResolution"), w, h, "Probe " + w + "x" + h });
-                group.GetType().GetMethod("AddCustomSize").Invoke(group, new[] { size });
-                int index = (int)group.GetType().GetMethod("IndexOf", new[] { sizeType }).Invoke(group, new[] { size });
-                var gvType = editorAsm.GetType("UnityEditor.GameView");
-                var editorWindow = editorAsm.GetType("UnityEditor.EditorWindow");
-                System.Reflection.MethodInfo getWindow = null;
-                var flags = System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static;
-                foreach (var method in editorWindow.GetMethods(flags))
-                {
-                    if (method.Name != "GetWindow" || !method.IsGenericMethodDefinition) continue;
-                    var ps = method.GetParameters();
-                    if (ps.Length == 1 && ps[0].ParameterType == typeof(bool)) { getWindow = method; break; }
-                }
-                var window = getWindow.MakeGenericMethod(gvType).Invoke(null, new object[] { false });
-                gvType.GetProperty("selectedSizeIndex", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.NonPublic)
-                    .SetValue(window, index, null);
-                editorWindow.GetMethod("Repaint").Invoke(window, null);
+                var windowType = Type.GetType("UnityEditor.PlayModeWindow, UnityEditor");
+                if (windowType == null) return;
+                var viewTypes = windowType.GetNestedType("PlayModeViewTypes");
+                var gameView = Enum.Parse(viewTypes, "GameView");
+                windowType.GetMethod("SetViewType").Invoke(null, new[] { gameView });
+                windowType.GetMethod("SetCustomRenderingResolution").Invoke(null, new object[] { (uint)w, (uint)h, "Probe " + w + "x" + h });
             }
             catch (Exception ex)
             {
