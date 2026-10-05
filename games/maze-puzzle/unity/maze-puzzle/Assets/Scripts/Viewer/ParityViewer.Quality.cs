@@ -74,7 +74,10 @@ namespace OrbitalSalvage.Viewer
 
             HomeChrome.SimplifyEffects = forced <= 0 && target <= 1.01;
             if (current != null && Math.Abs(current.RasterScale - target) >= 0.05)
+            {
                 current.ResizeRaster(target);
+                PaintCurrent(true);
+            }
             qualityReady = true;
         }
 

@@ -294,8 +294,7 @@ namespace OrbitalSalvage.Viewer
             armedEdge = null;
             clock.Restart();
             BindModalPlayfield(chrome);
-            if (selfTesting) chrome.Draw();
-            else chrome.Draw(0, -1, null, modal, modal);
+            PaintCurrent(true);
         }
 
         /// <summary>
@@ -334,7 +333,40 @@ namespace OrbitalSalvage.Viewer
             bool ambient = current.Loops && !intro && !enter && pressIndex < 0;
             if (HoldAmbientDraw(ambient)) return;
             BindModalPlayfield(current);
-            current.Draw(ms, pressIndex, pressCss, intro, modal);
+            PaintCurrent(false);
+        }
+
+        /// <summary>
+        /// IMGUI y grows down; <see cref="PageRect"/> and <c>Input.mousePosition</c> grow up.
+        /// Drawing the screen rect with GUI.DrawTexture puts a portrait letterbox off the Game view.
+        /// </summary>
+        public static Rect ToGui(Rect screen)
+        {
+            return new Rect(screen.x, Screen.height - screen.y - screen.height, screen.width, screen.height);
+        }
+
+        void PaintCurrent(bool pinEnter)
+        {
+            if (current == null) return;
+            if (selfTesting)
+            {
+                current.Draw();
+                return;
+            }
+            double ms = clock.Milliseconds;
+            bool modal = currentId != null && currentId.StartsWith("modal_", StringComparison.Ordinal);
+            bool intro = modal && ms < 400;
+            // Product path: never start a page at pageEnter opacity 0 (that is a clear RT, drawn
+            // without alpha, so the Game view is a black letterbox). Loops still run.
+            bool pin = true;
+            try
+            {
+                current.Draw(ms, pressIndex, pressCss, intro, pin);
+            }
+            catch (Exception ex)
+            {
+                Debug.LogError("[ParityViewer] draw " + currentId + ": " + ex);
+            }
         }
 
         void HandleInput()
@@ -588,7 +620,7 @@ namespace OrbitalSalvage.Viewer
             if (black == null || Screen.width < 2 || Screen.height < 2) return;
             var full = new Rect(0, 0, Screen.width, Screen.height);
             GUI.DrawTexture(full, black, ScaleMode.StretchToFill, false);
-            var letter = PageRect();
+            var letter = ToGui(PageRect());
             if (ShowPlayfield && session.Renderer.Target != null)
                 GUI.DrawTexture(letter, session.Renderer.Target, ScaleMode.StretchToFill, true);
             if (current != null && current.Target != null)
