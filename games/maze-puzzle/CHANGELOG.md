@@ -21,6 +21,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Editor Play at Simulator size (1284×2778) was ~16 fps and could paint a mustard page with a blue hero. Cause: live frames unbaked a reused local rect every tick; the 3× raster plus vSync filled the rest of the frame. Product path now unbakes once, turns vSync off, targets 60 fps, and drops raster 3→2→1.5→1 when p95 exceeds 22 ms. After, D3D12 p95 24.69 ms with a purple page and yellow face. Parity stills stay frozen 3× Draw (game/pause hashes unchanged). Phones untested.
 
+#### Unity (2026-10-05, `agent/parity/homefix-clean`)
+
+- Home lag in Editor Play (D3D12, Game view 1284×2778). The page cached 37 full-raster layers (534 MB at 3×) through `ReadPixels` and rebuilt all of them on every quality step and every text change. A Nibbles tap froze 2.9–3.6 s at 3× and 0.4–0.5 s at 1×; the 3→1 ramp froze 0.45–1.9 s three times.
+- Text and width values no longer drop the cache; only the set of overridden ids does. Layers copy GPU-to-GPU into render textures, and hidden-only runs are not baked (29 layers). The governor waits 0.9 s after a resize before baking and remembers the settled scale per Game-view size. Backdrop blur copies and blurs only the element rect plus its reach. Per-frame class splitting, shadow/colour string round-trips, regex and override signatures are cached.
+- After: Nibbles tap max 33–158 ms with no rebuild; ramp rebuilds 2.7–4.6 ms; 3× steady median 20–23 ms (was 41–44); 1× median 16.0–16.3 ms; home GC ~107–112 KB/frame at 1× (was ~234). Frames over 100 ms still appear in some forced-3× runs, with and without the fix; paint is 7–30 ms of each. All 16 zero-profile stills, game and pause hashes, and animated home dumps at 0/500/1500/4000 ms (3× and 1×) are SHA256-identical to before. EditMode 300/382: the 82 failures are audio reference tests whose Chromium reference files are not present in that checkout.
+
 The notes below are the 2026-09-30 uGUI changelog. Those types are gone.
 
 ### Fixed
