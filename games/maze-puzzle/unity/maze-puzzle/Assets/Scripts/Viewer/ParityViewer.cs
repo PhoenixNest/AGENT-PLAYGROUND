@@ -217,12 +217,15 @@ namespace OrbitalSalvage.Viewer
                 return;
             }
             BootApp();
+            string probeDir = ArgDirectory(args, "-editor-play-probe");
+            if (probeDir != null) StartCoroutine(EditorPlayProbe(probeDir));
         }
 
         void LateUpdate()
         {
             SuppressLegacy();
             if (selfTesting && !shipTesting) return;
+            if (!selfTesting) GovernQuality();
             if (app != null) SyncApp();
             HandleInput();
             Tick();
@@ -328,6 +331,8 @@ namespace OrbitalSalvage.Viewer
             bool intro = modal && ms < 400;
             bool enter = ms < 260;
             if (!current.Loops && !intro && !enter && pressIndex < 0) return;
+            bool ambient = current.Loops && !intro && !enter && pressIndex < 0;
+            if (HoldAmbientDraw(ambient)) return;
             BindModalPlayfield(current);
             current.Draw(ms, pressIndex, pressCss, intro, modal);
         }
@@ -336,6 +341,7 @@ namespace OrbitalSalvage.Viewer
         {
             if (Input.GetKeyDown(KeyCode.F1)) hintVisible = !hintVisible;
             if (Input.GetKeyDown(KeyCode.F2)) debugNav = !debugNav;
+            if (Input.GetKeyDown(KeyCode.F3)) qualityHud = !qualityHud;
             if (debugNav)
             {
                 if (Input.GetKeyDown(KeyCode.Escape)) Show(ParityPages.HomeId);
@@ -587,6 +593,7 @@ namespace OrbitalSalvage.Viewer
                 GUI.DrawTexture(letter, session.Renderer.Target, ScaleMode.StretchToFill, true);
             if (current != null && current.Target != null)
                 GUI.DrawTexture(letter, current.Target, ScaleMode.StretchToFill, ShowPlayfield);
+            DrawQualityHud();
             if (!hintVisible || selfTesting) return;
             if (hintStyle == null)
             {
