@@ -4,10 +4,10 @@ namespace OrbitalSalvage.Render
 {
     public sealed class CanvasImage
     {
-        public readonly Texture2D texture;
+        public readonly Texture texture;
         public readonly int width, height;
 
-        public CanvasImage(Texture2D texture)
+        public CanvasImage(Texture texture)
         {
             this.texture = texture;
             width = texture.width;

@@ -386,7 +386,12 @@ namespace OrbitalSalvage.Viewer
                 sb.Append("null");
                 return;
             }
-            var tex = img.texture;
+            var tex = img.texture as Texture2D;
+            if (tex == null)
+            {
+                sb.Append("{\"w\":").Append(img.texture.width).Append(",\"h\":").Append(img.texture.height).Append('}');
+                return;
+            }
             sb.Append("{\"w\":").Append(tex.width).Append(",\"h\":").Append(tex.height)
                 .Append(",\"format\":\"").Append(tex.format).Append("\",\"srgb\":").Append(tex.isDataSRGB ? "true" : "false").Append('}');
         }
