@@ -2,7 +2,7 @@
 
 Archive of how the Unity project was brought to the web prototype's UI design, animation, navigation and logic, written so the process can be repeated or audited. Numbers are measurements taken on this machine; nothing here claims that UI restoration is finished.
 
-Status at archive time: the Canvas2D painted UI is the default launch path, 5 of 11 reference stills pass the strict bar, 6 of 55 recorded flow steps pass, and a user-reported Editor Play lag is under repair (section 9). Not verified on a phone or tablet.
+Status at archive time: the Canvas2D painted UI is the default launch path, 5 of 11 reference stills pass the strict bar, 6 of 55 recorded flow steps pass, and the Editor Play lag workaround is merged (section 9). Not verified on a phone or tablet.
 
 ## 1. Goal and trigger
 
@@ -42,7 +42,7 @@ User feedback: the Unity UI looked static and "completely undynamic", especially
 | Branch | Content |
 | --- | --- |
 | infra, unity-capture, logic, canvas, audio | Phase 0/1: harness, golden dumps, bit-exact logic port, Canvas2D layer, C# Web Audio DSP |
-| integration | Merge target for all tracks (head 47668b8 at archive time, 0 behind and about 100 commits ahead of `maze-puzzle` 0425a60) |
+| integration | Merge target for all tracks (includes ship + lag as of `0b6f054`) |
 | live | Live game renderer and conformance |
 | anim | CSS animation player and animated specs |
 | perf | Layer cache, GPU blur, home draw 750 ms -> 3-6 ms |
@@ -52,7 +52,7 @@ User feedback: the Unity UI looked static and "completely undynamic", especially
 | home | Pedestal discs through perspective x rotateX, rotated shadows, dashed rim, daily regression fix |
 | glyph | Glyph tone model experiments (not merged: page gain under 0.01 pp) |
 | ship | Default launch boots the Canvas2D app, legacy uGUI removed |
-| lag | Editor Play lag and rendering fix (in progress) |
+| lag | Editor Play quality governor, live-home unbake, Simulator-size probe |
 
 ## 6. Measured results at archive time
 
@@ -95,12 +95,13 @@ pip install numpy scikit-image Pillow opencv-python
 
 Preview in the Editor: open the project at `games/maze-puzzle/unity/maze-puzzle` (Unity 6000.4.6f1), open `Assets/Scenes/MainGameScene.unity`, press Play. F1 hint, F2 page browser; menu Orbital Salvage -> Parity Viewer -> Enabled / Reset Profile.
 
-## 9. User-reported Editor Play lag (open)
+## 9. User-reported Editor Play lag (closed 2026-10-04)
 
-- Report: after Play in the Editor (Simulator, iOS Notch Device Large, width 1284) the game lags or is unplayable; the reported home page also rendered incorrectly (mustard-yellow background, dark-blue sphere in place of the emoji), with a saved balance of 1000.
-- Cause analysis: earlier timings came from the built D3D11 player and batch harness, not Editor Play at Simulator size; the painter redraws and uploads a 1290x2796 raster every frame on pages that animate.
-- Approved direction: keep the current painted UI and add a workaround (adaptive raster scale, frame-time governor, fewer redundant uploads) plus a fix for the wrong rendering if it is a real bug. Track `agent/parity/lag`. Parity modes must stay byte-identical.
-- Results of that track are recorded in the CHANGELOG when merged.
+- Report: after Play in the Editor (Simulator, iOS Notch Device Large, width 1284) the game lagged or was unplayable; the home page also rendered incorrectly (mustard-yellow background, dark-blue sphere in place of the emoji).
+- Causes, measured: (1) Wrong colours were live-frame drift. `CssFrame.Build` unbaked a reused local rect every frame, so the hero face left the sphere and a debris sprite grew into a mustard page. Frozen `Draw()` never unbakes, which is why the parity stills stayed correct. (2) Lag was the 3x raster plus vSync, not the CPU painter. Before, at a real D3D12 1284x2778: frame avg 51.08 / p95 61.67 ms while Draw was avg 8.23 / p95 11.55 ms; background `(162,129,72)`, hero `(77,78,188)`.
+- Workaround on the product path only: unbake once; vSync 0 and target 60; the raster snaps to the window and steps 3 to 2 to 1.5 to 1 when p95 over ~1 s exceeds 22 ms. Parity stills stay frozen `Draw` at 3x. Commits `6f871e3`, `478b974`, `90a9245`; merged to integration as `0b6f054`.
+- After, governor on, true 1284x2778: D3D12 frame avg 29.02 / p95 24.69 ms, raster 430x932, background `(39,36,101)`, hero `(255,182,75)`. D3D11 p95 24.40 ms with the GPU at 100%. Canvas PNG shows the purple page and winking face.
+- Remaining: phones untested; this Game view is a fixed 1284x2778, not the Simulator notch; at that size the governor stays at 1x so the page is softer than the 3x parity stills; D3D12 p99 is still 62.7 ms. A one-off `loading_t0000` 0.00 score during scoring was a missing-spec artifact against the camera clear, not a regression of `13_unity_loading_screen.png` (99.55/0.9908).
 
 ## 10. Open items
 
