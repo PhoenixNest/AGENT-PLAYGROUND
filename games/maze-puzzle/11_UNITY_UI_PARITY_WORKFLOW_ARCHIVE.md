@@ -53,6 +53,9 @@ User feedback: the Unity UI looked static and "completely undynamic", especially
 | glyph | Glyph tone model experiments (not merged: page gain under 0.01 pp) |
 | ship | Default launch boots the Canvas2D app, legacy uGUI removed |
 | lag | Editor Play quality governor, live-home unbake, Simulator-size probe |
+| homefix-clean | Home layer-cache, blur, and garbage fixes (section 9.1) |
+
+On 2026-10-05 the merged branches and their worktrees were deleted; the commits stay in `maze-puzzle` history. Glyph is kept as tag `archive/parity-glyph`.
 
 ## 6. Measured results at archive time
 
@@ -102,6 +105,12 @@ Preview in the Editor: open the project at `games/maze-puzzle/unity/maze-puzzle`
 - Workaround on the product path only: unbake once; vSync 0 and target 60; the raster snaps to the window and steps 3 to 2 to 1.5 to 1 when p95 over ~1 s exceeds 22 ms. Parity stills stay frozen `Draw` at 3x. Commits `6f871e3`, `478b974`, `90a9245`; merged to integration as `0b6f054`.
 - After, governor on, true 1284x2778: D3D12 frame avg 29.02 / p95 24.69 ms, raster 430x932, background `(39,36,101)`, hero `(255,182,75)`. D3D11 p95 24.40 ms with the GPU at 100%. Canvas PNG shows the purple page and winking face.
 - Remaining: phones untested; this Game view is a fixed 1284x2778, not the Simulator notch; at that size the governor stays at 1x so the page is softer than the 3x parity stills; D3D12 p99 is still 62.7 ms. A one-off `loading_t0000` 0.00 score during scoring was a missing-spec artifact against the camera clear, not a regression of `13_unity_loading_screen.png` (99.55/0.9908).
+
+### 9.1 Home-page lag (closed 2026-10-05)
+
+- Report: lag persisted and was mostly on home. Ablation probe (`agent/parity/homeperf`, flags only with `-editor-play-probe`, report `tools/parity/reports/perf-home-2026-10-05.md`) found: the layer cache split home into 37 full-raster layers (534 MB at 3x) baked through `ReadPixels`, and dropped all of them on every quality step and every override value change. Nibbles tap: two rebuilds of 2.8-3.5 s at 3x. Ramp: three rebuilds of 0.45-1.9 s. Steady 3x: Draw cost 25-27 ms of the median, 15-20 ms of it full-target backdrop blur. GC 229-234 KB/frame. Shadows, layer blits, app sync, and scene searches were not causes; the GPU timer stayed under 2 ms.
+- Fix (`agent/parity/homefix-clean`): cache key is the set of overridden ids, not their values; GPU-side layer copies, hidden-only runs skipped (29 layers); governor defers baking 0.9 s after a resize and remembers the settled scale; blur limited to the element rect plus reach; per-frame string work cached. Regression test `LayerCacheTests`.
+- After: tap max 33-158 ms with no rebuild; ramp rebuilds 2.7-4.6 ms; 3x median 20-23 ms; 1x median 16.0-16.3 ms; GC ~107-112 KB/frame. Stills, game/pause hashes, and animated home dumps SHA256-identical. Not reached: GC under 60 KB/frame; some forced-3x runs still have frames over 100 ms outside the paint path.
 
 ## 10. Open items
 
