@@ -92,8 +92,8 @@ namespace OrbitalSalvage.Render
             paramBuffer?.Dispose();
             DestroyOwned(matLayer);
             DestroyOwned(matBlur);
-            if (blurA != null) { blurA.Release(); DestroyOwned(blurA); }
-            if (blurB != null) { blurB.Release(); DestroyOwned(blurB); }
+            for (int i = 0; i < blurPairN; i++) ReleasePair(blurPairs[i]);
+            blurPairN = 0;
             cmd.Release();
             foreach (var c in clipPool) c.Release();
             ReleaseSnapshots();
@@ -215,7 +215,7 @@ namespace OrbitalSalvage.Render
             {
                 double gsx = Math.Min(p0.x, p1.x);
                 double gsy = Math.Min(p0.y, p1.y);
-                BackdropBlurGpu(radii, gsx, gsy, Math.Abs(p1.x - p0.x), Math.Abs(p1.y - p0.y), x, y, w, h);
+                BackdropBlurGpu(radii, gsx, gsy, Math.Abs(p1.x - p0.x), Math.Abs(p1.y - p0.y), x, y, w, h, x0, y0, x1, y1);
                 PaintProfile.End(PaintProfile.Backdrop);
                 return;
             }
@@ -268,10 +268,33 @@ namespace OrbitalSalvage.Render
             PaintProfile.End(PaintProfile.Backdrop);
         }
 
-        RenderTexture blurA, blurB;
         Material matBlur;
+        sealed class BlurPair
+        {
+            public int w, h;
+            public RenderTexture a, b;
+        }
+        readonly BlurPair[] blurPairs = new BlurPair[4];
+        int blurPairN;
 
-        void BackdropBlurGpu(int[] radii, double sx, double sy, double sw, double sh, double x, double y, double w, double h)
+        /// <summary>GPU copy of <see cref="Target"/> after the command buffer has been executed.</summary>
+        public RenderTexture CopyTarget(string name)
+        {
+            var rt = new RenderTexture(Width, Height, 0, target.format, RenderTextureReadWrite.Linear)
+            {
+                name = name,
+                filterMode = FilterMode.Point,
+                wrapMode = TextureWrapMode.Clamp,
+                useMipMap = false,
+                autoGenerateMips = false,
+                hideFlags = HideFlags.HideAndDontSave,
+            };
+            rt.Create();
+            Graphics.CopyTexture(target, rt);
+            return rt;
+        }
+
+        void BackdropBlurGpu(int[] radii, double sx, double sy, double sw, double sh, double x, double y, double w, double h, int x0, int y0, int x1, int y1)
         {
             if (matBlur == null)
             {
@@ -280,27 +303,69 @@ namespace OrbitalSalvage.Render
                 if (shader == null) throw new InvalidOperationException("missing BackdropBlur shader");
                 matBlur = new Material(shader) { hideFlags = HideFlags.HideAndDontSave };
             }
-            if (blurA == null || blurA.width != Width || blurA.height != Height)
-            {
-                if (blurA != null) { blurA.Release(); UnityEngine.Object.Destroy(blurA); }
-                if (blurB != null) { blurB.Release(); UnityEngine.Object.Destroy(blurB); }
-                blurA = MakeRT(RenderTextureFormat.ARGB32, "Canvas2D.BlurA");
-                blurB = MakeRT(RenderTextureFormat.ARGB32, "Canvas2D.BlurB");
-                PaintProfile.CountNewTexture();
-            }
-            cmd.Blit(target, blurA);
+            int radSum = 0;
+            for (int i = 0; i < radii.Length; i++) radSum += radii[i];
+            int cx0 = Clamp(x0 - radSum, 0, Width);
+            int cy0 = Clamp(y0 - radSum, 0, Height);
+            int cx1 = Clamp(x1 + radSum, 0, Width);
+            int cy1 = Clamp(y1 + radSum, 0, Height);
+            int cw = cx1 - cx0, ch = cy1 - cy0;
+            if (cw < 1 || ch < 1) return;
+            BlurPair pair = BlurPairFor(cw, ch);
+            cmd.CopyTexture(target, 0, 0, cx0, cy0, cw, ch, pair.a, 0, 0, 0, 0);
             for (int pass = 0; pass < radii.Length; pass++)
             {
                 matBlur.SetFloat("_Radius", radii[pass]);
                 matBlur.SetVector("_Axis", new Vector4(1f, 0f, 0f, 0f));
-                cmd.Blit(blurA, blurB, matBlur);
+                cmd.Blit(pair.a, pair.b, matBlur);
                 matBlur.SetVector("_Axis", new Vector4(0f, 1f, 0f, 0f));
-                cmd.Blit(blurB, blurA, matBlur);
+                cmd.Blit(pair.b, pair.a, matBlur);
             }
             bool smooth = state.imageSmoothing;
             state.imageSmoothing = false;
-            DrawTexture(blurA, sx, sy, sw, sh, x, y, w, h);
+            double localSx = sx - cx0;
+            double localSy = sy - (Height - cy1);
+            DrawTexture(pair.a, localSx, localSy, sw, sh, x, y, w, h);
             state.imageSmoothing = smooth;
+        }
+
+        BlurPair BlurPairFor(int w, int h)
+        {
+            for (int i = 0; i < blurPairN; i++)
+                if (blurPairs[i].w == w && blurPairs[i].h == h) return blurPairs[i];
+            var pair = new BlurPair { w = w, h = h };
+            if (blurPairN < blurPairs.Length)
+            {
+                blurPairs[blurPairN++] = pair;
+            }
+            else
+            {
+                ReleasePair(blurPairs[0]);
+                for (int i = 1; i < blurPairs.Length; i++) blurPairs[i - 1] = blurPairs[i];
+                blurPairs[blurPairs.Length - 1] = pair;
+            }
+            pair.a = MakeSized(w, h, "Canvas2D.BlurA");
+            pair.b = MakeSized(w, h, "Canvas2D.BlurB");
+            PaintProfile.CountNewTexture();
+            return pair;
+        }
+
+        RenderTexture MakeSized(int w, int h, string name)
+        {
+            var rt = new RenderTexture(w, h, 0, RenderTextureFormat.ARGB32, RenderTextureReadWrite.Linear)
+            {
+                name = name, filterMode = FilterMode.Point, wrapMode = TextureWrapMode.Clamp, useMipMap = false, autoGenerateMips = false,
+                hideFlags = HideFlags.HideAndDontSave,
+            };
+            rt.Create();
+            return rt;
+        }
+
+        static void ReleasePair(BlurPair pair)
+        {
+            if (pair == null) return;
+            if (pair.a != null) { pair.a.Release(); DestroyOwned(pair.a); }
+            if (pair.b != null) { pair.b.Release(); DestroyOwned(pair.b); }
         }
 
         static int Clamp(int v, int lo, int hi) => v < lo ? lo : (v > hi ? hi : v);

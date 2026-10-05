@@ -85,7 +85,7 @@ namespace OrbitalSalvage.Render
         CssFrame frame;
         int[] elementLayer;
         int staticLayerCount;
-        Texture2D[] layerTex;
+        Texture[] layerTex;
         CanvasImage[] layerImg;
         double[] baseOpacity;
         bool cacheReady;
@@ -132,6 +132,8 @@ namespace OrbitalSalvage.Render
         /// <summary>Product path only. Skips backdrop-filter blurs at the lowest raster tier. Parity leaves this false.</summary>
         public static bool SimplifyEffects;
 
+        /// <summary>Product path. While true, <see cref="Draw"/> paints without building the layer cache.</summary>
+        public static bool DeferLayerCache;
         static HomeChrome()
         {
             var args = Environment.GetCommandLineArgs();
@@ -150,8 +152,32 @@ namespace OrbitalSalvage.Render
 
         /// <summary>True after a live draw has cached static runs.</summary>
         public bool UsesLayerCache => UseLayerCache && cacheReady && staticLayerCount > 0;
+
+        /// <summary>How many times this chrome has baked its static layers.</summary>
+        public int CacheBuilds { get; private set; }
         bool cachedSkip;
-        string cachedOverrides = "";
+        bool cachedExt;
+        string[] snapText = Array.Empty<string>();
+        string[] snapWidth = Array.Empty<string>();
+        string[] snapWidthPct = Array.Empty<string>();
+        string[] snapOpacity = Array.Empty<string>();
+        string[] snapHidden = Array.Empty<string>();
+        string[] snapClass = Array.Empty<string>();
+        struct ClassOcc { public int element; public string key; }
+        ClassOcc[] classOcc;
+        int classOccN;
+        string[] classSnapK = Array.Empty<string>();
+        string[] classSnapV = Array.Empty<string>();
+        bool[] isAppPage;
+        bool[] isBeam;
+        byte[] backdropKind;
+        double[] blurSigma;
+        readonly Rgba[] borderSave = new Rgba[4];
+        readonly List<CssShadow> shadowSave = new List<CssShadow>(4);
+        readonly string[] textCandidates = new string[4];
+        readonly string[] oneLine = new string[1];
+        readonly Dictionary<string, string> upperText = new Dictionary<string, string>();
+        readonly Dictionary<string, string> trimmedText = new Dictionary<string, string>();
 
         public RenderTexture Target => canvas.Target;
         public int PixelWidth => canvas.Width;
@@ -346,9 +372,7 @@ namespace OrbitalSalvage.Render
 
         public void Dispose()
         {
-            if (layerTex != null)
-                for (int i = 0; i < layerTex.Length; i++)
-                    DestroyObject(layerTex[i]);
+            DropLayerCache();
             playfield?.Dispose();
             canvas.Dispose();
         }
@@ -405,7 +429,7 @@ namespace OrbitalSalvage.Render
         {
             if (layerTex != null)
                 for (int i = 0; i < layerTex.Length; i++)
-                    DestroyObject(layerTex[i]);
+                    ReleaseLayer(layerTex[i]);
             layerTex = null;
             layerImg = null;
             elementLayer = null;
@@ -413,27 +437,69 @@ namespace OrbitalSalvage.Render
             staticLayerCount = 0;
         }
 
-        string OverrideKey()
+        static void ReleaseLayer(Texture tex)
         {
-            var sb = new System.Text.StringBuilder();
-            foreach (var kv in TextOverrides) sb.Append('\n').Append(kv.Key).Append('=').Append(kv.Value);
-            foreach (var kv in WidthOverrides) sb.Append('\n').Append(kv.Key).Append('#').Append(kv.Value.ToString(CultureInfo.InvariantCulture));
-            foreach (var kv in WidthPercentOverrides) sb.Append('\n').Append(kv.Key).Append('%').Append(kv.Value.ToString(CultureInfo.InvariantCulture));
-            foreach (var kv in OpacityOverrides) sb.Append('\n').Append(kv.Key).Append('@').Append(kv.Value.ToString(CultureInfo.InvariantCulture));
-            foreach (var id in HiddenIds) sb.Append('\n').Append('!').Append(id);
-            foreach (var kv in ClassTextOverrides) sb.Append('\n').Append(kv.Key).Append('=').Append(kv.Value);
-            return sb.ToString();
+            if (tex == null) return;
+            if (tex is RenderTexture rt) rt.Release();
+            DestroyObject(tex);
+        }
+
+        static bool SameKeys<T>(Dictionary<string, T> dict, string[] snap)
+        {
+            if (snap == null || dict.Count != snap.Length) return false;
+            for (int i = 0; i < snap.Length; i++)
+                if (!dict.ContainsKey(snap[i])) return false;
+            return true;
+        }
+
+        static bool SameHidden(HashSet<string> set, string[] snap)
+        {
+            if (snap == null || set.Count != snap.Length) return false;
+            for (int i = 0; i < snap.Length; i++)
+                if (!set.Contains(snap[i])) return false;
+            return true;
+        }
+
+        static string[] CopyKeys<T>(Dictionary<string, T> dict)
+        {
+            var keys = new string[dict.Count];
+            int i = 0;
+            foreach (var kv in dict) keys[i++] = kv.Key;
+            return keys;
+        }
+
+        bool DynamicSetSame()
+        {
+            return cachedSkip == SkipPlayfield
+                && cachedExt == (ExternalPlayfield != null)
+                && SameKeys(TextOverrides, snapText)
+                && SameKeys(WidthOverrides, snapWidth)
+                && SameKeys(WidthPercentOverrides, snapWidthPct)
+                && SameKeys(OpacityOverrides, snapOpacity)
+                && SameHidden(HiddenIds, snapHidden)
+                && SameKeys(ClassTextOverrides, snapClass);
+        }
+
+        void RememberDynamicSet()
+        {
+            cachedSkip = SkipPlayfield;
+            cachedExt = ExternalPlayfield != null;
+            snapText = CopyKeys(TextOverrides);
+            snapWidth = CopyKeys(WidthOverrides);
+            snapWidthPct = CopyKeys(WidthPercentOverrides);
+            snapOpacity = CopyKeys(OpacityOverrides);
+            snapHidden = new string[HiddenIds.Count];
+            HiddenIds.CopyTo(snapHidden);
+            snapClass = CopyKeys(ClassTextOverrides);
         }
 
         void EnsureCache()
         {
-            // Quota text/width and the live playfield hole change which elements may be baked.
-            string key = OverrideKey();
-            if (ExternalPlayfield != null) key += "\n~ext";
-            if (cacheReady && (cachedSkip != SkipPlayfield || cachedOverrides != key)) DropLayerCache();
+            // Only the set of overridden ids changes which elements are baked. Values are painted live.
+            if (cacheReady && !DynamicSetSame()) DropLayerCache();
             if (cacheReady) return;
-            cachedSkip = SkipPlayfield;
-            cachedOverrides = key;
+            if (DeferLayerCache) return;
+            RememberDynamicSet();
             int n = elements.Count;
             elementLayer = new int[n];
             var dynamic = new bool[n];
@@ -535,34 +601,35 @@ namespace OrbitalSalvage.Render
             staticLayerCount = open ? layer + 1 : layer;
             if (staticLayerCount <= 0) { cacheReady = true; return; }
 
+            var layerLive = new bool[staticLayerCount];
+            for (int k = 0; k < n; k++)
+            {
+                if (elementLayer[k] < 0) continue;
+                string kind = S(elements[k], "t");
+                // Images and the playfield stream ignore a zero opacity on the element itself.
+                if (kind == "canvas" || kind == "img" || baseOpacity[k] > 0) layerLive[elementLayer[k]] = true;
+            }
+
             var saved = frame;
             frame = null;
-            layerTex = new Texture2D[staticLayerCount];
+            layerTex = new Texture[staticLayerCount];
             layerImg = new CanvasImage[staticLayerCount];
             for (int L = 0; L < staticLayerCount; L++)
             {
+                if (!layerLive[L]) continue;
                 paintOnlyLayer = L;
                 canvas.BeginFrame();
                 canvas.SetTransform(scale, 0, 0, scale, 0, 0);
                 PaintAll();
                 canvas.EndFrame();
-                var tex = new Texture2D(canvas.Width, canvas.Height, TextureFormat.RGBA32, false, true)
-                {
-                    filterMode = FilterMode.Point,
-                    wrapMode = TextureWrapMode.Clamp,
-                    hideFlags = HideFlags.HideAndDontSave
-                };
-                var prev = RenderTexture.active;
-                RenderTexture.active = canvas.Target;
-                tex.ReadPixels(new Rect(0, 0, canvas.Width, canvas.Height), 0, 0, false);
-                tex.Apply(false, false);
-                RenderTexture.active = prev;
-                layerTex[L] = tex;
-                layerImg[L] = new CanvasImage(tex);
+                var rt = canvas.CopyTarget("HomeChrome.Layer" + L.ToString(CultureInfo.InvariantCulture));
+                layerTex[L] = rt;
+                layerImg[L] = new CanvasImage(rt);
             }
             paintOnlyLayer = -1;
             frame = saved;
             cacheReady = true;
+            CacheBuilds++;
         }
 
         // ---- drawing ------------------------------------------------------------------------------------
@@ -625,16 +692,21 @@ namespace OrbitalSalvage.Render
             }
         }
 
-        void BuildClassText()
+        void EnsureClassOcc()
         {
-            classText = null;
-            if (ClassTextOverrides.Count == 0) return;
-            classText = new Dictionary<int, string>();
+            if (classOcc != null) return;
+            int total = 0;
+            for (int k = 0; k < elements.Count; k++)
+            {
+                string classes = S(elements[k], "c");
+                for (int i = 0; i < classes.Length; i++)
+                    if (classes[i] != ' ' && (i == 0 || classes[i - 1] == ' ')) total++;
+            }
+            classOcc = new ClassOcc[total];
             var count = new Dictionary<string, int>();
             for (int k = 0; k < elements.Count; k++)
             {
                 string classes = S(elements[k], "c");
-                if (classes.Length == 0) continue;
                 int i = 0;
                 while (i < classes.Length)
                 {
@@ -643,17 +715,94 @@ namespace OrbitalSalvage.Render
                     while (i < classes.Length && classes[i] != ' ') i++;
                     if (i <= start) continue;
                     string token = classes.Substring(start, i - start);
-                    int n;
-                    count.TryGetValue(token, out n);
-                    string key = token + "#" + n.ToString(CultureInfo.InvariantCulture);
+                    count.TryGetValue(token, out int n);
+                    classOcc[classOccN++] = new ClassOcc { element = k, key = token + "#" + n.ToString(CultureInfo.InvariantCulture) };
                     count[token] = n + 1;
-                    if (ClassTextOverrides.TryGetValue(key, out var text)) classText[k] = text;
                 }
             }
         }
 
+        bool ClassValuesMatch()
+        {
+            if (classSnapK == null || classSnapK.Length != ClassTextOverrides.Count) return false;
+            int i = 0;
+            foreach (var kv in ClassTextOverrides)
+            {
+                if (classSnapK[i] != kv.Key || classSnapV[i] != kv.Value) return false;
+                i++;
+            }
+            return true;
+        }
+
+        void BuildClassText()
+        {
+            if (ClassTextOverrides.Count == 0)
+            {
+                classText = null;
+                classSnapK = Array.Empty<string>();
+                classSnapV = Array.Empty<string>();
+                return;
+            }
+            EnsureClassOcc();
+            if (classText != null && ClassValuesMatch()) return;
+            if (classText == null) classText = new Dictionary<int, string>();
+            else classText.Clear();
+            for (int i = 0; i < classOccN; i++)
+                if (ClassTextOverrides.TryGetValue(classOcc[i].key, out var text)) classText[classOcc[i].element] = text;
+            classSnapK = new string[ClassTextOverrides.Count];
+            classSnapV = new string[ClassTextOverrides.Count];
+            int n = 0;
+            foreach (var kv in ClassTextOverrides)
+            {
+                classSnapK[n] = kv.Key;
+                classSnapV[n] = kv.Value;
+                n++;
+            }
+        }
+
+        void EnsurePaintFlags()
+        {
+            if (isAppPage != null) return;
+            int n = elements.Count;
+            isAppPage = new bool[n];
+            isBeam = new bool[n];
+            backdropKind = new byte[n];
+            blurSigma = new double[n];
+            for (int k = 0; k < n; k++)
+            {
+                string classes = S(elements[k], "c");
+                isAppPage[k] = HasToken(classes, "app-page");
+                isBeam[k] = HasToken(classes, "pedestal-glow-beam");
+                string bf = S(elements[k], "bf");
+                if (bf.Length == 0 || bf == "none") continue;
+                int at = bf.IndexOf("blur(", StringComparison.Ordinal);
+                if (at < 0) { backdropKind[k] = 2; continue; }
+                int start = at + 5;
+                int end = bf.IndexOf(')', start);
+                if (end <= start) { backdropKind[k] = 2; continue; }
+                backdropKind[k] = 1;
+                blurSigma[k] = CssBox.ParseLength(bf.Substring(start, end - start));
+            }
+        }
+
+        static bool HasToken(string classes, string token)
+        {
+            if (string.IsNullOrEmpty(classes)) return false;
+            int i = 0;
+            while (i < classes.Length)
+            {
+                while (i < classes.Length && classes[i] == ' ') i++;
+                int start = i;
+                while (i < classes.Length && classes[i] != ' ') i++;
+                if (i - start == token.Length && string.CompareOrdinal(classes, start, token, 0, token.Length) == 0)
+                    return true;
+            }
+            return false;
+        }
+
         void PaintAll()
         {
+            EnsurePaintFlags();
             int n = elements.Count;
             if (effBuf == null || effBuf.Length < n)
             {
@@ -696,7 +845,7 @@ namespace OrbitalSalvage.Render
                 if (paintOnlyLayer >= 0 && (elementLayer == null || elementLayer[k] != paintOnlyLayer)) continue;
                 int parent = (int)N(e, "p", -1);
                 int pk = parent >= 0 && byIndex.TryGetValue(parent, out var pp) ? pp : -1;
-                bool appPage = (" " + S(e, "c") + " ").Contains(" app-page ");
+                bool appPage = isAppPage[k];
                 pageSkip[k] = appPage || (pk >= 0 && pageSkip[pk]);
                 if (Underlay != null && S(e, "id") == "mobile-frame")
                 {
@@ -769,16 +918,15 @@ namespace OrbitalSalvage.Render
                 if (moving) BeginMotion(k);
                 if (isShine[k]) { PaintShine(e, pk, eff[k], k); if (moving) canvas.Restore(); continue; }
 
-                if (!SimplifyEffects && S(e, "bf") != "" && S(e, "bf") != "none")
+                if (!SimplifyEffects && backdropKind[k] == 1)
                 {
-                    var m = System.Text.RegularExpressions.Regex.Match(S(e, "bf"), @"blur\(([^)]+)\)");
-                    if (m.Success && eff[k] > 0.001)
+                    if (eff[k] > 0.001)
                     {
                         var rr = Rect(e);
-                        canvas.BackdropBlur(rr[0], rr[1], rr[2], rr[3], CssBox.ParseLength(m.Groups[1].Value));
+                        canvas.BackdropBlur(rr[0], rr[1], rr[2], rr[3], blurSigma[k]);
                     }
-                    else Defer("backdrop-filter");
                 }
+                else if (!SimplifyEffects && backdropKind[k] == 2) Defer("backdrop-filter");
                 if (S(e, "flt") != "" && S(e, "flt") != "none") Defer("filter (drop-shadow / blur)");
                 if (S(e, "an") != "" && S(e, "an") != "none" && !e.ContainsKey("am"))
                     Defer("animation (drawn at the measured rect only): " + S(e, "an"));
@@ -865,22 +1013,23 @@ namespace OrbitalSalvage.Render
             }
             var style = prep.style;
             style.x = r[0]; style.y = r[1]; style.w = r[2]; style.h = r[3];
-            bool borderOverride = element && frame != null && frame.Border[k] != null;
-            bool shadowOverride = element && frame != null && frame.Shadow[k] != null;
+            bool borderOverride = element && frame != null && frame.BorderLive[k];
+            bool shadowOverride = element && frame != null && frame.ShadowN[k] > 0;
             if (!prep.any && !borderOverride && !shadowOverride) { PaintProfile.End(PaintProfile.PaintBox); return; }
-            Rgba[] savedBorder = null;
-            CssShadow[] savedShadow = null;
             if (borderOverride)
             {
-                savedBorder = (Rgba[])style.borderC.Clone();
-                var parsed = CssColor.Parse(frame.Border[k], Rgba.Transparent);
+                Array.Copy(style.borderC, borderSave, 4);
+                var parsed = frame.BorderRgba[k];
                 for (int i = 0; i < 4; i++) style.borderC[i] = parsed;
             }
             if (shadowOverride)
             {
-                savedShadow = style.shadows.ToArray();
+                shadowSave.Clear();
+                shadowSave.AddRange(style.shadows);
                 style.shadows.Clear();
-                style.shadows.AddRange(CssBox.ParseShadows(frame.Shadow[k]));
+                int baseIx = k * CssFrame.ShadowStride;
+                int sn = frame.ShadowN[k];
+                for (int i = 0; i < sn; i++) style.shadows.Add(frame.ShadowPool[baseIx + i]);
             }
             if (tilt != 0)
             {
@@ -890,7 +1039,7 @@ namespace OrbitalSalvage.Render
                 canvas.Rotate(tilt);
                 canvas.Translate(-cx, -cy);
             }
-            bool beam = element && (" " + S(e, "c") + " ").Contains(" pedestal-glow-beam ");
+            bool beam = element && isBeam != null && isBeam[k];
             if (beam)
             {
                 canvas.Save();
@@ -919,11 +1068,11 @@ namespace OrbitalSalvage.Render
             else CssBox.Draw(canvas, style, alpha);
             if (beam) canvas.Restore();
             if (tilt != 0) canvas.Restore();
-            if (savedBorder != null) Array.Copy(savedBorder, style.borderC, 4);
-            if (savedShadow != null)
+            if (borderOverride) Array.Copy(borderSave, style.borderC, 4);
+            if (shadowOverride)
             {
                 style.shadows.Clear();
-                style.shadows.AddRange(savedShadow);
+                style.shadows.AddRange(shadowSave);
             }
             DrawnBoxes++;
             PaintProfile.End(PaintProfile.PaintBox);
@@ -1002,6 +1151,15 @@ namespace OrbitalSalvage.Render
             upperOf[k] = S(e, "tt") == "uppercase";
         }
 
+        string CachedUpper(string text)
+        {
+            if (text == null) return "";
+            if (upperText.TryGetValue(text, out var up)) return up;
+            up = text.ToUpperInvariant();
+            upperText[text] = up;
+            return up;
+        }
+
         string ChildEmoji(Dictionary<string, object> e)
         {
             int id = (int)N(e, "i", -1);
@@ -1048,13 +1206,20 @@ namespace OrbitalSalvage.Render
                 // The equipped label is "🍩 DONUT FLOAT" while the spec already paints that emoji as a child image.
                 string mark = ChildEmoji(e);
                 if (mark.Length > 0 && textReplacement.StartsWith(mark, StringComparison.Ordinal))
-                    textReplacement = textReplacement.Substring(mark.Length);
+                {
+                    if (!trimmedText.TryGetValue(textReplacement, out var cut))
+                    {
+                        cut = textReplacement.Substring(mark.Length);
+                        trimmedText[textReplacement] = cut;
+                    }
+                    textReplacement = cut;
+                }
             }
             for (int ri = 0; ri < runs.Count; ri++)
             {
                 var run = (Dictionary<string, object>)runs[ri];
                 string text;
-                if (replaceText && ri == 0) text = upper ? textReplacement.ToUpperInvariant() : textReplacement;
+                if (replaceText && ri == 0) text = upper ? CachedUpper(textReplacement) : textReplacement;
                 else if (replaceText) continue;
                 else if (upper)
                 {
@@ -1091,11 +1256,11 @@ namespace OrbitalSalvage.Render
                 {
                     string best = text;
                     double bestErr = double.MaxValue;
-                    string trimStart = text.TrimStart();
-                    string trimEnd = text.TrimEnd();
-                    string trimBoth = text.Trim();
-                    string[] candidates = { text, trimStart, trimEnd, trimBoth };
-                    foreach (var cand in candidates)
+                    textCandidates[0] = text;
+                    textCandidates[1] = text.TrimStart();
+                    textCandidates[2] = text.TrimEnd();
+                    textCandidates[3] = text.Trim();
+                    foreach (var cand in textCandidates)
                     {
                         double err = Math.Abs(canvas.MeasureText(cand) - r[2]);
                         if (err < bestErr - 0.01) { bestErr = err; best = cand; }
@@ -1104,7 +1269,13 @@ namespace OrbitalSalvage.Render
                     // narrower pre-transform width stacks the second word on top of the first.
                     double fontPx = CssBox.ParseLength(S(e, "fz"));
                     bool singleLine = fontPx > 0 && r[3] <= fontPx * 1.5 + 2;
-                    lines = singleLine ? new[] { best } : WrapToWidth(canvas, best, r[2]).ToArray();
+                    if (singleLine && replaceText)
+                    {
+                        oneLine[0] = best;
+                        lines = oneLine;
+                    }
+                    else if (singleLine) lines = new[] { best };
+                    else lines = WrapToWidth(canvas, best, r[2]).ToArray();
                     if (!replaceText)
                         laid[slot] = new Laid { font = font, text = text, width = r[2], lines = lines };
                 }

@@ -83,12 +83,15 @@ namespace OrbitalSalvage.Render
             public bool Opacity;
             public double OpacityValue;
             public bool Shadow;
-            public string ShadowValue;
+            public int ShadowCount;
             public bool Border;
-            public string BorderValue;
+            public Rgba BorderColor;
             public bool Transform;
             public Matrix2D Matrix;
         }
+
+        /// <summary>Filled by <see cref="Evaluate"/> when <see cref="Sample.Shadow"/> is set. Copied out before the next call.</summary>
+        public static readonly List<CssShadow> ShadowScratch = new List<CssShadow>(4);
 
         public static Sample Evaluate(double timeMs, double delayMs, double durationMs, double iterations, string direction, string fill, string easing, KeyframeSet set, double width, double height, double dx)
         {
@@ -105,13 +108,14 @@ namespace OrbitalSalvage.Render
             }
             if (set.TryShadow(directed, ease, out var sf, out var st, out var su))
             {
-                sample.Shadow = true;
-                sample.ShadowValue = LerpShadows(sf, st, su);
+                LerpShadowsInto(sf, st, su, ShadowScratch);
+                sample.Shadow = ShadowScratch.Count > 0;
+                sample.ShadowCount = ShadowScratch.Count;
             }
             if (set.TryBorder(directed, ease, out var bf, out var bt, out var bu))
             {
                 sample.Border = true;
-                sample.BorderValue = Format(LerpColor(CssColor.Parse(bf, Rgba.Transparent), CssColor.Parse(bt, Rgba.Transparent), bu));
+                sample.BorderColor = QuantizeCss(LerpColor(CssColor.Parse(bf, Rgba.Transparent), CssColor.Parse(bt, Rgba.Transparent), bu));
             }
             if (set.TryTransform(directed, ease, out var tf, out var tt, out var tu))
             {
@@ -121,32 +125,40 @@ namespace OrbitalSalvage.Render
             return sample;
         }
 
-        static string LerpShadows(string a, string b, double u)
+        static void LerpShadowsInto(string a, string b, double u, List<CssShadow> dst)
         {
+            dst.Clear();
             var left = CssBox.ParseShadows(a);
             var right = CssBox.ParseShadows(b);
             int n = Math.Max(left.Count, right.Count);
-            if (n == 0) return "none";
-            var parts = new List<string>(n);
             for (int i = 0; i < n; i++)
             {
                 var sa = i < left.Count ? left[i] : default(CssShadow);
                 var sb = i < right.Count ? right[i] : default(CssShadow);
                 if (i >= left.Count) sa.color = Rgba.Transparent;
                 if (i >= right.Count) sb.color = Rgba.Transparent;
-                var sh = new CssShadow
+                dst.Add(new CssShadow
                 {
                     dx = sa.dx + (sb.dx - sa.dx) * u,
                     dy = sa.dy + (sb.dy - sa.dy) * u,
                     blur = sa.blur + (sb.blur - sa.blur) * u,
                     spread = sa.spread + (sb.spread - sa.spread) * u,
-                    color = LerpColor(sa.color, sb.color, u),
+                    color = QuantizeCss(LerpColor(sa.color, sb.color, u)),
                     inset = u < 0.5 ? sa.inset : sb.inset
-                };
-                parts.Add(string.Format(CultureInfo.InvariantCulture, "{0} {1}px {2}px {3}px {4}px",
-                    Format(sh.color), sh.dx, sh.dy, sh.blur, sh.spread) + (sh.inset ? " inset" : ""));
+                });
             }
-            return string.Join(", ", parts);
+        }
+
+        /// <summary>Same 8-bit channels and 4-decimal alpha as <see cref="Format"/> then <see cref="CssColor.Parse"/>.</summary>
+        public static Rgba QuantizeCss(Rgba c)
+        {
+            double r = Math.Max(0, Math.Min(255, Math.Round(c.r * 255.0)));
+            double g = Math.Max(0, Math.Min(255, Math.Round(c.g * 255.0)));
+            double b = Math.Max(0, Math.Min(255, Math.Round(c.b * 255.0)));
+            double a = Math.Round(c.a, 4, MidpointRounding.AwayFromZero);
+            if (a < 0) a = 0;
+            if (a > 1) a = 1;
+            return new Rgba((float)(r / 255.0), (float)(g / 255.0), (float)(b / 255.0), (float)a);
         }
 
         public static Rgba LerpColor(Rgba a, Rgba b, double u)
@@ -197,9 +209,14 @@ namespace OrbitalSalvage.Render
     /// <summary>Per-element overrides for one clock time. Index-parallel with the spec element list.</summary>
     public sealed class CssFrame
     {
+        public const int ShadowStride = 4;
         public readonly double[] Opacity;
         public readonly string[] Shadow;
         public readonly string[] Border;
+        public readonly int[] ShadowN;
+        public readonly CssShadow[] ShadowPool;
+        public readonly bool[] BorderLive;
+        public readonly Rgba[] BorderRgba;
         public readonly bool[] Own;
         public readonly bool[] Live;
         public readonly bool[] Tree;
@@ -235,13 +252,13 @@ namespace OrbitalSalvage.Render
                 Opacity[i] = double.NaN;
                 Shadow[i] = null;
                 Border[i] = null;
+                ShadowN[i] = 0;
+                BorderLive[i] = false;
                 Own[i] = false;
                 Live[i] = false;
                 Tree[i] = false;
                 Shine[i] = false;
                 ExtraY[i] = 0;
-                OriginX[i] = double.NaN;
-                OriginY[i] = double.NaN;
             }
         }
 
@@ -250,6 +267,10 @@ namespace OrbitalSalvage.Render
             Opacity = new double[n];
             Shadow = new string[n];
             Border = new string[n];
+            ShadowN = new int[n];
+            ShadowPool = new CssShadow[n * ShadowStride];
+            BorderLive = new bool[n];
+            BorderRgba = new Rgba[n];
             Own = new bool[n];
             Live = new bool[n];
             Tree = new bool[n];
@@ -322,8 +343,19 @@ namespace OrbitalSalvage.Render
                     continue;
                 }
                 if (sample.Opacity) frame.Opacity[k] = sample.OpacityValue;
-                if (sample.Shadow) frame.Shadow[k] = sample.ShadowValue;
-                if (sample.Border) frame.Border[k] = sample.BorderValue;
+                if (sample.Shadow)
+                {
+                    int nSh = sample.ShadowCount;
+                    if (nSh > ShadowStride) nSh = ShadowStride;
+                    frame.ShadowN[k] = nSh;
+                    int dst = k * ShadowStride;
+                    for (int s = 0; s < nSh; s++) frame.ShadowPool[dst + s] = CssAnimation.ShadowScratch[s];
+                }
+                if (sample.Border)
+                {
+                    frame.BorderLive[k] = true;
+                    frame.BorderRgba[k] = sample.BorderColor;
+                }
                 bool hidden = SpecInt(e, "v", 1) == 0 || SpecStr(e, "vis") == "hidden" || classes.IndexOf("page-hidden", StringComparison.Ordinal) >= 0;
                 if (sample.Transform)
                 {
@@ -353,7 +385,8 @@ namespace OrbitalSalvage.Render
                     frame.Local[k] = CopyRect(elements[k], hasBase ? "br" : "r");
                     if (!hasBase && frame.Local[k] != null) UnbakeCaptured(elements, frame, k);
                 }
-                if (frame.Local[k] != null) OriginOf(elements[k], frame.Local[k][2], frame.Local[k][3], out frame.OriginX[k], out frame.OriginY[k]);
+                if (frame.Local[k] != null && double.IsNaN(frame.OriginX[k]))
+                    OriginOf(elements[k], frame.Local[k][2], frame.Local[k][3], out frame.OriginX[k], out frame.OriginY[k]);
                 if (frame.Runs[k] == null) frame.Runs[k] = CopyRuns(elements[k], true);
                 frame.HasMotion = true;
             }

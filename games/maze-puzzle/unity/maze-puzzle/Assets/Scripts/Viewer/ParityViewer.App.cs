@@ -21,7 +21,18 @@ namespace OrbitalSalvage.Viewer
         bool armedControl;
         ParityPages.ControlHit armedHit;
         int appliedEpoch = -1;
-        string overrideSig = "";
+        string snapTemplate = "";
+        string snapPage = "";
+        string snapCredit = "";
+        string snapQuota = "";
+        string snapBar = "";
+        string snapTip = "";
+        int snapElemN = -1;
+        string[] snapElemKey = Array.Empty<string>();
+        string[] snapElemText = Array.Empty<string>();
+        double?[] snapElemWidth = Array.Empty<double?>();
+        double?[] snapElemPct = Array.Empty<double?>();
+        bool?[] snapElemVis = Array.Empty<bool?>();
         bool sessionWired;
         bool flowClockActive;
         double flowClockMs;
@@ -193,20 +204,59 @@ namespace OrbitalSalvage.Viewer
             session.UsedBackupPod = app.UsedBackupPod;
         }
 
+        bool OverridesUnchanged()
+        {
+            if (snapTemplate != app.TemplateId || snapPage != app.CurrentPage || snapCredit != app.CreditText
+                || snapQuota != app.QuotaText || snapBar != app.LoadingBar || snapTip != app.LoadingTip)
+                return false;
+            var els = app.Model.Elements;
+            if (els.Count != snapElemN) return false;
+            int i = 0;
+            foreach (var kv in els)
+            {
+                if (snapElemKey[i] != kv.Key || snapElemText[i] != kv.Value.Text) return false;
+                if (snapElemWidth[i] != kv.Value.WidthPx || snapElemPct[i] != kv.Value.WidthPercent || snapElemVis[i] != kv.Value.Visible)
+                    return false;
+                i++;
+            }
+            return true;
+        }
+
+        void RememberOverrides()
+        {
+            snapTemplate = app.TemplateId;
+            snapPage = app.CurrentPage;
+            snapCredit = app.CreditText;
+            snapQuota = app.QuotaText;
+            snapBar = app.LoadingBar;
+            snapTip = app.LoadingTip;
+            var els = app.Model.Elements;
+            snapElemN = els.Count;
+            if (snapElemKey.Length != snapElemN)
+            {
+                snapElemKey = new string[snapElemN];
+                snapElemText = new string[snapElemN];
+                snapElemWidth = new double?[snapElemN];
+                snapElemPct = new double?[snapElemN];
+                snapElemVis = new bool?[snapElemN];
+            }
+            int i = 0;
+            foreach (var kv in els)
+            {
+                snapElemKey[i] = kv.Key;
+                snapElemText[i] = kv.Value.Text;
+                snapElemWidth[i] = kv.Value.WidthPx;
+                snapElemPct[i] = kv.Value.WidthPercent;
+                snapElemVis[i] = kv.Value.Visible;
+                i++;
+            }
+        }
+
         void ApplyOverrides(bool forceDraw)
         {
             if (current == null || app == null) return;
-            var sig = new StringBuilder();
-            sig.Append(app.TemplateId).Append('|').Append(app.CurrentPage).Append('|').Append(app.CreditText)
-                .Append('|').Append(app.QuotaText).Append('|').Append(app.LoadingBar).Append('|').Append(app.LoadingTip);
-            foreach (var kv in app.Model.Elements)
-            {
-                sig.Append('\n').Append(kv.Key).Append('=').Append(kv.Value.Text).Append('#').Append(kv.Value.WidthPx)
-                    .Append('%').Append(kv.Value.WidthPercent).Append('!').Append(kv.Value.Visible);
-            }
-            string text = sig.ToString();
-            if (!forceDraw && text == overrideSig) return;
-            overrideSig = text;
+            if (!forceDraw && OverridesUnchanged()) return;
+            RememberOverrides();
             current.TextOverrides.Clear();
             current.WidthOverrides.Clear();
             current.WidthPercentOverrides.Clear();

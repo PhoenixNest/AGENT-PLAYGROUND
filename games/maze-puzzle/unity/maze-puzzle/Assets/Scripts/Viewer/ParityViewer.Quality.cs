@@ -21,6 +21,8 @@ namespace OrbitalSalvage.Viewer
         double ambientInterval;
         bool qualityHud;
         bool qualityReady;
+        bool qualityBooted;
+        float cacheDeferUntil = -1f;
 
         void ConfigurePresentation()
         {
@@ -42,6 +44,15 @@ namespace OrbitalSalvage.Viewer
             if (qualityCount < QualityWindow) qualityCount++;
 
             double forced = PlayQuality.Forced;
+            if (!qualityBooted)
+            {
+                qualityBooted = true;
+                if (forced <= 0)
+                {
+                    double saved = LoadSettledScale(Screen.width, Screen.height);
+                    if (saved > 0) qualityCap = SnapStep(saved);
+                }
+            }
             double target;
             if (forced > 0)
             {
@@ -55,7 +66,9 @@ namespace OrbitalSalvage.Viewer
                 bool warmed = qualityCount >= 30;
                 if (warmed && p95 > 0.022f && now - lastQualityStep > 0.8f)
                 {
-                    qualityCap = StepDown(Math.Min(qualityCap, fit));
+                    double cur = Math.Min(qualityCap, fit);
+                    double implied = ImpliedScale(cur, p95);
+                    qualityCap = implied < cur - 0.05 ? implied : StepDown(cur);
                     lastQualityStep = now;
                 }
                 else if (warmed && p95 < 0.014f && now - lastQualityStep > 3f)
@@ -73,12 +86,58 @@ namespace OrbitalSalvage.Viewer
             }
 
             HomeChrome.SimplifyEffects = forced <= 0 && target <= 1.01;
-            if (current != null && Math.Abs(current.RasterScale - target) >= 0.05)
+            bool resized = current != null && Math.Abs(current.RasterScale - target) >= 0.05;
+            if (resized)
             {
                 current.ResizeRaster(target);
-                PaintCurrent(true);
+                cacheDeferUntil = forced <= 0 ? now + 0.9f : -1f;
             }
+            HomeChrome.DeferLayerCache = forced <= 0 && cacheDeferUntil > 0f && now < cacheDeferUntil;
+            if (resized) PaintCurrent(true);
+            if (!HomeChrome.DeferLayerCache && forced <= 0 && current != null && current.UsesLayerCache
+                && Math.Abs(current.RasterScale - target) < 0.05)
+                SaveSettledScale(Screen.width, Screen.height, current.RasterScale);
             qualityReady = true;
+        }
+
+        static double ImpliedScale(double scale, float p95)
+        {
+            const double budget = 0.0166;
+            if (p95 <= budget) return scale;
+            double want = scale * Math.Sqrt(budget / p95);
+            double best = 1;
+            for (int i = 0; i < QualitySteps.Length; i++)
+            {
+                double step = QualitySteps[i];
+                if (step < scale - 0.05 && step <= want + 0.02) best = step;
+            }
+            return best;
+        }
+
+        static string ScalePrefKey(int w, int h) => "os.parity.scale." + w.ToString(System.Globalization.CultureInfo.InvariantCulture) + "x" + h.ToString(System.Globalization.CultureInfo.InvariantCulture);
+
+        static double LoadSettledScale(int w, int h)
+        {
+            if (w < 2 || h < 2) return 0;
+            string key = ScalePrefKey(w, h);
+#if UNITY_EDITOR
+            if (!UnityEditor.EditorPrefs.HasKey(key)) return 0;
+            return UnityEditor.EditorPrefs.GetFloat(key, 0f);
+#else
+            if (!PlayerPrefs.HasKey(key)) return 0;
+            return PlayerPrefs.GetFloat(key, 0f);
+#endif
+        }
+
+        static void SaveSettledScale(int w, int h, double scale)
+        {
+            if (w < 2 || h < 2) return;
+            string key = ScalePrefKey(w, h);
+#if UNITY_EDITOR
+            UnityEditor.EditorPrefs.SetFloat(key, (float)scale);
+#else
+            PlayerPrefs.SetFloat(key, (float)scale);
+#endif
         }
 
         double LatchedFit(float now)
