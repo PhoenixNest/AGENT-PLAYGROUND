@@ -245,13 +245,13 @@ namespace OrbitalSalvage.Viewer
             current.Underlay = null;
             if (flowClockActive) BindFlowUnderlay(current);
             if (flowCapture && app != null) current.PoseGestureHint(app.HintAgeMs);
-            if (!flowClockActive && (selfTesting || currentId != null && currentId.StartsWith("loading", StringComparison.Ordinal))) current.Draw();
-            else
+            if (flowClockActive)
             {
-                double ms = flowClockActive ? flowClockMs : clock.Milliseconds;
                 bool modal = currentId != null && currentId.StartsWith("modal_", StringComparison.Ordinal);
-                current.Draw(ms, pressIndex, pressCss, modal && ms < 400, modal);
+                current.Draw(flowClockMs, pressIndex, pressCss, modal && flowClockMs < 400, modal);
             }
+            else if (selfTesting || currentId != null && currentId.StartsWith("loading", StringComparison.Ordinal)) current.Draw();
+            else PaintCurrent(true);
         }
 
         void BindFlowUnderlay(HomeChrome modalChrome)
