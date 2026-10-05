@@ -90,14 +90,21 @@ namespace OrbitalSalvage.Render
             DisposeText();
             edgeBuffer?.Dispose();
             paramBuffer?.Dispose();
-            if (matLayer != null) UnityEngine.Object.Destroy(matLayer);
-            if (matBlur != null) UnityEngine.Object.Destroy(matBlur);
-            if (blurA != null) { blurA.Release(); UnityEngine.Object.Destroy(blurA); }
-            if (blurB != null) { blurB.Release(); UnityEngine.Object.Destroy(blurB); }
+            DestroyOwned(matLayer);
+            DestroyOwned(matBlur);
+            if (blurA != null) { blurA.Release(); DestroyOwned(blurA); }
+            if (blurB != null) { blurB.Release(); DestroyOwned(blurB); }
             cmd.Release();
             foreach (var c in clipPool) c.Release();
             ReleaseSnapshots();
             target.Release(); accum.Release(); maskA.Release(); maskB.Release();
+        }
+
+        static void DestroyOwned(UnityEngine.Object obj)
+        {
+            if (obj == null) return;
+            if (Application.isPlaying) UnityEngine.Object.Destroy(obj);
+            else UnityEngine.Object.DestroyImmediate(obj);
         }
 
         // BackdropBlur snapshots are sampled by draws recorded after that call's Flush.
