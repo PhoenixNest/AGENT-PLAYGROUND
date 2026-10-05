@@ -9,6 +9,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+#### Unity (2026-10-04, `agent/parity/ship`)
+
+- Play, with no command-line flags, boots `ParityViewer` and `AppController` (Canvas2D). The main scene is a camera. Pointer clicks, drags, and holds go through the letterboxed 430×932 page. Profile is `orbital-salvage-profile.json` under `Application.persistentDataPath` (key `ORBITAL_SALVAGE_CARTOON_PROFILE_V1`). Audio on that path is the C# DSP player. `--parity` and the parity self-tests keep a frozen clock and silent audio.
+- Retired the uGUI shell: `UIManager`, `SpriteHelper`, `SafeAreaFitter`, the old `OrbitalSalvage.Core` managers, Physics2D gameplay scripts, TMP Examples & Extras. Fluent emoji and Fredoka/Nunito assets stay. `Assets/Audio/*.wav` stays; the DSP path does not play those files.
+- Harness re-measure (same machine, not a device): 11 stills unchanged from the listed baseline (5 pass the 99.0%/0.985 bar, 6 fail, mostly text edges). Game and pause SHA256 unchanged. Live streams 30/30 byte-identical. Controller goldens 9/9. Flow shots 55, 6 at the bar, 0 blank. HomeChrome.Draw one D3D11 run: avg 3.049 ms, p95 4.409 ms. Live frame p95 14.32 ms. EditMode 380/380. This is not a completed UI restoration.
+
+#### Unity (2026-10-04, `agent/parity/lag`)
+
+- Editor Play at Simulator size (1284×2778) was ~16 fps and could paint a mustard page with a blue hero. Cause: live frames unbaked a reused local rect every tick; the 3× raster plus vSync filled the rest of the frame. Product path now unbakes once, turns vSync off, targets 60 fps, and drops raster 3→2→1.5→1 when p95 exceeds 22 ms. After, D3D12 p95 24.69 ms with a purple page and yellow face. Parity stills stay frozen 3× Draw (game/pause hashes unchanged). Phones untested.
+
+The notes below are the 2026-09-30 uGUI changelog. Those types are gone.
+
 ### Fixed
 
 #### Unity

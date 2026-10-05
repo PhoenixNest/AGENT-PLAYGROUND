@@ -1,0 +1,23 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>raf-probe</title>
+<style>
+  @keyframes k { from { left: 0 } to { left: 1000px } }
+  #anim { position: absolute; width: 10px; height: 10px; animation: k 10s linear infinite }
+</style>
+<div id="anim"></div>
+<script>
+  window.__probe = { raf: [], timeouts: [], intervals: [], boot: { perf: performance.now(), date: Date.now() } };
+  let n = 0;
+  function frame(t) {
+    window.__probe.raf.push({ arg: t, perf: performance.now(), date: Date.now() });
+    if (++n < 400) requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+  setTimeout(() => window.__probe.timeouts.push({ perf: performance.now(), date: Date.now() }), 100);
+  let k = 0;
+  const id = setInterval(() => {
+    window.__probe.intervals.push({ perf: performance.now() });
+    if (++k >= 5) clearInterval(id);
+  }, 250);
+</script>

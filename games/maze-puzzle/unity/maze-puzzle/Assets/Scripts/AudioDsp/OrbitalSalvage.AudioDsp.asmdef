@@ -1,0 +1,14 @@
+{
+    "name": "OrbitalSalvage.AudioDsp",
+    "rootNamespace": "OrbitalSalvage.AudioDsp",
+    "references": [],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

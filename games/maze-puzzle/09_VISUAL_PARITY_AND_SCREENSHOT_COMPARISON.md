@@ -8,6 +8,26 @@
 > **Capture note:** Web captures are $1252 \times 1528$ (device frame included). Unity captures are $860 \times 1864$ ($2\times$ of $430 \times 932$). They are **not** pixel-overlay comparable.  
 > **Emoji note:** Fluent 3D emoji sprites now live in `unity/maze-puzzle/Assets/Resources/Emojis/3D/` and load via `Resources.Load` (the previous file-path loader would have shown circles on device builds).
 
+### Measured harness status (2026-10-04)
+
+The 6/10-style scores in section 1 are the 2026-09-30 uGUI review. They are not the current pixel comparison. Re-capture of the 11 harness stills (zero profile, bar 99.0% within 16 and SSIM 0.985) on the Canvas2D player:
+
+| Still | pix16 % | SSIM | bar |
+| --- | ---: | ---: | --- |
+| loading | 99.55 | 0.9908 | pass |
+| game | 99.51 | 0.9919 | pass |
+| pause | 99.25 | 0.9877 | pass |
+| settings | 99.20 | 0.9890 | pass |
+| debrief | 99.05 | 0.9856 | pass |
+| trophy | 98.80 | 0.9815 | fail |
+| skies | 98.72 | 0.9782 | fail |
+| home | 98.67 | 0.9799 | fail |
+| daily | 98.05 | 0.9706 | fail |
+| hats | 98.01 | 0.9649 | fail |
+| donuts | 97.78 | 0.9614 | fail |
+
+Game PNG SHA256 `38730953997DE30D033C10E6CFF0B9AE2E47FBAB1671D07178039B484609A12A`. Pause PNG SHA256 `CE4A6AE83A5563E98F7F722334E17A7FC06FA1375C26390A9714FC838FEE7078`. Failures are mostly text-edge anti-aliasing (Chromium DirectWrite vs exact-area coverage). Flow shots: 6 of 55 at the bar, 0 blank. Live renderer vs recorded canvas streams: 30/30 byte-identical. Controller goldens: 9/9. UI restoration is not complete. No phone or tablet was used.
+
 ---
 
 ## 1. Visual Benchmark Archive Summary

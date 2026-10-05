@@ -1,0 +1,671 @@
+{
+  "sources": {
+    "google/fonts": {
+      "repo": "google/fonts",
+      "commit": "9710da1eacb3be272583c3224dcb70f9da6eadbb"
+    },
+    "microsoft/fluentui-emoji": {
+      "repo": "microsoft/fluentui-emoji",
+      "commit": "1ffb34c752ecf5d402f04cfb4b392c77f57c54bc"
+    }
+  },
+  "files": [
+    {
+      "path": "emoji/1f30c.png",
+      "bytes": 43569,
+      "sha256": "f15827e7e2ddc06e679fe5373072f7f62341e0b28e22e1d88ea419f4b3442cde",
+      "kind": "download",
+      "url": "https://raw.githubusercontent.com/microsoft/fluentui-emoji/1ffb34c752ecf5d402f04cfb4b392c77f57c54bc/assets/Milky%20way/3D/milky_way_3d.png",
+      "repo": "microsoft/fluentui-emoji",
+      "commit": "1ffb34c752ecf5d402f04cfb4b392c77f57c54bc"
+    },
+    {
+      "path": "emoji/1f31f.png",
+      "bytes": 28165,
+      "sha256": "a8041e122bfebbc72ff85c294568561ae77dc97ae322f747292c082901a3bef7",
+      "kind": "download",
+      "url": "https://raw.githubusercontent.com/microsoft/fluentui-emoji/1ffb34c752ecf5d402f04cfb4b392c77f57c54bc/assets/Glowing%20star/3D/glowing_star_3d.png",
+      "repo": "microsoft/fluentui-emoji",
+      "commit": "1ffb34c752ecf5d402f04cfb4b392c77f57c54bc"
+    },
+    {
+      "path": "emoji/1f353.png",
+      "bytes": 29831,
+      "sha256": "446d640c24e146d03e8382c61ae52862848b11aadf74e7b47d200bc44d2f0223",
+      "kind": "download",
+      "url": "https://raw.githubusercontent.com/microsoft/fluentui-emoji/1ffb34c752ecf5d402f04cfb4b392c77f57c54bc/assets/Strawberry/3D/strawberry_3d.png",
+      "repo": "microsoft/fluentui-emoji",
+      "commit": "1ffb34c752ecf5d402f04cfb4b392c77f57c54bc"
+    },
+    {
+      "path": "emoji/1f369.png",
+      "bytes": 42247,
+      "sha256": "5527fa6a366ad366a45f84b71432e8a54aa502debea3b53d3926c2823fcdf986",
+      "kind": "download",
+      "url": "https://raw.githubusercontent.com/microsoft/fluentui-emoji/1ffb34c752ecf5d402f04cfb4b392c77f57c54bc/assets/Doughnut/3D/doughnut_3d.png",
+      "repo": "microsoft/fluentui-emoji",
+      "commit": "1ffb34c752ecf5d402f04cfb4b392c77f57c54bc"
+    },
+    {
+      "path": "emoji/1f36c.png",
+      "bytes": 34780,
+      "sha256": "79607ed1b5a0b96117723261fb9c79db77e63b154cebbd9af42ee8ddb6776fb9",
+      "kind": "download",
+      "url": "https://raw.githubusercontent.com/microsoft/fluentui-emoji/1ffb34c752ecf5d402f04cfb4b392c77f57c54bc/assets/Candy/3D/candy_3d.png",
+      "repo": "microsoft/fluentui-emoji",
+      "commit": "1ffb34c752ecf5d402f04cfb4b392c77f57c54bc"
+    },
+    {
+      "path": "emoji/1f381.png",
+      "bytes": 31757,
+      "sha256": "fc9c446401c9fb347f4e9f47e6023247208126047d9ec32059d5e14e127fb562",
+      "kind": "download",
+      "url": "https://raw.githubusercontent.com/microsoft/fluentui-emoji/1ffb34c752ecf5d402f04cfb4b392c77f57c54bc/assets/Wrapped%20gift/3D/wrapped_gift_3d.png",
+      "repo": "microsoft/fluentui-emoji",
+      "commit": "1ffb34c752ecf5d402f04cfb4b392c77f57c54bc"
+    },
+    {
+      "path": "emoji/1f389.png",
+      "bytes": 42512,
+      "sha256": "70a8e2f9daf1646be9e773751b7f3b6b281a2415cf29c3c3aeebd9c923cdc3e0",
+      "kind": "download",
+      "url": "https://raw.githubusercontent.com/microsoft/fluentui-emoji/1ffb34c752ecf5d402f04cfb4b392c77f57c54bc/assets/Party%20popper/3D/party_popper_3d.png",
+      "repo": "microsoft/fluentui-emoji",
+      "commit": "1ffb34c752ecf5d402f04cfb4b392c77f57c54bc"
+    },
+    {
+      "path": "emoji/1f3ae.png",
+      "bytes": 31507,
+      "sha256": "4b01e22089defe553717d49624e673cb5492ecdd9c6a8eddb7e6ba12d400c0da",
+      "kind": "download",
+      "url": "https://raw.githubusercontent.com/microsoft/fluentui-emoji/1ffb34c752ecf5d402f04cfb4b392c77f57c54bc/assets/Video%20game/3D/video_game_3d.png",
+      "repo": "microsoft/fluentui-emoji",
+      "commit": "1ffb34c752ecf5d402f04cfb4b392c77f57c54bc"
+    },
+    {
+      "path": "emoji/1f3c6.png",
+      "bytes": 31910,
+      "sha256": "7c4a9805f354eb2aec35063a95a4043306efc726324c0d128883f24497857bbc",
+      "kind": "download",
+      "url": "https://raw.githubusercontent.com/microsoft/fluentui-emoji/1ffb34c752ecf5d402f04cfb4b392c77f57c54bc/assets/Trophy/3D/trophy_3d.png",
+      "repo": "microsoft/fluentui-emoji",
+      "commit": "1ffb34c752ecf5d402f04cfb4b392c77f57c54bc"
+    },
+    {
+      "path": "emoji/1f3e0.png",
+      "bytes": 43007,
+      "sha256": "0279b073321551b55c86a10dc2fff5bf66c8dec895672004da43482c5a1de87c",
+      "kind": "download",
+      "url": "https://raw.githubusercontent.com/microsoft/fluentui-emoji/1ffb34c752ecf5d402f04cfb4b392c77f57c54bc/assets/House/3D/house_3d.png",
+      "repo": "microsoft/fluentui-emoji",
+      "commit": "1ffb34c752ecf5d402f04cfb4b392c77f57c54bc"
+    },
+    {
+      "path": "emoji/1f41f.png",
+      "bytes": 29593,
+      "sha256": "d219342f1f416f2a89b5f6d412743bc809ac75d3be3d8cff0bc0cf5af5e288fa",
+      "kind": "download",
+      "url": "https://raw.githubusercontent.com/microsoft/fluentui-emoji/1ffb34c752ecf5d402f04cfb4b392c77f57c54bc/assets/Fish/3D/fish_3d.png",
+      "repo": "microsoft/fluentui-emoji",
+      "commit": "1ffb34c752ecf5d402f04cfb4b392c77f57c54bc"
+    },
+    {
+      "path": "emoji/1f431.png",
+      "bytes": 37653,
+      "sha256": "d930f2aee8ae47cb3ca26f2594ddd15df42345d952b5903b776adf4a728860b5",
+      "kind": "download",
+      "url": "https://raw.githubusercontent.com/microsoft/fluentui-emoji/1ffb34c752ecf5d402f04cfb4b392c77f57c54bc/assets/Cat%20face/3D/cat_face_3d.png",
+      "repo": "microsoft/fluentui-emoji",
+      "commit": "1ffb34c752ecf5d402f04cfb4b392c77f57c54bc"
+    },
+    {
+      "path": "emoji/1f446.png",
+      "bytes": 24750,
+      "sha256": "71a036d4d74cb61d92c037724dc1ba8696b07625d4692ef7edd47768f0d10c63",
+      "kind": "download",
+      "url": "https://raw.githubusercontent.com/microsoft/fluentui-emoji/1ffb34c752ecf5d402f04cfb4b392c77f57c54bc/assets/Backhand%20index%20pointing%20up/Default/3D/backhand_index_pointing_up_3d_default.png",
+      "repo": "microsoft/fluentui-emoji",
+      "commit": "1ffb34c752ecf5d402f04cfb4b392c77f57c54bc"
+    },
+    {
+      "path": "emoji/1f44d.png",
+      "bytes": 29710,
+      "sha256": "a48dbe89a1a16969593db76f5bec45e9e537e0f090e7609caa8d9a3ff598d1d2",
+      "kind": "download",
+      "url": "https://raw.githubusercontent.com/microsoft/fluentui-emoji/1ffb34c752ecf5d402f04cfb4b392c77f57c54bc/assets/Thumbs%20up/Default/3D/thumbs_up_3d_default.png",
+      "repo": "microsoft/fluentui-emoji",
+      "commit": "1ffb34c752ecf5d402f04cfb4b392c77f57c54bc"
+    },
+    {
+      "path": "emoji/1f451.png",
+      "bytes": 32050,
+      "sha256": "817095bb1423468afa155317ba04ca333957d51757a8d3326856ee8707c0edd6",
+      "kind": "download",
+      "url": "https://raw.githubusercontent.com/microsoft/fluentui-emoji/1ffb34c752ecf5d402f04cfb4b392c77f57c54bc/assets/Crown/3D/crown_3d.png",
+      "repo": "microsoft/fluentui-emoji",
+      "commit": "1ffb34c752ecf5d402f04cfb4b392c77f57c54bc"
+    },
+    {
+      "path": "emoji/1f496.png",
+      "bytes": 36392,
+      "sha256": "c458860ef79e7baedd7346104fb1f6cd27f2be165200c94fb3d7781c75269ae7",
+      "kind": "download",
+      "url": "https://raw.githubusercontent.com/microsoft/fluentui-emoji/1ffb34c752ecf5d402f04cfb4b392c77f57c54bc/assets/Sparkling%20heart/3D/sparkling_heart_3d.png",
+      "repo": "microsoft/fluentui-emoji",
+      "commit": "1ffb34c752ecf5d402f04cfb4b392c77f57c54bc"
+    },
+    {
+      "path": "emoji/1f4a4.png",
+      "bytes": 23820,
+      "sha256": "d4cbbecd5b80d16f003678a49d70cc3af500c0e9f0bdae855ddc6fce072e2931",
+      "kind": "download",
+      "url": "https://raw.githubusercontent.com/microsoft/fluentui-emoji/1ffb34c752ecf5d402f04cfb4b392c77f57c54bc/assets/Zzz/3D/zzz_3d.png",
+      "repo": "microsoft/fluentui-emoji",
+      "commit": "1ffb34c752ecf5d402f04cfb4b392c77f57c54bc"
+    },
+    {
+      "path": "emoji/1f4a5.png",
+      "bytes": 30796,
+      "sha256": "124ac1fc19f11512b0370197e6ddbd7b035f193df52c75e569f8e9059b7ccc13",
+      "kind": "download",
+      "url": "https://raw.githubusercontent.com/microsoft/fluentui-emoji/1ffb34c752ecf5d402f04cfb4b392c77f57c54bc/assets/Collision/3D/collision_3d.png",
+      "repo": "microsoft/fluentui-emoji",
+      "commit": "1ffb34c752ecf5d402f04cfb4b392c77f57c54bc"
+    },
+    {
+      "path": "emoji/1f4a8.png",
+      "bytes": 32947,
+      "sha256": "2e14654199310bce25f21e276f6f4888ff415063a517abf74ea346e29c7440a2",
+      "kind": "download",
+      "url": "https://raw.githubusercontent.com/microsoft/fluentui-emoji/1ffb34c752ecf5d402f04cfb4b392c77f57c54bc/assets/Dashing%20away/3D/dashing_away_3d.png",
+      "repo": "microsoft/fluentui-emoji",
+      "commit": "1ffb34c752ecf5d402f04cfb4b392c77f57c54bc"
+    },
+    {
+      "path": "emoji/1f4be.png",
+      "bytes": 33285,
+      "sha256": "6c0bf4706265b25d742ce2159e68e191036760765c2f7361dc1898d19836e8ab",
+      "kind": "download",
+      "url": "https://raw.githubusercontent.com/microsoft/fluentui-emoji/1ffb34c752ecf5d402f04cfb4b392c77f57c54bc/assets/Floppy%20disk/3D/floppy_disk_3d.png",
+      "repo": "microsoft/fluentui-emoji",
+      "commit": "1ffb34c752ecf5d402f04cfb4b392c77f57c54bc"
+    },
+    {
+      "path": "emoji/1f4c5.png",
+      "bytes": 41180,
+      "sha256": "7c377466753d5c5062e60edec0258ac78c512df423add89b2dd359035592d8ef",
+      "kind": "download",
+      "url": "https://raw.githubusercontent.com/microsoft/fluentui-emoji/1ffb34c752ecf5d402f04cfb4b392c77f57c54bc/assets/Calendar/3D/calendar_3d.png",
+      "repo": "microsoft/fluentui-emoji",
+      "commit": "1ffb34c752ecf5d402f04cfb4b392c77f57c54bc"
+    },
+    {
+      "path": "emoji/1f501.png",
+      "bytes": 33396,
+      "sha256": "1c33a4d05ad83f57c2f43771c22c791eff5c6bcb6281dd65416dd057d9b68ea7",
+      "kind": "download",
+      "url": "https://raw.githubusercontent.com/microsoft/fluentui-emoji/1ffb34c752ecf5d402f04cfb4b392c77f57c54bc/assets/Repeat%20button/3D/repeat_button_3d.png",
+      "repo": "microsoft/fluentui-emoji",
+      "commit": "1ffb34c752ecf5d402f04cfb4b392c77f57c54bc"
+    },
+    {
+      "path": "emoji/1f504.png",
+      "bytes": 34813,
+      "sha256": "f43c7b042dfef8a3a288e9ee54119caaca68f3b3a85493bfaf53abfa436d471c",
+      "kind": "download",
+      "url": "https://raw.githubusercontent.com/microsoft/fluentui-emoji/1ffb34c752ecf5d402f04cfb4b392c77f57c54bc/assets/Counterclockwise%20arrows%20button/3D/counterclockwise_arrows_button_3d.png",
+      "repo": "microsoft/fluentui-emoji",
+      "commit": "1ffb34c752ecf5d402f04cfb4b392c77f57c54bc"
+    },
+    {
+      "path": "emoji/1f507.png",
+      "bytes": 21372,
+      "sha256": "1f0d3fde8751b531831067a0725cce15dd4b745bcafc0168b8cc0d957ac1097f",
+      "kind": "download",
+      "url": "https://raw.githubusercontent.com/microsoft/fluentui-emoji/1ffb34c752ecf5d402f04cfb4b392c77f57c54bc/assets/Muted%20speaker/3D/muted_speaker_3d.png",
+      "repo": "microsoft/fluentui-emoji",
+      "commit": "1ffb34c752ecf5d402f04cfb4b392c77f57c54bc"
+    },
+    {
+      "path": "emoji/1f50a.png",
+      "bytes": 28034,
+      "sha256": "fd343b44a0fd2de6019a24a061d7954b2f9efcc6c2fc805895fec132e09beb71",
+      "kind": "download",
+      "url": "https://raw.githubusercontent.com/microsoft/fluentui-emoji/1ffb34c752ecf5d402f04cfb4b392c77f57c54bc/assets/Speaker%20high%20volume/3D/speaker_high_volume_3d.png",
+      "repo": "microsoft/fluentui-emoji",
+      "commit": "1ffb34c752ecf5d402f04cfb4b392c77f57c54bc"
+    },
+    {
+      "path": "emoji/1f512.png",
+      "bytes": 30342,
+      "sha256": "8c8e9209b8420ac7caf8c94fde6586044d9b91e85728aaaf4b98c2482761ea16",
+      "kind": "download",
+      "url": "https://raw.githubusercontent.com/microsoft/fluentui-emoji/1ffb34c752ecf5d402f04cfb4b392c77f57c54bc/assets/Locked/3D/locked_3d.png",
+      "repo": "microsoft/fluentui-emoji",
+      "commit": "1ffb34c752ecf5d402f04cfb4b392c77f57c54bc"
+    },
+    {
+      "path": "emoji/1f529.png",
+      "bytes": 32364,
+      "sha256": "35d1071ea9077e3f5b1b016a2730f63f92a7fdc23676db0cdd8eaf512d755864",
+      "kind": "download",
+      "url": "https://raw.githubusercontent.com/microsoft/fluentui-emoji/1ffb34c752ecf5d402f04cfb4b392c77f57c54bc/assets/Nut%20and%20bolt/3D/nut_and_bolt_3d.png",
+      "repo": "microsoft/fluentui-emoji",
+      "commit": "1ffb34c752ecf5d402f04cfb4b392c77f57c54bc"
+    },
+    {
+      "path": "emoji/1f573.png",
+      "bytes": 16915,
+      "sha256": "5f3002938b7e210717554c774980e2181b06e408ccb757a4914379994efaaedb",
+      "kind": "download",
+      "url": "https://raw.githubusercontent.com/microsoft/fluentui-emoji/1ffb34c752ecf5d402f04cfb4b392c77f57c54bc/assets/Hole/3D/hole_3d.png",
+      "repo": "microsoft/fluentui-emoji",
+      "commit": "1ffb34c752ecf5d402f04cfb4b392c77f57c54bc"
+    },
+    {
+      "path": "emoji/1f5d1.png",
+      "bytes": 50534,
+      "sha256": "3aa2d93f1d14e504675da7952e3d10114036004f458d617f5f46b744235b328c",
+      "kind": "download",
+      "url": "https://raw.githubusercontent.com/microsoft/fluentui-emoji/1ffb34c752ecf5d402f04cfb4b392c77f57c54bc/assets/Wastebasket/3D/wastebasket_3d.png",
+      "repo": "microsoft/fluentui-emoji",
+      "commit": "1ffb34c752ecf5d402f04cfb4b392c77f57c54bc"
+    },
+    {
+      "path": "emoji/1f5fa.png",
+      "bytes": 47756,
+      "sha256": "f170580a2a2f70662e1de8c76d8263c33202f66f4002e57ad89c997a1b3dc488",
+      "kind": "download",
+      "url": "https://raw.githubusercontent.com/microsoft/fluentui-emoji/1ffb34c752ecf5d402f04cfb4b392c77f57c54bc/assets/World%20map/3D/world_map_3d.png",
+      "repo": "microsoft/fluentui-emoji",
+      "commit": "1ffb34c752ecf5d402f04cfb4b392c77f57c54bc"
+    },
+    {
+      "path": "emoji/1f60b.png",
+      "bytes": 42377,
+      "sha256": "5e058b31cb8e7260d4a95fb1156a17ca11ce1a198524b4b33f162cbe0866c0c6",
+      "kind": "download",
+      "url": "https://raw.githubusercontent.com/microsoft/fluentui-emoji/1ffb34c752ecf5d402f04cfb4b392c77f57c54bc/assets/Face%20savoring%20food/3D/face_savoring_food_3d.png",
+      "repo": "microsoft/fluentui-emoji",
+      "commit": "1ffb34c752ecf5d402f04cfb4b392c77f57c54bc"
+    },
+    {
+      "path": "emoji/1f680.png",
+      "bytes": 36274,
+      "sha256": "4636925a1dfc76a45dc83c08b983699d39143a0978f794a4e2dfb6cbffdcd7ab",
+      "kind": "download",
+      "url": "https://raw.githubusercontent.com/microsoft/fluentui-emoji/1ffb34c752ecf5d402f04cfb4b392c77f57c54bc/assets/Rocket/3D/rocket_3d.png",
+      "repo": "microsoft/fluentui-emoji",
+      "commit": "1ffb34c752ecf5d402f04cfb4b392c77f57c54bc"
+    },
+    {
+      "path": "emoji/1f6e1.png",
+      "bytes": 30024,
+      "sha256": "3c1cc1b14f8dd43e8532f9fb751769cd68382a9f25c012b0549e352a8d953a94",
+      "kind": "download",
+      "url": "https://raw.githubusercontent.com/microsoft/fluentui-emoji/1ffb34c752ecf5d402f04cfb4b392c77f57c54bc/assets/Shield/3D/shield_3d.png",
+      "repo": "microsoft/fluentui-emoji",
+      "commit": "1ffb34c752ecf5d402f04cfb4b392c77f57c54bc"
+    },
+    {
+      "path": "emoji/1f947.png",
+      "bytes": 30635,
+      "sha256": "3f4dc5626b0e9f62585d317572e9c11d8ec64856c3e82f03c16c40be3a31dae5",
+      "kind": "download",
+      "url": "https://raw.githubusercontent.com/microsoft/fluentui-emoji/1ffb34c752ecf5d402f04cfb4b392c77f57c54bc/assets/1st%20place%20medal/3D/1st_place_medal_3d.png",
+      "repo": "microsoft/fluentui-emoji",
+      "commit": "1ffb34c752ecf5d402f04cfb4b392c77f57c54bc"
+    },
+    {
+      "path": "emoji/1f948.png",
+      "bytes": 35627,
+      "sha256": "cd9cea56595cdca5db22e0891499e5d1d033fb30bd03a77fe2836ecccbb97c80",
+      "kind": "download",
+      "url": "https://raw.githubusercontent.com/microsoft/fluentui-emoji/1ffb34c752ecf5d402f04cfb4b392c77f57c54bc/assets/2nd%20place%20medal/3D/2nd_place_medal_3d.png",
+      "repo": "microsoft/fluentui-emoji",
+      "commit": "1ffb34c752ecf5d402f04cfb4b392c77f57c54bc"
+    },
+    {
+      "path": "emoji/1f949.png",
+      "bytes": 34823,
+      "sha256": "b88e840433181b12ad1c1de0ab0e1fc84437b4c3f187f6a9e13013dfe4da7c32",
+      "kind": "download",
+      "url": "https://raw.githubusercontent.com/microsoft/fluentui-emoji/1ffb34c752ecf5d402f04cfb4b392c77f57c54bc/assets/3rd%20place%20medal/3D/3rd_place_medal_3d.png",
+      "repo": "microsoft/fluentui-emoji",
+      "commit": "1ffb34c752ecf5d402f04cfb4b392c77f57c54bc"
+    },
+    {
+      "path": "emoji/1f963.png",
+      "bytes": 38601,
+      "sha256": "96fd473a66885c7823a2e3138ef714d2f2858a86fbdc00a6c84f4b470b98e094",
+      "kind": "download",
+      "url": "https://raw.githubusercontent.com/microsoft/fluentui-emoji/1ffb34c752ecf5d402f04cfb4b392c77f57c54bc/assets/Bowl%20with%20spoon/3D/bowl_with_spoon_3d.png",
+      "repo": "microsoft/fluentui-emoji",
+      "commit": "1ffb34c752ecf5d402f04cfb4b392c77f57c54bc"
+    },
+    {
+      "path": "emoji/1f96b.png",
+      "bytes": 25278,
+      "sha256": "843c6d66ddb07d7f236ab1a3070b70c170004f8572b60a0f7a2c9c57d302cbb8",
+      "kind": "download",
+      "url": "https://raw.githubusercontent.com/microsoft/fluentui-emoji/1ffb34c752ecf5d402f04cfb4b392c77f57c54bc/assets/Canned%20food/3D/canned_food_3d.png",
+      "repo": "microsoft/fluentui-emoji",
+      "commit": "1ffb34c752ecf5d402f04cfb4b392c77f57c54bc"
+    },
+    {
+      "path": "emoji/1f970.png",
+      "bytes": 52432,
+      "sha256": "2b8c4abe57a81fe3805ec0c271f855984e9f4a7a1d10053050a4db7b6def778e",
+      "kind": "download",
+      "url": "https://raw.githubusercontent.com/microsoft/fluentui-emoji/1ffb34c752ecf5d402f04cfb4b392c77f57c54bc/assets/Smiling%20face%20with%20hearts/3D/smiling_face_with_hearts_3d.png",
+      "repo": "microsoft/fluentui-emoji",
+      "commit": "1ffb34c752ecf5d402f04cfb4b392c77f57c54bc"
+    },
+    {
+      "path": "emoji/1f97a.png",
+      "bytes": 44074,
+      "sha256": "7dfc89c51118f0adecf886063b5eafce140a613075394ebe22ed9dd2bd9e9c4f",
+      "kind": "download",
+      "url": "https://raw.githubusercontent.com/microsoft/fluentui-emoji/1ffb34c752ecf5d402f04cfb4b392c77f57c54bc/assets/Pleading%20face/3D/pleading_face_3d.png",
+      "repo": "microsoft/fluentui-emoji",
+      "commit": "1ffb34c752ecf5d402f04cfb4b392c77f57c54bc"
+    },
+    {
+      "path": "emoji/1f986.png",
+      "bytes": 32162,
+      "sha256": "c45934c5d609fc03e9713d66ada5e08034b0b27bf29a37a39c726633b5c2d2e4",
+      "kind": "download",
+      "url": "https://raw.githubusercontent.com/microsoft/fluentui-emoji/1ffb34c752ecf5d402f04cfb4b392c77f57c54bc/assets/Duck/3D/duck_3d.png",
+      "repo": "microsoft/fluentui-emoji",
+      "commit": "1ffb34c752ecf5d402f04cfb4b392c77f57c54bc"
+    },
+    {
+      "path": "emoji/1f9c0.png",
+      "bytes": 26839,
+      "sha256": "66966a3b1f27f802260988cde7ab2419525300e9747bcb92657c3f544e0568d7",
+      "kind": "download",
+      "url": "https://raw.githubusercontent.com/microsoft/fluentui-emoji/1ffb34c752ecf5d402f04cfb4b392c77f57c54bc/assets/Cheese%20wedge/3D/cheese_wedge_3d.png",
+      "repo": "microsoft/fluentui-emoji",
+      "commit": "1ffb34c752ecf5d402f04cfb4b392c77f57c54bc"
+    },
+    {
+      "path": "emoji/1f9f2.png",
+      "bytes": 24240,
+      "sha256": "56687f679214a76166acd38ce1431f3de003733f0e0c58a3a83cc2acf9c7f7cf",
+      "kind": "download",
+      "url": "https://raw.githubusercontent.com/microsoft/fluentui-emoji/1ffb34c752ecf5d402f04cfb4b392c77f57c54bc/assets/Magnet/3D/magnet_3d.png",
+      "repo": "microsoft/fluentui-emoji",
+      "commit": "1ffb34c752ecf5d402f04cfb4b392c77f57c54bc"
+    },
+    {
+      "path": "emoji/1f9f9.png",
+      "bytes": 17391,
+      "sha256": "67676a5b71c3f30d5d4c249631b511f084c5423330ef200951f9d0a8dc832380",
+      "kind": "download",
+      "url": "https://raw.githubusercontent.com/microsoft/fluentui-emoji/1ffb34c752ecf5d402f04cfb4b392c77f57c54bc/assets/Broom/3D/broom_3d.png",
+      "repo": "microsoft/fluentui-emoji",
+      "commit": "1ffb34c752ecf5d402f04cfb4b392c77f57c54bc"
+    },
+    {
+      "path": "emoji/1fa90.png",
+      "bytes": 30147,
+      "sha256": "e810d03a3d347da5d0cf50cace209c413c963bae9a3c72d7e396ef858574087d",
+      "kind": "download",
+      "url": "https://raw.githubusercontent.com/microsoft/fluentui-emoji/1ffb34c752ecf5d402f04cfb4b392c77f57c54bc/assets/Ringed%20planet/3D/ringed_planet_3d.png",
+      "repo": "microsoft/fluentui-emoji",
+      "commit": "1ffb34c752ecf5d402f04cfb4b392c77f57c54bc"
+    },
+    {
+      "path": "emoji/1fa99.png",
+      "bytes": 35502,
+      "sha256": "17e2a0c226342fe2cdd2612c56f5dd188870d1435076f47600313c04876f843b",
+      "kind": "download",
+      "url": "https://raw.githubusercontent.com/microsoft/fluentui-emoji/1ffb34c752ecf5d402f04cfb4b392c77f57c54bc/assets/Coin/3D/coin_3d.png",
+      "repo": "microsoft/fluentui-emoji",
+      "commit": "1ffb34c752ecf5d402f04cfb4b392c77f57c54bc"
+    },
+    {
+      "path": "emoji/23e9.png",
+      "bytes": 32060,
+      "sha256": "9bcc5ecc301a33e51298dce7dcdb9082abb7c1abde73be96f9c4eb814e10150d",
+      "kind": "download",
+      "url": "https://raw.githubusercontent.com/microsoft/fluentui-emoji/1ffb34c752ecf5d402f04cfb4b392c77f57c54bc/assets/Fast-forward%20button/3D/fast-forward_button_3d.png",
+      "repo": "microsoft/fluentui-emoji",
+      "commit": "1ffb34c752ecf5d402f04cfb4b392c77f57c54bc"
+    },
+    {
+      "path": "emoji/23ea.png",
+      "bytes": 32156,
+      "sha256": "c92775949262e55b279a4c4c2a78bd5b19a8d3f4ae611a83d9928a202418f991",
+      "kind": "download",
+      "url": "https://raw.githubusercontent.com/microsoft/fluentui-emoji/1ffb34c752ecf5d402f04cfb4b392c77f57c54bc/assets/Fast%20reverse%20button/3D/fast_reverse_button_3d.png",
+      "repo": "microsoft/fluentui-emoji",
+      "commit": "1ffb34c752ecf5d402f04cfb4b392c77f57c54bc"
+    },
+    {
+      "path": "emoji/23f0.png",
+      "bytes": 42751,
+      "sha256": "1aa6929e1baa440db535fd321868dc76ddd888bf3e4f4333d37800ff2ec41c74",
+      "kind": "download",
+      "url": "https://raw.githubusercontent.com/microsoft/fluentui-emoji/1ffb34c752ecf5d402f04cfb4b392c77f57c54bc/assets/Alarm%20clock/3D/alarm_clock_3d.png",
+      "repo": "microsoft/fluentui-emoji",
+      "commit": "1ffb34c752ecf5d402f04cfb4b392c77f57c54bc"
+    },
+    {
+      "path": "emoji/23f8.png",
+      "bytes": 29055,
+      "sha256": "628ce66757a7567a3f16ff54793b83e06f4a34c56b9eba76b5d24dee2e9c2edc",
+      "kind": "download",
+      "url": "https://raw.githubusercontent.com/microsoft/fluentui-emoji/1ffb34c752ecf5d402f04cfb4b392c77f57c54bc/assets/Pause%20button/3D/pause_button_3d.png",
+      "repo": "microsoft/fluentui-emoji",
+      "commit": "1ffb34c752ecf5d402f04cfb4b392c77f57c54bc"
+    },
+    {
+      "path": "emoji/2699.png",
+      "bytes": 39892,
+      "sha256": "415296d4fadabc2e0f6593143ea632948fef20a1cd73fbbc3dbda571f0421988",
+      "kind": "download",
+      "url": "https://raw.githubusercontent.com/microsoft/fluentui-emoji/1ffb34c752ecf5d402f04cfb4b392c77f57c54bc/assets/Gear/3D/gear_3d.png",
+      "repo": "microsoft/fluentui-emoji",
+      "commit": "1ffb34c752ecf5d402f04cfb4b392c77f57c54bc"
+    },
+    {
+      "path": "emoji/26a0.png",
+      "bytes": 22076,
+      "sha256": "318f534c5d93100443f6e48defc47d76140473d797087af5821587f0feb8003c",
+      "kind": "download",
+      "url": "https://raw.githubusercontent.com/microsoft/fluentui-emoji/1ffb34c752ecf5d402f04cfb4b392c77f57c54bc/assets/Warning/3D/warning_3d.png",
+      "repo": "microsoft/fluentui-emoji",
+      "commit": "1ffb34c752ecf5d402f04cfb4b392c77f57c54bc"
+    },
+    {
+      "path": "emoji/26a1.png",
+      "bytes": 15517,
+      "sha256": "f8f9d3ed8a6f350f1e3f009fb8b3f3bcc20276c008b2ce391bef057ea062ca71",
+      "kind": "download",
+      "url": "https://raw.githubusercontent.com/microsoft/fluentui-emoji/1ffb34c752ecf5d402f04cfb4b392c77f57c54bc/assets/High%20voltage/3D/high_voltage_3d.png",
+      "repo": "microsoft/fluentui-emoji",
+      "commit": "1ffb34c752ecf5d402f04cfb4b392c77f57c54bc"
+    },
+    {
+      "path": "emoji/2705.png",
+      "bytes": 34052,
+      "sha256": "256e3dd950cf1705ab72511ab242472b4bd7db519aa402a6182c1aaf8c58def9",
+      "kind": "download",
+      "url": "https://raw.githubusercontent.com/microsoft/fluentui-emoji/1ffb34c752ecf5d402f04cfb4b392c77f57c54bc/assets/Check%20mark%20button/3D/check_mark_button_3d.png",
+      "repo": "microsoft/fluentui-emoji",
+      "commit": "1ffb34c752ecf5d402f04cfb4b392c77f57c54bc"
+    },
+    {
+      "path": "emoji/2728.png",
+      "bytes": 21948,
+      "sha256": "e4490c9ff74a3fd73a8f99c760d65b6ed51b8a3e4ad28da137fec050b77e1058",
+      "kind": "download",
+      "url": "https://raw.githubusercontent.com/microsoft/fluentui-emoji/1ffb34c752ecf5d402f04cfb4b392c77f57c54bc/assets/Sparkles/3D/sparkles_3d.png",
+      "repo": "microsoft/fluentui-emoji",
+      "commit": "1ffb34c752ecf5d402f04cfb4b392c77f57c54bc"
+    },
+    {
+      "path": "emoji/2764.png",
+      "bytes": 29389,
+      "sha256": "7218cb9f08ed1ef38fcd83fe699a1125d07f50725f4c87a68cb7c9f4efb3c32b",
+      "kind": "download",
+      "url": "https://raw.githubusercontent.com/microsoft/fluentui-emoji/1ffb34c752ecf5d402f04cfb4b392c77f57c54bc/assets/Red%20heart/3D/red_heart_3d.png",
+      "repo": "microsoft/fluentui-emoji",
+      "commit": "1ffb34c752ecf5d402f04cfb4b392c77f57c54bc"
+    },
+    {
+      "path": "emoji/2b50.png",
+      "bytes": 24449,
+      "sha256": "b935cdf502b69054bc2b08e7ba4e4eaba6499564a2041dd77d6291e21bf8cfe8",
+      "kind": "download",
+      "url": "https://raw.githubusercontent.com/microsoft/fluentui-emoji/1ffb34c752ecf5d402f04cfb4b392c77f57c54bc/assets/Star/3D/star_3d.png",
+      "repo": "microsoft/fluentui-emoji",
+      "commit": "1ffb34c752ecf5d402f04cfb4b392c77f57c54bc"
+    },
+    {
+      "path": "emoji/Fluent-LICENSE.txt",
+      "bytes": 1141,
+      "sha256": "c2cfccb812fe482101a8f04597dfc5a9991a6b2748266c47ac91b6a5aae15383",
+      "kind": "download",
+      "url": "https://raw.githubusercontent.com/microsoft/fluentui-emoji/1ffb34c752ecf5d402f04cfb4b392c77f57c54bc/LICENSE",
+      "repo": "microsoft/fluentui-emoji",
+      "commit": "1ffb34c752ecf5d402f04cfb4b392c77f57c54bc"
+    },
+    {
+      "path": "emoji/index.json",
+      "bytes": 5071,
+      "sha256": "5bdccfe597d8203d7c09a614282e0414aab432443db97d354d4591e3c7dee407",
+      "kind": "generated",
+      "generator": "fetch-assets.mjs"
+    },
+    {
+      "path": "fonts/Fredoka-400.ttf",
+      "bytes": 50196,
+      "sha256": "4181ccb9fb9253b2a9ce037a1599589b9485904e6fdd6de97ca96e027b3ee30f",
+      "kind": "generated",
+      "generator": "fontTools 4.66.1 varLib.instancer wght=400 wdth=100 --update-name-table",
+      "from": "fonts/src/Fredoka_wdth-wght.ttf"
+    },
+    {
+      "path": "fonts/Fredoka-600.ttf",
+      "bytes": 50104,
+      "sha256": "b24e06cf369855020b81ef1e9639f7b705d5348c96df96e875fc7d78bbbc6458",
+      "kind": "generated",
+      "generator": "fontTools 4.66.1 varLib.instancer wght=600 wdth=100 --update-name-table",
+      "from": "fonts/src/Fredoka_wdth-wght.ttf"
+    },
+    {
+      "path": "fonts/Fredoka-700.ttf",
+      "bytes": 49908,
+      "sha256": "c570243acd47e10bc47913bd1b0b20ba36f53ec8663e093f02195cceaca25297",
+      "kind": "generated",
+      "generator": "fontTools 4.66.1 varLib.instancer wght=700 wdth=100 --update-name-table",
+      "from": "fonts/src/Fredoka_wdth-wght.ttf"
+    },
+    {
+      "path": "fonts/Fredoka-OFL.txt",
+      "bytes": 4388,
+      "sha256": "5c9e7eee5c6b25f4b05b8d53b2e470ea4962f9ced742d044a98f7d95d1375bab",
+      "kind": "download",
+      "url": "https://raw.githubusercontent.com/google/fonts/9710da1eacb3be272583c3224dcb70f9da6eadbb/ofl/fredoka/OFL.txt",
+      "repo": "google/fonts",
+      "commit": "9710da1eacb3be272583c3224dcb70f9da6eadbb"
+    },
+    {
+      "path": "fonts/NotoSansSymbols-OFL.txt",
+      "bytes": 4383,
+      "sha256": "b118dd41337806a5d4797052c77caf3bd096aed783e5eb21b4d11154351e1ac0",
+      "kind": "download",
+      "url": "https://raw.githubusercontent.com/google/fonts/9710da1eacb3be272583c3224dcb70f9da6eadbb/ofl/notosanssymbols/OFL.txt",
+      "repo": "google/fonts",
+      "commit": "9710da1eacb3be272583c3224dcb70f9da6eadbb"
+    },
+    {
+      "path": "fonts/NotoSansSymbols-Regular.ttf",
+      "bytes": 185288,
+      "sha256": "f7a733b390a5cc37bf60cd3131aa844ad0bef90e3f5d56cae60fec30c39617d2",
+      "kind": "generated",
+      "generator": "fontTools 4.66.1 varLib.instancer wght=400 --update-name-table",
+      "from": "fonts/src/NotoSansSymbols_wght.ttf"
+    },
+    {
+      "path": "fonts/NotoSansSymbols2-OFL.txt",
+      "bytes": 4383,
+      "sha256": "b118dd41337806a5d4797052c77caf3bd096aed783e5eb21b4d11154351e1ac0",
+      "kind": "download",
+      "url": "https://raw.githubusercontent.com/google/fonts/9710da1eacb3be272583c3224dcb70f9da6eadbb/ofl/notosanssymbols2/OFL.txt",
+      "repo": "google/fonts",
+      "commit": "9710da1eacb3be272583c3224dcb70f9da6eadbb"
+    },
+    {
+      "path": "fonts/NotoSansSymbols2-Regular.ttf",
+      "bytes": 1233128,
+      "sha256": "7d5fb73b7ca67a6798101741f5d280a3d016a56a197afcd4199dbb57b4b82a21",
+      "kind": "download",
+      "url": "https://raw.githubusercontent.com/google/fonts/9710da1eacb3be272583c3224dcb70f9da6eadbb/ofl/notosanssymbols2/NotoSansSymbols2-Regular.ttf",
+      "repo": "google/fonts",
+      "commit": "9710da1eacb3be272583c3224dcb70f9da6eadbb"
+    },
+    {
+      "path": "fonts/Nunito-700.ttf",
+      "bytes": 132268,
+      "sha256": "c3943d48246d348358a8c9cea93705d3ac83f64309876abc00d7b02275acea01",
+      "kind": "generated",
+      "generator": "fontTools 4.66.1 varLib.instancer wght=700 --update-name-table",
+      "from": "fonts/src/Nunito_wght.ttf"
+    },
+    {
+      "path": "fonts/Nunito-800.ttf",
+      "bytes": 132224,
+      "sha256": "f3ca46028e63fcfe1ba08376d64219451b9eb3b7f273d6854e289456576af55e",
+      "kind": "generated",
+      "generator": "fontTools 4.66.1 varLib.instancer wght=800 --update-name-table",
+      "from": "fonts/src/Nunito_wght.ttf"
+    },
+    {
+      "path": "fonts/Nunito-900.ttf",
+      "bytes": 132164,
+      "sha256": "01abe18ab593161e909b10a59673b222b89899225ce254d0f4723bcc30964b21",
+      "kind": "generated",
+      "generator": "fontTools 4.66.1 varLib.instancer wght=900 --update-name-table",
+      "from": "fonts/src/Nunito_wght.ttf"
+    },
+    {
+      "path": "fonts/Nunito-OFL.txt",
+      "bytes": 4385,
+      "sha256": "580df76c95a1ec5ab878ceb25bb3d85c6a076804e9c970c8c6972aea775fdf65",
+      "kind": "download",
+      "url": "https://raw.githubusercontent.com/google/fonts/9710da1eacb3be272583c3224dcb70f9da6eadbb/ofl/nunito/OFL.txt",
+      "repo": "google/fonts",
+      "commit": "9710da1eacb3be272583c3224dcb70f9da6eadbb"
+    },
+    {
+      "path": "fonts/src/Fredoka_wdth-wght.ttf",
+      "bytes": 159184,
+      "sha256": "2ba02e68b152868aef9ba28e24b3648c7d457fe6f25c761f2c2c53fb61a73fc8",
+      "kind": "download",
+      "url": "https://raw.githubusercontent.com/google/fonts/9710da1eacb3be272583c3224dcb70f9da6eadbb/ofl/fredoka/Fredoka%5Bwdth%2Cwght%5D.ttf",
+      "repo": "google/fonts",
+      "commit": "9710da1eacb3be272583c3224dcb70f9da6eadbb"
+    },
+    {
+      "path": "fonts/src/NotoSansSymbols_wght.ttf",
+      "bytes": 372684,
+      "sha256": "f7e7e04b4a24b6c78893d50cbfd2b2f6cae49617ab047bfef668d252adb128f7",
+      "kind": "download",
+      "url": "https://raw.githubusercontent.com/google/fonts/9710da1eacb3be272583c3224dcb70f9da6eadbb/ofl/notosanssymbols/NotoSansSymbols%5Bwght%5D.ttf",
+      "repo": "google/fonts",
+      "commit": "9710da1eacb3be272583c3224dcb70f9da6eadbb"
+    },
+    {
+      "path": "fonts/src/Nunito_wght.ttf",
+      "bytes": 276932,
+      "sha256": "bb55a5ca5c2042335b3991af27c4d0705d0ef41cac6164ac737fd8f2a1e85207",
+      "kind": "download",
+      "url": "https://raw.githubusercontent.com/google/fonts/9710da1eacb3be272583c3224dcb70f9da6eadbb/ofl/nunito/Nunito%5Bwght%5D.ttf",
+      "repo": "google/fonts",
+      "commit": "9710da1eacb3be272583c3224dcb70f9da6eadbb"
+    }
+  ]
+}

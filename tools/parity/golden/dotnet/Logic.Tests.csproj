@@ -1,0 +1,33 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <LangVersion>9.0</LangVersion>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <IsPackable>false</IsPackable>
+    <RootNamespace>OrbitalSalvage.Logic.Tests</RootNamespace>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+    <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+    <NoWarn>CS1591</NoWarn>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <UnityAssets>$(MSBuildThisFileDirectory)..\..\..\..\games\maze-puzzle\unity\maze-puzzle\Assets\</UnityAssets>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="$(UnityAssets)Scripts\JsCompat\**\*.cs" LinkBase="JsCompat" />
+    <Compile Include="$(UnityAssets)Scripts\Logic\**\*.cs" LinkBase="Logic" />
+    <Compile Include="$(UnityAssets)Tests\EditMode\Logic\**\*.cs" LinkBase="Tests" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.11.1" />
+    <PackageReference Include="NUnit" Version="3.14.0" />
+    <PackageReference Include="NUnit3TestAdapter" Version="4.6.0" />
+  </ItemGroup>
+
+</Project>
+

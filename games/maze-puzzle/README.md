@@ -22,7 +22,7 @@ Welcome to the project repository for the **Space Debris Cleanup Puzzle Game** (
 | [`10_PROJECT_REVIEW_2026-09-30.md`](./10_PROJECT_REVIEW_2026-09-30.md)                             | Project Review (2026-09-30)                                 | Point-in-time review of Unity port fidelity, remaining gaps, and prioritized follow-ups.                                                |
 | [`CHANGELOG.md`](./CHANGELOG.md)                                                                   | Milestone Release History & Version Changelog               | Semantic versioning changelog tracing all milestone releases, feature additions, bug fixes, and commit hashes.                          |
 | [`web/`](./web/)                                                                                   | Playable Mobile Web Prototype                               | Modern HTML5 Canvas/Web Audio game implementation adhering to iOS 430pt × 932pt ergonomics with 50 progressive campaign sectors.        |
-| [`unity/maze-puzzle/`](./unity/maze-puzzle/)                                                       | Native Unity 6 Project Directory                            | Native Unity 6 (`6000.4.6f1`) project configured for iOS Portrait with core C# architecture, 3D emojis, audio, and 50 levels.           |
+| [`unity/maze-puzzle/`](./unity/maze-puzzle/)                                                       | Native Unity 6 Project Directory                            | Unity `6000.4.6f1`. Play boots the Canvas2D `AppController` (`ParityViewer`), not the retired uGUI shell. There is no `unity/README.md`. |
 
 ---
 

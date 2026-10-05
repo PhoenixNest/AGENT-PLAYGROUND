@@ -1,0 +1,20 @@
+{
+    "name": "OrbitalSalvage.Viewer",
+    "rootNamespace": "OrbitalSalvage.Viewer",
+    "references": [
+        "OrbitalSalvage.Render",
+        "OrbitalSalvage.App",
+        "OrbitalSalvage.AudioDsp",
+        "OrbitalSalvage.Logic",
+        "OrbitalSalvage.JsCompat"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

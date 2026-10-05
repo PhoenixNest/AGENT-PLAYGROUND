@@ -1,0 +1,93 @@
+[
+  {
+    "id": "home_default",
+    "description": "Home screen after loading",
+    "profiles": ["zero", "iphone"],
+    "steps": [{ "op": "boot" }, { "op": "capture" }]
+  },
+  {
+    "id": "maps_page",
+    "description": "Maps page, first world",
+    "profiles": ["zero", "iphone"],
+    "steps": [
+      { "op": "boot" },
+      { "op": "showPage", "page": "maps" },
+      { "op": "advance", "ms": 240 },
+      { "op": "capture" }
+    ]
+  },
+  {
+    "id": "shop_skies_tab",
+    "description": "Shop page with the skyboxes tab selected through its selector",
+    "profiles": ["zero", "iphone"],
+    "steps": [
+      { "op": "boot" },
+      { "op": "showPage", "page": "shop" },
+      { "op": "advance", "ms": 240 },
+      { "op": "clickSelector", "selector": ".tab-btn[data-tab=skyboxes]" },
+      { "op": "advance", "ms": 150 },
+      { "op": "capture" }
+    ]
+  },
+  {
+    "id": "settings_page",
+    "description": "Settings page",
+    "profiles": ["zero", "iphone"],
+    "steps": [
+      { "op": "boot" },
+      { "op": "showPage", "page": "settings" },
+      { "op": "advance", "ms": 240 },
+      { "op": "capture" }
+    ]
+  },
+  {
+    "id": "daily_page",
+    "description": "Daily shift page",
+    "profiles": ["zero", "iphone"],
+    "steps": [
+      { "op": "boot" },
+      { "op": "showPage", "page": "daily" },
+      { "op": "advance", "ms": 240 },
+      { "op": "capture" }
+    ]
+  },
+  {
+    "id": "achievements_page",
+    "description": "Achievements page",
+    "profiles": ["zero", "iphone"],
+    "steps": [
+      { "op": "boot" },
+      { "op": "showPage", "page": "achievements" },
+      { "op": "advance", "ms": 240 },
+      { "op": "capture" }
+    ]
+  },
+  {
+    "id": "pause_modal",
+    "description": "Pause modal over sector 1",
+    "profiles": ["zero", "iphone"],
+    "steps": [
+      { "op": "boot" },
+      { "op": "loadSector", "index": 0 },
+      { "op": "showPage", "page": "game" },
+      { "op": "call", "method": "dismissGestureHint", "args": [] },
+      { "op": "advance", "ms": 400 },
+      { "op": "click", "target": "btn-game-pause" },
+      { "op": "advance", "ms": 300 },
+      { "op": "capture" }
+    ]
+  },
+  {
+    "id": "game_sector_1",
+    "description": "Gameplay sector 1 after one second",
+    "profiles": ["zero", "iphone"],
+    "steps": [
+      { "op": "boot" },
+      { "op": "loadSector", "index": 0 },
+      { "op": "showPage", "page": "game" },
+      { "op": "call", "method": "dismissGestureHint", "args": [] },
+      { "op": "advance", "ms": 1000 },
+      { "op": "capture" }
+    ]
+  }
+]
