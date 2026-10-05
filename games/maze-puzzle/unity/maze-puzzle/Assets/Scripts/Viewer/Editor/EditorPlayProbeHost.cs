@@ -1,5 +1,4 @@
 using System;
-using System.Reflection;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
@@ -66,33 +65,11 @@ namespace OrbitalSalvage.Viewer.Editor
 
         static void SetGameViewSize(int width, int height)
         {
-            var asm = typeof(UnityEditor.Editor).Assembly;
-            var sizesType = asm.GetType("UnityEditor.GameViewSizes");
-            var single = typeof(ScriptableSingleton<>).MakeGenericType(sizesType);
-            var instance = single.GetProperty("instance").GetValue(null, null);
-            var groupEnum = asm.GetType("UnityEditor.GameViewSizeGroupType");
-            var standalone = Enum.Parse(groupEnum, "Standalone");
-            var group = instance.GetType().GetMethod("GetGroup").Invoke(instance, new[] { standalone });
-
-            var sizeType = asm.GetType("UnityEditor.GameViewSize");
-            var kindEnum = asm.GetType("UnityEditor.GameViewSizeType");
-            var ctor = sizeType.GetConstructor(new[] { kindEnum, typeof(int), typeof(int), typeof(string) });
-            var fixedRes = Enum.Parse(kindEnum, "FixedResolution");
             string label = "Probe " + width + "x" + height;
-            var size = ctor.Invoke(new object[] { fixedRes, width, height, label });
-            group.GetType().GetMethod("AddCustomSize").Invoke(group, new[] { size });
-            int index = (int)group.GetType().GetMethod("IndexOf", new[] { sizeType }).Invoke(group, new[] { size });
-
-            var gvType = asm.GetType("UnityEditor.GameView");
-            var window = EditorWindow.GetWindow(gvType, false, "Game", true);
-            var selected = gvType.GetProperty("selectedSizeIndex", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
-            if (selected != null) selected.SetValue(window, index, null);
-            var cb = gvType.GetMethod("SizeSelectionCallback", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
-            if (cb != null) cb.Invoke(window, new object[] { index, null });
-            window.minSize = new Vector2(Mathf.Min(width, 900), Mathf.Min(height, 1200));
-            window.position = new Rect(0, 0, Mathf.Min(width, 900), Mathf.Min(height, 1200));
-            window.Repaint();
-            Debug.Log("[EditorPlayProbe] game view size index " + index + " " + label);
+            PlayModeWindow.SetViewType(PlayModeWindow.PlayModeViewTypes.GameView);
+            PlayModeWindow.SetCustomRenderingResolution((uint)width, (uint)height, label);
+            PlayModeWindow.GetRenderingResolution(out uint rw, out uint rh);
+            Debug.Log("[EditorPlayProbe] rendering resolution " + rw + "x" + rh + " " + label);
         }
     }
 }
