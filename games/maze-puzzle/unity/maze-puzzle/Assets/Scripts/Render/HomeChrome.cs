@@ -152,6 +152,9 @@ namespace OrbitalSalvage.Render
 
         /// <summary>True after a live draw has cached static runs.</summary>
         public bool UsesLayerCache => UseLayerCache && cacheReady && staticLayerCount > 0;
+
+        /// <summary>How many times this chrome has baked its static layers.</summary>
+        public int CacheBuilds { get; private set; }
         bool cachedSkip;
         bool cachedExt;
         string[] snapText = Array.Empty<string>();
@@ -626,6 +629,7 @@ namespace OrbitalSalvage.Render
             paintOnlyLayer = -1;
             frame = saved;
             cacheReady = true;
+            CacheBuilds++;
         }
 
         // ---- drawing ------------------------------------------------------------------------------------
