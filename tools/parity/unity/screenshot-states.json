@@ -1,0 +1,504 @@
+[
+  {
+    "id": "home_default",
+    "description": "Home after loading, settled (boot + 240 ms)",
+    "profiles": [
+      "zero"
+    ],
+    "steps": [
+      {
+        "op": "boot"
+      },
+      {
+        "op": "capture"
+      }
+    ]
+  },
+  {
+    "id": "maps_world_1_fresh",
+    "description": "Maps page, world tab 1, nothing completed, level 1 current (0/10, LVL 1 shows PLAY)",
+    "profiles": [
+      "zero"
+    ],
+    "steps": [
+      {
+        "op": "boot"
+      },
+      {
+        "op": "click",
+        "target": "btn-open-maps-page"
+      },
+      {
+        "op": "advance",
+        "ms": 240
+      },
+      {
+        "op": "capture"
+      }
+    ]
+  },
+  {
+    "id": "daily_default",
+    "description": "Daily page, no shifts cleared, master box locked, countdown 14h 59m",
+    "profiles": [
+      "zero"
+    ],
+    "steps": [
+      {
+        "op": "boot"
+      },
+      {
+        "op": "click",
+        "target": "btn-open-daily-shift"
+      },
+      {
+        "op": "advance",
+        "ms": 400
+      },
+      {
+        "op": "capture"
+      }
+    ]
+  },
+  {
+    "id": "shop_rings_default",
+    "description": "Shop, rings tab, default profile (stipend claimable, starter equipped, others locked)",
+    "profiles": [
+      "zero"
+    ],
+    "steps": [
+      {
+        "op": "boot"
+      },
+      {
+        "op": "click",
+        "target": "btn-open-shop-page"
+      },
+      {
+        "op": "advance",
+        "ms": 400
+      },
+      {
+        "op": "capture"
+      }
+    ]
+  },
+  {
+    "id": "shop_singularities_default",
+    "description": "Shop, singularities tab, default profile",
+    "profiles": [
+      "zero"
+    ],
+    "steps": [
+      {
+        "op": "boot"
+      },
+      {
+        "op": "click",
+        "target": "btn-open-shop-page"
+      },
+      {
+        "op": "advance",
+        "ms": 400
+      },
+      {
+        "op": "clickSelector",
+        "selector": ".tab-btn[data-tab=singularities]"
+      },
+      {
+        "op": "advance",
+        "ms": 150
+      },
+      {
+        "op": "capture"
+      }
+    ]
+  },
+  {
+    "id": "shop_skyboxes_default",
+    "description": "Shop, skyboxes tab, default profile",
+    "profiles": [
+      "zero"
+    ],
+    "steps": [
+      {
+        "op": "boot"
+      },
+      {
+        "op": "click",
+        "target": "btn-open-shop-page"
+      },
+      {
+        "op": "advance",
+        "ms": 400
+      },
+      {
+        "op": "clickSelector",
+        "selector": ".tab-btn[data-tab=skyboxes]"
+      },
+      {
+        "op": "advance",
+        "ms": 150
+      },
+      {
+        "op": "capture"
+      }
+    ]
+  },
+  {
+    "id": "achievements_none",
+    "description": "Trophy room, nothing unlocked",
+    "profiles": [
+      "zero"
+    ],
+    "steps": [
+      {
+        "op": "boot"
+      },
+      {
+        "op": "click",
+        "target": "btn-open-trophies-page"
+      },
+      {
+        "op": "advance",
+        "ms": 240
+      },
+      {
+        "op": "capture"
+      }
+    ]
+  },
+  {
+    "id": "settings_default",
+    "description": "Settings, default profile",
+    "profiles": [
+      "zero"
+    ],
+    "steps": [
+      {
+        "op": "boot"
+      },
+      {
+        "op": "click",
+        "target": "btn-home-settings"
+      },
+      {
+        "op": "advance",
+        "ms": 240
+      },
+      {
+        "op": "capture"
+      }
+    ]
+  },
+  {
+    "id": "game_lvl01_t1000ms",
+    "description": "Level 01 gameplay 1000 ms after the hint settled (hint dismissed, no input)",
+    "profiles": [
+      "zero"
+    ],
+    "steps": [
+      {
+        "op": "boot"
+      },
+      {
+        "op": "loadSector",
+        "index": 0
+      },
+      {
+        "op": "showPage",
+        "page": "game"
+      },
+      {
+        "op": "call",
+        "method": "dismissGestureHint",
+        "args": []
+      },
+      {
+        "op": "advance",
+        "ms": 400
+      },
+      {
+        "op": "advance",
+        "ms": 1000
+      },
+      {
+        "op": "capture"
+      }
+    ]
+  },
+  {
+    "id": "modal_pause",
+    "description": "Pause modal over level 1, settled",
+    "profiles": [
+      "zero"
+    ],
+    "steps": [
+      {
+        "op": "boot"
+      },
+      {
+        "op": "loadSector",
+        "index": 0
+      },
+      {
+        "op": "showPage",
+        "page": "game"
+      },
+      {
+        "op": "call",
+        "method": "dismissGestureHint",
+        "args": []
+      },
+      {
+        "op": "advance",
+        "ms": 400
+      },
+      {
+        "op": "click",
+        "target": "btn-game-pause"
+      },
+      {
+        "op": "advance",
+        "ms": 300
+      },
+      {
+        "op": "capture"
+      }
+    ]
+  },
+  {
+    "id": "modal_debrief_exact",
+    "description": "Debrief after clearing level 1 at exactly the quota (no surplus), settled",
+    "profiles": [
+      "zero"
+    ],
+    "steps": [
+      {
+        "op": "boot"
+      },
+      {
+        "op": "loadSector",
+        "index": 0
+      },
+      {
+        "op": "showPage",
+        "page": "game"
+      },
+      {
+        "op": "call",
+        "method": "dismissGestureHint",
+        "args": []
+      },
+      {
+        "op": "advance",
+        "ms": 400
+      },
+      {
+        "op": "setApp",
+        "field": "collectedMass",
+        "value": 20
+      },
+      {
+        "op": "call",
+        "method": "handleLevelVictory",
+        "args": []
+      },
+      {
+        "op": "advance",
+        "ms": 900
+      },
+      {
+        "op": "capture"
+      }
+    ]
+  },
+  {
+    "id": "modal_defeat_12_of_20",
+    "description": "Defeat at level 1 with 12/20 kg and 4 kg spilled: no Backup Pod (below 70%)",
+    "profiles": [
+      "zero"
+    ],
+    "steps": [
+      {
+        "op": "boot"
+      },
+      {
+        "op": "loadSector",
+        "index": 0
+      },
+      {
+        "op": "showPage",
+        "page": "game"
+      },
+      {
+        "op": "call",
+        "method": "dismissGestureHint",
+        "args": []
+      },
+      {
+        "op": "advance",
+        "ms": 400
+      },
+      {
+        "op": "setApp",
+        "field": "collectedMass",
+        "value": 12
+      },
+      {
+        "op": "setApp",
+        "field": "spilledMass",
+        "value": 4
+      },
+      {
+        "op": "call",
+        "method": "handleLevelFailure",
+        "args": []
+      },
+      {
+        "op": "advance",
+        "ms": 700
+      },
+      {
+        "op": "capture"
+      }
+    ]
+  },
+  {
+    "id": "loading_t0500",
+    "description": "Loading screen 500 ms in (two interval ticks, bar transitions running)",
+    "profiles": [
+      "zero"
+    ],
+    "steps": [
+      {
+        "op": "boot",
+        "completeLoading": false
+      },
+      {
+        "op": "advance",
+        "ms": 500
+      },
+      {
+        "op": "capture"
+      }
+    ]
+  },
+  {
+    "id": "home_default_t500",
+    "spec": "home_default",
+    "timeOffsetMs": 500,
+    "description": "Home 500 ms after the settled capture",
+    "profiles": ["zero"],
+    "steps": [{ "op": "boot" }, { "op": "advance", "ms": 500 }, { "op": "capture" }]
+  },
+  {
+    "id": "home_default_t1500",
+    "spec": "home_default",
+    "timeOffsetMs": 1500,
+    "description": "Home 1500 ms after the settled capture",
+    "profiles": ["zero"],
+    "steps": [{ "op": "boot" }, { "op": "advance", "ms": 1500 }, { "op": "capture" }]
+  },
+  {
+    "id": "home_default_t4000",
+    "spec": "home_default",
+    "timeOffsetMs": 4000,
+    "description": "Home 4000 ms after the settled capture",
+    "profiles": ["zero"],
+    "steps": [{ "op": "boot" }, { "op": "advance", "ms": 4000 }, { "op": "capture" }]
+  },
+  {
+    "id": "loading_t0500_t500",
+    "spec": "loading_t0500",
+    "timeOffsetMs": 500,
+    "description": "Loading 500 ms after the 500 ms capture",
+    "profiles": ["zero"],
+    "steps": [
+      { "op": "boot", "completeLoading": false },
+      { "op": "advance", "ms": 1000 },
+      { "op": "capture" }
+    ]
+  },
+  {
+    "id": "loading_t0500_t1500",
+    "spec": "home_default",
+    "timeOffsetMs": 500,
+    "description": "2000 ms from boot has left loading; the web frame is home at the +500 pose",
+    "profiles": ["zero"],
+    "steps": [
+      { "op": "boot" },
+      { "op": "advance", "ms": 500 },
+      { "op": "capture" }
+    ]
+  },
+  {
+    "id": "shop_rings_default_t500",
+    "spec": "shop_rings_default",
+    "timeOffsetMs": 500,
+    "description": "Shop rings 500 ms after the settled capture (gift banner)",
+    "profiles": ["zero"],
+    "steps": [
+      { "op": "boot" },
+      { "op": "click", "target": "btn-open-shop-page" },
+      { "op": "advance", "ms": 900 },
+      { "op": "capture" }
+    ]
+  },
+  {
+    "id": "shop_rings_default_t1500",
+    "spec": "shop_rings_default",
+    "timeOffsetMs": 1500,
+    "description": "Shop rings 1500 ms after the settled capture (gift banner)",
+    "profiles": ["zero"],
+    "steps": [
+      { "op": "boot" },
+      { "op": "click", "target": "btn-open-shop-page" },
+      { "op": "advance", "ms": 1900 },
+      { "op": "capture" }
+    ]
+  },
+  {
+    "id": "daily_master_ready",
+    "description": "Daily page with the master box unlocked",
+    "profiles": ["zero"],
+    "steps": [
+      { "op": "boot" },
+      { "op": "setProfile", "path": "lastDailyShiftDate", "value": "2026-10-01" },
+      { "op": "setProfile", "path": "completedDailyTiers", "value": ["bronze", "silver", "gold"] },
+      { "op": "click", "target": "btn-open-daily-shift" },
+      { "op": "advance", "ms": 400 },
+      { "op": "capture" }
+    ]
+  },
+  {
+    "id": "daily_master_ready_t500",
+    "spec": "daily_master_ready",
+    "timeOffsetMs": 500,
+    "description": "Unlocked master box 500 ms later",
+    "profiles": ["zero"],
+    "steps": [
+      { "op": "boot" },
+      { "op": "setProfile", "path": "lastDailyShiftDate", "value": "2026-10-01" },
+      { "op": "setProfile", "path": "completedDailyTiers", "value": ["bronze", "silver", "gold"] },
+      { "op": "click", "target": "btn-open-daily-shift" },
+      { "op": "advance", "ms": 900 },
+      { "op": "capture" }
+    ]
+  },
+  {
+    "id": "daily_master_ready_t1500",
+    "spec": "daily_master_ready",
+    "timeOffsetMs": 1500,
+    "description": "Unlocked master box 1500 ms later",
+    "profiles": ["zero"],
+    "steps": [
+      { "op": "boot" },
+      { "op": "setProfile", "path": "lastDailyShiftDate", "value": "2026-10-01" },
+      { "op": "setProfile", "path": "completedDailyTiers", "value": ["bronze", "silver", "gold"] },
+      { "op": "click", "target": "btn-open-daily-shift" },
+      { "op": "advance", "ms": 1900 },
+      { "op": "capture" }
+    ]
+  }
+]

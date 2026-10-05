@@ -1,0 +1,19 @@
+{
+    "name": "OrbitalSalvage.Viewer.Editor",
+    "rootNamespace": "OrbitalSalvage.Viewer.Editor",
+    "references": [
+        "OrbitalSalvage.Viewer",
+        "OrbitalSalvage.App"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": false,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
