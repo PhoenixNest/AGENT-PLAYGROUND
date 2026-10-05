@@ -28,9 +28,9 @@ namespace OrbitalSalvage.Render
         public bool[] borderOn = new bool[4];
         public bool[] borderDashed = new bool[4];
         public readonly List<CssShadow> shadows = new List<CssShadow>();
-        internal CanvasGradient[] cachedLayers;
+        internal string[] layerCss;
+        internal bool[] layerEllipse;
         internal string cachedCss;
-        internal double cx, cy, cw, ch;
     }
 
     /// <summary>
@@ -338,15 +338,26 @@ namespace OrbitalSalvage.Render
             }
             if (!string.IsNullOrEmpty(s.bgImage) && s.bgImage != "none")
             {
-                var split = SplitTop(s.bgImage);
-                for (int li = split.Count - 1; li >= 0; li--)
+                if (s.cachedCss != s.bgImage)
                 {
-                    if (CssGradient.IsEllipse(split[li]))
+                    var split = SplitTop(s.bgImage);
+                    s.layerCss = new string[split.Count];
+                    s.layerEllipse = new bool[split.Count];
+                    for (int i = 0; i < split.Count; i++)
                     {
-                        CssGradient.FillEllipse(c, split[li], s.x, s.y, s.w, s.h, outer);
+                        s.layerCss[i] = split[i];
+                        s.layerEllipse[i] = CssGradient.IsEllipse(split[i]);
+                    }
+                    s.cachedCss = s.bgImage;
+                }
+                for (int li = s.layerCss.Length - 1; li >= 0; li--)
+                {
+                    if (s.layerEllipse[li])
+                    {
+                        CssGradient.FillEllipse(c, s.layerCss[li], s.x, s.y, s.w, s.h, outer);
                         continue;
                     }
-                    var g = CssGradient.Create(c, split[li], s.x, s.y, s.w, s.h);
+                    var g = CssGradient.Create(c, s.layerCss[li], s.x, s.y, s.w, s.h);
                     if (g == null) continue;
                     c.FillStyle = g;
                     c.BeginPath();
@@ -544,17 +555,33 @@ namespace OrbitalSalvage.Render
     {
         struct Stop { public Rgba color; public double pos; public bool hasPos; }
 
+        sealed class GradSpec
+        {
+            public bool missing;
+            public bool radial;
+            public double deg = 180;
+            public bool closest, farthest;
+            public string pos0, pos1;
+            public Rgba[] colors = Array.Empty<Rgba>();
+            public double[] pos = Array.Empty<double>();
+        }
+
+        static readonly Dictionary<string, GradSpec> gradSpecs = new Dictionary<string, GradSpec>();
+
         public static CanvasGradient Create(Canvas2D c, string css, double x, double y, double w, double h)
         {
+            if (css != null && gradSpecs.TryGetValue(css, out var cached))
+                return cached.missing ? null : Realize(c, cached, x, y, w, h);
+            string raw = css;
             css = css.Trim();
             int open = css.IndexOf('(');
-            if (open < 0 || !css.EndsWith(")", StringComparison.Ordinal)) return null;
+            if (open < 0 || !css.EndsWith(")", StringComparison.Ordinal)) { gradSpecs[raw] = new GradSpec { missing = true }; return null; }
             string fn = css.Substring(0, open).Trim();
             var args = CssBox.SplitTop(css.Substring(open + 1, css.Length - open - 2));
-            if (args.Count < 2) return null;
+            if (args.Count < 2) { gradSpecs[raw] = new GradSpec { missing = true }; return null; }
 
             bool radial = fn == "radial-gradient";
-            if (!radial && fn != "linear-gradient") return null;
+            if (!radial && fn != "linear-gradient") { gradSpecs[raw] = new GradSpec { missing = true }; return null; }
 
             string first = args[0];
             bool firstIsStop = first.StartsWith("rgb", StringComparison.OrdinalIgnoreCase) || first.StartsWith("#");
@@ -574,8 +601,9 @@ namespace OrbitalSalvage.Render
                 if (posText != null) { st.hasPos = true; st.pos = posText.EndsWith("%", StringComparison.Ordinal) ? CssBox.ParseLength(posText, 100) / 100.0 : double.NaN; }
                 stops.Add(st);
             }
-            if (stops.Count < 2) return null;
+            if (stops.Count < 2) { gradSpecs[raw] = new GradSpec { missing = true }; return null; }
 
+            var spec = new GradSpec { radial = radial };
             CanvasGradient g;
             double lineLen;
             if (!radial)
@@ -590,6 +618,7 @@ namespace OrbitalSalvage.Render
                     else if (t == "to bottom") deg = 180;
                     else if (t == "to left") deg = 270;
                 }
+                spec.deg = deg;
                 double rad = deg * Math.PI / 180.0;
                 double dx = Math.Sin(rad), dy = -Math.Cos(rad);
                 lineLen = Math.Abs(w * dx) + Math.Abs(h * dy);
@@ -608,15 +637,17 @@ namespace OrbitalSalvage.Render
                 if (atText != null)
                 {
                     var pr = atText.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
-                    if (pr.Length >= 1) cx = x + Position(pr[0], w);
-                    if (pr.Length >= 2) cy = y + Position(pr[1], h);
+                    if (pr.Length >= 1) { spec.pos0 = pr[0]; cx = x + Position(pr[0], w); }
+                    if (pr.Length >= 2) { spec.pos1 = pr[1]; cy = y + Position(pr[1], h); }
                     else cy = y + h / 2;
                 }
+                spec.closest = t.Contains("closest-side");
+                spec.farthest = t.Contains("farthest-side");
                 // farthest-corner (the default) for a circle
                 double fx = Math.Max(Math.Abs(cx - x), Math.Abs(cx - (x + w))), fy = Math.Max(Math.Abs(cy - y), Math.Abs(cy - (y + h)));
                 double r = Math.Sqrt(fx * fx + fy * fy);
-                if (t.Contains("closest-side")) r = Math.Min(Math.Min(Math.Abs(cx - x), Math.Abs(cx - x - w)), Math.Min(Math.Abs(cy - y), Math.Abs(cy - y - h)));
-                if (t.Contains("farthest-side")) r = Math.Max(fx, fy);
+                if (spec.closest) r = Math.Min(Math.Min(Math.Abs(cx - x), Math.Abs(cx - x - w)), Math.Min(Math.Abs(cy - y), Math.Abs(cy - y - h)));
+                if (spec.farthest) r = Math.Max(fx, fy);
                 lineLen = r;
                 g = c.CreateRadialGradient(cx, cy, 0, cx, cy, r);
             }
@@ -638,7 +669,41 @@ namespace OrbitalSalvage.Render
                 int n = j - (i - 1);
                 for (int k = i; k < j; k++) { var s = stops[k]; s.pos = a0 + (a1 - a0) * (k - (i - 1)) / n; s.hasPos = true; stops[k] = s; }
             }
+            spec.colors = new Rgba[stops.Count];
+            spec.pos = new double[stops.Count];
+            for (int i = 0; i < stops.Count; i++) { spec.colors[i] = stops[i].color; spec.pos[i] = stops[i].pos; }
+            gradSpecs[raw] = spec;
             foreach (var s in stops) g.AddColorStop(Math.Min(1, Math.Max(0, s.pos)), s.color);
+            return g;
+        }
+
+        static CanvasGradient Realize(Canvas2D c, GradSpec spec, double x, double y, double w, double h)
+        {
+            CanvasGradient g;
+            if (!spec.radial)
+            {
+                double rad = spec.deg * Math.PI / 180.0;
+                double dx = Math.Sin(rad), dy = -Math.Cos(rad);
+                double lineLen = Math.Abs(w * dx) + Math.Abs(h * dy);
+                double cx = x + w / 2, cy = y + h / 2;
+                g = c.CreateLinearGradient(cx - dx * lineLen / 2, cy - dy * lineLen / 2, cx + dx * lineLen / 2, cy + dy * lineLen / 2);
+            }
+            else
+            {
+                double cx = x + w / 2, cy = y + h / 2;
+                if (spec.pos0 != null)
+                {
+                    cx = x + Position(spec.pos0, w);
+                    cy = spec.pos1 != null ? y + Position(spec.pos1, h) : y + h / 2;
+                }
+                double fx = Math.Max(Math.Abs(cx - x), Math.Abs(cx - (x + w))), fy = Math.Max(Math.Abs(cy - y), Math.Abs(cy - (y + h)));
+                double r = Math.Sqrt(fx * fx + fy * fy);
+                if (spec.closest) r = Math.Min(Math.Min(Math.Abs(cx - x), Math.Abs(cx - x - w)), Math.Min(Math.Abs(cy - y), Math.Abs(cy - y - h)));
+                if (spec.farthest) r = Math.Max(fx, fy);
+                g = c.CreateRadialGradient(cx, cy, 0, cx, cy, r);
+            }
+            for (int i = 0; i < spec.colors.Length; i++)
+                g.AddColorStop(Math.Min(1, Math.Max(0, spec.pos[i])), spec.colors[i]);
             return g;
         }
 

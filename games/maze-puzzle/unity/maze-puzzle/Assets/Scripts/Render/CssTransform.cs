@@ -51,9 +51,9 @@ namespace OrbitalSalvage.Render
             var b = Parse(to ?? "none", dx);
             if (a.Count == b.Count && SameKinds(a, b))
             {
-                var mid = new List<Fn>(a.Count);
-                for (int i = 0; i < a.Count; i++) mid.Add(LerpFn(a[i], b[i], u, width, height));
-                return Compose(mid, width, height);
+            midScratch.Clear();
+            for (int i = 0; i < a.Count; i++) midScratch.Add(LerpFn(a[i], b[i], u, width, height));
+            return Compose(midScratch, width, height);
             }
             return LerpMatrix(ToMatrix(from, width, height, dx), ToMatrix(to, width, height, dx), u);
         }
@@ -156,7 +156,33 @@ namespace OrbitalSalvage.Render
             }
         }
 
+        readonly struct ParseKey : IEquatable<ParseKey>
+        {
+            public readonly string Css;
+            public readonly long Dx;
+            public ParseKey(string css, double dx)
+            {
+                Css = css ?? "";
+                Dx = BitConverter.DoubleToInt64Bits(dx);
+            }
+            public bool Equals(ParseKey other) => Dx == other.Dx && Css == other.Css;
+            public override bool Equals(object obj) => obj is ParseKey other && Equals(other);
+            public override int GetHashCode() => (Css.GetHashCode() * 397) ^ Dx.GetHashCode();
+        }
+
+        static readonly Dictionary<ParseKey, List<Fn>> parsed = new Dictionary<ParseKey, List<Fn>>();
+        static readonly List<Fn> midScratch = new List<Fn>(4);
+
         static List<Fn> Parse(string css, double dx)
+        {
+            var key = new ParseKey(css, dx);
+            if (parsed.TryGetValue(key, out var hit)) return hit;
+            var list = ParseNew(css, dx);
+            parsed[key] = list;
+            return list;
+        }
+
+        static List<Fn> ParseNew(string css, double dx)
         {
             var list = new List<Fn>();
             if (string.IsNullOrWhiteSpace(css) || css == "none") return list;
