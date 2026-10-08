@@ -24,7 +24,7 @@ namespace OrbitalSalvage.App.Tests
         };
 
         [Test]
-        public void ClaimOnce_AcrossTabs_CreditsIncreaseOnce_NoSecondToast()
+        public void ClaimOnce_AcrossTabs_CreditsIncreaseOnce_OneReminderToast()
         {
             var audio = new SilentAudio();
             var app = NewApp(audio);
@@ -58,8 +58,9 @@ namespace OrbitalSalvage.App.Tests
             Assert.AreEqual(start + 100, app.Economy.Profile.Credits, 0.001, "credits increased more than once");
             Assert.AreEqual("2026-10-01", app.Economy.Profile.LastDailyGiftDate);
             Assert.IsFalse(app.Economy.CanClaimDailyGift());
-            Assert.AreEqual(1, app.Model.Toasts.Count, "a later press added a toast");
+            Assert.AreEqual(2, app.Model.Toasts.Count, "later presses must add exactly one reminder toast");
             Assert.AreEqual(ClaimToast, app.Model.Toasts[0].Text);
+            Assert.AreEqual(AppController.AlreadyClaimedToast, app.Model.Toasts[1].Text);
             Assert.AreEqual(1, audio.Cues.Count);
             Assert.AreEqual(1, app.Haptics.Count);
         }
@@ -118,7 +119,8 @@ namespace OrbitalSalvage.App.Tests
             again.ShowPage("shop");
             again.Click("btn-claim-daily-gift");
             Assert.AreEqual(credits, again.Economy.Profile.Credits, 0.001);
-            Assert.AreEqual(0, again.Model.Toasts.Count);
+            Assert.AreEqual(1, again.Model.Toasts.Count);
+            Assert.AreEqual(AppController.AlreadyClaimedToast, again.Model.Toasts[0].Text);
             Assert.AreEqual("shop_gift_claimed", again.TemplateId);
         }
 
@@ -135,7 +137,8 @@ namespace OrbitalSalvage.App.Tests
             Assert.IsFalse(app.Economy.CanClaimDailyGift());
             app.Click("btn-claim-daily-gift");
             Assert.AreEqual(once, app.Economy.Profile.Credits, 0.001);
-            Assert.AreEqual(1, app.Model.Toasts.Count);
+            Assert.AreEqual(2, app.Model.Toasts.Count);
+            Assert.AreEqual(AppController.AlreadyClaimedToast, app.Model.Toasts[1].Text);
 
             app.CatchUp(0, NextUtcDay);
             Assert.AreEqual("2026-10-02", app.Economy.Today());
@@ -145,11 +148,15 @@ namespace OrbitalSalvage.App.Tests
             Assert.AreEqual(once + 100, app.Economy.Profile.Credits, 0.001);
             Assert.AreEqual("2026-10-02", app.Economy.Profile.LastDailyGiftDate);
             Assert.IsFalse(app.Economy.CanClaimDailyGift());
-            Assert.AreEqual(2, app.Model.Toasts.Count);
-            Assert.AreEqual(ClaimToast, app.Model.Toasts[1].Text);
+            Assert.AreEqual(ClaimToast, app.Model.Toasts[app.Model.Toasts.Count - 1].Text);
+            int toastsAfterClaim = app.Model.Toasts.Count;
             app.Click("btn-claim-daily-gift");
             Assert.AreEqual(once + 100, app.Economy.Profile.Credits, 0.001);
-            Assert.AreEqual(2, app.Model.Toasts.Count);
+            Assert.LessOrEqual(app.Model.Toasts.Count, toastsAfterClaim + 1);
+            int reminders = 0;
+            for (int i = 0; i < app.Model.Toasts.Count; i++)
+                if (app.Model.Toasts[i].Text == AppController.AlreadyClaimedToast) reminders++;
+            Assert.AreEqual(1, reminders, "reminder toast must not stack");
         }
 
         [Test]

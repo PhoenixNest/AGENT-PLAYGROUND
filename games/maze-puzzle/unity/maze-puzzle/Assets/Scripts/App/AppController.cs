@@ -729,9 +729,24 @@ namespace OrbitalSalvage.App
             Rebuild();
         }
 
+        public const string AlreadyClaimedToast = "🎁 Claimed today. Come back tomorrow!";
+
         void ClaimDailyGift()
         {
-            if (!Economy.CanClaimDailyGift()) return;
+            if (!Economy.CanClaimDailyGift())
+            {
+                // Deliberate difference from the web, whose claimed button is `disabled` and silent.
+                // A press on the claimed banner says why nothing happened; no sound, no haptic, no credits.
+                bool showing = false;
+                for (int i = 0; i < _toasts.Count; i++)
+                    if (_toasts[i].Text == AlreadyClaimedToast) { showing = true; break; }
+                if (!showing)
+                {
+                    ShowToast(AlreadyClaimedToast);
+                    Rebuild();
+                }
+                return;
+            }
             if (!Economy.ClaimDailyGift(100)) return;
             try { TouchAudio(); _audio.PlayBoosterPass(); } catch (Exception) { }
             Haptic(40);
