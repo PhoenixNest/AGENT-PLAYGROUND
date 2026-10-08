@@ -92,6 +92,11 @@ namespace OrbitalSalvage.App
         string StateHash();
     }
 
+    public interface IFailureClock
+    {
+        void ResetFailureClock();
+    }
+
     public interface IAppClock
     {
         double NowMs { get; set; }
