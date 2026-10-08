@@ -218,7 +218,7 @@ namespace OrbitalSalvage.Logic
             }
         }
 
-        /// <summary>FNV-1a 64 of <see cref="Capture"/>, little-endian IEEE doubles. Same bytes as <c>tools/parity/web/game-sync.mjs</c>.</summary>
+        /// <summary>FNV-1a 64 of <see cref="Capture"/>, little-endian IEEE doubles. Same bytes as <c>games/maze-puzzle/tools/parity/web/game-sync.mjs</c>.</summary>
         public static string Hash(PhysicsEngine e)
         {
             return HashDoubles(Capture(e));

@@ -21,7 +21,7 @@
 
 ### Current status (2026-10-04)
 
-The table below is the 2026-09-30 uGUI snapshot. It is historical. `UIManager`, `SpriteHelper`, `SafeAreaFitter`, `AudioManager`, `GameManager` (the old `OrbitalSalvage.Core` type), `MazeSanitizer`, `sectors_50.json`, and the Physics2D gameplay scripts were removed on `agent/parity/ship`. Play (Editor and the standalone player, no flags) loads `MainGameScene` (camera only) and `ParityViewer` boots `AppController` with pointer input, a wall clock, `FileProfileStore` (`ORBITAL_SALVAGE_CARTOON_PROFILE_V1`), and the C# DSP player. Parity capture and self-tests still use a frozen clock and silent audio. The page is a 430×932 portrait raster letterboxed into `Screen.safeArea`. Landscape is letterboxed, not a separate layout. Not verified on a device. Strict still parity is not finished (see `09` and `tools/parity/README.md`).
+The table below is the 2026-09-30 uGUI snapshot. It is historical. `UIManager`, `SpriteHelper`, `SafeAreaFitter`, `AudioManager`, `GameManager` (the old `OrbitalSalvage.Core` type), `MazeSanitizer`, `sectors_50.json`, and the Physics2D gameplay scripts were removed on `agent/parity/ship`. Play (Editor and the standalone player, no flags) loads `MainGameScene` (camera only) and `ParityViewer` boots `AppController` with pointer input, a wall clock, `FileProfileStore` (`ORBITAL_SALVAGE_CARTOON_PROFILE_V1`), and the C# DSP player. Parity capture and self-tests still use a frozen clock and silent audio. The page is a 430×932 portrait raster letterboxed into `Screen.safeArea`. Landscape is letterboxed, not a separate layout. Not verified on a device. Strict still parity is not finished (see `09` and `games/maze-puzzle/tools/parity/README.md`).
 
 ### Snapshot (2026-09-30)
 

@@ -11,7 +11,7 @@ namespace OrbitalSalvage.AudioDsp.Tests
         public const string AllowMissingVariable = "PARITY_ALLOW_MISSING_REFS";
 
         public const string RegenerateHint =
-            "Reference data missing. Regenerate with: cd tools/parity; npm ci; cd audio; node render-ref.mjs; node rng-counts.mjs";
+            "Reference data missing. Regenerate with: cd games/maze-puzzle/tools/parity; npm ci; cd audio; node render-ref.mjs; node rng-counts.mjs";
 
         public static bool AllowMissing
         {
@@ -39,7 +39,7 @@ namespace OrbitalSalvage.AudioDsp.Tests
             string dir = AudioDir;
             if (dir == null)
             {
-                ReportMissing("tools/parity/audio/ref-manifest.json not found");
+                ReportMissing("games/maze-puzzle/tools/parity/audio/ref-manifest.json not found");
             }
 
             return dir;
@@ -50,7 +50,7 @@ namespace OrbitalSalvage.AudioDsp.Tests
             string dir = RequireAudioDir();
             if (!Directory.Exists(Path.Combine(dir, "out", "ref")))
             {
-                ReportMissing("tools/parity/audio/out/ref is missing");
+                ReportMissing("games/maze-puzzle/tools/parity/audio/out/ref is missing");
             }
 
             return dir;
@@ -354,7 +354,7 @@ namespace OrbitalSalvage.AudioDsp.Tests
             string dir = AudioTestEnvironment.RequireAudioDir();
             if (!File.Exists(Path.Combine(dir, "trace-golden.json")))
             {
-                AudioTestEnvironment.ReportMissing("tools/parity/audio/trace-golden.json not found");
+                AudioTestEnvironment.ReportMissing("games/maze-puzzle/tools/parity/audio/trace-golden.json not found");
             }
 
             List<string> failures = ParityChecks.TraceFailures(dir);

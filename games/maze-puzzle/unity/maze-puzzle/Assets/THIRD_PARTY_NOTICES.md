@@ -1,6 +1,6 @@
 # Third-Party Notices
 
-Pinned copies are produced by `tools/parity/scripts/fetch-assets.mjs` and synced into this project by `OrbitalSalvage.Editor.ParityAssetBuilder.BuildAll`. Hashes for every file are in `tools/parity/assets/manifest.json`.
+Pinned copies are produced by `games/maze-puzzle/tools/parity/scripts/fetch-assets.mjs` and synced into this project by `OrbitalSalvage.Editor.ParityAssetBuilder.BuildAll`. Hashes for every file are in `games/maze-puzzle/tools/parity/assets/manifest.json`.
 
 | Component | License | Source | Pinned commit | License text |
 | --- | --- | --- | --- | --- |

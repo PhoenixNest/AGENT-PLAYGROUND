@@ -7,7 +7,7 @@ namespace OrbitalSalvage.Render
 {
     /// <summary>
     /// Resolves a CSS (family, font-weight) pair to the TMP font asset a real browser would render for the web
-    /// prototype (tools/parity/SPEC.md section 5).
+    /// prototype (games/maze-puzzle/tools/parity/SPEC.md section 5).
     ///
     /// The web app loads its fonts from Google Fonts, which serves only Fredoka 400/600/700 and Nunito 700/800/900
     /// for the styles.css @import. Every other requested weight is resolved by the CSS font-matching algorithm

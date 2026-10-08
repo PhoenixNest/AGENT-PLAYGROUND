@@ -9,7 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+Paths written as `tools/parity/...` in entries dated before 2026-10-08 are the location on that day. Those files now live under `games/maze-puzzle/tools/parity/...`.
+
 ### Changed
+
+#### Tooling (2026-10-08, `agent/chore/tools-move`)
+
+- The parity toolset moved from repo-root `tools/parity` to `games/maze-puzzle/tools/parity` (`git mv`, 346 paths). Repo-root `tools/` is gone. Scripts and Unity tests find it by walking up to the directory that contains both `tools/parity` and `web`. Inventory and the files removed in that move are in `games/maze-puzzle/tools/parity/CLEANUP.md`.
 
 #### Web + Unity (2026-10-08, `agent/fix/funnel`)
 

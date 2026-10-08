@@ -260,11 +260,14 @@ namespace OrbitalSalvage.App.Tests
         static string ReportDir()
         {
             var dir = new DirectoryInfo(Application.dataPath);
-            for (int i = 0; i < 4 && dir != null; i++) dir = dir.Parent;
-            if (dir == null) return null;
-            string path = Path.Combine(dir.FullName, "tools", "parity", "reports", "shop-gift-2026-10-08");
-            if (!Directory.Exists(path)) return null;
-            return path;
+            for (int i = 0; i < 8 && dir != null; i++)
+            {
+                string path = Path.Combine(dir.FullName, "tools", "parity", "reports", "shop-gift-2026-10-08");
+                string web = Path.Combine(dir.FullName, "web", "index.html");
+                if (Directory.Exists(path) && File.Exists(web)) return path;
+                dir = dir.Parent;
+            }
+            return null;
         }
 
         static void ApplyClaimedText(HomeChrome chrome)

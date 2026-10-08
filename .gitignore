@@ -37,3 +37,14 @@ Thumbs.db
 sysinfo.txt
 *.unitypackage
 
+# Maze parity tool output. Generators, fixtures, goldens, and recordings stay tracked.
+games/maze-puzzle/tools/parity/**/out/
+games/maze-puzzle/tools/parity/**/__pycache__/
+games/maze-puzzle/tools/parity/reports/**/*.csv
+games/maze-puzzle/tools/parity/reports/*-frames/
+games/maze-puzzle/tools/parity/reports/*-accum.txt
+games/maze-puzzle/tools/parity/reports/iter-*/report.json
+games/maze-puzzle/tools/parity/reports/iter-*/images/
+**/.local-browsers/
+**/ms-playwright/
+

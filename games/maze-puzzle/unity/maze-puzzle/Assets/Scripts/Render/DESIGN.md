@@ -2,7 +2,7 @@
 
 A native Unity re-implementation of the subset of the HTML Canvas 2D API used by `games/maze-puzzle/web/`, built to match headless Chromium (CPU Skia, DPR 3) pixel for pixel. No third-party rasterizer is used.
 
-Pass bar from the SPEC: at least 99.0 % of pixels within a per-channel difference of 16, and SSIM at least 0.985. Our own target is 99.5 % / 0.99. Measured numbers live in `tools/parity/canvas-conformance/REPORT.md`.
+Pass bar from the SPEC: at least 99.0 % of pixels within a per-channel difference of 16, and SSIM at least 0.985. Our own target is 99.5 % / 0.99. Measured numbers live in `games/maze-puzzle/tools/parity/canvas-conformance/REPORT.md`.
 
 ## Pipeline
 

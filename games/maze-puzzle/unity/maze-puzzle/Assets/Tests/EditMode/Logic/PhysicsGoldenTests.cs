@@ -27,7 +27,7 @@ namespace OrbitalSalvage.Logic.Tests
         [Test]
         public void Fixtures_Present()
         {
-            Assert.IsTrue(Fixtures.Exists("physics/manifest.json"), "physics fixtures missing; run `node tools/parity/golden/generate.mjs`");
+            Assert.IsTrue(Fixtures.Exists("physics/manifest.json"), "physics fixtures missing; run `node games/maze-puzzle/tools/parity/golden/generate.mjs`");
             Assert.Greater(new List<string>(RunNames()).Count, 0);
         }
 
