@@ -15,6 +15,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - The funnel centering term is now `(dx * 16 - vx * 8) * dt` in `web/engine/physics.js` and `PhysicsEngine.ResolveMagneticFunnel`. c = 8 is critical damping for k = 16. Rails, aperture, gravity, and the black hole are unchanged. Idle debris on the measured levels no longer misses the hole along the rail; a swipe or a held spin can still spill. Report: `tools/parity/reports/funnel-fix-2026-10-08.md`.
 
+#### Unity (2026-10-08, reminder toast)
+
+- Pressing the claimed daily-gift button now shows one "🎁 Claimed today. Come back tomorrow!" toast (never stacked while it is showing). No credits, sound or haptic. This is a deliberate difference from the web, whose claimed button is `disabled` and silent. `ShopGiftTests` updated; EditMode 318/402, the same 82 audio reference tests fail.
+
 #### Unity (2026-10-08, `agent/fix/shop-gift`)
 
 - After the daily gift is claimed, every Toy Shop tab paints the claimed banner taken from `shop_gift_claimed`: muted banner, green stipend tag, grey "Claimed Today" button. The gift still pays +100 once per UTC day. A second press on that button does not add a toast or a sound. Profile-zero stills stayed SHA256-identical to the capture taken before this change, including game `38730953997DE30D033C10E6CFF0B9AE2E47FBAB1671D07178039B484609A12A` and pause `CE4A6AE83A5563E98F7F722334E17A7FC06FA1375C26390A9714FC838FEE7078`. EditMode 316/400; the same 82 audio reference tests fail. Report: `tools/parity/reports/shop-gift-2026-10-08.md`.
