@@ -85,7 +85,7 @@ namespace OrbitalSalvage.Viewer
                 else if (p95 < 0.016f) ambientInterval = 0;
             }
 
-            HomeChrome.SimplifyEffects = forced <= 0 && target <= 1.01;
+            HomeChrome.SimplifyEffects = ProbeSkipBlur() || (forced <= 0 && target <= 1.01);
             bool resized = current != null && Math.Abs(current.RasterScale - target) >= 0.05;
             if (resized)
             {
@@ -187,6 +187,15 @@ namespace OrbitalSalvage.Viewer
             if (rank < 0) rank = 0;
             if (rank >= n) rank = n - 1;
             return qualitySort[rank];
+        }
+
+        static int probeSkipBlur = -1;
+
+        static bool ProbeSkipBlur()
+        {
+            if (probeSkipBlur < 0)
+                probeSkipBlur = Array.IndexOf(Environment.GetCommandLineArgs(), "-probe-no-blur") >= 0 ? 1 : 0;
+            return probeSkipBlur == 1;
         }
 
         bool HoldAmbientDraw(bool ambient)

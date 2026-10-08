@@ -52,6 +52,16 @@ namespace OrbitalSalvage.Viewer
                 while (Time.realtimeSinceStartup < settle) yield return null;
             }
 
+            bool pauseProbe = Array.IndexOf(Environment.GetCommandLineArgs(), "-probe-pause") >= 0;
+            if (error == null && pauseProbe && app != null)
+            {
+                app.Click("btn-home-play");
+                yield return null;
+                app.Click("btn-game-pause");
+                float pauseSettle = Time.realtimeSinceStartup + 0.8f;
+                while (Time.realtimeSinceStartup < pauseSettle) yield return null;
+            }
+
             bool diag = Array.IndexOf(Environment.GetCommandLineArgs(), "-probe-diag") >= 0;
             if (error == null && diag && current != null)
             {
@@ -144,6 +154,7 @@ namespace OrbitalSalvage.Viewer
                 sb.Append(",\"template\":");
                 Quote(sb, currentId);
                 sb.Append(",\"loops\":").Append(current != null && current.Loops ? "true" : "false");
+                sb.Append(",\"simplify\":").Append(HomeChrome.SimplifyEffects ? "true" : "false");
                 sb.Append(",\"layerCache\":").Append(current != null && current.UsesLayerCache ? "true" : "false");
                 if (current != null)
                     sb.Append(",\"raster\":\"").Append(current.PixelWidth).Append('x').Append(current.PixelHeight).Append('"');
@@ -408,8 +419,11 @@ namespace OrbitalSalvage.Viewer
             }
             if (n > 0) avg /= n;
             Array.Sort(copy);
+            double median = 0;
+            if (n > 0) median = (n % 2) == 1 ? copy[n / 2] : (copy[(n / 2) - 1] + copy[n / 2]) * 0.5;
             var inv = CultureInfo.InvariantCulture;
             sb.Append(",\"").Append(name).Append("\":{\"avg\":").Append(avg.ToString("R", inv))
+                .Append(",\"median\":").Append(median.ToString("R", inv))
                 .Append(",\"p95\":").Append(Percentile(copy, 0.95).ToString("R", inv))
                 .Append(",\"p99\":").Append(Percentile(copy, 0.99).ToString("R", inv))
                 .Append(",\"max\":").Append(mx.ToString("R", inv)).Append('}');
