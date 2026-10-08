@@ -259,6 +259,7 @@ namespace OrbitalSalvage.Viewer
         void ApplyOverrides(bool forceDraw)
         {
             if (current == null || app == null) return;
+            current.UseClaimedGiftBanner(app.CurrentPage == "shop" && !app.Economy.CanClaimDailyGift());
             if (!forceDraw && OverridesUnchanged()) return;
             RememberOverrides();
             current.TextOverrides.Clear();
