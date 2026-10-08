@@ -48,6 +48,24 @@ namespace OrbitalSalvage.Render
         public bool RenderEnabled = true;
         public bool FixedStep;
         public double FixedDt = 16.0 / 1000.0;
+
+        /// <summary>
+        /// Live play only. When set, and <see cref="FixedStep"/> is false, <see cref="Update"/>
+        /// accumulates real frame time and integrates at <see cref="LiveStep"/> (1/60 s, a steady
+        /// browser frame). Recorded streams stay on <see cref="FixedDt"/> of 16 ms via
+        /// <see cref="FixedStep"/>. At most <see cref="LiveMaxSteps"/> integrations run per call,
+        /// which is 50 ms, the same cap as <see cref="DtCap"/>. Leftover time past that cap is dropped.
+        /// </summary>
+        public bool Accumulate;
+        public const double LiveStep = 1.0 / 60.0;
+        public const int LiveMaxSteps = 3;
+        public double SimulatedTime { get; private set; }
+        public double PendingAccum { get { return _accum; } }
+        double _accum;
+
+        /// <summary>Invoked at the start of each live 1/60 s step with <see cref="SimulatedTime"/>. Null in product play.</summary>
+        public Action<double> BeforeAccumStep;
+
         public bool ForceRcs;
         public Func<double> NowMs = () => 0;
 
@@ -192,6 +210,8 @@ namespace OrbitalSalvage.Render
             IsLevelFailed = false;
             FailureCheckTimer = 0;
             UsedBackupPod = false;
+            SimulatedTime = 0;
+            ClearAccum();
             Renderer.ResetNibblesScale();
             var bh = Physics.BlackHole;
             Physics.InitSector(sector, Physics.Center, new Vec2(bh.X, bh.Y));
@@ -207,8 +227,12 @@ namespace OrbitalSalvage.Render
         public void StepWebFrame(double dtSeconds, bool simulate)
         {
             bool was = IsPaused;
+            bool accumulate = Accumulate;
             IsPaused = !simulate;
+            Accumulate = false;
+            ClearAccum();
             Update(dtSeconds);
+            Accumulate = accumulate;
             IsPaused = was;
         }
 
@@ -217,35 +241,74 @@ namespace OrbitalSalvage.Render
             return PhysicsSnapshot.Hash(Physics);
         }
 
+        public void ClearAccum()
+        {
+            _accum = 0;
+        }
+
         public void Update(double dt)
         {
+            if (Accumulate && !FixedStep)
+            {
+                UpdateAccumulated(dt);
+                return;
+            }
             double step = FixedStep ? FixedDt : dt;
             step = JsMath.Min(step, DtCap);
-            if (!IsPaused)
+            if (!IsPaused) AdvanceUnpaused(step);
+            Present(step);
+        }
+
+        void UpdateAccumulated(double dt)
+        {
+            if (IsPaused)
             {
-                Physics.Update(step);
-                PhysicsSteps++;
-                if (!IsLevelCleared && !IsLevelFailed && ActiveSector != null)
-                {
-                    bool any = false;
-                    var list = Physics.DebrisList;
-                    for (int i = 0; i < list.Count; i++)
-                    {
-                        var state = list[i].State;
-                        if (state == DebrisState.InRing || state == DebrisState.Falling || state == DebrisState.Ingesting)
-                        {
-                            any = true;
-                            break;
-                        }
-                    }
-                    if (!any && CollectedMass < ActiveSector.Quota)
-                    {
-                        FailureCheckTimer += step;
-                        if (FailureCheckTimer >= FailDelay) HandleDefeat();
-                    }
-                    else FailureCheckTimer = 0;
-                }
+                ClearAccum();
+                Present(JsMath.Min(dt, DtCap));
+                return;
             }
+            if (dt > 0) _accum += dt;
+            int n = 0;
+            while (n < LiveMaxSteps && _accum >= LiveStep)
+            {
+                if (BeforeAccumStep != null) BeforeAccumStep(SimulatedTime);
+                AdvanceUnpaused(LiveStep);
+                SimulatedTime += LiveStep;
+                _accum -= LiveStep;
+                n++;
+            }
+            if (n == LiveMaxSteps) _accum = 0;
+            Present(n * LiveStep);
+        }
+
+        void AdvanceUnpaused(double step)
+        {
+            Physics.Update(step);
+            PhysicsSteps++;
+            if (!IsLevelCleared && !IsLevelFailed && ActiveSector != null)
+            {
+                bool any = false;
+                var list = Physics.DebrisList;
+                for (int i = 0; i < list.Count; i++)
+                {
+                    var state = list[i].State;
+                    if (state == DebrisState.InRing || state == DebrisState.Falling || state == DebrisState.Ingesting)
+                    {
+                        any = true;
+                        break;
+                    }
+                }
+                if (!any && CollectedMass < ActiveSector.Quota)
+                {
+                    FailureCheckTimer += step;
+                    if (FailureCheckTimer >= FailDelay) HandleDefeat();
+                }
+                else FailureCheckTimer = 0;
+            }
+        }
+
+        void Present(double step)
+        {
             if (ForceRcs) Physics.RcsThrusting = true;
             if (RenderEnabled)
             {

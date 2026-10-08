@@ -104,6 +104,29 @@ namespace OrbitalSalvage.Render.Tests
         }
 
         [Test]
+        public void AccumulatorCapsAtThreeStepsAndDropsTimeWhilePaused()
+        {
+            _session.Accumulate = true;
+            _session.FixedStep = false;
+            _session.Update(0.01);
+            Assert.AreEqual(0, _session.PhysicsSteps);
+            _session.IsPaused = true;
+            _session.Update(0.2);
+            Assert.AreEqual(0, _session.PhysicsSteps);
+            _session.IsPaused = false;
+            _session.Update(0.2);
+            Assert.AreEqual(3, _session.PhysicsSteps);
+            int frames = _session.RenderFrames;
+            _session.Update(1.0 / 60.0);
+            Assert.AreEqual(4, _session.PhysicsSteps);
+            Assert.AreEqual(frames + 1, _session.RenderFrames);
+            _session.FixedStep = true;
+            _session.FixedDt = 0.016;
+            _session.Update(0.2);
+            Assert.AreEqual(5, _session.PhysicsSteps);
+        }
+
+        [Test]
         public void PauseFreezesPhysicsAndTheFailTimer()
         {
             for (int i = 0; i < _session.Physics.DebrisList.Count; i++)
