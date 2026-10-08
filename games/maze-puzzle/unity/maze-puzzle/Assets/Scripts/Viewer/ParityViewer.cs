@@ -730,11 +730,16 @@ namespace OrbitalSalvage.Viewer
 
         void TickLive()
         {
-            if (!ShowPlayfield) return;
+            if (!ShowPlayfield)
+            {
+                if (session != null) session.ClearAccum();
+                return;
+            }
             // Pause freezes via the controller. Debrief and defeat keep the web clock running, but the
             // stills are one frozen canvas; hold that frame while a modal covers the playfield.
             bool modal = currentId != null && currentId.StartsWith("modal_", StringComparison.Ordinal);
             session.IsPaused = (app != null && app.IsPaused) || modal;
+            session.Accumulate = true;
             session.Update(Time.unscaledDeltaTime);
             if (app != null) app.SetLiveMass(session.CollectedMass, session.SpilledMass);
             ApplyQuota();
@@ -817,6 +822,7 @@ namespace OrbitalSalvage.Viewer
             if (game && session != null)
             {
                 session.FixedStep = false;
+                session.Accumulate = false;
                 session.NowMs = () => Time.realtimeSinceStartupAsDouble * 1000.0;
             }
             double clock = 240;

@@ -11,6 +11,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+#### Unity (2026-10-07, `agent/fix/physics`)
+
+- Live play (`ParityViewer.TickLive`) accumulates real frame time and integrates physics at 1/60 s, at most 3 steps per frame (50 ms). Time left over that cap is dropped. Pause and leaving the game page clear the accumulator so the next frame does not catch up. Recorded 16 ms conformance (`FixedStep`, `StepWebFrame`) is unchanged. The 1/60 step is a steady browser frame; the 16 ms figure is the recorded-stream cadence.
+
 #### Unity (2026-10-04, `agent/parity/ship`)
 
 - Play, with no command-line flags, boots `ParityViewer` and `AppController` (Canvas2D). The main scene is a camera. Pointer clicks, drags, and holds go through the letterboxed 430×932 page. Profile is `orbital-salvage-profile.json` under `Application.persistentDataPath` (key `ORBITAL_SALVAGE_CARTOON_PROFILE_V1`). Audio on that path is the C# DSP player. `--parity` and the parity self-tests keep a frozen clock and silent audio.
