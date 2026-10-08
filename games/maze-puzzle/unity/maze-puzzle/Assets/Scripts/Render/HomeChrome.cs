@@ -163,6 +163,44 @@ namespace OrbitalSalvage.Render
         string[] snapOpacity = Array.Empty<string>();
         string[] snapHidden = Array.Empty<string>();
         string[] snapClass = Array.Empty<string>();
+        int cachedReflow;
+        int reflowSig;
+        double[] reflowY;
+        double[] reflowH;
+        int[] reflowLines;
+        byte[] reflowAlign;
+        double[] reflowPitch;
+        string[] reflowSource;
+        List<string>[] reflowLineText;
+        byte[] blockCenter;
+        int[] parentOf;
+        Dictionary<string, int> indexById;
+        string[] reflowKeys = Array.Empty<string>();
+        readonly List<string> wrapScratch = new List<string>(4);
+
+        struct WrapHit
+        {
+            public int Index;
+            public int Card;
+            public double Extra;
+            public double Y;
+        }
+
+        readonly WrapHit[] wrapHits = new WrapHit[8];
+        int wrapN;
+
+        /// <summary>True when a centered block override wrapped and shifted the card upward.</summary>
+        public bool BlockReflowActive => reflowSig != 0;
+
+        public struct PaintedRun
+        {
+            public string Id;
+            public double X, Y, W, H;
+        }
+
+        /// <summary>Test hook. Records each drawn run. Leave false on the product path.</summary>
+        public static bool RecordRuns;
+        public readonly List<PaintedRun> RecordedRuns = new List<PaintedRun>();
         struct ClassOcc { public int element; public string key; }
         ClassOcc[] classOcc;
         int classOccN;
@@ -472,6 +510,7 @@ namespace OrbitalSalvage.Render
         {
             return cachedSkip == SkipPlayfield
                 && cachedExt == (ExternalPlayfield != null)
+                && cachedReflow == reflowSig
                 && SameKeys(TextOverrides, snapText)
                 && SameKeys(WidthOverrides, snapWidth)
                 && SameKeys(WidthPercentOverrides, snapWidthPct)
@@ -484,6 +523,7 @@ namespace OrbitalSalvage.Render
         {
             cachedSkip = SkipPlayfield;
             cachedExt = ExternalPlayfield != null;
+            cachedReflow = reflowSig;
             snapText = CopyKeys(TextOverrides);
             snapWidth = CopyKeys(WidthOverrides);
             snapWidthPct = CopyKeys(WidthPercentOverrides);
@@ -573,6 +613,8 @@ namespace OrbitalSalvage.Render
                 if (hole >= 0 && (k == hole || (k < hole && CoversViewport(e)))) dynamic[k] = true;
                 string id = S(e, "id");
                 if (id.Length > 0 && (TextOverrides.ContainsKey(id) || WidthOverrides.ContainsKey(id))) dynamic[k] = true;
+                if (reflowSig != 0 && reflowY != null && (Math.Abs(reflowY[k]) > 0.1 || Math.Abs(reflowH[k]) > 0.1))
+                    dynamic[k] = true;
             }
             baseOpacity = new double[n];
             for (int k = 0; k < n; k++)
@@ -645,6 +687,8 @@ namespace OrbitalSalvage.Render
             long prof = PaintProfile.Stamp();
             frame = double.IsNaN(timeMs) ? null : CssFrame.Build(elements, timeMs, pinPageEnter, modalIntro, pressed, pressCss, frameSlot);
             if (frame != null) frameSlot = frame;
+            if (RecordRuns) RecordedRuns.Clear();
+            ApplyBlockReflow();
             // A live frame used to force the approximate blur. Settled modals (pageEnter already
             // finished) need the exact readback or the dim behind the card shifts by several levels.
             canvas.ExactBackdrop = DebugExactBackdrop || frame == null || !frame.HasMotion;
@@ -968,6 +1012,11 @@ namespace OrbitalSalvage.Render
             rectScratch[2] = src[2];
             rectScratch[3] = src[3];
             if (element && frame != null && Math.Abs(frame.ExtraY[k]) > 1e-6) rectScratch[1] += frame.ExtraY[k];
+            if (element && reflowY != null && k < reflowY.Length)
+            {
+                rectScratch[1] += reflowY[k];
+                rectScratch[3] += reflowH[k];
+            }
             return rectScratch;
         }
 
@@ -1179,11 +1228,238 @@ namespace OrbitalSalvage.Render
             return true;
         }
 
+        void NoteRun(string id, double x, double y, double w, double h)
+        {
+            RecordedRuns.Add(new PaintedRun { Id = id, X = x, Y = y, W = w, H = h });
+        }
+
+        void EnsureReflowBuffers(int n)
+        {
+            if (reflowY != null && reflowY.Length == n) return;
+            reflowY = new double[n];
+            reflowH = new double[n];
+            reflowLines = new int[n];
+            reflowAlign = new byte[n];
+            reflowPitch = new double[n];
+            reflowSource = new string[n];
+            reflowLineText = new List<string>[n];
+            blockCenter = new byte[n];
+        }
+
+        bool ReflowKeySetSame()
+        {
+            if (reflowKeys.Length != TextOverrides.Count) return false;
+            for (int i = 0; i < reflowKeys.Length; i++)
+                if (!TextOverrides.ContainsKey(reflowKeys[i])) return false;
+            return true;
+        }
+
+        void EnsureIndexById()
+        {
+            if (indexById != null) return;
+            indexById = new Dictionary<string, int>();
+            for (int k = 0; k < elements.Count; k++)
+            {
+                string id = S(elements[k], "id");
+                if (id.Length > 0 && !indexById.ContainsKey(id)) indexById[id] = k;
+            }
+        }
+
+        void EnsureParents()
+        {
+            if (parentOf != null) return;
+            int n = elements.Count;
+            parentOf = new int[n];
+            var byIndex = new Dictionary<int, int>(n);
+            for (int k = 0; k < n; k++) byIndex[(int)N(elements[k], "i", k)] = k;
+            for (int k = 0; k < n; k++)
+            {
+                int pi = (int)N(elements[k], "p", -1);
+                parentOf[k] = pi >= 0 && byIndex.TryGetValue(pi, out var pk) ? pk : -1;
+            }
+        }
+
+        /// <summary>
+        /// A centered block is a div whose captured run has matching left and right gaps inside the
+        /// element rect (the sample is centered, so the rect is the wrap width, not a shrink-wrapped line).
+        /// One line keeps the captured run x. Extra lines grow the modal-card upward because the overlay
+        /// is align-items:flex-end: elements at or above the text move up, elements below stay.
+        /// </summary>
+        bool IsCenteredBlock(int k)
+        {
+            if (blockCenter[k] != 0) return blockCenter[k] == 1;
+            var e = elements[k];
+            bool yes = false;
+            if (S(e, "t") == "div" && e.TryGetValue("runs", out var rv) && rv is List<object> runs && runs.Count > 0 && runs[0] is Dictionary<string, object> run)
+            {
+                var rr = Rect(run);
+                var er = Rect(e);
+                if (rr != null && er != null && er[2] > 0 && rr[2] > 0)
+                {
+                    double left = rr[0] - er[0];
+                    double right = (er[0] + er[2]) - (rr[0] + rr[2]);
+                    yes = left >= 1 && right >= 1 && Math.Abs(left - right) <= 1.5;
+                }
+            }
+            blockCenter[k] = (byte)(yes ? 1 : 2);
+            return yes;
+        }
+
+        /// <summary>
+        /// A div whose box is already taller than one captured line and whose text starts at the box's left edge.
+        /// The web wraps that block (gift-banner-desc). Nowrap pills and shrink-wrapped spans are not this.
+        /// </summary>
+        bool IsLeftWrapBox(int k, out double pitch)
+        {
+            pitch = 0;
+            var e = elements[k];
+            if (S(e, "t") != "div") return false;
+            if (!e.TryGetValue("runs", out var rv) || !(rv is List<object> runs) || runs.Count < 2) return false;
+            if (!(runs[0] is Dictionary<string, object> run)) return false;
+            var rr = Rect(run);
+            var er = Rect(e);
+            if (rr == null || er == null || er[2] <= 0 || rr[3] <= 0) return false;
+            double left = rr[0] - er[0];
+            if (left > 1.5) return false;
+            if (er[3] < rr[3] * 1.5) return false;
+            pitch = er[3] / runs.Count;
+            return pitch > 0;
+        }
+
+        int CardOf(int k)
+        {
+            for (int p = k, hops = 0; p >= 0 && hops < elements.Count; p = parentOf[p], hops++)
+                if (HasToken(S(elements[p], "c"), "modal-card")) return p;
+            return -1;
+        }
+
+        int CountWrapped(int k, Dictionary<string, object> e, string text)
+        {
+            if (reflowSource[k] == text && reflowLineText[k] != null) return reflowLineText[k].Count;
+            var er = Rect(e);
+            canvas.Font = fontOf[k];
+            canvas.LetterSpacing = letterOf[k];
+            if (reflowLineText[k] == null) reflowLineText[k] = new List<string>(4);
+            WrapWords(canvas, text, er[2], 0.5, reflowLineText[k]);
+            reflowSource[k] = text;
+            return reflowLineText[k].Count;
+        }
+
+        void ApplyBlockReflow()
+        {
+            int n = elements.Count;
+            EnsureReflowBuffers(n);
+            Array.Clear(reflowY, 0, n);
+            Array.Clear(reflowH, 0, n);
+            Array.Clear(reflowLines, 0, n);
+            Array.Clear(reflowAlign, 0, n);
+            Array.Clear(reflowPitch, 0, n);
+            reflowSig = 0;
+            wrapN = 0;
+            if (TextOverrides.Count == 0)
+            {
+                if (reflowKeys.Length != 0) reflowKeys = Array.Empty<string>();
+                return;
+            }
+            if (!ReflowKeySetSame())
+            {
+                reflowKeys = new string[TextOverrides.Count];
+                int i = 0;
+                foreach (var kv in TextOverrides) reflowKeys[i++] = kv.Key;
+            }
+            EnsureIndexById();
+            for (int i = 0; i < reflowKeys.Length; i++)
+            {
+                string id = reflowKeys[i];
+                if (!indexById.TryGetValue(id, out int k)) continue;
+                if (!TextOverrides.TryGetValue(id, out string text) || string.IsNullOrEmpty(text)) continue;
+                var e = elements[k];
+                EnsureRunStyle(e, k);
+                if (upperOf[k]) text = CachedUpper(text);
+                if (!IsCenteredBlock(k))
+                {
+                    if (!IsLeftWrapBox(k, out double pitch)) continue;
+                    var box = Rect(e);
+                    int wrapped = CountWrapped(k, e, text);
+                    if (wrapped <= 1) continue;
+                    reflowLines[k] = wrapped;
+                    reflowAlign[k] = 2;
+                    reflowPitch[k] = pitch;
+                    reflowSig = reflowSig * 31 + (k + 1) * 17 + wrapped;
+                    if (wrapped * pitch > box[3] + 1) reflowH[k] = wrapped * pitch - box[3];
+                    continue;
+                }
+                int lines = CountWrapped(k, e, text);
+                if (lines <= 1) continue;
+                EnsureParents();
+                int card = CardOf(k);
+                if (card < 0 || wrapN >= wrapHits.Length) continue;
+                var er = Rect(e);
+                wrapHits[wrapN++] = new WrapHit { Index = k, Card = card, Extra = (lines - 1) * er[3], Y = er[1] };
+                reflowLines[k] = lines;
+                reflowAlign[k] = 1;
+                reflowPitch[k] = er[3];
+                reflowSig = reflowSig * 31 + (k + 1) * 17 + lines;
+            }
+            if (wrapN == 0) return;
+            EnsureParents();
+            for (int k = 0; k < n; k++)
+            {
+                int card = CardOf(k);
+                if (card < 0) continue;
+                var er = Rect(elements[k]);
+                double dy = 0, dh = 0;
+                for (int w = 0; w < wrapN; w++)
+                {
+                    if (wrapHits[w].Card != card) continue;
+                    if (wrapHits[w].Y + 0.01 >= er[1]) dy += wrapHits[w].Extra;
+                    bool inside = wrapHits[w].Index == k || (wrapHits[w].Y >= er[1] - 0.01 && wrapHits[w].Y < er[1] + er[3] - 0.01);
+                    if (inside) dh += wrapHits[w].Extra;
+                }
+                reflowY[k] = -dy;
+                reflowH[k] = dh;
+            }
+        }
+
+        void PaintReflowLines(Dictionary<string, object> e, int k, double alpha)
+        {
+            var el = Rect(e);
+            double top = el[1] + (reflowY != null && k < reflowY.Length ? reflowY[k] : 0);
+            double lineH = reflowPitch != null && k < reflowPitch.Length && reflowPitch[k] > 0 ? reflowPitch[k] : el[3];
+            bool left = reflowAlign != null && k < reflowAlign.Length && reflowAlign[k] == 2;
+            if (left && e.TryGetValue("runs", out var rv) && rv is List<object> runs && runs.Count > 0 && runs[0] is Dictionary<string, object> first)
+            {
+                var fr = Rect(first);
+                if (fr != null) top = fr[1] + (reflowY != null && k < reflowY.Length ? reflowY[k] : 0);
+            }
+            var lines = reflowLineText[k];
+            string id = S(e, "id");
+            canvas.Save();
+            canvas.Font = fontOf[k];
+            canvas.LetterSpacing = letterOf[k];
+            for (int i = 0; i < lines.Count; i++)
+            {
+                double tw = canvas.MeasureText(lines[i]);
+                double x = left ? el[0] : el[0] + (el[2] - tw) * 0.5;
+                double baseline = top + i * lineH + canvas.FontAscent();
+                CssBox.DrawText(canvas, lines[i], x, baseline, colorOf[k], shadowOf[k], alpha);
+                if (RecordRuns) NoteRun(id, x, top + i * lineH, tw, lineH);
+                DrawnRuns++;
+            }
+            canvas.Restore();
+        }
+
         void PaintRuns(Dictionary<string, object> e, int k, double alpha)
         {
             if (!e.TryGetValue("runs", out var rv) || !(rv is List<object> runs) || runs.Count == 0) return;
             PaintProfile.Begin(PaintProfile.PaintRuns);
             EnsureRunStyle(e, k);
+            if (reflowLines != null && k < reflowLines.Length && reflowLines[k] > 1 && reflowLineText != null && reflowLineText[k] != null)
+            {
+                PaintReflowLines(e, k, alpha);
+                PaintProfile.End(PaintProfile.PaintRuns);
+                return;
+            }
             string font = fontOf[k];
             double ls = letterOf[k];
             var color = colorOf[k];
@@ -1240,6 +1516,7 @@ namespace OrbitalSalvage.Render
                 runScratch[3] = src[3];
                 var r = runScratch;
                 if (frame != null && Math.Abs(frame.ExtraY[k]) > 1e-6) r[1] += frame.ExtraY[k];
+                if (reflowY != null && k < reflowY.Length) r[1] += reflowY[k];
                 if (Blank(text)) continue;
                 bool movingText = frame != null && (frame.PageTransform || frame.Tree[k]);
                 if (!movingText && Outside(r, textReach)) continue;
@@ -1273,6 +1550,15 @@ namespace OrbitalSalvage.Render
                     {
                         oneLine[0] = best;
                         lines = oneLine;
+                        double tw = canvas.MeasureText(best);
+                        if (tw > r[2] + 0.5)
+                        {
+                            var er = Rect(e);
+                            double rightGap = (er[0] + er[2]) - (r[0] + r[2]);
+                            double leftGap = r[0] - er[0];
+                            if (er != null && rightGap <= 1.5 && leftGap >= 8)
+                                r[0] = er[0] + er[2] - tw;
+                        }
                     }
                     else if (singleLine) lines = new[] { best };
                     else lines = WrapToWidth(canvas, best, r[2]).ToArray();
@@ -1285,6 +1571,7 @@ namespace OrbitalSalvage.Render
                     // The run rect's top is the first em box, the same origin a single line uses.
                     double baseline = r[1] + (lines.Length > 1 ? i * lineH : 0) + canvas.FontAscent();
                     CssBox.DrawText(canvas, lines[i], r[0], baseline, color, shadows, alpha);
+                    if (RecordRuns) NoteRun(textId, r[0], r[1] + (lines.Length > 1 ? i * lineH : 0), canvas.MeasureText(lines[i]), lines.Length > 1 ? lineH : r[3]);
                     DrawnRuns++;
                 }
                 canvas.Restore();
@@ -1295,7 +1582,14 @@ namespace OrbitalSalvage.Render
         static List<string> WrapToWidth(Canvas2D canvas, string text, double width)
         {
             var lines = new List<string>();
-            if (canvas.MeasureText(text) <= width + Math.Max(8, width * 0.08)) { lines.Add(text); return lines; }
+            WrapWords(canvas, text, width, Math.Max(8, width * 0.08), lines);
+            return lines;
+        }
+
+        static void WrapWords(Canvas2D canvas, string text, double width, double slack, List<string> lines)
+        {
+            lines.Clear();
+            if (canvas.MeasureText(text) <= width + slack) { lines.Add(text); return; }
             string cur = "";
             foreach (var word in text.Split(' '))
             {
@@ -1310,7 +1604,6 @@ namespace OrbitalSalvage.Render
             }
             if (cur.Length > 0) lines.Add(cur);
             if (lines.Count == 0) lines.Add(text);
-            return lines;
         }
 
         /// <summary>
