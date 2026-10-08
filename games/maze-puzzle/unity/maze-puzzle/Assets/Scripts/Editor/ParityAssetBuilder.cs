@@ -44,7 +44,22 @@ namespace OrbitalSalvage.Editor
         }
 
         private static string ProjectRoot => Path.GetFullPath(Path.Combine(Application.dataPath, ".."));
-        private static string ParityAssets => Path.GetFullPath(Path.Combine(ProjectRoot, "..", "..", "..", "..", "tools", "parity", "assets"));
+
+        private static string ParityAssets
+        {
+            get
+            {
+                var dir = new DirectoryInfo(ProjectRoot);
+                for (int i = 0; i < 8 && dir != null; i++)
+                {
+                    string assets = Path.Combine(dir.FullName, "tools", "parity", "assets");
+                    string web = Path.Combine(dir.FullName, "web", "index.html");
+                    if (Directory.Exists(assets) && File.Exists(web)) return assets;
+                    dir = dir.Parent;
+                }
+                throw new DirectoryNotFoundException("games/maze-puzzle/tools/parity/assets not found from " + ProjectRoot);
+            }
+        }
 
         public static void BuildAll()
         {

@@ -284,7 +284,15 @@ namespace OrbitalSalvage.App.Tests
 
         static string GoldenDir()
         {
-            return Path.GetFullPath(Path.Combine(Application.dataPath, "..", "..", "..", "..", "..", "tools", "parity", "golden", "app"));
+            var dir = new DirectoryInfo(Application.dataPath);
+            for (int i = 0; i < 8 && dir != null; i++)
+            {
+                string candidate = Path.Combine(dir.FullName, "tools", "parity", "golden", "app");
+                string web = Path.Combine(dir.FullName, "web", "index.html");
+                if (Directory.Exists(candidate) && File.Exists(web)) return candidate;
+                dir = dir.Parent;
+            }
+            throw new DirectoryNotFoundException("games/maze-puzzle/tools/parity/golden/app not found from " + Application.dataPath);
         }
     }
 }
