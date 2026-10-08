@@ -112,6 +112,12 @@ Preview in the Editor: open the project at `games/maze-puzzle/unity/maze-puzzle`
 - Fix (`agent/parity/homefix-clean`): cache key is the set of overridden ids, not their values; GPU-side layer copies, hidden-only runs skipped (29 layers); governor defers baking 0.9 s after a resize and remembers the settled scale; blur limited to the element rect plus reach; per-frame string work cached. Regression test `LayerCacheTests`.
 - After: tap max 33-158 ms with no rebuild; ramp rebuilds 2.7-4.6 ms; 3x median 20-23 ms; 1x median 16.0-16.3 ms; GC ~107-112 KB/frame. Stills, game/pause hashes, and animated home dumps SHA256-identical. Not reached: GC under 60 KB/frame; some forced-3x runs still have frames over 100 ms outside the paint path.
 
+### 9.2 UI fixes (2026-10-07, `agent/fix/ui`)
+
+- Menu, toast age, pause text reflow, gesture hint, and the failure clock are on `agent/fix/ui` (not merged). Report: `tools/parity/reports/ui-fixes-2026-10-07.md`.
+- Centered block: a div whose captured run is centered in the element (gaps match within 1.5 px). Extra lines wrap to that width and the modal card grows upward. One line keeps the captured run x, so the pause still stayed `CE4A6AE83A5563E98F7F722334E17A7FC06FA1375C26390A9714FC838FEE7078`.
+- 1x blur stays skipped. The D3D12 probe did not meet the keep-blur rule: draw cost was under 1 ms, but frame medians were 8.0-11.9 ms rather than 15.5-16.5 ms, and two p95 pairs worsened by more than 2 ms. Paint raster stayed 430x932 at both Game view sizes.
+
 ## 10. Open items
 
 - Real device verification (touch, safe area, rotation, thermals).

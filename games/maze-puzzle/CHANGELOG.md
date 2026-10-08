@@ -11,6 +11,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+#### Unity (2026-10-07, `agent/fix/ui`)
+
+- Play Quality menu path is `Orbital Salvage/Play Quality/`. The spaceless `OrbitalSalvage/` root is gone, so the Editor no longer shows a second top-level menu.
+- Product-path toasts refresh age every frame and get one redraw after the last toast expires. Flow capture and the parity self-test keep the previous clock. EditMode `ToastAgeTests` on `settings_default`.
+- Pause name and goal that do not fit the 256 px centered box wrap and grow the card upward. One-line sample text is unchanged. Gift description wraps inside its two-line box. A quota string wider than the captured run stays right-aligned in the capsule. `PauseReflowTests`.
+- Backdrop blur at 1× stays skipped. Editor Play probe, D3D12, RTX 4060 Laptop, `-parity-quality 1`: added `drawMs` average was under 1 ms in eight home/pause pairs at 430×932 and 1284×2778, but frame medians were 8.0–11.9 ms (vSync 0, window unfocused, not the 15.5–16.5 ms band) and two frame-p95 pairs worsened by more than 2 ms. Raster stayed 430×932 at both Game view sizes. D3D11 was not measured. Report: `tools/parity/reports/ui-fixes-2026-10-07.md`.
+- Gesture hint is shown on the first entry to the game page and stays hidden after that. A new app still shows it. Leaving via Return to Home zeros `FailureCheckTimer` and keeps collected mass, spilled mass, and debris. `GameResumeTests`.
+- Profile-zero capture after the player rebuild: 23 stills SHA256-identical to the capture taken before these edits, including game `38730953997DE30D033C10E6CFF0B9AE2E47FBAB1671D07178039B484609A12A` and pause `CE4A6AE83A5563E98F7F722334E17A7FC06FA1375C26390A9714FC838FEE7078`. Web PNGs were not in the tree, so `modal_pause` was not re-scored. Flow shots were not re-captured. EditMode 307/389; the same 82 audio reference tests fail.
+
 #### Unity (2026-10-04, `agent/parity/ship`)
 
 - Play, with no command-line flags, boots `ParityViewer` and `AppController` (Canvas2D). The main scene is a camera. Pointer clicks, drags, and holds go through the letterboxed 430×932 page. Profile is `orbital-salvage-profile.json` under `Application.persistentDataPath` (key `ORBITAL_SALVAGE_CARTOON_PROFILE_V1`). Audio on that path is the C# DSP player. `--parity` and the parity self-tests keep a frozen clock and silent audio.
