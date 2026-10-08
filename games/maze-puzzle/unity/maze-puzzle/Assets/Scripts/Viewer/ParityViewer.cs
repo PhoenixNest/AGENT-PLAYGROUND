@@ -329,9 +329,13 @@ namespace OrbitalSalvage.Viewer
             bool modal = currentId.StartsWith("modal_", StringComparison.Ordinal);
             bool intro = modal && ms < 400;
             bool enter = ms < 260;
-            if (!current.Loops && !intro && !enter && pressIndex < 0) return;
-            bool ambient = current.Loops && !intro && !enter && pressIndex < 0;
+            // Toasts paint after the cached layers. A non-looping page still has to redraw while
+            // one is on screen, and once more on the frame the last toast leaves.
+            bool toastAnim = toastSlots > 0 || toastClearFrame;
+            if (!current.Loops && !intro && !enter && pressIndex < 0 && !toastAnim) return;
+            bool ambient = current.Loops && !intro && !enter && pressIndex < 0 && !toastAnim;
             if (HoldAmbientDraw(ambient)) return;
+            if (toastClearFrame && toastSlots == 0) toastClearFrame = false;
             BindModalPlayfield(current);
             PaintCurrent(false);
         }
@@ -348,6 +352,7 @@ namespace OrbitalSalvage.Viewer
         void PaintCurrent(bool pinEnter)
         {
             if (current == null) return;
+            ProductDraws++;
             if (selfTesting)
             {
                 current.Draw();

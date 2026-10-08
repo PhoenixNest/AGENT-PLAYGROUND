@@ -6,7 +6,7 @@ namespace OrbitalSalvage.Viewer.Editor
 {
     static class PlayQualityMenu
     {
-        const string Root = "OrbitalSalvage/Play Quality/";
+        const string Root = "Orbital Salvage/Play Quality/";
 
         [MenuItem(Root + "Auto", false, 1)]
         static void Auto() { PlayQuality.Forced = 0; }
