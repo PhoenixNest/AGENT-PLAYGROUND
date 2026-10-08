@@ -169,7 +169,8 @@ namespace OrbitalSalvage.App.Tests
 
             Color32[] stamped = BannerOf("shop_rings_default", true, true, true, "ring_donut:owned,ring_duckie:locked,ring_candyland:locked,ring_spacecat:equipped");
             AssertSame("stamped rings", reference, stamped);
-            AssertSame("reference live text matches frozen text", reference, referenceLive);
+            Color32[] live = BannerOf("shop_singularities_default", true, true, false);
+            AssertSame("singularities live vs claimed live", referenceLive, live);
         }
 
         [Test]
@@ -249,6 +250,16 @@ namespace OrbitalSalvage.App.Tests
             return new AppController(store, new ManualAppClock(0, BootEpoch), audio, () => 0);
         }
 
+        static string ReportDir()
+        {
+            var dir = new DirectoryInfo(Application.dataPath);
+            for (int i = 0; i < 4 && dir != null; i++) dir = dir.Parent;
+            if (dir == null) return null;
+            string path = Path.Combine(dir.FullName, "tools", "parity", "reports", "shop-gift-2026-10-08");
+            if (!Directory.Exists(path)) return null;
+            return path;
+        }
+
         static void ApplyClaimedText(HomeChrome chrome)
         {
             chrome.TextOverrides["gift-banner-title"] = "Allowance Claimed! ✨";
@@ -280,10 +291,9 @@ namespace OrbitalSalvage.App.Tests
                 if (frozen) chrome.Draw();
                 else chrome.Draw(4000);
                 Color32[] pixels = ReadBanner(chrome);
-                string dir = Environment.GetEnvironmentVariable("SHOP_GIFT_OUT");
-                if (!string.IsNullOrEmpty(dir) && claim && text && frozen)
+                string dir = ReportDir();
+                if (dir != null && text && frozen)
                 {
-                    Directory.CreateDirectory(dir);
                     string name = string.IsNullOrEmpty(stamp) ? spec : spec + "_stamped";
                     File.WriteAllBytes(Path.Combine(dir, name + ".png"), Encode(chrome));
                 }
