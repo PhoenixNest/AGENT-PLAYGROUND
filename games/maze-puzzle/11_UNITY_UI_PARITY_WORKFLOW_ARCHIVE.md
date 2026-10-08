@@ -2,6 +2,8 @@
 
 Archive of how the Unity project was brought to the web prototype's UI design, animation, navigation and logic, written so the process can be repeated or audited. Numbers are measurements taken on this machine; nothing here claims that UI restoration is finished.
 
+**Toolset location (2026-10-08, `agent/chore/tools-move`).** The parity toolset moved from repo-root `tools/parity` to `games/maze-puzzle/tools/parity`. Repo-root `tools/` is gone. Commands below use the new path. Older sentences in this file that still say `tools/parity/...` were the path on the day they were written; the same files are now under `games/maze-puzzle/tools/parity/...`.
+
 Status at archive time: the Canvas2D painted UI is the default launch path, 5 of 11 reference stills pass the strict bar, 6 of 55 recorded flow steps pass, and the Editor Play lag workaround is merged (section 9). Not verified on a phone or tablet.
 
 ## 1. Goal and trigger
@@ -12,7 +14,7 @@ User feedback: the Unity UI looked static and "completely undynamic", especially
 
 - Web prototype is read-only. Parity tooling injects instrumentation at runtime.
 - Strict metric: viewport 430x932 css, captured at 3x (1290x2796), profile `zero`. A state passes when at least 99.0% of pixels have per-channel max abs diff of 16 or less AND SSIM is at least 0.985 (Pillow + numpy + scikit-image, `channel_axis=2`, `data_range=255`).
-- Web references: `tools/parity/out/web/<stateId>__zero.png`, from a Playwright harness with frozen clock, seed `0x5EED1234`, time zone America/Los_Angeles, instant 2026-10-01T09:00:01-07:00.
+- Web references: `games/maze-puzzle/tools/parity/out/web/<stateId>__zero.png`, from a Playwright harness with frozen clock, seed `0x5EED1234`, time zone America/Los_Angeles, instant 2026-10-01T09:00:01-07:00.
 - BLANK guard: a frame with fewer than 50 unique colours, or more than 99.5% one colour, never counts as a pass (an early 26/59 flow score was two flat navy frames).
 - Never replace a saved screenshot with a worse one. A state that does not improve for 3 iterations is escalated, not retried.
 - No blitting of web PNGs, no TMP SDF text in the painter, no region masks.
@@ -24,7 +26,7 @@ User feedback: the Unity UI looked static and "completely undynamic", especially
 - Lead reviewer: Claude Sonnet 5.5 (High). It plans, reviews every report against measured numbers, rejects unmeasured claims, and decides merges.
 - Engineers: Grok 4.7 High sub-agents, one per track, each in its own git worktree under `.worktrees/parity-*` on a branch `agent/parity/<track>`. Tracks finish with a numbered report: root cause, before/after table, gate results, commit hashes.
 - Loop: capture web reference -> capture Unity -> score -> attribute error -> fix at the cause -> rebuild -> recapture -> rescore -> regression gates -> commit. Merges into `agent/parity/integration` always run the full regression first.
-- Tooling: Unity CLI (`tools/parity/unity/build.ps1`, `capture.ps1`, `perf.ps1`, `build-play.ps1`); Unity MCP was unavailable (authentication timed out).
+- Tooling: Unity CLI (`games/maze-puzzle/tools/parity/unity/build.ps1`, `capture.ps1`, `perf.ps1`, `build-play.ps1`); Unity MCP was unavailable (authentication timed out).
 
 ## 4. Architecture decisions
 
@@ -87,13 +89,13 @@ On 2026-10-05 the merged branches and their worktrees were deleted; the commits 
 ## 8. How to repeat
 
 ```powershell
-cd tools/parity
+cd games/maze-puzzle/tools/parity
 npm ci
 pip install numpy scikit-image Pillow opencv-python
-# web references: see tools/parity/README.md (Playwright harness)
+# web references: see games/maze-puzzle/tools/parity/README.md (Playwright harness)
 ./unity/build.ps1      # parity player
-./unity/capture.ps1    # 1290x2796 stills, profile zero
-# score stills and flows with the diff/score scripts under tools/parity (SPEC.md v1.6 is the contract)
+./unity/capture.ps1 -States unity/screenshot-states.json -Profile zero
+# score stills and flows with the diff/score scripts under games/maze-puzzle/tools/parity (SPEC.md v1.6 is the contract)
 ```
 
 Preview in the Editor: open the project at `games/maze-puzzle/unity/maze-puzzle` (Unity 6000.4.6f1), open `Assets/Scenes/MainGameScene.unity`, press Play. F1 hint, F2 page browser; menu Orbital Salvage -> Parity Viewer -> Enabled / Reset Profile.
@@ -122,7 +124,7 @@ Preview in the Editor: open the project at `games/maze-puzzle/unity/maze-puzzle`
 
 The web prototype is no longer frozen for this one change. `games/maze-puzzle/web/engine/physics.js` `resolveMagneticFunnel` and the C# port use the same centering line, `(dx * 16 - vx * 8) * dt`. Nothing else under `web/` was edited. Report: `tools/parity/reports/funnel-fix-2026-10-08.md`.
 
-Regenerating after a physics edit: from the repo root, with Playwright Chromium installed (`cd tools/parity; npm ci; npx playwright install chromium`), run `node tools/parity/golden/generate.mjs --only physics` (Chromium is authoritative; `--engine node` is a cross-check). Also re-run `node tools/parity/web/record-playfield.mjs`, `node tools/parity/canvas-conformance/record.mjs`, and `node tools/parity/web/app-flows.mjs`, then Unity `LiveConformanceBatch.Run` and EditMode `FullRun_BitExact`. On 2026-10-08 the playfield JSON, the 30 canvas streams, the app-flow goldens, and `fixtures/engine.txt` regenerated byte-identical to the previous commit. 23 of 35 physics runs changed. Profile-zero page PNGs were not recaptured.
+Regenerating after a physics edit: from the repo root, with Playwright Chromium installed (`cd games/maze-puzzle/tools/parity; npm ci; npx playwright install chromium`), run `node games/maze-puzzle/tools/parity/golden/generate.mjs --only physics` (Chromium is authoritative; `--engine node` is a cross-check). Also re-run `node games/maze-puzzle/tools/parity/web/record-playfield.mjs`, `node games/maze-puzzle/tools/parity/canvas-conformance/record.mjs`, and `node games/maze-puzzle/tools/parity/web/app-flows.mjs`, then Unity `OrbitalSalvage.Render.Editor.LiveConformanceBatch.Run` (`-live-out` and `-live-streams`) and EditMode `FullRun_BitExact`. On 2026-10-08 the playfield JSON, the 30 canvas streams, the app-flow goldens, and `fixtures/engine.txt` regenerated byte-identical to the previous commit. 23 of 35 physics runs changed. Profile-zero page PNGs were not recaptured.
 
 ## 10. Open items
 

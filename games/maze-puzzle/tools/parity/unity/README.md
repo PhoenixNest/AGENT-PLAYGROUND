@@ -1,22 +1,22 @@
 # Unity capture track
 
-Drives the Unity project in `games/maze-puzzle/unity/maze-puzzle` through the SPEC (`tools/parity/SPEC.md`) states and writes `<stateId>__<profile>.png`, `.layout.json`, `.unity-notes.json` and a trace per capture.
+Drives the Unity project in `games/maze-puzzle/unity/maze-puzzle` through the SPEC (`games/maze-puzzle/tools/parity/SPEC.md`) states and writes `<stateId>__<profile>.png`, `.layout.json`, `.unity-notes.json` and a trace per capture.
 
 ## Run
 
 ```powershell
-pwsh tools/parity/unity/build.ps1
-pwsh tools/parity/unity/capture.ps1 -Out tools/parity/out/unity
+pwsh games/maze-puzzle/tools/parity/unity/build.ps1
+pwsh games/maze-puzzle/tools/parity/unity/capture.ps1 -Out games/maze-puzzle/tools/parity/out/unity
 ```
 
-`build.ps1` runs Unity in `-batchmode -quit` with `OrbitalSalvage.Editor.ParityBuild.BuildPlayer` and produces `games/maze-puzzle/unity/maze-puzzle/Builds/Parity/OrbitalSalvageParity.exe` (Win64 Mono, define `ORBITAL_PARITY`). Log: `tools/parity/out/unity-logs/build.log`.
+`build.ps1` runs Unity in `-batchmode -quit` with `OrbitalSalvage.Editor.ParityBuild.BuildPlayer` and produces `games/maze-puzzle/unity/maze-puzzle/Builds/Parity/OrbitalSalvageParity.exe` (Win64 Mono, define `ORBITAL_PARITY`). Log: `games/maze-puzzle/tools/parity/out/unity-logs/build.log`.
 
 `capture.ps1` options:
 
 | Option | Meaning |
 | --- | --- |
-| `-States` | states JSON; default `tools/parity/states.json` when present, else `smoke-states.json` |
-| `-Out` | output directory (default `tools/parity/out/unity`) |
+| `-States` | states JSON; default `games/maze-puzzle/tools/parity/states.json` when present, else `smoke-states.json` |
+| `-Out` | output directory (default `games/maze-puzzle/tools/parity/out/unity`) |
 | `-Only a,b` / `-Profile zero\|iphone` | subset of states / one profile |
 | `-Isolated` | one player process per (state, profile); results are merged into `timings.json` / `errors.json` |
 | `-WindowStyle` | default `Minimized` |

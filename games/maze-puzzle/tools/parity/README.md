@@ -1,6 +1,6 @@
 # Web-to-Unity pixel parity tooling
 
-`SPEC.md` is the binding contract (v1.6). This file only says how to run things. Everything below runs from `tools/parity` in PowerShell on Windows.
+`SPEC.md` is the binding contract (v1.6). This file only says how to run things. Everything below runs from `games/maze-puzzle/tools/parity` in PowerShell on Windows.
 
 Measured on this machine on 2026-10-04 (D3D11, RTX 4060 Laptop, windowed). These are harness numbers, not a claim that UI restoration is finished.
 
@@ -18,7 +18,7 @@ The default player (Editor Play and `Builds/Play`, no flags) boots `ParityViewer
 ## Setup
 
 ```powershell
-cd tools/parity
+cd games/maze-puzzle/tools/parity
 npm ci
 pip install numpy scikit-image Pillow opencv-python
 ```
@@ -80,7 +80,7 @@ python diff/diff.py --web out/web --unity out/unity --iter 01
 python diff/trace_diff.py --web out/web/traces --unity out/unity/traces
 ```
 
-`reports/iter-01/report.md` and `report.json` (committed), plus heatmap and three-panel diff PNGs in `out/reports/iter-01/`. Missing Unity files are reported as `MISSING`. Exit code: 0 all pass, 1 any fail, 2 when something is missing or the arguments are invalid (2 wins over 1).
+`diff.py` writes `reports/iter-NN/report.md` and `report.json`, plus heatmap and three-panel diff PNGs under `out/reports/iter-NN/`. `report.json` and `reports/iter-*/images/` are gitignored. The 2026-10-01 iter-00 dump and the iter-01 images were removed; `reports/iter-01/home.md` is the kept home note (`CLEANUP.md`). Missing Unity files are reported as `MISSING`. Exit code: 0 all pass, 1 any fail, 2 when something is missing or the arguments are invalid (2 wins over 1).
 
 ## Contact sheets
 
@@ -107,4 +107,4 @@ No output means every PNG, layout and trace is byte-identical.
 
 ## Other scripts
 
-`scripts/fetch-assets.mjs`, `font-usage-scan.mjs`, `emoji-scan.mjs`, `tracked-classes.mjs` maintain the pinned assets and `tracked-classes.json`. `scripts/probe-*.mjs`, `*-probe*.mjs` are measurement probes used to derive the SPEC values and the winning drag program of sector 1.
+`scripts/fetch-assets.mjs`, `font-usage-scan.mjs`, `emoji-scan.mjs`, `tracked-classes.mjs` maintain the pinned assets and `tracked-classes.json`. `scripts/paused-clock-probe.mjs` and `scripts/raf-probe*.mjs` are the SPEC §4.3 clock probes. `probe-win.mjs`, `probe-game.mjs`, and `safe-area-probe.mjs` were removed on 2026-10-08; nothing else referenced them (`CLEANUP.md`).

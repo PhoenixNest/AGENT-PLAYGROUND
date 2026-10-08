@@ -10,13 +10,13 @@ Timezone is pinned to `America/Los_Angeles` for the economy and countdown fixtur
 
 ## Commands
 
-Run from the repository root. Playwright resolves from `tools/parity/node_modules` (`cd tools/parity; npm install; npx playwright install chromium` if missing).
+Run from the repository root. Playwright resolves from `games/maze-puzzle/tools/parity/node_modules` (`cd games/maze-puzzle/tools/parity; npm install; npx playwright install chromium` if missing).
 
 ```powershell
-node tools/parity/golden/jsmath-vectors.mjs
-node tools/parity/golden/generate.mjs
-node tools/parity/golden/generate.mjs --full --out $env:TEMP\gfull
-node tools/parity/golden/generate.mjs --engine node --only physics --filter L21-drag-silent --full --out $env:TEMP\gnode
+node games/maze-puzzle/tools/parity/golden/jsmath-vectors.mjs
+node games/maze-puzzle/tools/parity/golden/generate.mjs
+node games/maze-puzzle/tools/parity/golden/generate.mjs --full --out $env:TEMP\gfull
+node games/maze-puzzle/tools/parity/golden/generate.mjs --engine node --only physics --filter L21-drag-silent --full --out $env:TEMP\gnode
 ```
 
 `generate.mjs` flags: `--engine chromium|node`, `--out <dir>`, `--only maze,economy,physics`, `--filter <substr>`, `--full`.
@@ -70,8 +70,8 @@ The frame hash is a dual 32-bit FNV-style hash over the vector as uint words. Lo
 
 ## Tests
 
-- Unity EditMode: `OrbitalSalvage.Logic.Tests` (`Assets/Tests/EditMode/Logic`). Fixtures resolve via `../../../../tools/parity/golden/fixtures` relative to the Unity project.
-- Fast loop: `dotnet test tools/parity/golden/dotnet`. It compiles the same sources and tests on .NET 10.
+- Unity EditMode: `OrbitalSalvage.Logic.Tests` (`Assets/Tests/EditMode/Logic`). Fixtures are found by walking up from the working directory until a folder contains both `web/index.html` and `tools/parity/golden/fixtures` (that folder is `games/maze-puzzle`).
+- Fast loop: `dotnet test games/maze-puzzle/tools/parity/golden/dotnet`. It compiles the same sources and tests on .NET 10.
 
 ```powershell
 Unity.exe -batchmode -nographics -projectPath games\maze-puzzle\unity\maze-puzzle -runTests -testPlatform EditMode -testResults $env:TEMP\logic-results.xml -logFile $env:TEMP\logic-tests.log

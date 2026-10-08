@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """Montage of web | unity side by side at 1/4 scale for a fixed set of states.
 
-Usage (from tools/parity):
-    python diff/montage.py --web out/web --unity out/unity --report reports/iter-00/report.json \
-        --out out/reports/iter-00
+Usage (from games/maze-puzzle/tools/parity):
+    python diff/montage.py --web out/web --unity out/unity --report <report.json> \
+        --out out/reports/montage
 
 Writes montage_zero.png and montage_iphone.png (one grid per profile; each cell: label with pixel % and SSIM
 from the report, then web on the left and unity on the right).
