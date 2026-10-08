@@ -436,9 +436,13 @@ export class PhysicsEngine {
       const halfWidth = 95 * (1 - t) + 46 * t;
       const centerX = this.blackHole.x;
 
-      // Magnetic centering tractor pull toward Nibbles central axis
+      // Centering spring. k = 16 (omega 4 rad/s) with only the per-step 0.994
+      // drag is underdamped: the half-period matches the fall, so debris that
+      // leave the aperture off-center arrive on the opposite rail (~39 px),
+      // outside the 28 px event horizon, and spill. c = 8 is critical damping
+      // (2*sqrt(16)). Idle then spills nothing; a hard swipe or spin still can.
       const dx = centerX - d.x;
-      d.vx += dx * 16 * dt;
+      d.vx += (dx * 16 - d.vx * 8) * dt;
 
       // Physical elastic rails (funnel containment)
       const leftRail = centerX - halfWidth + d.radius;
