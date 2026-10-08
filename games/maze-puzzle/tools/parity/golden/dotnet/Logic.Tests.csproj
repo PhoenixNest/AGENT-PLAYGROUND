@@ -14,7 +14,7 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <UnityAssets>$(MSBuildThisFileDirectory)..\..\..\..\games\maze-puzzle\unity\maze-puzzle\Assets\</UnityAssets>
+    <UnityAssets>$(MSBuildThisFileDirectory)..\..\..\..\unity\maze-puzzle\Assets\</UnityAssets>
   </PropertyGroup>
 
   <ItemGroup>

@@ -8,12 +8,13 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, isAbsolute, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { unityProject } from "../lib/roots.mjs";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const parityDir = resolve(here, "..");
 const args = process.argv.slice(2);
 let page = "home";
-let outDir = resolve(parityDir, "../../games/maze-puzzle/unity/maze-puzzle/Assets/Resources/Parity/Spec");
+let outDir = join(unityProject(here), "Assets", "Resources", "Parity", "Spec");
 for (let i = 0; i < args.length; i++) {
   if (args[i] === "--page") page = args[++i];
   else if (args[i] === "--out") {

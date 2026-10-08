@@ -8,13 +8,15 @@ param(
 
 $ErrorActionPreference = 'Stop'
 
-$repoRoot = (Resolve-Path (Join-Path $PSScriptRoot '..\..\..')).Path
-$project = Join-Path $repoRoot 'games\maze-puzzle\unity\maze-puzzle'
+. (Join-Path $PSScriptRoot '..\lib\roots.ps1')
+$mazeRoot = Get-MazeRoot $PSScriptRoot
+$parity = Join-Path $mazeRoot 'tools\parity'
+$project = Join-Path $mazeRoot 'unity\maze-puzzle'
 $exe = Join-Path $project 'Builds\Parity\OrbitalSalvageParity.exe'
-if (-not (Test-Path $exe)) { throw "Player not built: run tools\parity\unity\build.ps1 first" }
+if (-not (Test-Path $exe)) { throw "Player not built: run games\maze-puzzle\tools\parity\unity\build.ps1 first" }
 
-$logDir = Join-Path $repoRoot 'tools\parity\out\unity-logs'
-$phaseRoot = Join-Path $repoRoot ("tools\parity\out\perf-" + $Phase)
+$logDir = Join-Path $parity 'out\unity-logs'
+$phaseRoot = Join-Path $parity ("out\perf-" + $Phase)
 New-Item -ItemType Directory -Force -Path $logDir | Out-Null
 New-Item -ItemType Directory -Force -Path $phaseRoot | Out-Null
 
@@ -184,7 +186,7 @@ $records | ConvertTo-Json -Depth 6 | Set-Content -Path $summaryPath -Encoding ut
 Write-Host ("Wrote {0}" -f $summaryPath)
 
 function Read-Phase([string]$name) {
-    $path = Join-Path $repoRoot ("tools\parity\out\perf-" + $name + "\summary.json")
+    $path = Join-Path $parity ("out\perf-" + $name + "\summary.json")
     if (-not (Test-Path $path)) { return $null }
     return @(Get-Content $path -Raw | ConvertFrom-Json)
 }
@@ -198,7 +200,7 @@ function Row-For($rows, $scenario, $api) {
 
 $before = Read-Phase 'before'
 $after = Read-Phase 'after'
-$reportDir = Join-Path $repoRoot 'tools\parity\reports'
+$reportDir = Join-Path $parity 'reports'
 New-Item -ItemType Directory -Force -Path $reportDir | Out-Null
 $reportPath = Join-Path $reportDir ("perf-" + $ReportDate + ".md")
 

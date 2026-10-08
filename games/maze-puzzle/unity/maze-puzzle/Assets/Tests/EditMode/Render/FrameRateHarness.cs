@@ -65,7 +65,7 @@ namespace OrbitalSalvage.Render.Tests
             GameRenderer.DefaultRenderScale = 0.001;
             try
             {
-                string root = RepoRoot();
+                string root = MazeRoot();
                 string reportDir = Path.Combine(root, "tools", "parity", "reports");
                 Directory.CreateDirectory(reportDir);
                 string frameDir = Path.Combine(reportDir, "physics-framerate-2026-10-07-frames");
@@ -352,7 +352,7 @@ namespace OrbitalSalvage.Render.Tests
             GameRenderer.DefaultRenderScale = 0.001;
             try
             {
-                string root = RepoRoot();
+                string root = MazeRoot();
                 string reportDir = Path.Combine(root, "tools", "parity", "reports");
                 var profiles = BuildProfiles(Path.Combine(reportDir, "physics-framerate-2026-10-07-frames"));
                 var sectors = BuildSectors();
@@ -753,12 +753,17 @@ namespace OrbitalSalvage.Render.Tests
             throw new InvalidOperationException("missing " + sector + " " + stream + " " + profile);
         }
 
-        static string RepoRoot()
+        static string MazeRoot()
         {
-            string root = Path.GetFullPath(Path.Combine(Application.dataPath, "..", "..", "..", "..", ".."));
-            if (!Directory.Exists(Path.Combine(root, "tools", "parity")))
-                throw new InvalidOperationException("repo root not found from " + Application.dataPath + " -> " + root);
-            return root;
+            var dir = new DirectoryInfo(Application.dataPath);
+            for (int i = 0; i < 8 && dir != null; i++)
+            {
+                string parity = Path.Combine(dir.FullName, "tools", "parity");
+                string web = Path.Combine(dir.FullName, "web", "index.html");
+                if (Directory.Exists(parity) && File.Exists(web)) return dir.FullName;
+                dir = dir.Parent;
+            }
+            throw new InvalidOperationException("games/maze-puzzle marker (tools/parity + web) not found from " + Application.dataPath);
         }
     }
 }

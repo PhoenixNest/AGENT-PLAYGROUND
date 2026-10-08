@@ -4,8 +4,9 @@ param(
 )
 $ErrorActionPreference = "Stop"
 $here = Split-Path -Parent $MyInvocation.MyCommand.Path
-$root = Resolve-Path (Join-Path $here "..\..\..")
-$project = Join-Path $root "games\maze-puzzle\unity\maze-puzzle"
+. (Join-Path $here "..\lib\roots.ps1")
+$mazeRoot = Get-MazeRoot $here
+$project = Join-Path $mazeRoot "unity\maze-puzzle"
 $log = Join-Path $env:TEMP "physics-framerate-unity.log"
 $results = Join-Path $env:TEMP "physics-framerate-results.xml"
 if (Test-Path $log) { Remove-Item $log -Force }

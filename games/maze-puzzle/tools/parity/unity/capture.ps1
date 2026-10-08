@@ -12,17 +12,19 @@ param(
 
 $ErrorActionPreference = 'Stop'
 
-$repoRoot = (Resolve-Path (Join-Path $PSScriptRoot '..\..\..')).Path
-$project = Join-Path $repoRoot 'games\maze-puzzle\unity\maze-puzzle'
+. (Join-Path $PSScriptRoot '..\lib\roots.ps1')
+$mazeRoot = Get-MazeRoot $PSScriptRoot
+$parity = Join-Path $mazeRoot 'tools\parity'
+$project = Join-Path $mazeRoot 'unity\maze-puzzle'
 $exe = Join-Path $project 'Builds\Parity\OrbitalSalvageParity.exe'
-if (-not (Test-Path $exe)) { throw "Player not built: run tools\parity\unity\build.ps1 first" }
+if (-not (Test-Path $exe)) { throw "Player not built: run games\maze-puzzle\tools\parity\unity\build.ps1 first" }
 
 if (-not $States) {
-    $default = Join-Path $repoRoot 'tools\parity\states.json'
+    $default = Join-Path $parity 'states.json'
     $States = if (Test-Path $default) { $default } else { Join-Path $PSScriptRoot 'smoke-states.json' }
 }
-if (-not $Out) { $Out = Join-Path $repoRoot 'tools\parity\out\unity' }
-if (-not $LogFile) { $LogFile = Join-Path $repoRoot 'tools\parity\out\unity-logs\player.log' }
+if (-not $Out) { $Out = Join-Path $parity 'out\unity' }
+if (-not $LogFile) { $LogFile = Join-Path $parity 'out\unity-logs\player.log' }
 
 $States = (Resolve-Path $States).Path
 New-Item -ItemType Directory -Force -Path $Out | Out-Null

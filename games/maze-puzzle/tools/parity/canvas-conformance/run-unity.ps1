@@ -9,8 +9,9 @@ param(
 )
 $ErrorActionPreference = "Stop"
 $here = Split-Path -Parent $MyInvocation.MyCommand.Path
-$root = Resolve-Path (Join-Path $here "..\..\..")
-$project = Join-Path $root "games\maze-puzzle\unity\maze-puzzle"
+. (Join-Path $here "..\lib\roots.ps1")
+$mazeRoot = Get-MazeRoot $here
+$project = Join-Path $mazeRoot "unity\maze-puzzle"
 $Streams = (Resolve-Path $Streams).Path
 New-Item -ItemType Directory -Force -Path $Out | Out-Null
 $Out = (Resolve-Path $Out).Path
@@ -22,6 +23,6 @@ foreach ($s in $Set) { $argList += @("-set", $s) }
 foreach ($s in ($Sweep -join ";").Split(";", [StringSplitOptions]::RemoveEmptyEntries)) { $argList += @("-sweep", $s) }
 if ($Perf -gt 0) { $argList += @("-perf", "$Perf") }
 $p = Start-Process -FilePath $Unity -ArgumentList $argList -Wait -PassThru
-git -C $root checkout -- "games/maze-puzzle/unity/maze-puzzle/Assets/Resources/Fonts" 2>$null
+git -C $mazeRoot checkout -- "games/maze-puzzle/unity/maze-puzzle/Assets/Resources/Fonts" 2>$null
 Write-Host "unity exit code $($p.ExitCode); log: $log"
 exit $p.ExitCode

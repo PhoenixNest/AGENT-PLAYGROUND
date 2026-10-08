@@ -3,11 +3,12 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { chromium } from "playwright";
+import { webRoot } from "../../lib/roots.mjs";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 export const confDir = path.resolve(here, "..");
 export const parityDir = path.resolve(confDir, "..");
-export const webDir = path.resolve(parityDir, "../../games/maze-puzzle/web");
+export const webDir = webRoot(here);
 export const assetsDir = path.join(parityDir, "assets");
 export const outDir = path.join(confDir, "out");
 export const ORIGIN = "http://parity.test";

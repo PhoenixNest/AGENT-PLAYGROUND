@@ -3,8 +3,10 @@ import { dirname, join, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { buildScenarios, mulberry32, SEED, SAMPLE_RATE } from "./cues.mjs";
 
+import { webRoot } from "../lib/roots.mjs";
+
 const here = dirname(fileURLToPath(import.meta.url));
-const audioJs = resolve(here, "../../../games/maze-puzzle/web/engine/audio.js");
+const audioJs = join(webRoot(here), "engine", "audio.js");
 
 const r6 = (x) => (typeof x === "number" ? Math.round(x * 1e6) / 1e6 : x);
 

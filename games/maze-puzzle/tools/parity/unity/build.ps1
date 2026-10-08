@@ -5,9 +5,10 @@ param(
 
 $ErrorActionPreference = 'Stop'
 
-$repoRoot = (Resolve-Path (Join-Path $PSScriptRoot '..\..\..')).Path
-$project = Join-Path $repoRoot 'games\maze-puzzle\unity\maze-puzzle'
-$outDir = Join-Path $repoRoot 'tools\parity\out\unity-logs'
+. (Join-Path $PSScriptRoot '..\lib\roots.ps1')
+$mazeRoot = Get-MazeRoot $PSScriptRoot
+$project = Join-Path $mazeRoot 'unity\maze-puzzle'
+$outDir = Join-Path $mazeRoot 'tools\parity\out\unity-logs'
 if (-not $LogFile) { $LogFile = Join-Path $outDir 'build.log' }
 New-Item -ItemType Directory -Force -Path (Split-Path $LogFile) | Out-Null
 

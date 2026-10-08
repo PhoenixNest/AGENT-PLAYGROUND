@@ -34,7 +34,8 @@ namespace OrbitalSalvage.AudioDsp.Tests
             while (dir != null)
             {
                 string candidate = Path.Combine(dir.FullName, "tools", "parity", "audio");
-                if (File.Exists(Path.Combine(candidate, "ref-manifest.json")))
+                string web = Path.Combine(dir.FullName, "web", "index.html");
+                if (File.Exists(Path.Combine(candidate, "ref-manifest.json")) && File.Exists(web))
                 {
                     return candidate;
                 }

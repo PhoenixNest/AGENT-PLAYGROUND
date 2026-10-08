@@ -1,14 +1,16 @@
 // Headless study of where debris is lost between the ring aperture and the black hole.
 // Runs the web engine (games/maze-puzzle/web/engine) under Node at a steady 1/60 s.
-// Usage: node tools/parity/scripts/funnel-study.mjs [--variant name] [--k 16] [--c crit] [--seconds 40]
+// Usage: node games/maze-puzzle/tools/parity/scripts/funnel-study.mjs [--variant name] [--k 16] [--c crit] [--seconds 40]
 // --assert 1 fails unless idle spill is 0 on every releasing level, swipe/spin spill is in (0, 10], and no debris stays FALLING longer than 5 s.
 import { dirname, join } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
+import { webRoot } from "../lib/roots.mjs";
+
 const here = dirname(fileURLToPath(import.meta.url));
-const webRoot = join(here, "..", "..", "..", "games", "maze-puzzle", "web");
-const { PhysicsEngine } = await import(pathToFileURL(join(webRoot, "engine/physics.js")).href);
-const { MazeLevelBuilder } = await import(pathToFileURL(join(webRoot, "engine/maze.js")).href);
+const webRootPath = webRoot(here);
+const { PhysicsEngine } = await import(pathToFileURL(join(webRootPath, "engine/physics.js")).href);
+const { MazeLevelBuilder } = await import(pathToFileURL(join(webRootPath, "engine/maze.js")).href);
 
 const args = Object.fromEntries(process.argv.slice(2).reduce((a, v, i, all) => (v.startsWith("--") ? [...a, [v.slice(2), all[i + 1]]] : a), []));
 const levels = (args.levels || "1,2,3,5,11,21,31,41").split(",").map(Number);

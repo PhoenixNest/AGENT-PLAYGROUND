@@ -6,8 +6,10 @@ import { fileURLToPath } from "node:url";
 import { chromium } from "playwright";
 import { buildScenarios, SAMPLE_RATE } from "./cues.mjs";
 
+import { webRoot } from "../lib/roots.mjs";
+
 const here = dirname(fileURLToPath(import.meta.url));
-const webRoot = resolve(here, "../../../games/maze-puzzle/web");
+const webRootPath = webRoot(here);
 const outRef = join(here, "out", "ref");
 const manifestPath = join(here, "ref-manifest.json");
 
@@ -18,7 +20,7 @@ function serve() {
   const server = createServer((req, res) => {
     const url = decodeURIComponent(req.url.split("?")[0]);
     let file = null;
-    if (url.startsWith("/web/")) file = join(webRoot, url.slice(5));
+    if (url.startsWith("/web/")) file = join(webRootPath, url.slice(5));
     else if (url.startsWith("/audio/")) file = join(here, url.slice(7));
     if (!file || !existsSync(file)) {
       res.writeHead(404).end();

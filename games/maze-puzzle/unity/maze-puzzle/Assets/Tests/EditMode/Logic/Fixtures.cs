@@ -11,6 +11,7 @@ namespace OrbitalSalvage.Logic.Tests
     internal static class Fixtures
     {
         private const string Relative = "tools/parity/golden/fixtures";
+        private const string Regenerate = "run `node games/maze-puzzle/tools/parity/golden/generate.mjs` (see games/maze-puzzle/tools/parity/golden/README.md)";
 
         public static string Dir
         {
@@ -24,17 +25,16 @@ namespace OrbitalSalvage.Logic.Tests
                 starts.Add(AppDomain.CurrentDomain.BaseDirectory);
                 foreach (string start in starts)
                 {
-                    string cwdRelative = Path.GetFullPath(Path.Combine(start, "../../../../" + Relative));
-                    if (Directory.Exists(cwdRelative)) return cwdRelative;
                     string dir = start;
                     for (int i = 0; i < 14 && !string.IsNullOrEmpty(dir); i++)
                     {
                         string cand = Path.Combine(dir, Relative);
-                        if (Directory.Exists(cand)) return cand;
+                        string web = Path.Combine(dir, "web", "index.html");
+                        if (Directory.Exists(cand) && File.Exists(web)) return cand;
                         dir = Path.GetDirectoryName(dir);
                     }
                 }
-                throw new DirectoryNotFoundException("golden fixtures directory not found; run `node tools/parity/golden/generate.mjs` (see tools/parity/golden/README.md)");
+                throw new DirectoryNotFoundException("golden fixtures directory not found; " + Regenerate);
             }
         }
 
@@ -51,7 +51,7 @@ namespace OrbitalSalvage.Logic.Tests
         public static string ReadText(string name)
         {
             string path = Path_(name);
-            if (!File.Exists(path)) throw new FileNotFoundException("missing fixture " + name + "; run `node tools/parity/golden/generate.mjs` (see tools/parity/golden/README.md)", path);
+            if (!File.Exists(path)) throw new FileNotFoundException("missing fixture " + name + "; " + Regenerate, path);
             if (name.EndsWith(".gz", StringComparison.Ordinal))
             {
                 using (var fs = File.OpenRead(path))

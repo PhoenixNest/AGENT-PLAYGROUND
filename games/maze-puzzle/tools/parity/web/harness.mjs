@@ -4,11 +4,12 @@ import { existsSync, readFileSync } from "node:fs";
 import { dirname, extname, join, normalize, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 import { pngToRgbPng } from "./png.mjs";
+import { webRoot } from "../lib/roots.mjs";
 
 const here = dirname(fileURLToPath(import.meta.url));
 export const ROOT = join(here, "..");
 export const ASSETS_DIR = join(ROOT, "assets");
-export const WEB_DIR = join(ROOT, "..", "..", "games", "maze-puzzle", "web");
+export const WEB_DIR = webRoot(here);
 export const ORIGIN = "http://parity.test";
 export const T0 = new Date("2026-10-01T09:00:00-07:00");
 export const VIEWPORT = { width: 430, height: 932 };
