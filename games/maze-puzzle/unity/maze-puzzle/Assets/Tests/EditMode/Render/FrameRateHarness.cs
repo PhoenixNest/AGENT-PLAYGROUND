@@ -344,9 +344,76 @@ namespace OrbitalSalvage.Render.Tests
             return list;
         }
 
-        static RunRow RunOne(SectorCase sector, string stream, Profile profile, List<Ev> events)
+        [Test]
+        [Timeout(1800000)]
+        public void MeasureAccumulated()
+        {
+            double savedScale = GameRenderer.DefaultRenderScale;
+            GameRenderer.DefaultRenderScale = 0.001;
+            try
+            {
+                string root = RepoRoot();
+                string reportDir = Path.Combine(root, "tools", "parity", "reports");
+                var profiles = BuildProfiles(Path.Combine(reportDir, "physics-framerate-2026-10-07-frames"));
+                var sectors = BuildSectors();
+                var rows = new List<RunRow>();
+                string runsPath = Path.Combine(reportDir, "physics-framerate-2026-10-07-accum.csv");
+                File.WriteAllText(runsPath, "sector,stream,profile,collected,spilled,swallowed,steps,simTime,hash\n");
+                foreach (var sector in sectors)
+                {
+                    foreach (string stream in Streams)
+                    {
+                        var events = Program(stream);
+                        foreach (var profile in profiles)
+                        {
+                            profile.Reset();
+                            RunRow row = RunOne(sector, stream, profile, events, true);
+                            rows.Add(row);
+                            var inv = CultureInfo.InvariantCulture;
+                            File.AppendAllText(runsPath, string.Join(",", row.Sector, row.Stream, row.Profile,
+                                row.Collected.ToString("R", inv), row.Spilled.ToString("R", inv),
+                                row.Swallowed.ToString(inv), row.Steps.ToString(inv),
+                                row.SimTime.ToString("R", inv), row.Hash) + "\n");
+                        }
+                    }
+                }
+                string reference = "steady-1-60";
+                int mismatch = 0;
+                var detail = new StringBuilder();
+                for (int i = 0; i < rows.Count; i++)
+                {
+                    if (rows[i].Profile == reference) continue;
+                    RunRow src = Find(rows, rows[i].Sector, rows[i].Stream, reference);
+                    if (rows[i].Hash != src.Hash || rows[i].Spilled != src.Spilled || rows[i].Swallowed != src.Swallowed
+                        || rows[i].Collected != src.Collected || rows[i].Steps != src.Steps)
+                    {
+                        mismatch++;
+                        if (detail.Length < 4000)
+                        {
+                            detail.Append(rows[i].Sector).Append(' ').Append(rows[i].Stream).Append(' ').Append(rows[i].Profile)
+                                .Append(" hash ").Append(rows[i].Hash).Append(" vs ").Append(src.Hash)
+                                .Append(" spill ").Append(rows[i].Spilled.ToString("R", CultureInfo.InvariantCulture))
+                                .Append(" vs ").Append(src.Spilled.ToString("R", CultureInfo.InvariantCulture))
+                                .Append(" sw ").Append(rows[i].Swallowed).Append(" vs ").Append(src.Swallowed)
+                                .Append(" steps ").Append(rows[i].Steps).Append(" vs ").Append(src.Steps)
+                                .Append('\n');
+                        }
+                    }
+                }
+                File.WriteAllText(Path.Combine(reportDir, "physics-framerate-2026-10-07-accum.txt"),
+                    "rows " + rows.Count + "\nmismatches " + mismatch + "\n" + detail);
+                Assert.AreEqual(0, mismatch, detail.ToString());
+            }
+            finally
+            {
+                GameRenderer.DefaultRenderScale = savedScale;
+            }
+        }
+
+        static RunRow RunOne(SectorCase sector, string stream, Profile profile, List<Ev> events, bool accumulate = false)
         {
             var session = CreateFor(sector.Config);
+            if (accumulate) session.Accumulate = true;
             double nowMs = 0;
             session.NowMs = () => nowMs;
             var outcome = new Dictionary<int, string>();
@@ -385,39 +452,77 @@ namespace OrbitalSalvage.Render.Tests
             int cursor = 0;
             double pointerX = 0;
             bool down = false;
+            void ApplyDue(double time)
+            {
+                while (cursor < events.Count && events[cursor].T <= time + 1e-9)
+                {
+                    Ev ev = events[cursor++];
+                    if (ev.Drag)
+                    {
+                        if (!down)
+                        {
+                            session.PointerDown(pointerX, 0, 430);
+                            down = true;
+                        }
+                        pointerX += ev.V;
+                        session.PointerMove(pointerX);
+                    }
+                    else
+                    {
+                        session.KeyDown(ev.V > 0 ? "d" : "a");
+                    }
+                }
+            }
+            const int AccumTarget = 1800;
             try
             {
-                while (sim < Duration - 1e-12)
+                session.BeforeAccumStep = time =>
                 {
-                    nowMs = sim * 1000.0;
-                    while (cursor < events.Count && events[cursor].T <= sim + 1e-9)
+                    nowMs = time * 1000.0;
+                    ApplyDue(time);
+                };
+                int stall = 0;
+                while (accumulate ? session.PhysicsSteps < AccumTarget : sim < Duration - 1e-12)
+                {
+                    if (!accumulate)
                     {
-                        Ev ev = events[cursor++];
-                        if (ev.Drag)
-                        {
-                            if (!down)
-                            {
-                                session.PointerDown(pointerX, 0, 430);
-                                down = true;
-                            }
-                            pointerX += ev.V;
-                            session.PointerMove(pointerX);
-                        }
-                        else
-                        {
-                            session.KeyDown(ev.V > 0 ? "d" : "a");
-                        }
+                        nowMs = sim * 1000.0;
+                        ApplyDue(sim);
                     }
                     double requested = profile.NextDt();
                     if (requested <= 0) throw new InvalidOperationException("non-positive dt from " + profile.Name);
-                    double step = requested;
-                    if (step > LiveGameSession.DtCap) step = LiveGameSession.DtCap;
-                    double remain = Duration - sim;
-                    if (step > remain) step = remain;
+                    double passed = requested;
+                    if (!accumulate)
+                    {
+                        if (passed > LiveGameSession.DtCap) passed = LiveGameSession.DtCap;
+                        double remain = Duration - sim;
+                        if (passed > remain) passed = remain;
+                    }
+                    else
+                    {
+                        int room = AccumTarget - session.PhysicsSteps;
+                        int cap = room < LiveGameSession.LiveMaxSteps ? room : LiveGameSession.LiveMaxSteps;
+                        double budget = cap * LiveGameSession.LiveStep - session.PendingAccum;
+                        if (budget < 0) budget = 0;
+                        if (passed > budget) passed = budget;
+                    }
+                    int stepsBefore = session.PhysicsSteps;
                     requestedSum += requested;
-                    session.Update(step);
-                    sim += step;
+                    session.Update(passed);
                     frames++;
+                    if (accumulate)
+                    {
+                        sim = session.SimulatedTime;
+                        if (session.PhysicsSteps == stepsBefore)
+                        {
+                            if (++stall > 10000) throw new InvalidOperationException("accumulator stalled on " + profile.Name);
+                        }
+                        else stall = 0;
+                    }
+                    else
+                    {
+                        sim += passed;
+                    }
                     if (victory < 0 && session.IsLevelCleared) victory = sim;
                     if (defeat < 0 && session.IsLevelFailed) defeat = sim;
                 }

@@ -137,4 +137,16 @@ Versus steady 1/60, idle `editor-s3-baseline-1` spill delta mean +21.82 (min 0, 
 
 ## Step A reading
 
-Sustained slow steps change outcomes on the sectors that feed the hole: L31 idle goes from 16 swallowed and 0 spilled at 16 ms to 0 swallowed and 74 spilled on the scale-3 editor trace; the daily bronze idle victory at 9.664 s disappears at 33.3 ms and on that trace. The scale-1 editor trace (p95 26.4 ms, max 32.9 ms) stays near the 16 ms and 1/60 rows. Drag deltas swing by thousands of kg and hundreds of swallows in both directions, so that stream is not a clean spill-up/swallow-down result. Accumulator confirmation is a separate run.
+Sustained slow steps change outcomes on the sectors that feed the hole: L31 idle goes from 16 swallowed and 0 spilled at 16 ms to 0 swallowed and 74 spilled on the scale-3 editor trace; the daily bronze idle victory at 9.664 s disappears at 33.3 ms and on that trace. The scale-1 editor trace (p95 26.4 ms, max 32.9 ms) stays near the 16 ms and 1/60 rows. Drag deltas swing by thousands of kg and hundreds of swallows in both directions, so that stream is not a clean spill-up/swallow-down result.
+
+## Accumulator rerun
+
+`FrameRateHarness.MeasureAccumulated` sets `Accumulate` and integrates at 1/60 s, up to 3 steps per frame. Scripted inputs fire from `BeforeAccumStep` at the physics time of each step. Every profile runs 1800 steps (simulated time 29.999999999999577 s). Unity exit 0. Result file `physics-framerate-2026-10-07-accum.txt`: 264 rows, 0 mismatches against `steady-1-60` on hash, spilled mass, swallowed count, collected mass, and step count.
+
+Daily bronze idle, which disagreed across profiles in the variable-step run, is one row for every profile: collected 58, spilled 62, swallowed 29, hash `27a58fb1c6d0389a`. That swallowed/spilled pair is the variable-step `steady-1-60` idle result from the first sweep.
+
+## Verification after the live-path change
+
+EditMode suite, GPU, no `-testFilter`, Unity exit 2 (failures present). XML `test-run`: total 385, passed 301, failed 82, skipped 2, duration 68.3 s. The two skipped cases are the explicit harness methods `FrameRateHarness.Measure` and `FrameRateHarness.MeasureAccumulated`. All 82 failures are `ReferenceComparisonTests` (73) and `ReferenceGateTests` (9); the message is `tools/parity/audio/out/ref is missing`. `AppFlowTests.Flow_MatchesWeb` passed 9/9. `PhysicsGoldenTests.FullRun_BitExact` passed 35/35. `LiveGameSessionTests.AccumulatorCapsAtThreeStepsAndDropsTimeWhilePaused` passed.
+
+`LiveConformanceBatch.Run` (Unity exit 0) wrote 30 live PNGs and 30 stream PNGs. Byte compare: 30 pairs, 0 mismatches. `export.log` ends with `deterministic true`. Step counts in that log are 1, 60, 180, 181, 190, 190 for f001, f060, f180, vfx1, vfx2, pause on each of sectors 01, 11, 21, 31, 41.
