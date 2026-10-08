@@ -2,8 +2,10 @@ import { readFileSync, readdirSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+import { webRoot } from '../lib/roots.mjs';
+
 const here = dirname(fileURLToPath(import.meta.url));
-export const WEB_DIR = join(here, '..', '..', '..', 'games', 'maze-puzzle', 'web');
+export const WEB_DIR = webRoot(here);
 
 const PICTO = /\p{Extended_Pictographic}/u;
 const EMOJI_PRES = /\p{Emoji_Presentation}/u;

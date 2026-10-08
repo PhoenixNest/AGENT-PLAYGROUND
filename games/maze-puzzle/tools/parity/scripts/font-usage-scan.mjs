@@ -8,8 +8,10 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, extname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+import { webRoot } from '../lib/roots.mjs';
+
 const here = dirname(fileURLToPath(import.meta.url));
-const WEB_DIR = resolve(here, '..', '..', '..', 'games', 'maze-puzzle', 'web');
+const WEB_DIR = webRoot(here);
 const ORIGIN = 'http://parity.test';
 const MIME = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css', '.png': 'image/png' };
 

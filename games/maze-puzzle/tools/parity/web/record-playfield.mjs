@@ -4,6 +4,7 @@
 import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { unityProject } from "../lib/roots.mjs";
 import { ROOT, Session, launchBrowser } from "./harness.mjs";
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -20,10 +21,7 @@ const want = new Set([
   "modal_debrief_exact",
   "modal_defeat_12_of_20",
 ]);
-const outDir = join(
-  ROOT,
-  "../../games/maze-puzzle/unity/maze-puzzle/Assets/Resources/Parity/Playfield",
-);
+const outDir = join(unityProject(here), "Assets", "Resources", "Parity", "Playfield");
 mkdirSync(outDir, { recursive: true });
 
 const hook = () => {

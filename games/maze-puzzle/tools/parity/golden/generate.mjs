@@ -1,4 +1,4 @@
-// Usage: node tools/parity/golden/generate.mjs [--engine chromium|node] [--out <dir>] [--only maze,economy,physics] [--filter <substr>] [--full]
+// Usage: node games/maze-puzzle/tools/parity/golden/generate.mjs [--engine chromium|node] [--out <dir>] [--only maze,economy,physics] [--filter <substr>] [--full]
 // Without --full only every 100th frame snapshot is stored (plus a hash of every frame); --full stores all 601 snapshots per run.
 // Golden fixtures are produced by the unmodified web engine modules under mulberry32(0x5EED1234).
 // Chromium (Playwright, timezone America/Los_Angeles) is authoritative; Node is a cross-check only
@@ -9,8 +9,10 @@ import { gzipSync } from "node:zlib";
 import { dirname, extname, join, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
+import { webRoot } from "../lib/roots.mjs";
+
 const here = dirname(fileURLToPath(import.meta.url));
-const webRoot = resolve(here, "../../../games/maze-puzzle/web");
+const webRootPath = webRoot(here);
 const browserDir = resolve(here, "browser");
 
 const args = process.argv.slice(2);
@@ -55,8 +57,8 @@ function mime(p) {
 function startServer() {
   const server = createServer((req, res) => {
     const url = decodeURIComponent(req.url.split("?")[0]);
-    const file = url.startsWith("/__golden/") ? join(browserDir, url.slice(10)) : join(webRoot, url);
-    if (!file.startsWith(webRoot) && !file.startsWith(browserDir)) {
+    const file = url.startsWith("/__golden/") ? join(browserDir, url.slice(10)) : join(webRootPath, url);
+    if (!file.startsWith(webRootPath) && !file.startsWith(browserDir)) {
       res.writeHead(403).end();
       return;
     }
@@ -109,10 +111,10 @@ async function runChromium() {
 }
 
 async function runNode() {
-  const economy = await import(pathToFileURL(join(webRoot, "engine/economy.js")).href);
-  const physics = await import(pathToFileURL(join(webRoot, "engine/physics.js")).href);
-  const audio = await import(pathToFileURL(join(webRoot, "engine/audio.js")).href);
-  const maze = await import(pathToFileURL(join(webRoot, "engine/maze.js")).href);
+  const economy = await import(pathToFileURL(join(webRootPath, "engine/economy.js")).href);
+  const physics = await import(pathToFileURL(join(webRootPath, "engine/physics.js")).href);
+  const audio = await import(pathToFileURL(join(webRootPath, "engine/audio.js")).href);
+  const maze = await import(pathToFileURL(join(webRootPath, "engine/maze.js")).href);
   const collect = await import(pathToFileURL(join(browserDir, "collect.mjs")).href);
   const mods = { ...economy, PhysicsEngine: physics.PhysicsEngine, AudioEngine: audio.AudioEngine, MazeLevelBuilder: maze.MazeLevelBuilder };
   const stat = only.has("maze") || only.has("economy") ? collect.collectStatic(mods) : null;

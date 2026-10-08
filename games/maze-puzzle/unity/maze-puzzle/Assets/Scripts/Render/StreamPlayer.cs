@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace OrbitalSalvage.Render
 {
-    /// <summary>Replays a recorded command stream or a synthetic scene (tools/parity/canvas-conformance) on a Canvas2D.</summary>
+    /// <summary>Replays a recorded command stream or a synthetic scene (games/maze-puzzle/tools/parity/canvas-conformance) on a Canvas2D.</summary>
     public sealed class StreamPlayer
     {
         readonly Dictionary<int, CanvasGradient> gradients = new Dictionary<int, CanvasGradient>();

@@ -4,8 +4,10 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
+import { webRoot } from "../lib/roots.mjs";
+
 const here = path.dirname(fileURLToPath(import.meta.url));
-const webDir = path.resolve(here, "../../../games/maze-puzzle/web");
+const webDir = webRoot(here);
 const files = [
   { name: "engine/renderer.js", text: fs.readFileSync(path.join(webDir, "engine/renderer.js"), "utf8") },
   { name: "main.js", text: fs.readFileSync(path.join(webDir, "main.js"), "utf8") },

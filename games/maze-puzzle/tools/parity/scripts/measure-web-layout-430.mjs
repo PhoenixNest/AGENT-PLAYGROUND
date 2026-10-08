@@ -3,8 +3,10 @@ import path from "path";
 import { fileURLToPath, pathToFileURL } from "url";
 import vm from "vm";
 
+import { webRoot } from "../lib/roots.mjs";
+
 const here = path.dirname(fileURLToPath(import.meta.url));
-const web = path.resolve(here, "../../../games/maze-puzzle/web");
+const web = webRoot(here);
 const physicsUrl = pathToFileURL(path.join(web, "engine/physics.js")).href;
 const { PhysicsEngine } = await import(physicsUrl);
 
