@@ -2,7 +2,7 @@
 
 `OrbitalSalvage.Logic` and `OrbitalSalvage.JsCompat` are bit-exact ports of the web engine. Both assemblies use `noEngineReferences` and run `double` arithmetic only. JS paths are relative to `games/maze-puzzle/web/`. C# paths are relative to `Assets/Scripts/`. Each line number is the declaration line.
 
-Proof: golden fixtures from Chromium 153 in `tools/parity/golden/fixtures` (see `tools/parity/golden/README.md`) and the EditMode tests in `Assets/Tests/EditMode/Logic`.
+Proof: golden fixtures from Chromium 153 in `games/maze-puzzle/tools/parity/golden/fixtures` (see `games/maze-puzzle/tools/parity/golden/README.md`) and the EditMode tests in `Assets/Tests/EditMode/Logic`.
 
 ## JsCompat
 

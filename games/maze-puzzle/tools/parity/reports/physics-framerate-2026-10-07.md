@@ -79,7 +79,7 @@ Difference is profile minus `steady-16ms`, across every sector and stream. Swall
 | editor-s3-baseline-1 | 2154.909090909091 | 2769.212121212121 | 305.87878787878788 | 132.33333333333334 | 0.78787878787878785 | 40.636363636363633 | 0 | 11 |
 | editor-auto-timeline-1 | 2429.4545454545455 | 2555.151515151515 | 336.06060606060606 | 133.21212121212122 | 9.545454545454545 | 26.878787878787879 | 0 | 12 |
 
-Per-run rows: `physics-framerate-2026-10-07-runs.csv`. Per-debris rows: `physics-framerate-2026-10-07-debris.csv`.
+Per-run rows were in `physics-framerate-2026-10-07-runs.csv`. Per-debris rows were in `physics-framerate-2026-10-07-debris.csv`. Those dumps, the frame traces, and `physics-framerate-2026-10-07-accum.txt` were removed from git on 2026-10-08. `FrameRateHarness` still writes them, and `.gitignore` ignores the regenerated files. The tables above are the kept conclusions.
 
 ## Web layout at 430x932
 
@@ -141,7 +141,7 @@ Sustained slow steps change outcomes on the sectors that feed the hole: L31 idle
 
 ## Accumulator rerun
 
-`FrameRateHarness.MeasureAccumulated` sets `Accumulate` and integrates at 1/60 s, up to 3 steps per frame. Scripted inputs fire from `BeforeAccumStep` at the physics time of each step. Every profile runs 1800 steps (simulated time 29.999999999999577 s). Unity exit 0. Result file `physics-framerate-2026-10-07-accum.txt`: 264 rows, 0 mismatches against `steady-1-60` on hash, spilled mass, swallowed count, collected mass, and step count.
+`FrameRateHarness.MeasureAccumulated` sets `Accumulate` and integrates at 1/60 s, up to 3 steps per frame. Scripted inputs fire from `BeforeAccumStep` at the physics time of each step. Every profile runs 1800 steps (simulated time 29.999999999999577 s). Unity exit 0. Result file `physics-framerate-2026-10-07-accum.txt` (removed from git on 2026-10-08; the harness regenerates it): 264 rows, 0 mismatches against `steady-1-60` on hash, spilled mass, swallowed count, collected mass, and step count.
 
 Daily bronze idle, which disagreed across profiles in the variable-step run, is one row for every profile: collected 58, spilled 62, swallowed 29, hash `27a58fb1c6d0389a`. That swallowed/spilled pair is the variable-step `steady-1-60` idle result from the first sweep.
 
