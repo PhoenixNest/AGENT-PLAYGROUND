@@ -4,7 +4,9 @@
     "references": [
         "UnityEngine.TestRunner",
         "UnityEditor.TestRunner",
-        "OrbitalSalvage.Viewer"
+        "OrbitalSalvage.Viewer",
+        "OrbitalSalvage.App",
+        "OrbitalSalvage.Render"
     ],
     "includePlatforms": [
         "Editor"

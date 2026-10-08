@@ -40,6 +40,9 @@ namespace OrbitalSalvage.Viewer
         string underlayKey;
         bool flowCapture;
         readonly List<string> playMismatches = new List<string>();
+        int toastSlots;
+        bool toastClearFrame;
+        internal int ProductDraws;
 
         void BootApp()
         {
@@ -178,6 +181,7 @@ namespace OrbitalSalvage.Viewer
             string template = app.TemplateId;
             if (!string.IsNullOrEmpty(template)) Show(template, app.CardStamp);
             ApplyOverrides(forceDraw);
+            RefreshProductToasts();
         }
 
         void SyncApp()
@@ -302,6 +306,60 @@ namespace OrbitalSalvage.Viewer
             }
             else if (selfTesting || currentId != null && currentId.StartsWith("loading", StringComparison.Ordinal)) current.Draw();
             else PaintCurrent(true);
+        }
+
+        /// <summary>
+        /// Product path only. Toast ages are not part of <see cref="OverridesUnchanged"/>, so they are
+        /// copied every frame outside that guard. Flow capture and self-tests keep the snapshot
+        /// <see cref="ApplyOverrides"/> already wrote. Slots are reused; <see cref="HomeChrome.ToastPaint"/> is a struct.
+        /// </summary>
+        void RefreshProductToasts()
+        {
+            if (current == null || app == null || flowClockActive || selfTesting) return;
+            var src = app.Model.Toasts;
+            int n = src.Count;
+            if (n == 0 && toastSlots > 0) toastClearFrame = true;
+            var list = current.Toasts;
+            while (list.Count > n) list.RemoveAt(list.Count - 1);
+            while (list.Count < n) list.Add(default);
+            for (int i = 0; i < n; i++)
+            {
+                var toast = src[i];
+                double age = app.NowMs - (toast.ExpiresAtMs - AppController.ToastMs);
+                if (age < 0) age = 0;
+                var slot = list[i];
+                slot.Text = toast.Text;
+                slot.AgeMs = age;
+                list[i] = slot;
+            }
+            toastSlots = n;
+        }
+
+        public void BindToastProbe(HomeChrome chrome, string stateId, AppController controller)
+        {
+            current = chrome;
+            currentId = stateId;
+            app = controller;
+            followClock = false;
+            selfTesting = false;
+            flowClockActive = false;
+            shipTesting = false;
+            toastSlots = 0;
+            toastClearFrame = false;
+            ProductDraws = 0;
+        }
+
+        public void SetPageAgeMs(double ms)
+        {
+            clock.NowSeconds = () => ms / 1000.0;
+        }
+
+        public int ProbeToastFrame()
+        {
+            int before = ProductDraws;
+            RefreshProductToasts();
+            Tick();
+            return ProductDraws - before;
         }
 
         void BindFlowUnderlay(HomeChrome modalChrome)
