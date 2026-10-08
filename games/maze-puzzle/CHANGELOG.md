@@ -11,6 +11,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+#### Web + Unity (2026-10-08, `agent/fix/funnel`)
+
+- The funnel centering term is now `(dx * 16 - vx * 8) * dt` in `web/engine/physics.js` and `PhysicsEngine.ResolveMagneticFunnel`. c = 8 is critical damping for k = 16. Rails, aperture, gravity, and the black hole are unchanged. Idle debris on the measured levels no longer misses the hole along the rail; a swipe or a held spin can still spill. Report: `tools/parity/reports/funnel-fix-2026-10-08.md`.
+
 #### Unity (2026-10-07, `agent/fix/physics`)
 
 - Live play (`ParityViewer.TickLive`) accumulates real frame time and integrates physics at 1/60 s, at most 3 steps per frame (50 ms). Time left over that cap is dropped. Pause and leaving the game page clear the accumulator so the next frame does not catch up. Recorded 16 ms conformance (`FixedStep`, `StepWebFrame`) is unchanged. The 1/60 step is a steady browser frame; the 16 ms figure is the recorded-stream cadence.
