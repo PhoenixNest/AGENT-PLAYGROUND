@@ -579,8 +579,11 @@ namespace OrbitalSalvage.App
             else if (pageId == "game")
             {
                 LayoutRequested = true;
-                if (enterGame) _hintShownAt = NowMs;
-                After(HintMs, DismissHint);
+                if (enterGame && double.IsNaN(_hintShownAt))
+                {
+                    _hintShownAt = NowMs;
+                    After(HintMs, DismissHint);
+                }
             }
             Rebuild();
         }
@@ -788,6 +791,8 @@ namespace OrbitalSalvage.App
             _modals.Remove("modal-pause");
             _modals.Remove("modal-debrief");
             _modals.Remove("modal-defeat");
+            var clock = Playfield as IFailureClock;
+            if (clock != null) clock.ResetFailureClock();
         }
 
         void ToggleHudMute()

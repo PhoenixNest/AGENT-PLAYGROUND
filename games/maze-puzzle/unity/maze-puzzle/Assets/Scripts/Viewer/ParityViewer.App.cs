@@ -1039,10 +1039,11 @@ namespace OrbitalSalvage.Viewer
             public void PlayDebrisSwallowed() { player.PlayDebrisSwallowed(); }
         }
 
-        sealed class BoundPlayfield : IFixedPlayfield
+        sealed class BoundPlayfield : IFixedPlayfield, IFailureClock
         {
             readonly LiveGameSession _session;
             public BoundPlayfield(LiveGameSession session) { _session = session; }
+            public void ResetFailureClock() { _session.FailureCheckTimer = 0; }
             public void Step(double dtSeconds, bool simulate)
             {
                 _session.AdvanceReplayAudio(dtSeconds * 1000.0);
