@@ -155,6 +155,39 @@ namespace OrbitalSalvage.Render
 
         /// <summary>How many times this chrome has baked its static layers.</summary>
         public int CacheBuilds { get; private set; }
+
+        /// <summary>
+        /// Paint the daily-gift banner from <c>shop_gift_claimed</c>.
+        /// Specs that already carry the claimed class are left unchanged.
+        /// </summary>
+        public void UseClaimedGiftBanner(bool claimed)
+        {
+            if (claimed)
+            {
+                if (bannerApplied || BannerAlreadyClaimed()) return;
+                if (!ApplyClaimedBanner()) return;
+                bannerApplied = true;
+            }
+            else if (bannerApplied)
+            {
+                RestoreClaimedBanner();
+                bannerApplied = false;
+            }
+        }
+
+        readonly HashSet<string> styleOverrideIds = new HashSet<string>();
+        string[] snapStyle = Array.Empty<string>();
+        bool bannerApplied;
+        List<BannerSnap> bannerSnaps;
+        static List<Dictionary<string, object>> claimedBanner;
+
+        sealed class BannerSnap
+        {
+            public Dictionary<string, object> Element;
+            public Dictionary<string, object> Fields;
+            public bool Inserted;
+        }
+
         bool cachedSkip;
         bool cachedExt;
         string[] snapText = Array.Empty<string>();
@@ -516,7 +549,8 @@ namespace OrbitalSalvage.Render
                 && SameKeys(WidthPercentOverrides, snapWidthPct)
                 && SameKeys(OpacityOverrides, snapOpacity)
                 && SameHidden(HiddenIds, snapHidden)
-                && SameKeys(ClassTextOverrides, snapClass);
+                && SameKeys(ClassTextOverrides, snapClass)
+                && SameHidden(styleOverrideIds, snapStyle);
         }
 
         void RememberDynamicSet()
@@ -531,6 +565,8 @@ namespace OrbitalSalvage.Render
             snapHidden = new string[HiddenIds.Count];
             HiddenIds.CopyTo(snapHidden);
             snapClass = CopyKeys(ClassTextOverrides);
+            snapStyle = new string[styleOverrideIds.Count];
+            styleOverrideIds.CopyTo(snapStyle);
         }
 
         void EnsureCache()
@@ -672,6 +708,257 @@ namespace OrbitalSalvage.Render
             frame = saved;
             cacheReady = true;
             CacheBuilds++;
+        }
+
+        bool BannerAlreadyClaimed()
+        {
+            var root = FindById("daily-gift-banner");
+            if (root == null) return true;
+            return (" " + S(root, "c") + " ").Contains(" claimed ");
+        }
+
+        Dictionary<string, object> FindById(string id)
+        {
+            for (int k = 0; k < elements.Count; k++)
+                if (S(elements[k], "id") == id) return elements[k];
+            return null;
+        }
+
+        bool ApplyClaimedBanner()
+        {
+            var source = ClaimedBannerNodes();
+            if (source == null || source.Count == 0) return false;
+            var hostRoot = FindById("daily-gift-banner");
+            if (hostRoot == null) return false;
+            int hostRootI = (int)N(hostRoot, "i", -1);
+            int sourceRootI = -1;
+            for (int i = 0; i < source.Count; i++)
+                if (S(source[i], "id") == "daily-gift-banner") sourceRootI = (int)N(source[i], "i", -1);
+            if (sourceRootI < 0) return false;
+
+            var hostByI = IndexByI(elements);
+            var hostMap = new Dictionary<string, Dictionary<string, object>>();
+            var hostNodes = CollectBanner(elements);
+            if (hostNodes == null) return false;
+            for (int i = 0; i < hostNodes.Count; i++)
+            {
+                string path = RelPath(hostNodes[i], hostByI, hostRootI);
+                if (!hostMap.ContainsKey(path)) hostMap[path] = hostNodes[i];
+            }
+
+            var sourceByI = IndexByI(source);
+            bannerSnaps = new List<BannerSnap>();
+            Dictionary<string, object> previous = null;
+            for (int i = 0; i < source.Count; i++)
+            {
+                var src = source[i];
+                string path = RelPath(src, sourceByI, sourceRootI);
+                if (hostMap.TryGetValue(path, out var host))
+                {
+                    bannerSnaps.Add(new BannerSnap { Element = host, Fields = Snapshot(host) });
+                    CopyVisual(host, src);
+                    previous = host;
+                    continue;
+                }
+                int parentI = (int)N(src, "p", -1);
+                if (!sourceByI.TryGetValue(parentI, out var srcParent)) continue;
+                string parentPath = RelPath(srcParent, sourceByI, sourceRootI);
+                if (!hostMap.TryGetValue(parentPath, out var hostParent)) continue;
+                var clone = (Dictionary<string, object>)CloneJson(src);
+                clone["i"] = (double)(MaxElementI() + 1);
+                clone["p"] = hostParent["i"];
+                int at = previous != null ? elements.IndexOf(previous) + 1 : elements.IndexOf(hostParent) + 1;
+                if (at < 1) at = elements.Count;
+                elements.Insert(at, clone);
+                hostMap[path] = clone;
+                bannerSnaps.Add(new BannerSnap { Element = clone, Inserted = true });
+                previous = clone;
+            }
+            RememberBannerIds();
+            InvalidateBannerCaches();
+            return true;
+        }
+
+        void RestoreClaimedBanner()
+        {
+            if (bannerSnaps != null)
+            {
+                for (int i = bannerSnaps.Count - 1; i >= 0; i--)
+                    if (bannerSnaps[i].Inserted) elements.Remove(bannerSnaps[i].Element);
+                for (int i = 0; i < bannerSnaps.Count; i++)
+                {
+                    var snap = bannerSnaps[i];
+                    if (snap.Inserted || snap.Fields == null) continue;
+                    snap.Element.Clear();
+                    foreach (var kv in snap.Fields) snap.Element[kv.Key] = CloneJson(kv.Value);
+                }
+            }
+            bannerSnaps = null;
+            styleOverrideIds.Clear();
+            InvalidateBannerCaches();
+        }
+
+        void RememberBannerIds()
+        {
+            styleOverrideIds.Clear();
+            var root = FindById("daily-gift-banner");
+            if (root == null) return;
+            int rootI = (int)N(root, "i", -1);
+            var byI = IndexByI(elements);
+            for (int k = 0; k < elements.Count; k++)
+            {
+                bool hit = false;
+                var cur = elements[k];
+                for (int guard = 0; cur != null && guard < 24; guard++)
+                {
+                    if ((int)N(cur, "i", -2) == rootI) { hit = true; break; }
+                    int p = (int)N(cur, "p", -1);
+                    if (p < 0 || !byI.TryGetValue(p, out cur)) break;
+                }
+                if (!hit) continue;
+                string id = S(elements[k], "id");
+                if (id.Length > 0) styleOverrideIds.Add(id);
+            }
+        }
+
+        void InvalidateBannerCaches()
+        {
+            prepared.Clear();
+            rects.Clear();
+            laid.Clear();
+            collapsed.Clear();
+            collapsedUpper.Clear();
+            fontOf = null;
+            specHidden = null;
+            isShine = null;
+            isAppPage = null;
+            classOcc = null;
+            classText = null;
+            classSnapK = Array.Empty<string>();
+            classSnapV = Array.Empty<string>();
+            byId = null;
+            parentOf = null;
+            indexById = null;
+            effBuf = null;
+            reflowY = null;
+            frameSlot = null;
+            DropLayerCache();
+        }
+
+        int MaxElementI()
+        {
+            int max = 0;
+            for (int k = 0; k < elements.Count; k++)
+            {
+                int id = (int)N(elements[k], "i", 0);
+                if (id > max) max = id;
+            }
+            return max;
+        }
+
+        static List<Dictionary<string, object>> ClaimedBannerNodes()
+        {
+            if (claimedBanner != null) return claimedBanner;
+            var asset = Resources.Load<TextAsset>("Parity/Spec/shop_gift_claimed__zero");
+            if (asset == null) return null;
+            var root = MiniJson.Parse(asset.text) as Dictionary<string, object>;
+            if (root == null || !(root["elements"] is List<object> raw)) return null;
+            var list = new List<Dictionary<string, object>>(raw.Count);
+            for (int i = 0; i < raw.Count; i++)
+                if (raw[i] is Dictionary<string, object> el) list.Add(el);
+            var nodes = CollectBanner(list);
+            if (nodes == null) return null;
+            claimedBanner = new List<Dictionary<string, object>>(nodes.Count);
+            for (int i = 0; i < nodes.Count; i++)
+                claimedBanner.Add((Dictionary<string, object>)CloneJson(nodes[i]));
+            return claimedBanner;
+        }
+
+        static List<Dictionary<string, object>> CollectBanner(List<Dictionary<string, object>> els)
+        {
+            int rootI = -1;
+            for (int k = 0; k < els.Count; k++)
+                if (S(els[k], "id") == "daily-gift-banner") { rootI = (int)N(els[k], "i", -1); break; }
+            if (rootI < 0) return null;
+            var ids = new HashSet<int> { rootI };
+            bool grew = true;
+            while (grew)
+            {
+                grew = false;
+                for (int k = 0; k < els.Count; k++)
+                {
+                    int id = (int)N(els[k], "i", -1);
+                    int p = (int)N(els[k], "p", -2);
+                    if (ids.Contains(p) && ids.Add(id)) grew = true;
+                }
+            }
+            var list = new List<Dictionary<string, object>>();
+            for (int k = 0; k < els.Count; k++)
+                if (ids.Contains((int)N(els[k], "i", -1))) list.Add(els[k]);
+            return list;
+        }
+
+        static Dictionary<int, Dictionary<string, object>> IndexByI(List<Dictionary<string, object>> els)
+        {
+            var map = new Dictionary<int, Dictionary<string, object>>(els.Count);
+            for (int k = 0; k < els.Count; k++) map[(int)N(els[k], "i", k)] = els[k];
+            return map;
+        }
+
+        static string RelPath(Dictionary<string, object> e, Dictionary<int, Dictionary<string, object>> byI, int rootI)
+        {
+            var bits = new List<string>(8);
+            var cur = e;
+            for (int guard = 0; cur != null && guard < 16; guard++)
+            {
+                string id = S(cur, "id");
+                bits.Add(id.Length > 0 ? "#" + id : "." + S(cur, "c"));
+                if ((int)N(cur, "i", -2) == rootI) break;
+                int p = (int)N(cur, "p", -1);
+                if (p < 0 || !byI.TryGetValue(p, out cur)) break;
+            }
+            bits.Reverse();
+            return string.Join("/", bits);
+        }
+
+        static Dictionary<string, object> Snapshot(Dictionary<string, object> host)
+        {
+            var copy = new Dictionary<string, object>(host.Count);
+            foreach (var kv in host) copy[kv.Key] = CloneJson(kv.Value);
+            return copy;
+        }
+
+        static void CopyVisual(Dictionary<string, object> host, Dictionary<string, object> source)
+        {
+            object keepI = host["i"];
+            object keepP = host.ContainsKey("p") ? host["p"] : null;
+            host.Clear();
+            foreach (var kv in source)
+            {
+                if (kv.Key == "i" || kv.Key == "p") continue;
+                host[kv.Key] = CloneJson(kv.Value);
+            }
+            host["i"] = keepI;
+            if (keepP != null) host["p"] = keepP;
+        }
+
+        static object CloneJson(object value)
+        {
+            var dict = value as Dictionary<string, object>;
+            if (dict != null)
+            {
+                var copy = new Dictionary<string, object>(dict.Count);
+                foreach (var kv in dict) copy[kv.Key] = CloneJson(kv.Value);
+                return copy;
+            }
+            var list = value as List<object>;
+            if (list != null)
+            {
+                var copy = new List<object>(list.Count);
+                for (int i = 0; i < list.Count; i++) copy.Add(CloneJson(list[i]));
+                return copy;
+            }
+            return value;
         }
 
         // ---- drawing ------------------------------------------------------------------------------------
