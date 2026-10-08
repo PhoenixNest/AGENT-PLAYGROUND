@@ -52,18 +52,18 @@ Config shapes: `Logic/MazeConfig.cs` (`SectorConfig`, `GateConfig`, `DividerConf
 | `applyRcsBurst` :235 | `ApplyRcsBurst` :297 |
 | `update` :246 | `Update` :310 |
 | `resolveMagneticFunnel` :430 | `ResolveMagneticFunnel` :491 |
-| `updateIngestion` :461 | `UpdateIngestion` :527 |
-| `resolveRingCollisions` :475 | `ResolveRingCollisions` :542 |
-| `resolveDividerCollisions` :535 | `ResolveDividerCollisions` :602 |
-| `resolveFlapperCollisions` :585 | `ResolveFlapperCollisions` :647 |
-| `resolveTrackWallCollisions` :644 | `ResolveTrackWallCollisions` :708 |
-| `resolveDeflectorCollisions` :694 | `ResolveDeflectorCollisions` :754 |
-| `checkMultiplierGates` :757 | `CheckMultiplierGates` :826 |
-| `syncAdjacentGates` (inner arrow, :789) | `SyncAdjacentGates` :810 |
-| `checkVolatileDetonation` :860 | `CheckVolatileDetonation` :910 |
-| `resolveDebrisCollisions` :885 | `ResolveDebrisCollisions` :937 |
-| `normalizeAngle` :928 | `NormalizeAngle` :983 |
-| `isAngleBetween` :934 | `IsAngleBetween` :990 |
+| `updateIngestion` :465 | `UpdateIngestion` :532 |
+| `resolveRingCollisions` :479 | `ResolveRingCollisions` :547 |
+| `resolveDividerCollisions` :539 | `ResolveDividerCollisions` :607 |
+| `resolveFlapperCollisions` :589 | `ResolveFlapperCollisions` :652 |
+| `resolveTrackWallCollisions` :648 | `ResolveTrackWallCollisions` :713 |
+| `resolveDeflectorCollisions` :698 | `ResolveDeflectorCollisions` :759 |
+| `checkMultiplierGates` :761 | `CheckMultiplierGates` :831 |
+| `syncAdjacentGates` (inner arrow, :793) | `SyncAdjacentGates` :815 |
+| `checkVolatileDetonation` :864 | `CheckVolatileDetonation` :915 |
+| `resolveDebrisCollisions` :889 | `ResolveDebrisCollisions` :942 |
+| `normalizeAngle` :932 | `NormalizeAngle` :988 |
+| `isAngleBetween` :938 | `IsAngleBetween` :995 |
 
 Runtime types are in `Logic/PhysicsTypes.cs` (`Debris`, `GateRuntime`, `DividerRuntime`, `FlapRuntime`, `PinRuntime`, `TrackWallRuntime`, `BlackHole`, `BumperHit`, `Vec2`). The JS callbacks (`onDebrisSwallowed`, `onGatePassed`, ...) become `Action` fields on `PhysicsEngine`.
 
@@ -77,11 +77,11 @@ State capture for goldens and resync: `Logic/PhysicsSnapshot.cs` (`Capture` :98,
 | Debris cap of 320 still draws one RNG value | `physics.js:46`, :165 | `SpawnDebris` |
 | Spawn argument order fixes the RNG draw order (angle, radius, vx, vy) | `physics.js:145-155`, :213-223 | `InitSector`, `SpawnBackupScrap` |
 | Backwards loop with `splice` | `physics.js:313` | `Update` (`RemoveAt`) |
-| `x \|\| default` on numbers, where 0 and NaN fall to the default | `physics.js:101-140`, :602, :611, :663, :734, :814 | `Truthy` :68 / `OrDefault` :73 |
-| `Math.sign(angularVelocity) \|\| 1` | `physics.js:815` | `PhysicsEngine.cs:864` |
+| `x \|\| default` on numbers, where 0 and NaN fall to the default | `physics.js:101-140`, :606, :615, :667, :738, :818 | `Truthy` :68 / `OrDefault` :73 |
+| `Math.sign(angularVelocity) \|\| 1` | `physics.js:819` | `PhysicsEngine.cs:869` |
 | Stale `dx`/`dy`/`dist` inside divider and gate loops | `physics.js:535-583`, :757-858 | the same loops, locals not re-declared |
 | `Math.pow(damping, dt * 60)` | `physics.js:259` | `JsMath.Pow` (see FP notes) |
-| `Math.hypot` | `physics.js:325`, :355, :386, :480, :538, :589, :649, :712, :762, :876, :897 | `JsMath.Hypot` |
+| `Math.hypot` | `physics.js:325`, :355, :386, :484, :542, :593, :653, :716, :766, :880, :901 | `JsMath.Hypot` |
 
 ## Audio (`engine/audio.js`) to `Logic/IAudioCues.cs`
 
