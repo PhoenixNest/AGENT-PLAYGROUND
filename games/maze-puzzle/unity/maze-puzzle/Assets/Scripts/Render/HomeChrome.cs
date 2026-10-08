@@ -155,6 +155,14 @@ namespace OrbitalSalvage.Render
 
         /// <summary>How many times this chrome has baked its static layers.</summary>
         public int CacheBuilds { get; private set; }
+
+        /// <summary>
+        /// Paint the daily-gift banner from <c>shop_gift_claimed</c>. A no-op until the override is applied.
+        /// Specs that already carry the claimed class are left unchanged.
+        /// </summary>
+        public void UseClaimedGiftBanner(bool claimed)
+        {
+        }
         bool cachedSkip;
         bool cachedExt;
         string[] snapText = Array.Empty<string>();
