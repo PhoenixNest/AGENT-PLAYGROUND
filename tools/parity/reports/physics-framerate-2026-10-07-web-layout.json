@@ -1,0 +1,13 @@
+{
+  "source": "games/maze-puzzle/web/main.js initLayout + engine/physics.js blackHole defaults",
+  "w": 430,
+  "h": 932,
+  "scale": 1,
+  "centerX": 215,
+  "centerY": 354.16,
+  "blackHoleX": 215,
+  "blackHoleY": 708.32,
+  "eventHorizonRadius": 28,
+  "gravityRadius": 240,
+  "gravityStrength": 480000
+}
