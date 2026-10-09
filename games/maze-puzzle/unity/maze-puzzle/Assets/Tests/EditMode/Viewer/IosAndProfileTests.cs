@@ -37,18 +37,20 @@ namespace OrbitalSalvage.Viewer.Tests
     public class IosExportTests
     {
         [Test]
-        public void IosItems_AreDisabledWhenTheModuleIsMissing()
+        public void IosMenu_FollowsWhetherTheModuleIsInstalled()
         {
             bool supported = BuildPipeline.IsBuildTargetSupported(BuildTargetGroup.iOS, BuildTarget.iOS);
-            Assert.IsFalse(supported, "this Editor does not have the iOS Build Support module");
             var ios = Find("OrbitalSalvage.Editor.IosExport");
-            Assert.IsFalse((bool)ios.GetProperty("ModuleInstalled").GetValue(null));
-            Assert.IsFalse((bool)ios.GetMethod("ValidateSimulator").Invoke(null, null));
-            Assert.IsFalse((bool)ios.GetMethod("ValidateDevice").Invoke(null, null));
+            bool module = (bool)ios.GetProperty("ModuleInstalled").GetValue(null);
+            Assert.AreEqual(supported, module);
+            bool simulatorOn = (bool)ios.GetMethod("ValidateSimulator").Invoke(null, null);
+            bool deviceOn = (bool)ios.GetMethod("ValidateDevice").Invoke(null, null);
+            Assert.AreEqual(module, simulatorOn);
+            Assert.AreEqual(module, deviceOn);
             string simulator = (string)ios.GetField("SimulatorMenu").GetRawConstantValue();
             string device = (string)ios.GetField("DeviceMenu").GetRawConstantValue();
-            Assert.IsFalse(Menu.GetEnabled(simulator));
-            Assert.IsFalse(Menu.GetEnabled(device));
+            Assert.AreEqual(module, Menu.GetEnabled(simulator));
+            Assert.AreEqual(module, Menu.GetEnabled(device));
         }
 
         static Type Find(string fullName)
