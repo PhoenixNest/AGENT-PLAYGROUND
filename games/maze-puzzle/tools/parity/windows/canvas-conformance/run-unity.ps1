@@ -9,7 +9,7 @@ param(
 )
 $ErrorActionPreference = "Stop"
 $here = Split-Path -Parent $MyInvocation.MyCommand.Path
-. (Join-Path $here "..\lib\roots.ps1")
+. (Join-Path $here "..\..\lib\roots.ps1")
 $mazeRoot = Get-MazeRoot $here
 $project = Join-Path $mazeRoot "unity\maze-puzzle"
 $Streams = (Resolve-Path $Streams).Path

@@ -9,9 +9,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-Paths written as `tools/parity/...` in entries dated before 2026-10-08 are the location on that day. Those files now live under `games/maze-puzzle/tools/parity/...`.
+Paths written as `tools/parity/...` in entries dated before 2026-10-08 are the location on that day. Those files now live under `games/maze-puzzle/tools/parity/...`. Entries that name `tools/parity/unity/*.ps1` or `canvas-conformance/run-unity.ps1` record the path used that day. Those Windows wrappers now live under `games/maze-puzzle/tools/parity/windows/`.
 
 ### Changed
+
+#### Tooling (2026-10-08, `agent/chore/tools-platform`)
+
+- Windows PowerShell launchers moved to `games/maze-puzzle/tools/parity/windows/unity/` (`build.ps1`, `capture.ps1`, `perf.ps1`, `run-framerate.ps1`, `build-play.ps1`) and `games/maze-puzzle/tools/parity/windows/canvas-conformance/run-unity.ps1`. They stay tracked. `macos/` is a placeholder only. Screenshot baselines stay the Windows D3D12 hashes until a Mac recapture. Classification: `tools/parity/README.md` (Platforms) and `tools/parity/CLEANUP.md`.
+- After that move, `windows/unity/build.ps1` (Unity exit 0, 10.1 s) and `windows/unity/capture.ps1` (player exit 0, 17.5 s, profile zero, `screenshot-states.json`) wrote 23 PNGs SHA256-identical to the capture taken before the move, including game `38730953997DE30D033C10E6CFF0B9AE2E47FBAB1671D07178039B484609A12A` and pause `CE4A6AE83A5563E98F7F722334E17A7FC06FA1375C26390A9714FC838FEE7078`. `LiveConformanceBatch.Run` wrote 30 live PNGs and 30 stream PNGs, 0 mismatches, `deterministic true`. EditMode 318/402; the same 82 audio reference tests fail; 2 skipped.
 
 #### Tooling (2026-10-08, `agent/chore/tools-move`)
 
