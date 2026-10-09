@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using UnityEngine;
 
 namespace OrbitalSalvage.Viewer
 {
@@ -35,7 +36,9 @@ namespace OrbitalSalvage.Viewer
         public const int CssWidth = 430;
         public const int CssHeight = 932;
         public const int CacheCapacity = 3;
+        /// <summary>Parity captures, Page Preview's default, and editor windows with a full safe area.</summary>
         public const string Profile = "zero";
+        public const string IphoneProfile = "iphone";
         public const string EnabledPrefKey = "OrbitalSalvage.ParityViewer.Enabled";
         public const string HomeId = "home_default";
 
@@ -121,6 +124,34 @@ namespace OrbitalSalvage.Viewer
         static NavEdge ById(string state, string id, string target) => new NavEdge(state, target, id, null, -1);
         static NavEdge ByClass(string state, string token, string target) => new NavEdge(state, target, null, token, -1);
         static NavEdge ByClassNth(string state, string token, int index, string target) => new NavEdge(state, target, null, token, index);
+
+        /// <summary>
+        /// <c>iphone</c> when the safe area leaves a top or bottom inset. A full-rect safe area, an empty rect,
+        /// and a window under 8 px on either side stay on <c>zero</c> (editor Game view, Page Preview, parity captures).
+        /// Unity's safe area is bottom-left origin: bottom inset is <c>safeArea.y</c>, top inset is
+        /// <c>screenH - (safeArea.y + safeArea.height)</c>.
+        /// </summary>
+        public static string ProfileFor(int screenW, int screenH, Rect safeArea)
+        {
+            if (screenW < 8 || screenH < 8) return Profile;
+            if (safeArea.width < 8f || safeArea.height < 8f) return Profile;
+            float top = screenH - (safeArea.y + safeArea.height);
+            float bottom = safeArea.y;
+            if (top > 1f || bottom > 1f) return IphoneProfile;
+            return Profile;
+        }
+
+        /// <summary>Profile for the current screen. Editor play with a full safe area stays on zero.</summary>
+        public static string ActiveProfile => ProfileFor(Screen.width, Screen.height, Screen.safeArea);
+
+        /// <summary>Prefer <paramref name="preferred"/> when that spec exists. Otherwise the zero spec.</summary>
+        public static string ResolveProfile(string specId, string preferred)
+        {
+            if (string.IsNullOrEmpty(preferred) || preferred == Profile) return Profile;
+            if (Resources.Load<TextAsset>("Parity/Spec/" + specId + "__" + preferred) != null)
+                return preferred;
+            return Profile;
+        }
 
         public static bool IsState(string id)
         {

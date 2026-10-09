@@ -8,6 +8,30 @@ namespace OrbitalSalvage.Viewer.Tests
     public class ParityViewerTests
     {
         [Test]
+        public void ProfileFor_UsesTopOrBottomInset()
+        {
+            var notch = new Rect(0f, 102f, 1170f, 2328f);
+            Assert.AreEqual("iphone", ParityPages.ProfileFor(1170, 2532, notch));
+            Assert.AreEqual("zero", ParityPages.ProfileFor(1170, 2532, new Rect(0f, 0f, 1170f, 2532f)));
+            Assert.AreEqual("zero", ParityPages.ProfileFor(1920, 1080, new Rect(0f, 0f, 1920f, 1080f)));
+            Assert.AreEqual("zero", ParityPages.ProfileFor(430, 932, new Rect(0f, 0f, 430f, 932f)));
+            Assert.AreEqual("zero", ParityPages.ProfileFor(1366, 768, new Rect(0f, 0f, 1366f, 768f)));
+            Assert.AreEqual("zero", ParityPages.ProfileFor(1170, 2532, new Rect(0f, 0f, 0f, 0f)));
+            Assert.AreEqual("zero", ParityPages.ProfileFor(4, 4, notch));
+            // Left inset only (landscape editor / rotated phone) stays on the zero spec.
+            Assert.AreEqual("zero", ParityPages.ProfileFor(2532, 1170, new Rect(120f, 0f, 2292f, 1170f)));
+        }
+
+        [Test]
+        public void PageSwitchHint_StartsOffOutsideEditorAndDevelopmentBuilds()
+        {
+            Assert.IsTrue(ParityViewer.HintStartsVisible(true, false));
+            Assert.IsTrue(ParityViewer.HintStartsVisible(false, true));
+            Assert.IsFalse(ParityViewer.HintStartsVisible(false, false));
+            Assert.IsTrue(ParityViewer.HintVisibleInThisPlayer);
+        }
+
+        [Test]
         public void NavTargets_ArePaintedStates()
         {
             Assert.AreEqual(13, ParityPages.StateIds.Length);
