@@ -81,6 +81,26 @@ namespace OrbitalSalvage.Viewer.Tests
             Assert.AreEqual(module, Menu.GetEnabled(device));
         }
 
+        [Test]
+        public void PlayerSettings_TargetsIphoneOnly()
+        {
+            Assert.AreEqual(iOSTargetDevice.iPhoneOnly, PlayerSettings.iOS.targetDevice);
+        }
+
+        [Test]
+        public void ExportCode_DoesNotReenableIpad()
+        {
+            string editor = Path.GetFullPath(Path.Combine(Application.dataPath, "Scripts", "Editor"));
+            foreach (string name in new[] { "IosExport.cs", "IosXcodePostProcess.cs" })
+            {
+                string text = File.ReadAllText(Path.Combine(editor, name));
+                StringAssert.DoesNotContain("targetDevice", text, name);
+                StringAssert.DoesNotContain("iPhoneAndiPad", text, name);
+                StringAssert.DoesNotContain("iPadOnly", text, name);
+                StringAssert.DoesNotContain("TARGETED_DEVICE_FAMILY", text, name);
+            }
+        }
+
         static Type Find(string fullName)
         {
             foreach (var asm in AppDomain.CurrentDomain.GetAssemblies())
