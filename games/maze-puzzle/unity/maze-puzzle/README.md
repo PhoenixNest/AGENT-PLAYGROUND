@@ -46,7 +46,11 @@ Priorities are 100 (Preview), 200 (Build), 300 (Play), and 400 (Tools). Adjacent
 
 ## Page Preview
 
-`Page Preview` paints `Assets/Resources/Parity/Spec/<id>__<profile>.json` with `HomeChrome` and does not enter Play mode. The dropdown lists every `__zero` spec, grouped by page. The iPhone profile toggle is shown only when that id also has an `__iphone` spec (today that is `home` only).
+`Page Preview` paints `Assets/Resources/Parity/Spec/<id>__<profile>.json` with `HomeChrome` and does not enter Play mode. The dropdown lists every `__zero` spec, grouped by page. The iPhone profile toggle is shown for every id that also has an `__iphone` spec. That is every painted page. The default toggle stays on `zero`, which is the parity-player capture.
+
+Play mode loads `__iphone` when `Screen.safeArea` has a top or bottom inset, and `__zero` otherwise (the editor Game view, a full-rect safe area). A missing iphone spec falls back to zero. The page is still contain-fitted in the full screen; the notch padding is inside the iphone spec. Those specs were captured at fixed insets of 59 CSS px top and 34 CSS px bottom, so a device with a different inset is off by a few px. Game-page playfield frames stay the zero recordings: the web canvas fills the frame and its size does not follow the insets.
+
+iOS Player Settings target iPhone only (`targetDevice: 0`). The page-switch hint (`F1`) starts visible in the Editor and in Development builds, and hidden in a release player.
 
 The default raster is the spec scale, 3×, so the texture is 1290×2796 for the 430×932 page. `Fast 1x raster` calls `HomeChrome.ResizeRaster(1)` and is not the still. Fit and zoom only change how the texture is drawn in the window.
 

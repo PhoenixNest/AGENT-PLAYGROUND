@@ -13,6 +13,14 @@ Paths written as `tools/parity/...` in entries dated before 2026-10-08 are the l
 
 ### Fixed
 
+#### Unity iPhone safe area (2026-10-09, `agent/fix/iphone-safe-area`)
+
+- iOS Player Settings `targetDevice` is iPhone only. `IosExport` and `IosXcodePostProcess` do not set a device family. The page-switch hint starts visible in the Editor and in Development builds, and hidden in a release player. F1 still toggles it.
+- Every page that has a `__zero` spec now has a `__iphone` spec (44). The profile is the parity tool's fixed insets, 59 CSS px top and 34 CSS px bottom. A device with a different inset is off by a few px. Regenerating `__zero` matched the committed specs for 43 of 44 pages (some files differ only in the key order of root `t0`). `home__zero` also gains animation fields on 18 elements, so the committed zero specs were left in place. `home__iphone` was replaced with that distill: element rects are unchanged and the animation baseline is filled in.
+- Play mode loads `__iphone` when `Screen.safeArea` has a top or bottom inset, and `__zero` otherwise. A missing iphone spec falls back to zero. Page Preview's iPhone toggle is offered for every page and still defaults to zero. The page stays contain-fitted in the full screen. The web game canvas fills the frame and does not follow the insets, so game pages keep the zero playfield recordings.
+- EditMode (GPU, no `-nographics`): 370 passed, 82 failed, 3 skipped, 455 total. Before: 363 passed, 82 failed, 3 skipped, 448 total. The seven new tests passed. The 82 failures are `ReferenceComparisonTests` (73) and `ReferenceGateTests` (9). The skips are `FrameRateHarness.Measure`, `MeasureAccumulated`, and `PagePreviewTests.Stills_MatchTheParityPlayer_IncludingShopRingsDefault` because `tools/parity/out/unity-before` is not in this checkout.
+- The 23 zero stills were repainted with `PagePreviewPainter` (outline cache cleared, same pose as that test). `game_lvl01_t1000ms` is `38730953997DE30D033C10E6CFF0B9AE2E47FBAB1671D07178039B484609A12A`, `modal_pause` is `CE4A6AE83A5563E98F7F722334E17A7FC06FA1375C26390A9714FC838FEE7078`, and `maps_world_1_fresh` is `E8DB19615D6FC8D0299B4990E79BDD36F9600E15E4DB3D5034002DB812D94590`. No device or simulator run.
+
 #### Unity quota bar and modal backdrop (2026-10-09, `agent/fix/quota-bar-modal-backdrop`)
 
 - The level HUD quota fill paints when mass is collected. The level-1 capture stores `hud-quota-bar` at width 0 (`v:0`), and HomeChrome skipped that element before the live width override. A width of 0 hides the fill again, including after a restart that leaves the quota label unchanged. The web green-to-yellow gradient used once the goal is met is not ported; the captured yellow-to-pink gradient stays.

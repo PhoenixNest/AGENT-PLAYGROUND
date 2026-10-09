@@ -939,7 +939,7 @@ gantt
 1. Build the iOS player from Unity CLI to generate the native `Unity-iPhone.xcodeproj`. The Editor entry points are `OrbitalSalvage.Editor.IosExport.ExportSimulator` and `ExportDevice` (2026-10-08). They do not run to a project until the iOS module is installed.
 2. Open in Xcode on a Mac, configure Signing & Capabilities (Team ID still empty, bundle identifier `io.dev.maze`). Minimum iOS version is 15.0.
 3. Profile on physical iPhone hardware via Xcode Instruments: validate locked 60/120 FPS and memory $< 180\text{MB}$.
-4. Upload build to **TestFlight** and submit to App Store Connect with Guideline 4.3 defense notes.
+4. Upload build to **TestFlight** and submit to App Store Connect with Guideline 4.3 defense notes. The player is iPhone only and portrait only. In App Store Connect, turn off availability on Apple silicon Macs and Apple Vision Pro.
 
 ---
 
@@ -959,11 +959,12 @@ gantt
 
 Scaffolding and core architecture are already in place (`unity/maze-puzzle/`). Real remaining work:
 
-1. **iOS PlayerSettings:** Set bundle identifier (`applicationIdentifier`), iOS target OS version, signing team (`appleDeveloperTeamID`), and confirm `productName` / `companyName` for App Store Connect.
-2. **Worlds 3–5 mechanics or explicit scope-out:** Implement concentric rings / `gearRatio`, track walls, deflector pins, and one-way flaps at runtime — or document that campaign levels using those fields are unsupported.
-3. **Physics fidelity decision:** Align Unity thruster ($4.0$) and max $\omega$ ($25$) with doc 06 / web ($3.8$, clamp $12$), or update specs to accept Physics2D divergence.
-4. **Debris cap / pooling:** Add active-debris limits and object pooling (magnetic currently aliases to titanium; only `Debris_Titanium` prefab exists).
-5. **TMP Examples & Extras removal:** Strip unused TextMesh Pro Examples & Extras from the project once emoji/UI fonts are finalized.
-6. **URP / Linear decision:** Either install URP 2D and switch to Linear color space as originally planned, or revise the plan to keep Built-in + Gamma.
-7. **Finish Phase 5 stubs:** Wire shop purchase, sound, and settings handlers; create TMP emoji sprite asset / atlas if inline TMP sprites are still desired.
-8. **Phase 6 polish:** AudioMixer compressor bus and CoreHaptics (MCP v10.2.0 is already pinned).
+1. **iOS PlayerSettings:** Bundle identifier is `io.dev.maze`. `targetDevice` is iPhone only (not iPhone+iPad). Still set the signing team (`appleDeveloperTeamID`) and confirm `productName` / `companyName` for App Store Connect. **App Store Connect: turn off availability on Apple silicon Macs and Apple Vision Pro.** The build is portrait-only and iPhone-only; iPad, Mac, and visionOS are out of scope.
+2. **Notch insets:** Unity selects the `iphone` layout spec when the device safe area has a top or bottom inset. That spec was captured at fixed insets of 59 CSS px top and 34 CSS px bottom (`tools/parity` profile `iphone`). A device whose insets differ is off by a few px. The page stays contain-fitted in the full screen; the padding is inside the spec.
+3. **Worlds 3–5 mechanics or explicit scope-out:** Implement concentric rings / `gearRatio`, track walls, deflector pins, and one-way flaps at runtime — or document that campaign levels using those fields are unsupported.
+4. **Physics fidelity decision:** Align Unity thruster ($4.0$) and max $\omega$ ($25$) with doc 06 / web ($3.8$, clamp $12$), or update specs to accept Physics2D divergence.
+5. **Debris cap / pooling:** Add active-debris limits and object pooling (magnetic currently aliases to titanium; only `Debris_Titanium` prefab exists).
+6. **TMP Examples & Extras removal:** Strip unused TextMesh Pro Examples & Extras from the project once emoji/UI fonts are finalized.
+7. **URP / Linear decision:** Either install URP 2D and switch to Linear color space as originally planned, or revise the plan to keep Built-in + Gamma.
+8. **Finish Phase 5 stubs:** Wire shop purchase, sound, and settings handlers; create TMP emoji sprite asset / atlas if inline TMP sprites are still desired.
+9. **Phase 6 polish:** AudioMixer compressor bus and CoreHaptics (MCP v10.2.0 is already pinned).
