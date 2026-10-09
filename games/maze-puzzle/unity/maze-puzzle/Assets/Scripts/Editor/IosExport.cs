@@ -19,7 +19,8 @@ namespace OrbitalSalvage.Editor
     {
         public const string SimulatorMenu = "Orbital Salvage/Build/iOS Xcode Project (Simulator)";
         public const string DeviceMenu = "Orbital Salvage/Build/iOS Xcode Project (Device)";
-        public const string BundleId = "io.dev.maze-puzzle";
+        public const string BundleId = "io.dev.maze";
+        public const string MinimumIosVersion = "15.0";
 
         public const string MissingModuleMessage =
             "iOS Build Support is not installed for this Editor (BuildPipeline.IsBuildTargetSupported is false). " +

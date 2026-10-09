@@ -5,7 +5,7 @@
 - **Project:** _Orbital Salvage: Event Horizon_ / _Space Trash Clean_
 - **Current Baseline:** Playable HTML5 Canvas / ES6 Mobile Web Prototype (`web/`)
 - **Target Engine:** Unity 2022 LTS / Unity 6 (Universal Render Pipeline - 2D / Stylized 2.5D)
-- **Initial Launch Platform:** Apple iPhone (iOS 16+ / Metal API / High-DPI Retina)
+- **Initial Launch Platform:** Apple iPhone (iOS 15+ / Metal API / High-DPI Retina)
 - **Primary Viewport Standard:** iPhone 16 Pro Max Logical Dimensions ($430\text{pt} \times 932\text{pt}$, aspect ratio $\sim 19.5:9$)
 - **Document Version:** 1.1.0 (1:1 Audio & Visual Asset Parity Archive)
 - **Companion Documents:**
@@ -35,7 +35,7 @@ Verified against `unity/maze-puzzle/` ProjectSettings, `Packages/manifest.json`,
 | **4 Animation** | DOTween juice, VFX, flappers | **Not started** (no DOTween package). |
 | **5 UI & meta** | All screens, win/lose, Backup Pod, shop/economy handlers | **Partial.** Procedural uGUI for all 13 reviewed screens; runtime win/lose wiring and defeat / Backup Pod path implemented. Shop purchase / sound / settings handlers still stubs. |
 | **6 Audio & MCP** | AudioMixer, CoreHaptics, Unity MCP | **Partial.** `AudioManager` + WAVs. No AudioMixer / CoreHaptics. MCP for Unity package `com.coplaydev.unity-mcp` pinned to **v10.2.0** in `Packages/manifest.json`; server `mcpforunityserver==10.2.0` in `.cursor/mcp.json`. |
-| **7 iOS** | Bundle id, signing, Xcode export | **Export menu only. No Xcode project has been produced on this machine.** `PlayerSettings` iOS application identifier is `io.dev.maze-puzzle` (`applicationIdentifier.iPhone`, `overrideDefaultApplicationIdentifier: 1`). `OrbitalSalvage.Editor.IosExport` adds `Orbital Salvage/Build/iOS Xcode Project (Simulator)` and `(Device)`. Simulator SDK is `SimulatorSDK` with `AppleMobileArchitectureSimulator.ARM64` (Universal also includes x86_64; this export does not). Device SDK is `DeviceSDK`. Output is `games/maze-puzzle/output/maze-puzzle-simulator` and `games/maze-puzzle/output/maze-puzzle`. The iOS Build Support module is not installed (`PlaybackEngines` has `windowsstandalonesupport` only), so the menu items are disabled and the batch entry points exit 1. Still open: install the iOS module, Apple team ID, minimum iOS version, signing, and a Mac with Xcode to sign and run. `iOSTargetOSVersionString` empty; `appleDeveloperTeamID` empty; `productName: maze-puzzle`; `companyName: GalacticSanitation`. |
+| **7 iOS** | Bundle id, signing, Xcode export | **Export menu only. No Xcode project has been produced on this machine.** `PlayerSettings` iOS application identifier is `io.dev.maze` (`applicationIdentifier.iPhone`, `overrideDefaultApplicationIdentifier: 1`). `OrbitalSalvage.Editor.IosExport` adds `Orbital Salvage/Build/iOS Xcode Project (Simulator)` and `(Device)`. Simulator SDK is `SimulatorSDK` with `AppleMobileArchitectureSimulator.ARM64` (Universal also includes x86_64; this export does not). Device SDK is `DeviceSDK`. Output is `games/maze-puzzle/output/maze-puzzle-simulator` and `games/maze-puzzle/output/maze-puzzle`. The iOS Build Support module is not installed (`PlaybackEngines` has `windowsstandalonesupport` only), so the menu items are disabled and the batch entry points exit 1. Minimum iOS version is 15.0 (`iOSTargetOSVersionString: 15.0`). Still open: install the iOS module, Apple team ID, signing, and a Mac with Xcode to sign and run. `appleDeveloperTeamID` empty; `productName: maze-puzzle`; `companyName: GalacticSanitation`. |
 
 ---
 
@@ -937,7 +937,7 @@ gantt
 #### Phase 7: iOS Xcode Export, Profiling & App Store Submission
 
 1. Build the iOS player from Unity CLI to generate the native `Unity-iPhone.xcodeproj`. The Editor entry points are `OrbitalSalvage.Editor.IosExport.ExportSimulator` and `ExportDevice` (2026-10-08). They do not run to a project until the iOS module is installed.
-2. Open in Xcode on a Mac, configure Signing & Capabilities (Team ID still empty, bundle identifier `io.dev.maze-puzzle`). Minimum iOS version is still empty.
+2. Open in Xcode on a Mac, configure Signing & Capabilities (Team ID still empty, bundle identifier `io.dev.maze`). Minimum iOS version is 15.0.
 3. Profile on physical iPhone hardware via Xcode Instruments: validate locked 60/120 FPS and memory $< 180\text{MB}$.
 4. Upload build to **TestFlight** and submit to App Store Connect with Guideline 4.3 defense notes.
 
