@@ -151,9 +151,11 @@ namespace OrbitalSalvage.Viewer
 
         static void StampShop(HomeChrome chrome, string kinds)
         {
-            var heights = HomeChrome.ShopCardHeights(kinds);
+            var heights = HomeChrome.ShopCardHeights(kinds, chrome.Profile);
             if (heights == null) return;
-            var slots = CardInstancer.StackShop(heights);
+            double originY = CardInstancer.ShopY;
+            if (chrome.TryGridOrigin("store-card", out _, out double measuredY)) originY = measuredY;
+            var slots = CardInstancer.Stack(CardInstancer.ShopX, originY, CardInstancer.ShopW, CardInstancer.ShopGap, heights);
             var xs = new double[slots.Length];
             var ys = new double[slots.Length];
             for (int i = 0; i < slots.Length; i++)
@@ -411,7 +413,7 @@ namespace OrbitalSalvage.Viewer
             if (underlayChrome == null || underlayKey != key)
             {
                 if (underlayChrome != null) underlayChrome.Dispose();
-                underlayChrome = HomeChrome.Load(underId, ParityPages.Profile);
+                underlayChrome = HomeChrome.Load(underId, ParityPages.ResolveProfile(underId, ParityPages.ActiveProfile));
                 underlayKey = key;
                 if (!string.IsNullOrEmpty(stamp)) StampShop(underlayChrome, stamp);
             }

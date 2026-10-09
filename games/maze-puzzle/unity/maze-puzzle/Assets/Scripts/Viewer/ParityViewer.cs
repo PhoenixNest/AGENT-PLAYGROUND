@@ -52,7 +52,8 @@ namespace OrbitalSalvage.Viewer
         NavEdge armedEdge;
         Texture2D pageFill;
         GUIStyle hintStyle;
-        bool hintVisible = true;
+        // Editor and Development builds show the page-switch hint. Release players start hidden. F1 still toggles.
+        bool hintVisible = HintVisibleInThisPlayer;
         bool selfTesting;
         bool shipTesting;
         string dragSlider;
@@ -133,6 +134,30 @@ namespace OrbitalSalvage.Viewer
         public static string ShipSelfTestDirectory(string[] args)
         {
             return ArgDirectory(args, ShipSelfTestFlag);
+        }
+
+        /// <summary>
+        /// The debug page-switch hint starts on in the Editor and in Development builds, and off in release players.
+        /// F1 still toggles it after start.
+        /// </summary>
+        public static bool HintStartsVisible(bool inEditor, bool developmentBuild)
+        {
+            return inEditor || developmentBuild;
+        }
+
+        /// <summary>Whether this player is an Editor or Development build, which is where the hint starts visible.</summary>
+        public static bool HintVisibleInThisPlayer
+        {
+            get
+            {
+#if UNITY_EDITOR
+                return HintStartsVisible(true, false);
+#elif DEVELOPMENT_BUILD
+                return HintStartsVisible(false, true);
+#else
+                return HintStartsVisible(false, false);
+#endif
+            }
         }
 
         /// <summary>True when a flag-free launch runs the Canvas2D app instead of a parity capture.</summary>
@@ -262,14 +287,15 @@ namespace OrbitalSalvage.Viewer
         /// <summary>Load <paramref name="stateId"/>. When <paramref name="cardKinds"/> is set, shop cards are instanced from the measured sub-templates.</summary>
         public void Show(string stateId, string cardKinds)
         {
-            string key = string.IsNullOrEmpty(cardKinds) ? stateId : stateId + "#" + cardKinds;
             if (!ParityPages.IsState(stateId) && !HomeChrome.Applies(stateId)) return;
+            string profile = ParityPages.ResolveProfile(stateId, ParityPages.ActiveProfile);
+            string key = string.IsNullOrEmpty(cardKinds) ? stateId + "@" + profile : stateId + "@" + profile + "#" + cardKinds;
             if (shownKey == key && current != null) return;
             if (!cache.TryGet(key, out var chrome))
             {
                 try
                 {
-                    chrome = HomeChrome.Load(stateId, ParityPages.Profile);
+                    chrome = HomeChrome.Load(stateId, profile);
                     if (!string.IsNullOrEmpty(cardKinds)) StampShop(chrome, cardKinds);
                 }
                 catch (Exception ex)
@@ -558,7 +584,8 @@ namespace OrbitalSalvage.Viewer
         string Spec(string stateId)
         {
             if (specs.TryGetValue(stateId, out var json)) return json;
-            var asset = Resources.Load<TextAsset>("Parity/Spec/" + stateId + "__" + ParityPages.Profile);
+            string profile = ParityPages.ResolveProfile(stateId, ParityPages.ActiveProfile);
+            var asset = Resources.Load<TextAsset>("Parity/Spec/" + stateId + "__" + profile);
             json = asset != null ? asset.text : "{\"elements\":[]}";
             specs[stateId] = json;
             return json;
@@ -604,7 +631,7 @@ namespace OrbitalSalvage.Viewer
 
         /// <summary>
         /// Contain-fit the 430×932 page into the full screen. Aspect stays 430:932 (no stretch, no crop).
-        /// <paramref name="safeArea"/> does not shrink the rect; notch padding is a follow-up.
+        /// <paramref name="safeArea"/> does not shrink the rect. Notch and home-indicator padding live in the iphone spec.
         /// A screen under 8 px on either side falls back to a usable safe area when one is given.
         /// </summary>
         public static Rect PageRectFor(int screenWidth, int screenHeight, Rect? safeArea = null)

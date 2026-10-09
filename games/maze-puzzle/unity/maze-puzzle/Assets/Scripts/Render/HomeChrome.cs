@@ -39,7 +39,8 @@ namespace OrbitalSalvage.Render
                     return true;
             }
             if (stateId.IndexOf('/') >= 0 || stateId.IndexOf('\\') >= 0 || stateId.IndexOf('#') >= 0) return false;
-            return Resources.Load<TextAsset>("Parity/Spec/" + stateId + "__zero") != null;
+            if (Resources.Load<TextAsset>("Parity/Spec/" + stateId + "__zero") != null) return true;
+            return Resources.Load<TextAsset>("Parity/Spec/" + stateId + "__iphone") != null;
         }
 
         Canvas2D canvas;
@@ -179,7 +180,8 @@ namespace OrbitalSalvage.Render
         string[] snapStyle = Array.Empty<string>();
         bool bannerApplied;
         List<BannerSnap> bannerSnaps;
-        static List<Dictionary<string, object>> claimedBanner;
+        static readonly Dictionary<string, List<Dictionary<string, object>>> claimedBannerByProfile =
+            new Dictionary<string, List<Dictionary<string, object>>>();
 
         sealed class BannerSnap
         {
@@ -282,7 +284,13 @@ namespace OrbitalSalvage.Render
 
         public static HomeChrome Load(string spec, string profile)
         {
+            if (string.IsNullOrEmpty(profile)) profile = "zero";
             var asset = Resources.Load<TextAsset>("Parity/Spec/" + spec + "__" + profile);
+            if (asset == null && profile != "zero")
+            {
+                profile = "zero";
+                asset = Resources.Load<TextAsset>("Parity/Spec/" + spec + "__zero");
+            }
             if (asset == null) throw new InvalidOperationException("missing home spec for profile " + profile);
             var root = (Dictionary<string, object>)MiniJson.Parse(asset.text);
             var vp = (Dictionary<string, object>)root["viewport"];
@@ -291,6 +299,8 @@ namespace OrbitalSalvage.Render
             var list = new List<Dictionary<string, object>>();
             foreach (var o in (List<object>)root["elements"]) list.Add((Dictionary<string, object>)o);
             var canvas = new Canvas2D((int)Math.Round(w * scale), (int)Math.Round(h * scale));
+            // Playfield recordings are canvas-space frames. The web canvas fills #mobile-frame and
+            // initLayout uses the frame size, not safe-area insets, so the zero recording is reused.
             var fieldAsset = Resources.Load<TextAsset>("Parity/Playfield/" + spec);
             StreamPlayer field = fieldAsset != null ? StreamPlayer.Load(fieldAsset.text) : null;
             var chrome = new HomeChrome(profile, canvas, field, list, w, h, scale);
@@ -304,23 +314,42 @@ namespace OrbitalSalvage.Render
             return chrome;
         }
 
-        static Dictionary<string, List<Dictionary<string, object>>> shopTemplates;
+        static readonly Dictionary<string, Dictionary<string, List<Dictionary<string, object>>>> shopTemplatesByProfile =
+            new Dictionary<string, Dictionary<string, List<Dictionary<string, object>>>>();
+
+        /// <summary>First element whose class is exactly <paramref name="exactClass"/>. Used to stack cards on this page's grid.</summary>
+        public bool TryGridOrigin(string exactClass, out double x, out double y)
+        {
+            x = y = 0;
+            if (string.IsNullOrEmpty(exactClass)) return false;
+            for (int i = 0; i < elements.Count; i++)
+            {
+                if (S(elements[i], "c") != exactClass) continue;
+                if (!elements[i].TryGetValue("r", out var rv) || !(rv is List<object> rect) || rect.Count < 2) continue;
+                x = (double)rect[0];
+                y = (double)rect[1];
+                return true;
+            }
+            return false;
+        }
 
         /// <summary>Replace shop cards with the measured locked / owned / equipped sub-templates, stacked at <paramref name="slotX"/>/<paramref name="slotY"/>.</summary>
         public void StampShopCards(string kinds, double[] slotX, double[] slotY)
         {
             if (IsItemStamp(kinds))
             {
-                CardStamp.ApplyTrees(elements, ItemTrees(kinds), slotX, slotY);
+                CardStamp.ApplyTrees(elements, ItemTrees(kinds, Profile), slotX, slotY);
                 return;
             }
-            CardStamp.ApplyShop(elements, kinds, ShopTemplates(), slotX, slotY);
+            CardStamp.ApplyShop(elements, kinds, ShopTemplates(Profile), slotX, slotY);
         }
 
-        public static double[] ShopCardHeights(string kinds)
+        public static double[] ShopCardHeights(string kinds) => ShopCardHeights(kinds, "zero");
+
+        public static double[] ShopCardHeights(string kinds, string profile)
         {
-            if (!IsItemStamp(kinds)) return CardStamp.Heights(kinds, ShopTemplates());
-            var trees = ItemTrees(kinds);
+            if (!IsItemStamp(kinds)) return CardStamp.Heights(kinds, ShopTemplates(profile));
+            var trees = ItemTrees(kinds, profile);
             if (trees == null) return null;
             var heights = new double[trees.Count];
             for (int i = 0; i < trees.Count; i++)
@@ -344,7 +373,7 @@ namespace OrbitalSalvage.Render
 
         static bool IsItemStamp(string kinds) => !string.IsNullOrEmpty(kinds) && kinds.IndexOf(':') >= 0;
 
-        static List<List<Dictionary<string, object>>> ItemTrees(string kinds)
+        static List<List<Dictionary<string, object>>> ItemTrees(string kinds, string profile)
         {
             var parts = kinds.Split(',');
             var trees = new List<List<Dictionary<string, object>>>(parts.Length);
@@ -364,7 +393,7 @@ namespace OrbitalSalvage.Render
                     var specs = SpecsFor(id);
                     for (int s = 0; s < specs.Length; s++)
                     {
-                        var els = LoadElements(specs[s]);
+                        var els = LoadElements(specs[s], profile);
                         if (els == null) continue;
                         cards.AddRange(CardStamp.ExtractAll(els));
                     }
@@ -405,9 +434,18 @@ namespace OrbitalSalvage.Render
             return new[] { "shop_rings_default", "shop_rings_mixed", "shop_gift_claimed" };
         }
 
-        static List<Dictionary<string, object>> LoadElements(string spec)
+        static TextAsset LoadSpecAsset(string spec, string profile)
         {
-            var asset = Resources.Load<TextAsset>("Parity/Spec/" + spec + "__zero");
+            if (string.IsNullOrEmpty(profile)) profile = "zero";
+            var asset = Resources.Load<TextAsset>("Parity/Spec/" + spec + "__" + profile);
+            if (asset == null && profile != "zero")
+                asset = Resources.Load<TextAsset>("Parity/Spec/" + spec + "__zero");
+            return asset;
+        }
+
+        static List<Dictionary<string, object>> LoadElements(string spec, string profile)
+        {
+            var asset = LoadSpecAsset(spec, profile);
             if (asset == null) return null;
             var root = MiniJson.Parse(asset.text) as Dictionary<string, object>;
             if (root == null || !(root["elements"] is List<object> raw)) return null;
@@ -417,20 +455,22 @@ namespace OrbitalSalvage.Render
             return list;
         }
 
-        static Dictionary<string, List<Dictionary<string, object>>> ShopTemplates()
+        static Dictionary<string, List<Dictionary<string, object>>> ShopTemplates(string profile)
         {
-            if (shopTemplates != null) return shopTemplates;
-            shopTemplates = new Dictionary<string, List<Dictionary<string, object>>>();
-            TakeKind(shopTemplates, "shop_rings_default", "equipped");
-            TakeKind(shopTemplates, "shop_rings_default", "locked");
-            TakeKind(shopTemplates, "shop_rings_mixed", "owned");
-            return shopTemplates;
+            if (string.IsNullOrEmpty(profile)) profile = "zero";
+            if (shopTemplatesByProfile.TryGetValue(profile, out var cached)) return cached;
+            var map = new Dictionary<string, List<Dictionary<string, object>>>();
+            TakeKind(map, "shop_rings_default", "equipped", profile);
+            TakeKind(map, "shop_rings_default", "locked", profile);
+            TakeKind(map, "shop_rings_mixed", "owned", profile);
+            shopTemplatesByProfile[profile] = map;
+            return map;
         }
 
-        static void TakeKind(Dictionary<string, List<Dictionary<string, object>>> into, string spec, string kind)
+        static void TakeKind(Dictionary<string, List<Dictionary<string, object>>> into, string spec, string kind, string profile)
         {
             if (into.ContainsKey(kind)) return;
-            var asset = Resources.Load<TextAsset>("Parity/Spec/" + spec + "__zero");
+            var asset = LoadSpecAsset(spec, profile);
             if (asset == null) return;
             var root = MiniJson.Parse(asset.text) as Dictionary<string, object>;
             if (root == null || !(root["elements"] is List<object> raw)) return;
@@ -726,7 +766,7 @@ namespace OrbitalSalvage.Render
 
         bool ApplyClaimedBanner()
         {
-            var source = ClaimedBannerNodes();
+            var source = ClaimedBannerNodes(Profile);
             if (source == null || source.Count == 0) return false;
             var hostRoot = FindById("daily-gift-banner");
             if (hostRoot == null) return false;
@@ -856,10 +896,11 @@ namespace OrbitalSalvage.Render
             return max;
         }
 
-        static List<Dictionary<string, object>> ClaimedBannerNodes()
+        static List<Dictionary<string, object>> ClaimedBannerNodes(string profile)
         {
-            if (claimedBanner != null) return claimedBanner;
-            var asset = Resources.Load<TextAsset>("Parity/Spec/shop_gift_claimed__zero");
+            if (string.IsNullOrEmpty(profile)) profile = "zero";
+            if (claimedBannerByProfile.TryGetValue(profile, out var cached)) return cached;
+            var asset = LoadSpecAsset("shop_gift_claimed", profile);
             if (asset == null) return null;
             var root = MiniJson.Parse(asset.text) as Dictionary<string, object>;
             if (root == null || !(root["elements"] is List<object> raw)) return null;
@@ -868,10 +909,11 @@ namespace OrbitalSalvage.Render
                 if (raw[i] is Dictionary<string, object> el) list.Add(el);
             var nodes = CollectBanner(list);
             if (nodes == null) return null;
-            claimedBanner = new List<Dictionary<string, object>>(nodes.Count);
+            var copy = new List<Dictionary<string, object>>(nodes.Count);
             for (int i = 0; i < nodes.Count; i++)
-                claimedBanner.Add((Dictionary<string, object>)CloneJson(nodes[i]));
-            return claimedBanner;
+                copy.Add((Dictionary<string, object>)CloneJson(nodes[i]));
+            claimedBannerByProfile[profile] = copy;
+            return copy;
         }
 
         static List<Dictionary<string, object>> CollectBanner(List<Dictionary<string, object>> els)
