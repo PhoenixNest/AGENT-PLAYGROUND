@@ -978,7 +978,8 @@ namespace OrbitalSalvage.Render
             ApplyBlockReflow();
             // A live frame used to force the approximate blur. Settled modals (pageEnter already
             // finished) need the exact readback or the dim behind the card shifts by several levels.
-            canvas.ExactBackdrop = DebugExactBackdrop || frame == null || !frame.HasMotion;
+            // The sheet intro is motion too; the approximate blur of an empty hole flashes gray.
+            canvas.ExactBackdrop = DebugExactBackdrop || modalIntro || frame == null || !frame.HasMotion;
             bool savedPremul = Canvas2D.GradientInterpolatesPremultiplied;
             Canvas2D.GradientInterpolatesPremultiplied = true; // CSS gradients interpolate premultiplied
             Deferred.Clear(); DrawnBoxes = DrawnRuns = DrawnEmoji = 0;
@@ -1242,7 +1243,8 @@ namespace OrbitalSalvage.Render
                 eff[k] = parentOpacity * opacity;
                 skip[k] = parentSkipped;
                 if (parentSkipped) continue;
-                if (specHidden[k]) { skip[k] = true; continue; }
+                // Captures store hud-quota-bar at width 0 (v:0). A live width above 0 is the fill.
+                if (specHidden[k] && !PositiveWidthOverride(eid)) { skip[k] = true; continue; }
                 if (eid.Length > 0 && HiddenIds.Count > 0 && HiddenIds.Contains(eid)) { skip[k] = true; continue; }
                 if (OmitCached(k)) continue;
                 bool moving = Motion(k);
@@ -1269,6 +1271,11 @@ namespace OrbitalSalvage.Render
                 if (e.TryGetValue("th", out var th) && th is Dictionary<string, object> td) PaintBox(td, k, eff[k], false);
                 if (moving) canvas.Restore();
             }
+        }
+
+        bool PositiveWidthOverride(string id)
+        {
+            return id.Length > 0 && WidthOverrides.TryGetValue(id, out double width) && width > 0;
         }
 
         bool Motion(int k) => !DebugFreezeMotion && frame != null && !frame.Shine[k] && (frame.Tree[k] || frame.Pressed(k));

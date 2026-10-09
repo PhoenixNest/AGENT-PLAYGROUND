@@ -11,6 +11,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 Paths written as `tools/parity/...` in entries dated before 2026-10-08 are the location on that day. Those files now live under `games/maze-puzzle/tools/parity/...`. Entries that name `tools/parity/unity/*.ps1` or `canvas-conformance/run-unity.ps1` record the path used that day. Those Windows wrappers now live under `games/maze-puzzle/tools/parity/windows/`.
 
+### Fixed
+
+#### Unity quota bar and modal backdrop (2026-10-09, `agent/fix/quota-bar-modal-backdrop`)
+
+- The level HUD quota fill paints when mass is collected. The level-1 capture stores `hud-quota-bar` at width 0 (`v:0`), and HomeChrome skipped that element before the live width override. A width of 0 hides the fill again, including after a restart that leaves the quota label unchanged. The web green-to-yellow gradient used once the goal is met is not ported; the captured yellow-to-pink gradient stays.
+- Every game-page sheet (`modal_*`, including the surplus debrief and the other debrief and defeat variants) binds the live playfield under the overlay, including the first frame when the session has not rendered yet. The sheet intro uses the exact backdrop blur. `settings_modal_*` is unchanged. Game and pause stills stay `38730953997DE30D033C10E6CFF0B9AE2E47FBAB1671D07178039B484609A12A` and `CE4A6AE83A5563E98F7F722334E17A7FC06FA1375C26390A9714FC838FEE7078`. All 23 `screenshot-states.json` stills matched a GPU paint taken on this branch before the fix.
+- EditMode: 354 passed, 82 failed, 2 skipped, 438 total. The 6 new tests passed. The 82 failures are `ReferenceComparisonTests` (73) and `ReferenceGateTests` (9), the same missing-audio-reference set as before. The skips are `FrameRateHarness.Measure` and `MeasureAccumulated`. `PagePreviewTests.Stills_MatchTheParityPlayer_IncludingShopRingsDefault` ran and passed; it had been skipping because `tools/parity/out/unity-before` was absent.
+
 ### Changed
 
 #### Unity play page fit (2026-10-09, `agent/fix/fit-full-screen`)
