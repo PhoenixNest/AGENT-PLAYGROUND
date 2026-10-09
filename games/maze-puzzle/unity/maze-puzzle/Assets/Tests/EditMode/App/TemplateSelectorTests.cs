@@ -24,8 +24,16 @@ namespace OrbitalSalvage.App.Tests
             Assert.AreEqual("maps_world_5", TemplateSelector.Select(w5, out _));
             var done = fresh; done.WorldDone = 10;
             Assert.AreEqual("maps_world_1_all_complete", TemplateSelector.Select(done, out _));
-            var other = done; other.ActiveWorld = 2;
-            Assert.AreEqual("maps_world_1_all_complete_other_active", TemplateSelector.Select(other, out _));
+            var other = done; other.ActiveWorld = 2; other.CurrentLevel = 11;
+            Assert.AreEqual("maps_world_1_all_complete", TemplateSelector.Select(other, out _), "world 1 tab stays on the world 1 capture");
+            var on11 = fresh; on11.WorldIndex = 2; on11.CurrentLevel = 11;
+            Assert.AreEqual("maps_world_1_all_complete_other_active", TemplateSelector.Select(on11, out _));
+            Assert.IsTrue(TemplateSelector.MapsCaptureMatches("maps_world_1_fresh", 1, 1));
+            Assert.IsFalse(TemplateSelector.MapsCaptureMatches("maps_world_4", 4, 31));
+            Assert.IsTrue(TemplateSelector.MapsCaptureMatches("maps_world_4", 4, 34));
+            Assert.IsTrue(TemplateSelector.TryBakedMaps("maps_world_1_all_complete_other_active", out int bakedWorld, out int bakedLevel));
+            Assert.AreEqual(2, bakedWorld);
+            Assert.AreEqual(11, bakedLevel);
             var none = fresh; none.WorldIndex = 3; none.WorldDone = 0;
             Assert.AreEqual("maps_world_3_none_complete", TemplateSelector.Select(none, out _));
             var prefix = fresh; prefix.WorldIndex = 5; prefix.Levels1Through44 = true;

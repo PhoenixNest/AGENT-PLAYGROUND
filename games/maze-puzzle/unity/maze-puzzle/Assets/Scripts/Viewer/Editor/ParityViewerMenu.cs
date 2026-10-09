@@ -58,6 +58,7 @@ namespace OrbitalSalvage.Viewer.Editor
         {
             string path = ProfileFilePath();
             if (!ProceedWithReset()) return;
+            if (ParityViewer.RequestReset != null) ParityViewer.RequestReset();
             if (File.Exists(path)) File.Delete(path);
             Debug.Log("[ParityViewer] reset profile " + path);
         }

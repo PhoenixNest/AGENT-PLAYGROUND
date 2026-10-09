@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using System.Reflection;
 using NUnit.Framework;
+using OrbitalSalvage.Viewer;
 using OrbitalSalvage.Viewer.Editor;
 using UnityEditor;
 using UnityEngine;
@@ -27,6 +28,33 @@ namespace OrbitalSalvage.Viewer.Tests
             }
             finally
             {
+                ParityViewerMenu.ProfilePathOverride = null;
+                ParityViewerMenu.ConfirmReset = null;
+                if (Directory.Exists(dir)) Directory.Delete(dir, true);
+            }
+        }
+
+        [Test]
+        public void Confirm_ResetsARunningAppAndDeletesTheTempProfile()
+        {
+            string dir = Path.Combine(Path.GetTempPath(), "menu-ios-profile-" + Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(dir);
+            string file = Path.Combine(dir, "orbital-salvage-profile.json");
+            File.WriteAllText(file, "{\"keep\":true}");
+            var previous = ParityViewer.RequestReset;
+            int resets = 0;
+            ParityViewer.RequestReset = () => resets++;
+            ParityViewerMenu.ProfilePathOverride = () => file;
+            ParityViewerMenu.ConfirmReset = () => true;
+            try
+            {
+                ParityViewerMenu.ResetProfile();
+                Assert.AreEqual(1, resets, "confirm must reset the running app before deleting the file");
+                Assert.IsFalse(File.Exists(file));
+            }
+            finally
+            {
+                ParityViewer.RequestReset = previous;
                 ParityViewerMenu.ProfilePathOverride = null;
                 ParityViewerMenu.ConfirmReset = null;
                 if (Directory.Exists(dir)) Directory.Delete(dir, true);
