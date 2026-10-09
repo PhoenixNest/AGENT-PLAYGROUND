@@ -13,7 +13,7 @@ Measured on this machine on 2026-10-04 (D3D11, RTX 4060 Laptop, windowed). These
 | HomeChrome.Draw | 1 run, n=20, avg 3.049 ms, p95 4.409 ms. |
 | Live frame (600 steps, scale 1) | avg 9.38 ms, p95 14.32 ms (fence included). |
 
-The default player (Editor Play and `Builds/Play`, no flags) boots `ParityViewer` → `AppHost`/`AppController` with pointer input, a wall clock, `FileProfileStore`, and the DSP player. `--parity` and the parity self-test flags keep the frozen clock and silent audio. Landscape keeps the 430×932 page letterboxed. Not verified on a phone.
+The default player (Editor Play and `games/maze-puzzle/output/maze-puzzle-windows/OrbitalSalvage.exe`, no flags) boots `ParityViewer` → `AppHost`/`AppController` with pointer input, a wall clock, `FileProfileStore`, and the DSP player. `--parity` and the parity self-test flags keep the frozen clock and silent audio. Landscape keeps the 430×932 page letterboxed. Not verified on a phone.
 
 ## Platforms
 

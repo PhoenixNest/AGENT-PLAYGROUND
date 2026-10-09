@@ -251,7 +251,7 @@ foreach ($name in @('before', 'after')) {
 }
 [void]$sb.AppendLine("## D3D11 opt-in")
 [void]$sb.AppendLine("")
-[void]$sb.AppendLine("The parity capture player (tools/parity/windows/unity/build.ps1, ParityBuild) does not set a graphics API, so Unity 6 keeps the default (D3D12 on this machine) and stills stay on that path. A separate player for play mode is tools/parity/windows/unity/build-play.ps1 (PlayBuild), which forces Direct3D11 only for that build and writes Builds/Play/OrbitalSalvage.exe. It restores ProjectSettings afterwards, including the original graphics API list.")
+[void]$sb.AppendLine("The parity capture player (tools/parity/windows/unity/build.ps1, ParityBuild) does not set a graphics API, so Unity 6 keeps the default (D3D12 on this machine) and stills stay on that path. A separate player for play mode is tools/parity/windows/unity/build-play.ps1 (PlayBuild), which forces Direct3D11 only for that build and writes games/maze-puzzle/output/maze-puzzle-windows/OrbitalSalvage.exe. It restores ProjectSettings afterwards, including the original graphics API list.")
 [void]$sb.AppendLine("")
 [void]$sb.AppendLine("Editor Play mode uses the graphics API of the Editor process. Start the Editor with -force-d3d11 to play on D3D11. The running API is SystemInfo.graphicsDeviceType.")
 [void]$sb.AppendLine("")
