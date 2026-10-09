@@ -5,7 +5,7 @@ param(
 
 $ErrorActionPreference = 'Stop'
 
-. (Join-Path $PSScriptRoot '..\lib\roots.ps1')
+. (Join-Path $PSScriptRoot '..\..\lib\roots.ps1')
 $mazeRoot = Get-MazeRoot $PSScriptRoot
 $project = Join-Path $mazeRoot 'unity\maze-puzzle'
 $outDir = Join-Path $mazeRoot 'tools\parity\out\unity-logs'
