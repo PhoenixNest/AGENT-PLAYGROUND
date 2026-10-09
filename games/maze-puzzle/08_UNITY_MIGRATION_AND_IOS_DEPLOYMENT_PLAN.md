@@ -35,7 +35,7 @@ Verified against `unity/maze-puzzle/` ProjectSettings, `Packages/manifest.json`,
 | **4 Animation** | DOTween juice, VFX, flappers | **Not started** (no DOTween package). |
 | **5 UI & meta** | All screens, win/lose, Backup Pod, shop/economy handlers | **Partial.** Procedural uGUI for all 13 reviewed screens; runtime win/lose wiring and defeat / Backup Pod path implemented. Shop purchase / sound / settings handlers still stubs. |
 | **6 Audio & MCP** | AudioMixer, CoreHaptics, Unity MCP | **Partial.** `AudioManager` + WAVs. No AudioMixer / CoreHaptics. MCP for Unity package `com.coplaydev.unity-mcp` pinned to **v10.2.0** in `Packages/manifest.json`; server `mcpforunityserver==10.2.0` in `.cursor/mcp.json`. |
-| **7 iOS** | Bundle id, signing, Xcode export | **Not started.** `applicationIdentifier` empty; `iOSTargetOSVersionString` empty; `productName: maze-puzzle`; `companyName: GalacticSanitation`; `appleDeveloperTeamID` empty. |
+| **7 iOS** | Bundle id, signing, Xcode export | **Export menu only. No Xcode project has been produced on this machine.** `PlayerSettings` iOS application identifier is `io.dev.maze-puzzle` (`applicationIdentifier.iPhone`, `overrideDefaultApplicationIdentifier: 1`). `OrbitalSalvage.Editor.IosExport` adds `Orbital Salvage/Build/iOS Xcode Project (Simulator)` and `(Device)`. Simulator SDK is `SimulatorSDK` with `AppleMobileArchitectureSimulator.ARM64` (Universal also includes x86_64; this export does not). Device SDK is `DeviceSDK`. Output is `games/maze-puzzle/output/maze-puzzle-simulator` and `games/maze-puzzle/output/maze-puzzle`. The iOS Build Support module is not installed (`PlaybackEngines` has `windowsstandalonesupport` only), so the menu items are disabled and the batch entry points exit 1. Still open: install the iOS module, Apple team ID, minimum iOS version, signing, and a Mac with Xcode to sign and run. `iOSTargetOSVersionString` empty; `appleDeveloperTeamID` empty; `productName: maze-puzzle`; `companyName: GalacticSanitation`. |
 
 ---
 
@@ -806,15 +806,20 @@ Execute custom C# Editor utilities to batch-import all 50 level definitions from
 
 #### 3. Headless iOS Xcode Build Export
 
-Generate the native Xcode project directly from the command line:
+`OrbitalSalvage.Editor.IosExport` is the entry point. Without the iOS Build Support module the call logs `[IosExport]` and exits 1. It does not produce an Xcode project on this Windows machine. Signing and running need Xcode on a Mac. The simulator build cannot be tested here.
 
 ```powershell
 & "C:\Program Files\Unity\Hub\Editor\6000.4.6f1\Editor\Unity.exe" `
-  -batchmode -nographics `
+  -batchmode `
   -projectPath "c:\Users\ASUS\Documents\Code\Local\AGENT-PLAYGROUND\games\maze-puzzle\unity\maze-puzzle" `
-  -buildTarget iOS `
-  -executeMethod BuildScript.ExportXcodeProject `
-  -quit -logFile "build_ios.log"
+  -executeMethod OrbitalSalvage.Editor.IosExport.ExportSimulator `
+  -quit -logFile "build_ios_simulator.log"
+
+& "C:\Program Files\Unity\Hub\Editor\6000.4.6f1\Editor\Unity.exe" `
+  -batchmode `
+  -projectPath "c:\Users\ASUS\Documents\Code\Local\AGENT-PLAYGROUND\games\maze-puzzle\unity\maze-puzzle" `
+  -executeMethod OrbitalSalvage.Editor.IosExport.ExportDevice `
+  -quit -logFile "build_ios_device.log"
 ```
 
 ### 6.4 Unity Hub CLI (Headless Module Installation)
@@ -931,8 +936,8 @@ gantt
 
 #### Phase 7: iOS Xcode Export, Profiling & App Store Submission
 
-1. Build the iOS player from Unity CLI to generate the native `Unity-iPhone.xcodeproj`.
-2. Open in Xcode, configure Signing & Capabilities (Team ID, Bundle Identifier `com.company.orbitalsalvage`).
+1. Build the iOS player from Unity CLI to generate the native `Unity-iPhone.xcodeproj`. The Editor entry points are `OrbitalSalvage.Editor.IosExport.ExportSimulator` and `ExportDevice` (2026-10-08). They do not run to a project until the iOS module is installed.
+2. Open in Xcode on a Mac, configure Signing & Capabilities (Team ID still empty, bundle identifier `io.dev.maze-puzzle`). Minimum iOS version is still empty.
 3. Profile on physical iPhone hardware via Xcode Instruments: validate locked 60/120 FPS and memory $< 180\text{MB}$.
 4. Upload build to **TestFlight** and submit to App Store Connect with Guideline 4.3 defense notes.
 

@@ -13,6 +13,11 @@ Paths written as `tools/parity/...` in entries dated before 2026-10-08 are the l
 
 ### Changed
 
+#### Unity Editor (2026-10-08, `agent/feat/menu-ios`)
+
+- The custom Editor menu is `Orbital Salvage/Preview`, `Build`, `Play`, and `Tools`. Page Preview paints stored specs with HomeChrome outside Play mode. The Windows play player is `games/maze-puzzle/output/maze-puzzle-windows/OrbitalSalvage.exe`. iOS simulator and device export menu items exist and exit 1 until the iOS Build Support module is installed; no Xcode project was produced. The iOS application identifier is `io.dev.maze-puzzle`. Apple team ID, minimum iOS version, and signing are still empty. The menu map is in `unity/maze-puzzle/README.md`.
+- EditMode: 327 passed, 82 failed, 2 skipped, 411 total. The 82 failures are `ReferenceComparisonTests` and `ReferenceGateTests`. The skips are `FrameRateHarness.Measure` and `MeasureAccumulated`. The 10 new tests passed. Before and after captures of the 23 `screenshot-states.json` stills are SHA256-identical, including game `38730953997DE30D033C10E6CFF0B9AE2E47FBAB1671D07178039B484609A12A` and pause `CE4A6AE83A5563E98F7F722334E17A7FC06FA1375C26390A9714FC838FEE7078`. `PlayBuild.BuildPlayer` exited 0 and wrote the exe above; `ProjectSettings.asset` hash after that run matched the hash taken before it.
+
 #### Tooling (2026-10-08, `agent/chore/tools-platform`)
 
 - Windows PowerShell launchers moved to `games/maze-puzzle/tools/parity/windows/unity/` (`build.ps1`, `capture.ps1`, `perf.ps1`, `run-framerate.ps1`, `build-play.ps1`) and `games/maze-puzzle/tools/parity/windows/canvas-conformance/run-unity.ps1`. They stay tracked. `macos/` is a placeholder only. Screenshot baselines stay the Windows D3D12 hashes until a Mac recapture. Classification: `tools/parity/README.md` (Platforms) and `tools/parity/CLEANUP.md`.
