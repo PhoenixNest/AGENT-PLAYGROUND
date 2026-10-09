@@ -14,7 +14,7 @@ New-Item -ItemType Directory -Force -Path (Split-Path $LogFile) | Out-Null
 
 if (-not (Test-Path $UnityExe)) { throw "Unity editor not found: $UnityExe" }
 
-$exe = Join-Path $project 'Builds\Play\OrbitalSalvage.exe'
+$exe = Join-Path $mazeRoot 'output\maze-puzzle-windows\OrbitalSalvage.exe'
 if (Test-Path $exe) { Remove-Item $exe -Force }
 
 $arguments = @(

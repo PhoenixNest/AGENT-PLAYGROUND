@@ -37,6 +37,9 @@ Thumbs.db
 sysinfo.txt
 *.unitypackage
 
+# Generated players and Xcode exports (games/maze-puzzle/output/<name>).
+games/maze-puzzle/output/
+
 # Maze parity tool output. Generators, fixtures, goldens, and recordings stay tracked.
 games/maze-puzzle/tools/parity/**/out/
 games/maze-puzzle/tools/parity/**/__pycache__/
