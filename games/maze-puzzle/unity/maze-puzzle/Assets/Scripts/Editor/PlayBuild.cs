@@ -18,7 +18,7 @@ namespace OrbitalSalvage.Editor
     {
         public const string OutputRelative = "Builds/Play/OrbitalSalvage.exe";
 
-        [MenuItem("Orbital Salvage/Build Play Player (D3D11)")]
+        [MenuItem("Orbital Salvage/Build/Windows Play Player (D3D11)", false, 200)]
         public static void BuildPlayer()
         {
             int code;
