@@ -44,6 +44,9 @@ namespace OrbitalSalvage.Viewer
         bool toastClearFrame;
         internal int ProductDraws;
 
+        /// <summary>Set while a product boot is alive so Tools → Reset Saved Profile can reset that running app.</summary>
+        public static Action RequestReset;
+
         void BootApp()
         {
             if (!selfTesting) ConfigurePresentation();
@@ -76,6 +79,8 @@ namespace OrbitalSalvage.Viewer
             };
             app.AdoptSector(session.ActiveSector);
             appliedEpoch = app.SectorEpoch;
+            app.ResumeCurrentSector();
+            RequestReset = ResetRunningProgress;
             sessionWired = false;
             WireSession();
             app.Playfield = new BoundPlayfield(session);
@@ -169,7 +174,7 @@ namespace OrbitalSalvage.Viewer
             }
             if (session != null && app.ConsumeLayoutRequest())
                 session.ApplyLayout(ParityPages.CssWidth, ParityPages.CssHeight);
-            if (session != null && app.SectorEpoch != appliedEpoch && app.ActiveSector != null)
+            if (session != null && app.ActiveSector != null && SectorNeedsLoad(session))
             {
                 session.LoadSector(app.ActiveSector);
                 session.IsLevelCleared = app.IsLevelCleared;
@@ -195,7 +200,7 @@ namespace OrbitalSalvage.Viewer
             if (app == null || session == null) return;
             if (app.ConsumeLayoutRequest())
                 session.ApplyLayout(ParityPages.CssWidth, ParityPages.CssHeight);
-            if (app.SectorEpoch != appliedEpoch && app.ActiveSector != null)
+            if (app.ActiveSector != null && SectorNeedsLoad(session))
             {
                 session.LoadSector(app.ActiveSector);
                 appliedEpoch = app.SectorEpoch;
@@ -206,6 +211,30 @@ namespace OrbitalSalvage.Viewer
             session.IsLevelFailed = app.IsLevelFailed;
             session.IsPaused = app.IsPaused;
             session.UsedBackupPod = app.UsedBackupPod;
+        }
+
+        /// <summary>Reload when the controller advanced a sector, or the session is still showing a different id.</summary>
+        bool SectorNeedsLoad(LiveGameSession live)
+        {
+            if (live == null || app == null || app.ActiveSector == null) return false;
+            bool idDrift = live.ActiveSector == null || live.ActiveSector.Id != app.ActiveSector.Id;
+            return app.SectorEpoch != appliedEpoch || idDrift;
+        }
+
+        static int CampaignLevel(AppController controller)
+        {
+            if (controller == null || controller.ActiveSector == null) return 0;
+            if (controller.ActiveSector.IsDaily == true || !controller.ActiveSector.LevelNumber.HasValue) return 0;
+            return (int)controller.ActiveSector.LevelNumber.Value;
+        }
+
+        /// <summary>Tools → Reset Saved Profile. Returns the running app to level 1 and rewrites its store.</summary>
+        public void ResetRunningProgress()
+        {
+            if (app == null) return;
+            app.ResetSavedProgress();
+            appliedEpoch = -1;
+            SyncApp(true);
         }
 
         bool OverridesUnchanged()
@@ -295,6 +324,12 @@ namespace OrbitalSalvage.Viewer
                     if (age < 0) age = 0;
                     current.Toasts.Add(new HomeChrome.ToastPaint { Text = toast.Text, AgeMs = age });
                 }
+            }
+            if (app.CurrentPage == "maps")
+            {
+                int level = CampaignLevel(app);
+                bool match = TemplateSelector.MapsCaptureMatches(app.TemplateId, app.WorldIndex, level);
+                current.StampMapsCurrent(app.WorldIndex, level, match);
             }
             BindModalPlayfield(current);
             current.Underlay = null;

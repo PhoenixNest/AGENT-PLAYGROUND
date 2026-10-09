@@ -234,6 +234,7 @@ namespace OrbitalSalvage.Viewer
 
         void OnDestroy()
         {
+            if (RequestReset == ResetRunningProgress) RequestReset = null;
             cache.Clear(chrome => chrome.Dispose());
             current = null;
             if (underlayChrome != null)

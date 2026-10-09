@@ -29,6 +29,8 @@ namespace OrbitalSalvage.App
         public int AchievementsUnlocked;
         public int AchievementsTotal;
         public bool GameDaily;
+        /// <summary>Campaign level number of the active sector, or 0 for a daily shift or before a sector is adopted.</summary>
+        public int CurrentLevel;
     }
 
     /// <summary>Maps a controller snapshot to a distilled spec id. <paramref name="cardStamp"/> is set when no web state has this shop inventory.</summary>
@@ -100,10 +102,43 @@ namespace OrbitalSalvage.App
             return "modal_defeat_12_of_20";
         }
 
+        /// <summary>
+        /// Baked world tab and PLAY marker in each captured maps spec.
+        /// <c>maps_world_1_all_complete_other_active</c> was described as world 1 with level 11 active,
+        /// but the capture followed <c>loadSector(10)</c> onto world 2, so the pixels are the 11–20 tab with level 11 current.
+        /// </summary>
+        public static bool TryBakedMaps(string templateId, out int worldIndex, out int currentLevel)
+        {
+            worldIndex = 0;
+            currentLevel = 0;
+            switch (templateId)
+            {
+                case "maps_world_1_fresh": worldIndex = 1; currentLevel = 1; return true;
+                case "maps_world_1_all_complete": worldIndex = 1; currentLevel = 1; return true;
+                case "maps_world_1_all_complete_other_active": worldIndex = 2; currentLevel = 11; return true;
+                case "maps_world_2": worldIndex = 2; currentLevel = 14; return true;
+                case "maps_world_3": worldIndex = 3; currentLevel = 24; return true;
+                case "maps_world_3_none_complete": worldIndex = 3; currentLevel = 21; return true;
+                case "maps_world_4": worldIndex = 4; currentLevel = 34; return true;
+                case "maps_world_5": worldIndex = 5; currentLevel = 44; return true;
+                case "maps_world_5_levels_1_44_done": worldIndex = 5; currentLevel = 44; return true;
+                default: return false;
+            }
+        }
+
+        /// <summary>True when the captured world tab and PLAY marker already match live state, so the page must not be restamped.</summary>
+        public static bool MapsCaptureMatches(string templateId, int worldIndex, int currentLevel)
+        {
+            if (!TryBakedMaps(templateId, out int world, out int level)) return true;
+            return world == worldIndex && level == currentLevel;
+        }
+
         static string Maps(TemplateQuery q)
         {
             bool world1Done = q.WorldIndex == 1 && q.WorldTotal > 0 && q.WorldDone >= q.WorldTotal;
-            if (world1Done && q.ActiveWorld != 1) return "maps_world_1_all_complete_other_active";
+            // Pixels are world 2 / level 11, not the world-1 tab. Only select them when that is the live view.
+            if (q.WorldIndex == 2 && q.WorldDone == 0 && q.CurrentLevel == 11)
+                return "maps_world_1_all_complete_other_active";
             if (world1Done) return "maps_world_1_all_complete";
             if (q.WorldIndex == 3 && q.WorldDone == 0) return "maps_world_3_none_complete";
             if (q.WorldIndex == 5 && q.Levels1Through44) return "maps_world_5_levels_1_44_done";
