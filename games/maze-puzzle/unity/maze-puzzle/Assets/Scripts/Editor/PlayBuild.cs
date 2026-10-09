@@ -16,7 +16,7 @@ namespace OrbitalSalvage.Editor
     /// </summary>
     public static class PlayBuild
     {
-        public const string OutputRelative = "Builds/Play/OrbitalSalvage.exe";
+        public const string OutputRelative = "../../output/maze-puzzle-windows/OrbitalSalvage.exe";
 
         [MenuItem("Orbital Salvage/Build/Windows Play Player (D3D11)", false, 200)]
         public static void BuildPlayer()
@@ -45,8 +45,10 @@ namespace OrbitalSalvage.Editor
             }
 
             string projectRoot = Directory.GetParent(Application.dataPath).FullName;
-            string exePath = Path.Combine(projectRoot, OutputRelative);
-            Directory.CreateDirectory(Path.GetDirectoryName(exePath));
+            string exePath = Path.GetFullPath(Path.Combine(projectRoot, OutputRelative));
+            string dir = Path.GetDirectoryName(exePath);
+            if (Directory.Exists(dir)) Directory.Delete(dir, true);
+            Directory.CreateDirectory(dir);
 
             string settingsPath = Path.Combine(projectRoot, "ProjectSettings", "ProjectSettings.asset");
             byte[] settingsBytes = File.Exists(settingsPath) ? File.ReadAllBytes(settingsPath) : null;
