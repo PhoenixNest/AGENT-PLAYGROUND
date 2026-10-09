@@ -73,8 +73,10 @@ The frame hash is a dual 32-bit FNV-style hash over the vector as uint words. Lo
 - Unity EditMode: `OrbitalSalvage.Logic.Tests` (`Assets/Tests/EditMode/Logic`). Fixtures are found by walking up from the working directory until a folder contains both `web/index.html` and `tools/parity/golden/fixtures` (that folder is `games/maze-puzzle`).
 - Fast loop: `dotnet test games/maze-puzzle/tools/parity/golden/dotnet`. It compiles the same sources and tests on .NET 10.
 
+The command below is the Windows editor. A macOS Unity binary is not scripted yet (`../macos/README.md`). This line is the logic-fixture loop. The full EditMode suite is a separate run and needs a GPU.
+
 ```powershell
-Unity.exe -batchmode -nographics -projectPath games\maze-puzzle\unity\maze-puzzle -runTests -testPlatform EditMode -testResults $env:TEMP\logic-results.xml -logFile $env:TEMP\logic-tests.log
+& "C:\Program Files\Unity\Hub\Editor\6000.4.6f1\Editor\Unity.exe" -batchmode -nographics -projectPath games\maze-puzzle\unity\maze-puzzle -runTests -testPlatform EditMode -testResults $env:TEMP\logic-results.xml -logFile $env:TEMP\logic-tests.log
 ```
 
 Do not pass `-quit` with `-runTests`.
