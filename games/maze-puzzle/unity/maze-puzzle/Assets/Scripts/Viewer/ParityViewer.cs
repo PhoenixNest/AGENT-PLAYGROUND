@@ -311,13 +311,18 @@ namespace OrbitalSalvage.Viewer
                 return;
             }
             bool modal = currentId != null && currentId.StartsWith("modal_", StringComparison.Ordinal) && IsGamePage(currentId);
-            if (!modal || session == null || session.Renderer == null || session.Renderer.Target == null)
+            if (!modal || session == null || session.Renderer == null)
             {
                 chrome.ExternalPlayfield = null;
                 return;
             }
             session.IsPaused = true;
             if (session.RenderFrames == 0) session.Update(RecordedFrameDriver.FrameDt);
+            if (session.Renderer.Target == null)
+            {
+                chrome.ExternalPlayfield = null;
+                return;
+            }
             chrome.ExternalPlayfield = session.Renderer.Target;
             chrome.SkipPlayfield = false;
         }
@@ -672,8 +677,10 @@ namespace OrbitalSalvage.Viewer
 
         static bool IsGamePage(string id)
         {
-            return id == "game_lvl01_t1000ms" || id == "game_daily_bronze_t1000" || id == "modal_pause"
-                || id == "modal_debrief_exact" || id == "modal_defeat_12_of_20";
+            if (string.IsNullOrEmpty(id)) return false;
+            // Every game-page sheet is modal_*. Settings sheets are settings_modal_*.
+            if (id.StartsWith("modal_", StringComparison.Ordinal)) return true;
+            return id == "game_lvl01_t1000ms" || id == "game_daily_bronze_t1000";
         }
 
         bool WantLiveChrome(string id)
@@ -769,10 +776,12 @@ namespace OrbitalSalvage.Viewer
         {
             if (current == null || session == null) return;
             string label = session.QuotaLabel();
-            if (label == lastQuota) return;
+            double width = session.QuotaBarWidth(QuotaTrackWidth);
+            if (label == lastQuota && current.WidthOverrides.TryGetValue("hud-quota-bar", out double have) && Math.Abs(have - width) <= 1e-6)
+                return;
             lastQuota = label;
             current.TextOverrides["hud-quota-text"] = label;
-            current.WidthOverrides["hud-quota-bar"] = session.QuotaBarWidth(QuotaTrackWidth);
+            current.WidthOverrides["hud-quota-bar"] = width;
             BindModalPlayfield(current);
             if (selfTesting) current.Draw();
             else

@@ -474,5 +474,38 @@ namespace OrbitalSalvage.Viewer
             if (method != null) method.Invoke(null, new object[] { code });
             else Application.Quit(code);
         }
+
+        /// <summary>EditMode. The same predicate <see cref="IsGamePage"/> uses for live chrome and modal backdrops.</summary>
+        public static bool IsGamePageTemplate(string id) => IsGamePage(id);
+
+        /// <summary>EditMode. Writes the quota label and bar width the live tick would.</summary>
+        public void ProbeApplyQuota(LiveGameSession live, HomeChrome chrome, string pageId)
+        {
+            session = live;
+            current = chrome;
+            currentId = pageId;
+            liveVisual = true;
+            ApplyQuota();
+        }
+
+        /// <summary>
+        /// EditMode. Binds a game-page modal the way the first frame after it opens does,
+        /// including a session that has not rendered yet, then paints that frame.
+        /// </summary>
+        public HomeChrome ProbeFirstModalFrame(string templateId, LiveGameSession live)
+        {
+            session = live;
+            liveVisual = true;
+            selfTesting = false;
+            currentId = templateId;
+            clock.NowSeconds = () => 0;
+            clock.Restart();
+            var chrome = HomeChrome.Load(templateId, ParityPages.Profile);
+            current = chrome;
+            if (WantLiveChrome(templateId)) chrome.SkipPlayfield = true;
+            BindModalPlayfield(chrome);
+            PaintCurrent(true);
+            return chrome;
+        }
     }
 }
