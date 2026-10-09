@@ -5,9 +5,11 @@ Drives the Unity project in `games/maze-puzzle/unity/maze-puzzle` through the SP
 ## Run
 
 ```powershell
-pwsh games/maze-puzzle/tools/parity/unity/build.ps1
-pwsh games/maze-puzzle/tools/parity/unity/capture.ps1 -Out games/maze-puzzle/tools/parity/out/unity
+pwsh games/maze-puzzle/tools/parity/windows/unity/build.ps1
+pwsh games/maze-puzzle/tools/parity/windows/unity/capture.ps1 -Out games/maze-puzzle/tools/parity/out/unity
 ```
+
+These two scripts are Windows-only. They live under `windows/unity/` with `perf.ps1`, `run-framerate.ps1`, and `build-play.ps1`. `screenshot-states.json` and `smoke-states.json` stay in this directory. macOS launchers are not written yet (`../macos/unity/README.md`).
 
 `build.ps1` runs Unity in `-batchmode -quit` with `OrbitalSalvage.Editor.ParityBuild.BuildPlayer` and produces `games/maze-puzzle/unity/maze-puzzle/Builds/Parity/OrbitalSalvageParity.exe` (Win64 Mono, define `ORBITAL_PARITY`). Log: `games/maze-puzzle/tools/parity/out/unity-logs/build.log`.
 

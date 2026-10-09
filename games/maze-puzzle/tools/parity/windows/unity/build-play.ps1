@@ -5,23 +5,23 @@ param(
 
 $ErrorActionPreference = 'Stop'
 
-. (Join-Path $PSScriptRoot '..\lib\roots.ps1')
+. (Join-Path $PSScriptRoot '..\..\lib\roots.ps1')
 $mazeRoot = Get-MazeRoot $PSScriptRoot
 $project = Join-Path $mazeRoot 'unity\maze-puzzle'
 $outDir = Join-Path $mazeRoot 'tools\parity\out\unity-logs'
-if (-not $LogFile) { $LogFile = Join-Path $outDir 'build.log' }
+if (-not $LogFile) { $LogFile = Join-Path $outDir 'build-play.log' }
 New-Item -ItemType Directory -Force -Path (Split-Path $LogFile) | Out-Null
 
 if (-not (Test-Path $UnityExe)) { throw "Unity editor not found: $UnityExe" }
 
-$exe = Join-Path $project 'Builds\Parity\OrbitalSalvageParity.exe'
+$exe = Join-Path $project 'Builds\Play\OrbitalSalvage.exe'
 if (Test-Path $exe) { Remove-Item $exe -Force }
 
 $arguments = @(
     '-batchmode', '-quit',
     '-projectPath', "`"$project`"",
     '-buildTarget', 'Win64',
-    '-executeMethod', 'OrbitalSalvage.Editor.ParityBuild.BuildPlayer',
+    '-executeMethod', 'OrbitalSalvage.Editor.PlayBuild.BuildPlayer',
     '-logFile', "`"$LogFile`""
 )
 
@@ -36,5 +36,5 @@ if ($process.ExitCode -ne 0 -or -not (Test-Path $exe)) {
     exit 1
 }
 
-Write-Host "Built $exe"
+Write-Host "Built $exe (Direct3D11). Editor Play mode still uses the Editor process API; start Unity with -force-d3d11 to play on D3D11."
 exit 0

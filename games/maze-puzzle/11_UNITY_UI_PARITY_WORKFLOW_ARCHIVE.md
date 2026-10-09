@@ -26,7 +26,7 @@ User feedback: the Unity UI looked static and "completely undynamic", especially
 - Lead reviewer: Claude Sonnet 5.5 (High). It plans, reviews every report against measured numbers, rejects unmeasured claims, and decides merges.
 - Engineers: Grok 4.7 High sub-agents, one per track, each in its own git worktree under `.worktrees/parity-*` on a branch `agent/parity/<track>`. Tracks finish with a numbered report: root cause, before/after table, gate results, commit hashes.
 - Loop: capture web reference -> capture Unity -> score -> attribute error -> fix at the cause -> rebuild -> recapture -> rescore -> regression gates -> commit. Merges into `agent/parity/integration` always run the full regression first.
-- Tooling: Unity CLI (`games/maze-puzzle/tools/parity/unity/build.ps1`, `capture.ps1`, `perf.ps1`, `build-play.ps1`); Unity MCP was unavailable (authentication timed out).
+- Tooling: Unity CLI (`games/maze-puzzle/tools/parity/windows/unity/build.ps1`, `capture.ps1`, `perf.ps1`, `build-play.ps1`). On 2026-10-08 (`agent/chore/tools-platform`) those Windows wrappers moved from `unity/` to `windows/unity/`. `run-framerate.ps1` moved with them. `windows/canvas-conformance/run-unity.ps1` moved from `canvas-conformance/`. Unity MCP was unavailable (authentication timed out).
 
 ## 4. Architecture decisions
 
@@ -93,8 +93,8 @@ cd games/maze-puzzle/tools/parity
 npm ci
 pip install numpy scikit-image Pillow opencv-python
 # web references: see games/maze-puzzle/tools/parity/README.md (Playwright harness)
-./unity/build.ps1      # parity player
-./unity/capture.ps1 -States unity/screenshot-states.json -Profile zero
+./windows/unity/build.ps1      # Windows parity player
+./windows/unity/capture.ps1 -States unity/screenshot-states.json -Profile zero
 # score stills and flows with the diff/score scripts under games/maze-puzzle/tools/parity (SPEC.md v1.6 is the contract)
 ```
 
