@@ -13,6 +13,11 @@ Paths written as `tools/parity/...` in entries dated before 2026-10-08 are the l
 
 ### Changed
 
+#### Unity iOS GameAssembly id (2026-10-09, `agent/feat/ios-gameassembly-id`)
+
+- After every iOS export, `IosXcodePostProcess` sets the Xcode target `GameAssembly` bundle identifier to `com.unity3d.gameassembly`. The app identifier stays `io.dev.maze`. `UnityFramework` stays `com.unity3d.framework`. Player Settings are unchanged. The step is untested against a real Unity-generated Xcode project: this machine has no iOS Build Support module. On a Mac, run an export and check `[IosExport] GameAssembly bundle id set to com.unity3d.gameassembly`. If the console warns `target GameAssembly not found`, send the listed target names.
+- EditMode: 347 passed, 82 failed, 3 skipped, 432 total. The 20 new `IosGameAssemblyBundleIdTests` passed. The 82 failures are `ReferenceComparisonTests` (73) and `ReferenceGateTests` (9). The skips are `FrameRateHarness.Measure`, `MeasureAccumulated`, and `PagePreviewTests.Stills_MatchTheParityPlayer_IncludingShopRingsDefault` because `tools/parity/out/unity-before` is not in this checkout. The 23 stills were not recaptured. `IosExport.ExportSimulator` exited 1 with the missing-module message and wrote no Xcode project.
+
 #### Unity Editor follow-up (2026-10-08, `agent/feat/menu-ios`)
 
 - Page Preview clears the outline-glyph cache before a page. After other editor paints, `shop_rings_default` had differed from the parity still by 9 pixels (max channel delta 2, bbox (956,384)-(986,401)) on the "Claim +100" edge. With a fresh cache, all 23 `screenshot-states.json` states painted by `PagePreviewPainter` matched those stills byte for byte. HomeChrome was not changed.
