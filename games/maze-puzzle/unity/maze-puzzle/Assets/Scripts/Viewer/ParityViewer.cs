@@ -50,7 +50,7 @@ namespace OrbitalSalvage.Viewer
         int pressIndex = -1;
         string pressCss;
         NavEdge armedEdge;
-        Texture2D black;
+        Texture2D pageFill;
         GUIStyle hintStyle;
         bool hintVisible = true;
         bool selfTesting;
@@ -157,10 +157,10 @@ namespace OrbitalSalvage.Viewer
         void Awake()
         {
             useGUILayout = false;
-            black = new Texture2D(1, 1, TextureFormat.RGBA32, false);
-            black.SetPixel(0, 0, Color.black);
-            black.Apply(false, true);
-            black.hideFlags = HideFlags.HideAndDontSave;
+            pageFill = new Texture2D(1, 1, TextureFormat.RGBA32, false);
+            pageFill.SetPixel(0, 0, PageFill);
+            pageFill.Apply(false, true);
+            pageFill.hideFlags = HideFlags.HideAndDontSave;
         }
 
         void Start()
@@ -246,7 +246,7 @@ namespace OrbitalSalvage.Viewer
                 session.Renderer.Dispose();
                 session = null;
             }
-            if (black != null) Destroy(black);
+            if (pageFill != null) Destroy(pageFill);
             if (readTex != null) Destroy(readTex);
             if (readRt != null)
             {
@@ -565,7 +565,7 @@ namespace OrbitalSalvage.Viewer
         }
 
         /// <summary>
-        /// Scale the 430×932 portrait page into <paramref name="fit"/> (the window, or <see cref="Screen.safeArea"/>).
+        /// Scale the 430×932 portrait page into <paramref name="fit"/>, keeping 430:932.
         /// Landscape keeps this portrait page and letterboxes it; there is no separate landscape layout.
         /// The painter raster is the spec viewport (its scale is the capture device pixel ratio) stretched into this rect.
         /// </summary>
@@ -593,13 +593,28 @@ namespace OrbitalSalvage.Viewer
             return new Rect(dx, dy, dw, dh);
         }
 
-        /// <summary>Page rect for this frame: the portrait page fitted inside the device safe area.</summary>
+        /// <summary>#mobile-frame background, rgb(30, 27, 75). OnGUI paints this outside the contained page.</summary>
+        public static readonly Color32 PageFill = new Color32(30, 27, 75, 255);
+
+        /// <summary>
+        /// Contain-fit the 430×932 page into the full screen. Aspect stays 430:932 (no stretch, no crop).
+        /// <paramref name="safeArea"/> does not shrink the rect; notch padding is a follow-up.
+        /// A screen under 8 px on either side falls back to a usable safe area when one is given.
+        /// </summary>
+        public static Rect PageRectFor(int screenWidth, int screenHeight, Rect? safeArea = null)
+        {
+            bool screenOk = screenWidth >= 8 && screenHeight >= 8;
+            if (!screenOk && safeArea.HasValue && safeArea.Value.width >= 8f && safeArea.Value.height >= 8f)
+                return FitPage(safeArea.Value);
+            float w = screenOk ? screenWidth : 1f;
+            float h = screenOk ? screenHeight : 1f;
+            return FitPage(new Rect(0f, 0f, w, h));
+        }
+
+        /// <summary>Page rect for this frame: the portrait page contained in the full screen.</summary>
         public static Rect PageRect()
         {
-            Rect safe = Screen.safeArea;
-            if (safe.width < 8f || safe.height < 8f)
-                safe = new Rect(0f, 0f, Screen.width, Screen.height);
-            return FitPage(safe);
+            return PageRectFor(Screen.width, Screen.height, Screen.safeArea);
         }
 
         public static Vector2 CssToScreen(Rect box, double cssX, double cssY)
@@ -622,9 +637,9 @@ namespace OrbitalSalvage.Viewer
 
         void OnGUI()
         {
-            if (black == null || Screen.width < 2 || Screen.height < 2) return;
+            if (pageFill == null || Screen.width < 2 || Screen.height < 2) return;
             var full = new Rect(0, 0, Screen.width, Screen.height);
-            GUI.DrawTexture(full, black, ScaleMode.StretchToFill, false);
+            GUI.DrawTexture(full, pageFill, ScaleMode.StretchToFill, false);
             var letter = ToGui(PageRect());
             if (ShowPlayfield && session.Renderer.Target != null)
                 GUI.DrawTexture(letter, session.Renderer.Target, ScaleMode.StretchToFill, true);

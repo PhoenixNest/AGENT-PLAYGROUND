@@ -13,6 +13,11 @@ Paths written as `tools/parity/...` in entries dated before 2026-10-08 are the l
 
 ### Changed
 
+#### Unity play page fit (2026-10-09, `agent/fix/fit-full-screen`)
+
+- Play mode contain-fits the 430×932 page into the full screen and keeps that aspect. `Screen.safeArea` no longer shrinks the rect. Bands left by an aspect mismatch are rgb(30, 27, 75), the `#mobile-frame` background. Pointer mapping uses the same rect. Notch and home-indicator padding inside the page is not added.
+- EditMode, GPU: 351 passed, 82 failed, 3 skipped, 436 total. The 4 new `PageFitTests` passed. The 82 failures are `ReferenceComparisonTests` (73) and `ReferenceGateTests` (9). The skips are `FrameRateHarness.Measure`, `MeasureAccumulated`, and `PagePreviewTests.Stills_MatchTheParityPlayer_IncludingShopRingsDefault`. The 23 stills were not recaptured. Page Preview and HomeChrome were not changed.
+
 #### Unity iOS GameAssembly id (2026-10-09, `agent/feat/ios-gameassembly-id`)
 
 - After every iOS export, `IosXcodePostProcess` sets the Xcode target `GameAssembly` bundle identifier to `com.unity3d.gameassembly`. The app identifier stays `io.dev.maze`. `UnityFramework` stays `com.unity3d.framework`. Player Settings are unchanged. The step is untested against a real Unity-generated Xcode project: this machine has no iOS Build Support module. On a Mac, run an export and check `[IosExport] GameAssembly bundle id set to com.unity3d.gameassembly`. If the console warns `target GameAssembly not found`, send the listed target names.
