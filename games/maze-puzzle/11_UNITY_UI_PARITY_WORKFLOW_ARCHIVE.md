@@ -98,7 +98,20 @@ pip install numpy scikit-image Pillow opencv-python
 # score stills and flows with the diff/score scripts under games/maze-puzzle/tools/parity (SPEC.md v1.6 is the contract)
 ```
 
-Preview in the Editor: open the project at `games/maze-puzzle/unity/maze-puzzle` (Unity 6000.4.6f1), open `Assets/Scenes/MainGameScene.unity`, press Play. F1 hint, F2 page browser; menu Orbital Salvage -> Parity Viewer -> Enabled / Reset Profile.
+Preview in the Editor: open the project at `games/maze-puzzle/unity/maze-puzzle` (Unity 6000.4.6f1), open `Assets/Scenes/MainGameScene.unity`, press Play. F1 hint, F2 page browser.
+
+### 8.1 Editor menu (2026-10-08, `agent/feat/menu-ios`)
+
+`Orbital Salvage/` has four groups. Priorities 100, 200, 300, and 400 put separators between them. The full path table is `unity/maze-puzzle/README.md`.
+
+| Group | Items |
+| --- | --- |
+| Preview | `Open Window`, plus one item per page (`home_default`, `maps_world_1_fresh`, `daily_default`, `shop_rings_default`, `achievements_none`, `settings_default`, `loading_t0500`, `game_lvl01_t1000ms`, `modal_pause`, `modal_debrief_exact`, `modal_defeat_12_of_20`). Each opens Page Preview on that spec. The window dropdown lists every `__zero` spec. |
+| Build | `Windows Play Player (D3D11)` writes `games/maze-puzzle/output/maze-puzzle-windows/OrbitalSalvage.exe`. `iOS Xcode Project (Simulator)` and `(Device)` export Xcode projects when the iOS module is installed. While it is absent the items are disabled and the batch entry points exit 1. |
+| Play | `Quality/Auto`, `1x`, `1.5x`, `2x`, `3x` (checkmarks on `PlayQuality.Forced`) and `Parity Viewer Enabled`. |
+| Tools | `Reset Saved Profile` asks before deleting `orbital-salvage-profile.json`. Batch mode skips the dialog and deletes. |
+
+Page Preview paints with `HomeChrome` outside Play mode. Slider 0 is the capture pose (`Draw()`). A positive value uses `Draw(timeMs)`.
 
 ## 9. User-reported Editor Play lag (closed 2026-10-04)
 
