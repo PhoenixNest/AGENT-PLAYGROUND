@@ -61,3 +61,5 @@ Batch entry points, from this project:
 ```
 
 The Windows wrapper is `games/maze-puzzle/tools/parity/windows/unity/build-play.ps1`.
+
+After every iOS export, a post-process step sets the Xcode target `GameAssembly` to bundle id `com.unity3d.gameassembly`. The app id stays `io.dev.maze`. `UnityFramework` keeps `com.unity3d.framework`. This step is untested against a real Unity-generated Xcode project: this machine has no iOS Build Support module. On a Mac, run an export and look for `[IosExport] GameAssembly bundle id set to com.unity3d.gameassembly`. If the console warns `target GameAssembly not found`, send the target names from that line.
