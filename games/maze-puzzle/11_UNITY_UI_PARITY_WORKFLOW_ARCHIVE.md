@@ -107,7 +107,7 @@ Preview in the Editor: open the project at `games/maze-puzzle/unity/maze-puzzle`
 | Group | Items |
 | --- | --- |
 | Preview | `Open Window`, plus one item per page (`home_default`, `maps_world_1_fresh`, `daily_default`, `shop_rings_default`, `achievements_none`, `settings_default`, `loading_t0500`, `game_lvl01_t1000ms`, `modal_pause`, `modal_debrief_exact`, `modal_defeat_12_of_20`). Each opens Page Preview on that spec. The window dropdown lists every `__zero` spec. |
-| Build | `Windows Play Player (D3D11)` writes `games/maze-puzzle/output/maze-puzzle-windows/OrbitalSalvage.exe`. `iOS Xcode Project (Simulator)` and `(Device)` export Xcode projects when the iOS module is installed. It is not installed on this machine, so those items are disabled. |
+| Build | `Windows Play Player (D3D11)` writes `games/maze-puzzle/output/maze-puzzle-windows/OrbitalSalvage.exe`. `iOS Xcode Project (Simulator)` and `(Device)` export Xcode projects when the iOS module is installed. While it is absent the items are disabled and the batch entry points exit 1. |
 | Play | `Quality/Auto`, `1x`, `1.5x`, `2x`, `3x` (checkmarks on `PlayQuality.Forced`) and `Parity Viewer Enabled`. |
 | Tools | `Reset Saved Profile` asks before deleting `orbital-salvage-profile.json`. Batch mode skips the dialog and deletes. |
 
