@@ -15,7 +15,7 @@ namespace OrbitalSalvage.Render
     /// Infinite CSS animations set <see cref="Loops"/> and are sampled from the draw clock. Strict still parity is not
     /// finished: several pages sit under the 99.0% / 0.985 bar, mostly on text-edge coverage.
     /// </summary>
-    public sealed class HomeChrome : IDisposable
+    public sealed partial class HomeChrome : IDisposable
     {
         public static bool Applies(string stateId)
         {
