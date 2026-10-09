@@ -50,7 +50,7 @@ Priorities are 100 (Preview), 200 (Build), 300 (Play), and 400 (Tools). Adjacent
 
 The default raster is the spec scale, 3×, so the texture is 1290×2796 for the 430×932 page. `Fast 1x raster` calls `HomeChrome.ResizeRaster(1)` and is not the still. Fit and zoom only change how the texture is drawn in the window.
 
-Animation ms at 0 calls `HomeChrome.Draw()` (capture pose, no clock). That is the pose the parity player uses when the state has no `timeOffsetMs`. A value above 0 calls `HomeChrome.Draw(timeMs)`. The CSS clock is deterministic. Save PNG writes `games/maze-puzzle/output/preview/<id>__<profile>.png`.
+Animation ms at 0 calls `HomeChrome.Draw()` (capture pose, no clock). That is the pose the parity player uses when the state has no `timeOffsetMs`. A positive slider value calls `HomeChrome.Draw(timeMs)`. A screenshot state with `timeOffsetMs` is `Draw(CaptureTimeMs + timeOffsetMs)`. On 2026-10-08, after `OutlineFonts.Clear()`, a D3D11 repaint of all 23 `screenshot-states.json` states through `PagePreviewPainter` was byte-identical to the parity-player stills, including `shop_rings_default`. An earlier shop PNG differed by 9 pixels (max channel delta 2, bbox (956,384)-(986,401)) on the edge of "Claim +100" because a previous editor paint had filled the static glyph cache. The window clears that cache before each page. HomeChrome was not changed. Save PNG writes `games/maze-puzzle/output/preview/<id>__<profile>.png`.
 
 Batch entry points, from this project:
 

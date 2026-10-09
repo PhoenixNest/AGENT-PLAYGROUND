@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using NUnit.Framework;
 using OrbitalSalvage.App;
@@ -55,6 +57,68 @@ namespace OrbitalSalvage.Viewer.Tests
             }
         }
 
+        /// <summary>
+        /// Every <c>screenshot-states.json</c> entry, painted by <see cref="PagePreviewPainter"/>
+        /// with the parity player's clock: <c>Draw()</c> when the state has no time offset, otherwise
+        /// <c>Draw(CaptureTimeMs + timeOffsetMs)</c>. Bytes must match the D3D12 player still.
+        /// The earlier shop PNG differed by 9 pixels on the SDF edge of "Claim +100"; a repaint
+        /// through this path matches the still, so the bar is byte identity, including shop_rings_default.
+        /// </summary>
+        [Test]
+        public void Stills_MatchTheParityPlayer_IncludingShopRingsDefault()
+        {
+            string project = Directory.GetParent(Application.dataPath).FullName;
+            string maze = Path.GetFullPath(Path.Combine(project, "..", ".."));
+            string statesPath = Path.Combine(maze, "tools", "parity", "unity", "screenshot-states.json");
+            string stillDir = Path.Combine(maze, "tools", "parity", "out", "unity-before");
+            if (!File.Exists(statesPath) || !Directory.Exists(stillDir))
+                Assert.Ignore("parity stills are not in this checkout");
+
+            var root = MiniJson.Parse(File.ReadAllText(statesPath)) as List<object>;
+            Assert.IsNotNull(root);
+            Assert.AreEqual(23, root.Count);
+            // Earlier EditMode paints leave flattened glyphs in OutlineFonts. The parity player
+            // starts empty, and a second shop paint in a dirty cache moves 9 pixels on "Claim +100".
+            OutlineFonts.Clear();
+            bool sawShop = false;
+            foreach (var item in root)
+            {
+                var state = item as Dictionary<string, object>;
+                string id = Convert.ToString(state["id"]);
+                string spec = state.ContainsKey("spec") && state["spec"] != null ? Convert.ToString(state["spec"]) : id;
+                bool hasOffset = state.ContainsKey("timeOffsetMs") && state["timeOffsetMs"] != null;
+                double offset = hasOffset ? Convert.ToDouble(state["timeOffsetMs"], CultureInfo.InvariantCulture) : 0;
+                string stillPath = Path.Combine(stillDir, id + "__zero.png");
+                Assert.IsTrue(File.Exists(stillPath), id);
+                byte[] still = File.ReadAllBytes(stillPath);
+                byte[] preview = PaintLikeThePlayer(spec, hasOffset, offset);
+                if (id == "shop_rings_default")
+                {
+                    sawShop = true;
+                    Assert.IsFalse(hasOffset, "shop_rings_default is a capture-pose still");
+                }
+                if (!BytesEqual(still, preview))
+                {
+                    string dir = Path.Combine(maze, "output", "preview-diff");
+                    Directory.CreateDirectory(dir);
+                    File.WriteAllBytes(Path.Combine(dir, id + "__preview.png"), preview);
+                    int pixels = CountPixelDiffs(still, preview, out int maxDelta, out int minX, out int minY, out int maxX, out int maxY);
+                    Assert.Fail(id + " pixels=" + pixels + " maxDelta=" + maxDelta + " bbox=" + minX + "," + minY + "-" + maxX + "," + maxY
+                        + " pngBytes still=" + still.Length + " preview=" + preview.Length);
+                }
+            }
+            Assert.IsTrue(sawShop);
+
+            OutlineFonts.Clear();
+            byte[] shopStill = File.ReadAllBytes(Path.Combine(stillDir, "shop_rings_default__zero.png"));
+            byte[] shopAlone = Paint("shop_rings_default", true, 0);
+            if (!BytesEqual(shopStill, shopAlone))
+            {
+                int pixels = CountPixelDiffs(shopStill, shopAlone, out int maxDelta, out int minX, out int minY, out int maxX, out int maxY);
+                Assert.Fail("shop alone pixels=" + pixels + " maxDelta=" + maxDelta + " bbox=" + minX + "," + minY + "-" + maxX + "," + maxY);
+            }
+        }
+
         [Test]
         public void AnimationClock_IsDeterministic()
         {
@@ -105,6 +169,60 @@ namespace OrbitalSalvage.Viewer.Tests
             Assert.AreEqual(prefs, PlayerPrefs.GetInt(sentinel, 0));
             Assert.IsFalse(EditorPrefs.HasKey(sentinel));
             Assert.AreEqual(quality, PlayQuality.Forced);
+        }
+
+        static bool BytesEqual(byte[] a, byte[] b)
+        {
+            if (a == null || b == null || a.Length != b.Length) return false;
+            for (int i = 0; i < a.Length; i++)
+                if (a[i] != b[i]) return false;
+            return true;
+        }
+
+        static int CountPixelDiffs(byte[] a, byte[] b, out int maxDelta, out int minX, out int minY, out int maxX, out int maxY)
+        {
+            maxDelta = 0;
+            minX = minY = int.MaxValue;
+            maxX = maxY = -1;
+            var ta = new Texture2D(2, 2, TextureFormat.RGB24, false, true);
+            var tb = new Texture2D(2, 2, TextureFormat.RGB24, false, true);
+            try
+            {
+                if (!ImageConversion.LoadImage(ta, a) || !ImageConversion.LoadImage(tb, b)) return -1;
+                if (ta.width != tb.width || ta.height != tb.height) return -1;
+                var pa = ta.GetPixels32();
+                var pb = tb.GetPixels32();
+                int n = 0;
+                int w = ta.width;
+                int h = ta.height;
+                for (int i = 0; i < pa.Length; i++)
+                {
+                    int d = Math.Max(Math.Abs(pa[i].r - pb[i].r), Math.Max(Math.Abs(pa[i].g - pb[i].g), Math.Abs(pa[i].b - pb[i].b)));
+                    if (d == 0) continue;
+                    n++;
+                    if (d > maxDelta) maxDelta = d;
+                    int x = i % w;
+                    int top = h - 1 - (i / w);
+                    if (x < minX) minX = x;
+                    if (top < minY) minY = top;
+                    if (x > maxX) maxX = x;
+                    if (top > maxY) maxY = top;
+                }
+                return n;
+            }
+            finally
+            {
+                UnityEngine.Object.DestroyImmediate(ta);
+                UnityEngine.Object.DestroyImmediate(tb);
+            }
+        }
+
+        static byte[] PaintLikeThePlayer(string spec, bool hasOffset, double offset)
+        {
+            var chrome = HomeChrome.Load(spec, "zero");
+            double timeMs = chrome.CaptureTimeMs + offset;
+            chrome.Dispose();
+            return Paint(spec, !hasOffset, timeMs);
         }
 
         static byte[] Paint(string id, bool capturePose, double timeMs)

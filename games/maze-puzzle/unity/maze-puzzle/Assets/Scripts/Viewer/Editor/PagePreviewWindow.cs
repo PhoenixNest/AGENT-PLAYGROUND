@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using OrbitalSalvage.Render;
 using UnityEditor;
 using UnityEngine;
 
@@ -148,6 +149,9 @@ namespace OrbitalSalvage.Viewer.Editor
             DestroyPreview();
             try
             {
+                // A dirty OutlineFonts cache from an earlier editor paint shifts the shop claim label by a few pixels.
+                // The parity stills come from a fresh process. One page view starts from that empty cache.
+                OutlineFonts.Clear();
                 preview = PagePreviewPainter.Render(selectedId, profile, capture, animMs, fast1x ? 1 : 0, out png);
                 pixelW = preview.width;
                 pixelH = preview.height;
