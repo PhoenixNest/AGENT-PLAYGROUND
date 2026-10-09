@@ -168,8 +168,48 @@ namespace OrbitalSalvage.App
             IsLevelFailed = false;
             UsedBackupPod = false;
             if (sector != null && sector.WorldIndex.HasValue) WorldIndex = (int)sector.WorldIndex.Value;
+            AlignSectorIndex(sector);
             SectorEpoch++;
             Rebuild();
+        }
+
+        /// <summary>First campaign sector that is not in <c>completedSectors</c>, or -1 when every sector is complete.</summary>
+        public int FirstUncompletedIndex()
+        {
+            var done = Economy.Profile.CompletedSectors;
+            for (int i = 0; i < Sectors.Count; i++)
+            {
+                if (done == null || !done.Contains(Sectors[i].Id)) return i;
+            }
+            return -1;
+        }
+
+        /// <summary>
+        /// Web play keeps <c>activeSector</c>. A fresh profile's active sector is level 1.
+        /// After saved progress, the current level is the first sector not yet completed, and Play loads that.
+        /// </summary>
+        public void ResumeCurrentSector()
+        {
+            if (Sectors.Count == 0) return;
+            int idx = FirstUncompletedIndex();
+            if (idx < 0) idx = 0;
+            if (SectorIndex == idx && ActiveSector != null && ActiveSector.Id == Sectors[idx].Id) return;
+            SectorIndex = idx;
+            LoadSector(Sectors[idx], false);
+        }
+
+        /// <summary>In-game confirm and Tools → Reset Saved Profile. Memory returns to level 1 and the store is rewritten as a new profile.</summary>
+        public void ResetSavedProgress()
+        {
+            Economy.ResetProfile();
+            _modals.Clear();
+            if (Sectors.Count > 0)
+            {
+                SectorIndex = 0;
+                LoadSector(Sectors[0], false);
+            }
+            ShowToast("Progress Reset to Day 1! 🧹");
+            ShowPage("home");
         }
 
         /// <summary>Start the loading-bar interval. Call after the sector-0 random prefix.</summary>
@@ -273,6 +313,7 @@ namespace OrbitalSalvage.App
             {
                 case "btn-home-play":
                     TouchAudio();
+                    ResumeCurrentSector();
                     ShowPage("game");
                     break;
                 case "btn-open-maps-page":
@@ -595,10 +636,24 @@ namespace OrbitalSalvage.App
             SpilledMass = 0;
             ResetGameplaySessionUi();
             if (sector != null && sector.WorldIndex.HasValue) WorldIndex = (int)sector.WorldIndex.Value;
+            AlignSectorIndex(sector);
             SectorEpoch++;
             RefreshCredits();
             if (toast && sector != null) ShowToast("Clean up " + sector.Name + "! 🚀");
             Rebuild();
+        }
+
+        void AlignSectorIndex(SectorConfig sector)
+        {
+            if (sector == null || string.IsNullOrEmpty(sector.Id)) return;
+            for (int i = 0; i < Sectors.Count; i++)
+            {
+                if (Sectors[i].Id == sector.Id)
+                {
+                    SectorIndex = i;
+                    return;
+                }
+            }
         }
 
         public void RestartSector()
@@ -767,15 +822,7 @@ namespace OrbitalSalvage.App
 
         void ConfirmReset()
         {
-            Economy.ResetProfile();
-            CloseModal("modal-reset-confirm");
-            if (Sectors.Count > 0)
-            {
-                SectorIndex = 0;
-                LoadSector(Sectors[0], false);
-            }
-            ShowToast("Progress Reset to Day 1! 🧹");
-            ShowPage("home");
+            ResetSavedProgress();
         }
 
         void OpenPause()
@@ -1091,6 +1138,9 @@ namespace OrbitalSalvage.App
                 MasterClaimed = Economy.IsDailyMasterClaimed(),
                 SoundOn = settings == null || settings.SoundEnabled,
                 HapticsOn = settings == null || settings.HapticsEnabled,
+                CurrentLevel = ActiveSector != null && ActiveSector.IsDaily != true && ActiveSector.LevelNumber.HasValue
+                    ? (int)ActiveSector.LevelNumber.Value
+                    : 0,
                 SlidersDefault = settings == null || (Math.Abs(settings.SfxVolume - 80) < 0.01 && Math.Abs(settings.AmbientVolume - 70) < 0.01),
                 DebriefDaily = ActiveSector != null && !string.IsNullOrEmpty(ActiveSector.DailyTier),
                 DebriefSurplus = ActiveSector != null && CollectedMass > ActiveSector.Quota,
