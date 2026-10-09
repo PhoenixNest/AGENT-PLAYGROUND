@@ -22,7 +22,7 @@ namespace OrbitalSalvage.Viewer.Tests
         };
 
         [Test]
-        public void Catalog_GroupsSpecsAndOnlyHomeHasAnIphonePair()
+        public void Catalog_GroupsSpecsAndOffersIphoneForEveryPage()
         {
             var specs = PageCatalog.LoadZeroSpecs();
             Assert.GreaterOrEqual(specs.Count, PageCatalog.MenuSpecIds.Length);
@@ -32,12 +32,14 @@ namespace OrbitalSalvage.Viewer.Tests
             {
                 ids.Add(spec.Id);
                 Assert.AreEqual(PageCatalog.GroupOf(spec.Id), spec.Group);
+                Assert.IsTrue(spec.HasIphone, spec.Id);
                 if (spec.HasIphone) iphone++;
             }
             foreach (string id in PageCatalog.MenuSpecIds) Assert.IsTrue(ids.Contains(id), id);
             Assert.IsTrue(PageCatalog.HasIphone("home"));
-            Assert.IsFalse(PageCatalog.HasIphone("home_default"));
-            Assert.AreEqual(1, iphone, "profile toggle is only for specs that have both zero and iphone");
+            Assert.IsTrue(PageCatalog.HasIphone("home_default"));
+            Assert.IsTrue(PageCatalog.HasIphone("daily_default"));
+            Assert.AreEqual(specs.Count, iphone);
         }
 
         [Test]
