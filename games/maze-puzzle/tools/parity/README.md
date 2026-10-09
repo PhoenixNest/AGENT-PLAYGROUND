@@ -1,6 +1,6 @@
 # Web-to-Unity pixel parity tooling
 
-`SPEC.md` is the binding contract (v1.6). This file only says how to run things. Everything below runs from `games/maze-puzzle/tools/parity` in PowerShell on Windows.
+`SPEC.md` is the binding contract (v1.6). This file only says how to run things. Run commands from `games/maze-puzzle/tools/parity`. Windows launchers are under `windows/`. Node, Python, and the goldens are cross-platform. See Platforms.
 
 Measured on this machine on 2026-10-04 (D3D11, RTX 4060 Laptop, windowed). These are harness numbers, not a claim that UI restoration is finished.
 
@@ -14,6 +14,27 @@ Measured on this machine on 2026-10-04 (D3D11, RTX 4060 Laptop, windowed). These
 | Live frame (600 steps, scale 1) | avg 9.38 ms, p95 14.32 ms (fence included). |
 
 The default player (Editor Play and `Builds/Play`, no flags) boots `ParityViewer` → `AppHost`/`AppController` with pointer input, a wall clock, `FileProfileStore`, and the DSP player. `--parity` and the parity self-test flags keep the frozen clock and silent audio. Landscape keeps the 430×932 page letterboxed. Not verified on a phone.
+
+## Platforms
+
+Windows is the machine these wrappers run on today. macOS (Xcode, App Store) is later. The Windows scripts stay tracked. `macos/` is a placeholder for the equivalents; it has no shell scripts.
+
+Layout choice: one `windows/` directory and one `macos/` directory at the toolset root, each with `unity/` and `canvas-conformance/`. State JSON stays in `unity/` (`screenshot-states.json`, `smoke-states.json`). `lib/roots.ps1` stays in `lib/` and is dot-sourced by the wrappers. `lib/roots.mjs` is the Node walker.
+
+| Class | Where | Evidence |
+| --- | --- | --- |
+| Windows-only launchers (6) | `windows/unity/build.ps1`, `build-play.ps1`, `capture.ps1`, `perf.ps1`, `run-framerate.ps1`; `windows/canvas-conformance/run-unity.ps1` | Each calls `Start-Process` on `C:\Program Files\Unity\Hub\Editor\6000.4.6f1\Editor\Unity.exe` or `OrbitalSalvageParity.exe`. `build.ps1` and `build-play.ps1` pass `-buildTarget Win64`. `perf.ps1` and `build-play.ps1` name D3D11/D3D12. `run-framerate.ps1` writes `$env:TEMP`. |
+| Windows-only helper (not moved) | `lib/roots.ps1` | PowerShell only. `Get-MazeRoot` joins `tools\parity\package.json` and `web\index.html` with backslashes. No `.exe`. The six launchers dot-source it. |
+| Windows-only Editor builds (not moved) | `Assets/Scripts/Editor/ParityBuild.cs`, `PlayBuild.cs` | `BuildTarget.StandaloneWindows64`. `PlayBuild` sets `GraphicsDeviceType.Direct3D11`. |
+| Cross-platform | The other tracked files under this directory: Node/Playwright generators, Python diff and canvas tools, goldens, fixtures, recordings, `states.json`, `sequences.json`, `scripts/funnel-study.mjs`, `scripts/measure-web-layout-430.mjs`, `SPEC.md`, fonts, emoji | `git ls-files` listed 323 files before this doc change. Seven are `.ps1` (the six launchers plus `roots.ps1`). A search of the rest for `Start-Process`, `Program Files`, `Direct3D`, `force-d3d`, and `StandaloneWindows64` hit documentation of the Windows player (`SPEC.md`, `unity/README.md`, `CLEANUP.md`) and dated reports, not generators or fixtures. |
+
+`ConfigureEmojiSprites.cs` and `ParityAssetBuilder.cs` only rewrite `\` to `/`. They are not Windows build targets.
+
+Migration plan:
+
+1. Add macOS `.sh` equivalents beside the Windows wrappers (`macos/unity/` for build, capture, perf; `macos/canvas-conformance/` for run-unity). Do not add them until they have been run on a Mac.
+2. Recapture screenshot baselines on Mac. The committed still hashes were measured on Windows D3D12. Physics goldens are pure math and should carry over; verify that on the first Mac run.
+3. Retire the `.ps1` files only after the `.sh` versions pass the same checks.
 
 ## Setup
 

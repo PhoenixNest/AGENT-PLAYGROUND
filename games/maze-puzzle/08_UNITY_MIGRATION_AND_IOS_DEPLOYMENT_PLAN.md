@@ -732,6 +732,8 @@ To maximize development velocity and automate repetitive game development tasks,
 
 ### 6.1 Confirmed Local Environment Status
 
+The editor path and the PowerShell blocks in this section are Windows-only, written for this machine. They are not the parity wrappers. Those wrappers live under `games/maze-puzzle/tools/parity/windows/`. macOS equivalents are not written; the planned editor path is in `games/maze-puzzle/tools/parity/macos/README.md`.
+
 - **Unity Version:** **Unity 6 (6000.4.6f1)**
 - **Editor Executable:** `C:\Program Files\Unity\Hub\Editor\6000.4.6f1\Editor\Unity.exe`
 - **Unity Hub Executable:** `C:\Program Files\Unity Hub\Unity Hub.exe`
