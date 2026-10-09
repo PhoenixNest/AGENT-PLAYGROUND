@@ -14,12 +14,16 @@ namespace OrbitalSalvage.Editor
     /// without it the menu items are disabled and these entry points log and return 1.
     /// Simulator architecture is ARM64 (<see cref="AppleMobileArchitectureSimulator"/>).
     /// Universal also contains x86_64, which this export does not need for Apple-silicon simulators.
+    /// <see cref="BuildPipeline.BuildPlayer"/> runs <see cref="IosXcodePostProcess"/>, which sets the
+    /// GameAssembly target id to <see cref="GameAssemblyBundleId"/>. The app id stays <see cref="BundleId"/>.
     /// </summary>
     public static class IosExport
     {
         public const string SimulatorMenu = "Orbital Salvage/Build/iOS Xcode Project (Simulator)";
         public const string DeviceMenu = "Orbital Salvage/Build/iOS Xcode Project (Device)";
         public const string BundleId = "io.dev.maze";
+        public const string GameAssemblyBundleId = "com.unity3d.gameassembly";
+        public const string GameAssemblyTargetName = "GameAssembly";
         public const string MinimumIosVersion = "15.0";
 
         public const string MissingModuleMessage =
