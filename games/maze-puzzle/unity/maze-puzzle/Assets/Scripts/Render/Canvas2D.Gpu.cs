@@ -43,6 +43,23 @@ namespace OrbitalSalvage.Render
         /// <summary>Frozen captures keep the CPU box blur. Live draws record a GPU box blur and do not read the frame back.</summary>
         public bool ExactBackdrop = true;
 
+        /// <summary>Experiment (<c>noshadow</c>). Skips blurred shadows on every canvas. Zero-blur shadows still draw.</summary>
+        public static bool SkipBlurredShadows;
+
+        /// <summary>Experiment (<c>nogamefx</c>). <see cref="GameRenderer"/> copies this onto <see cref="SkipBlurredFx"/>.</summary>
+        public static bool SkipGameFx;
+
+        /// <summary>
+        /// Experiment (<c>rt16</c>). Read when the canvas is constructed. When true, the shadow
+        /// accum is <see cref="RenderTextureFormat.ARGBHalf"/> instead of <see cref="RenderTextureFormat.RFloat"/>.
+        /// </summary>
+        public static bool HalfAccum;
+
+        /// <summary>Experiment. This canvas skips blurred shadows. Default false.</summary>
+        public bool SkipBlurredFx;
+
+        int pendingDraws;
+
         /// <summary>
         /// When true, <see cref="EndFrame"/> still records the frame on the CPU but returns before
         /// buffer uploads, <c>Shader.SetGlobal*</c>, <see cref="UploadText"/>, and
@@ -68,7 +85,7 @@ namespace OrbitalSalvage.Render
             Width = width;
             Height = height;
             target = MakeRT(RenderTextureFormat.ARGB32, "Canvas2D.Target");
-            accum = MakeRT(RenderTextureFormat.RFloat, "Canvas2D.Accum");
+            accum = MakeRT(HalfAccum ? RenderTextureFormat.ARGBHalf : RenderTextureFormat.RFloat, "Canvas2D.Accum");
             maskA = MakeRT(RenderTextureFormat.RHalf, "Canvas2D.MaskA");
             maskB = MakeRT(RenderTextureFormat.RHalf, "Canvas2D.MaskB");
             matAccum = MakeMaterial("Hidden/Canvas2D/Accumulate");
@@ -140,6 +157,7 @@ namespace OrbitalSalvage.Render
 
         public void BeginFrame()
         {
+            pendingDraws = 0;
             ReleaseSnapshots();
             cmd.Clear();
             edgeCount = 0;
@@ -174,6 +192,7 @@ namespace OrbitalSalvage.Render
             cmd.SetRenderTarget(target);
             cmd.SetGlobalTexture(IdLayerTex, tex);
             Draw(matLayer, 0, 6, pb);
+            RenderStats.Blits++;
             PaintProfile.End(PaintProfile.Blit);
         }
 
@@ -184,6 +203,7 @@ namespace OrbitalSalvage.Render
         {
             if (SkipSubmit)
             {
+                pendingDraws = 0;
                 if (keepDrawing)
                     throw new InvalidOperationException("Canvas2D.SkipSubmit refuses Flush: it would execute the command buffer and read pixels back.");
                 return;
@@ -234,12 +254,14 @@ namespace OrbitalSalvage.Render
             int[] radii = BoxRadii(sigmaDev);
             if (!ExactBackdrop)
             {
+                RenderStats.BackdropGpu++;
                 double gsx = Math.Min(p0.x, p1.x);
                 double gsy = Math.Min(p0.y, p1.y);
                 BackdropBlurGpu(radii, gsx, gsy, Math.Abs(p1.x - p0.x), Math.Abs(p1.y - p0.y), x, y, w, h, x0, y0, x1, y1);
                 PaintProfile.End(PaintProfile.Backdrop);
                 return;
             }
+            RenderStats.BackdropExact++;
             int maxR = 0;
             for (int i = 0; i < radii.Length; i++) if (radii[i] > maxR) maxR = radii[i];
             // Padding stays the original framebuffer; only [x0,y0,x1,y1) is blurred, matching BoxH/BoxV.
@@ -583,6 +605,9 @@ namespace OrbitalSalvage.Render
         {
             Graphics.ExecuteCommandBuffer(cmd);
             ExecuteCount++;
+            RenderStats.Submits++;
+            RenderStats.Commands += pendingDraws;
+            pendingDraws = 0;
         }
 
         static void EnsureBuffer(ref GraphicsBuffer buf, int count, int stride)
@@ -608,6 +633,8 @@ namespace OrbitalSalvage.Render
             cmd.SetGlobalFloat(IdParamBase, pb);
             cmd.DrawProcedural(Matrix4x4.identity, m, pass, MeshTopology.Triangles, verts);
             DrawCount++;
+            pendingDraws++;
+            RenderStats.Draws++;
             PaintProfile.CountDraw(verts);
         }
 
@@ -809,12 +836,18 @@ namespace OrbitalSalvage.Render
         void RenderShadow(PolygonSet ps, bool evenOdd, bool stroke, float alpha, bool snap)
         {
             PaintProfile.Begin(PaintProfile.Shadow);
-            PaintProfile.CountShadow();
             var st = state;
             double dx = st.shadowOffsetX * ShadowScale, dy = st.shadowOffsetY * ShadowScale;
             double blur = st.shadowBlur * ShadowScale;
             double sigma = blur * 0.5;
             int radius = sigma > 0 ? (int)Math.Ceiling(sigma * 3) : 0;
+            if (radius > 0 && (SkipBlurredShadows || SkipBlurredFx))
+            {
+                PaintProfile.End(PaintProfile.Shadow);
+                return;
+            }
+            PaintProfile.CountShadow();
+            RenderStats.Shadows++;
             if (!EmitEdges(ps, dx, dy, out var rect, out int ebase, out int ecount, snap)) { PaintProfile.End(PaintProfile.Shadow); return; }
             var full = new PixelRect(0, 0, Width, Height);
             int pbA = NewParams();

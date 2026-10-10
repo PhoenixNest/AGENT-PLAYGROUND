@@ -310,6 +310,8 @@ namespace OrbitalSalvage.Render
             if (!RenderToCanvas || _canvas == null) return;
 
             var ctx = _canvas;
+            if (Canvas2D.SkipGameFx) ctx.SkipBlurredFx = true;
+            else if (ctx.SkipBlurredFx) ctx.SkipBlurredFx = false;
             ctx.BeginFrame();
             double s = Dpr * RenderScale;
             ctx.SetTransform(s, 0, 0, s, 0, 0);

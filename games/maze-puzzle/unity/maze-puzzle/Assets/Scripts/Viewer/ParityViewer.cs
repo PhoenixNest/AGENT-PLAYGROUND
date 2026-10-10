@@ -250,6 +250,7 @@ namespace OrbitalSalvage.Viewer
         {
             SuppressLegacy();
             if (selfTesting && !shipTesting) return;
+            CaptureGpu();
             PerfOpen();
             if (perfOn) PerfResumeUpdate();
             if (perfOn)
@@ -262,7 +263,8 @@ namespace OrbitalSalvage.Viewer
             PerfResumeUpdate();
             if (!selfTesting) TrimResident();
             if (app != null) SyncApp();
-            HandleInput();
+            if (benchSession) DriveBench();
+            else HandleInput();
             PerfSuspendUpdate();
             Tick();
             TickLive();
@@ -427,8 +429,9 @@ namespace OrbitalSalvage.Viewer
             // Toasts paint after the cached layers. A non-looping page still has to redraw while
             // one is on screen, and once more on the frame the last toast leaves.
             bool toastAnim = toastSlots > 0 || toastClearFrame;
-            if (!current.Loops && !intro && !enter && pressIndex < 0 && !toastAnim) return;
-            bool ambient = current.Loops && !intro && !enter && pressIndex < 0 && !toastAnim;
+            bool loops = current.Loops && !DeviceFlags.Current.NoLoops;
+            if (!loops && !intro && !enter && pressIndex < 0 && !toastAnim) return;
+            bool ambient = loops && !intro && !enter && pressIndex < 0 && !toastAnim;
             if (HoldAmbientDraw(ambient)) return;
             if (toastClearFrame && toastSlots == 0) toastClearFrame = false;
             BindModalPlayfield(current);
@@ -444,9 +447,15 @@ namespace OrbitalSalvage.Viewer
             return new Rect(screen.x, Screen.height - screen.y - screen.height, screen.width, screen.height);
         }
 
+        bool SkipGameHud()
+        {
+            return DeviceFlags.Current.NoGameHud && ShowPlayfield
+                && (currentId == null || !currentId.StartsWith("modal_", StringComparison.Ordinal));
+        }
+
         void PaintCurrent(bool pinEnter)
         {
-            if (current == null) return;
+            if (current == null || SkipGameHud()) return;
             bool resumeUpdate = perfUpdateStamp != 0;
             if (resumeUpdate) PerfSuspendUpdate();
             long drawStamp = PerfStamp();
@@ -752,7 +761,8 @@ namespace OrbitalSalvage.Viewer
             var letter = ToGui(PageRect());
             if (ShowPlayfield && session.Renderer.Target != null)
                 GUI.DrawTexture(letter, session.Renderer.Target, ScaleMode.StretchToFill, true);
-            if (current != null && current.Target != null)
+            bool skipChromeBlit = DeviceFlags.Current.NoImgui && ShowPlayfield;
+            if (current != null && current.Target != null && !skipChromeBlit)
                 GUI.DrawTexture(letter, current.Target, ScaleMode.StretchToFill, ShowPlayfield);
             DrawQualityHud();
             if (!hintVisible || selfTesting)
@@ -902,6 +912,7 @@ namespace OrbitalSalvage.Viewer
             current.TextOverrides["hud-quota-text"] = label;
             current.WidthOverrides["hud-quota-bar"] = width;
             BindModalPlayfield(current);
+            if (SkipGameHud()) return;
             if (selfTesting) current.Draw();
             else
             {

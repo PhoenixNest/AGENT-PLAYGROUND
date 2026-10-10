@@ -96,11 +96,13 @@ namespace OrbitalSalvage.Editor
             byte[] settingsBytes = File.Exists(settingsPath) ? File.ReadAllBytes(settingsPath) : null;
             var previousSdk = PlayerSettings.iOS.sdkVersion;
             var previousArch = PlayerSettings.iOS.simulatorSdkArchitecture;
+            bool previousTiming = PlayerSettings.enableFrameTimingStats;
             try
             {
                 PlayerSettings.iOS.sdkVersion = simulator ? iOSSdkVersion.SimulatorSDK : iOSSdkVersion.DeviceSDK;
                 if (simulator)
                     PlayerSettings.iOS.simulatorSdkArchitecture = AppleMobileArchitectureSimulator.ARM64;
+                PlayerSettings.enableFrameTimingStats = true;
 
                 var options = new BuildPlayerOptions
                 {
@@ -114,7 +116,7 @@ namespace OrbitalSalvage.Editor
                 var summary = report.summary;
                 string sdk = simulator ? "SimulatorSDK" : "DeviceSDK";
                 string arch = simulator ? "ARM64" : "unchanged";
-                Debug.Log("[IosExport] result=" + summary.result + " sdk=" + sdk + " arch=" + arch + " output=" + summary.outputPath);
+                Debug.Log("[IosExport] result=" + summary.result + " sdk=" + sdk + " arch=" + arch + " frameTiming=1 output=" + summary.outputPath);
                 if (summary.result != BuildResult.Succeeded)
                 {
                     Debug.LogError("[IosExport] " + which + " export failed: " + summary.result);
@@ -136,6 +138,7 @@ namespace OrbitalSalvage.Editor
             {
                 PlayerSettings.iOS.sdkVersion = previousSdk;
                 PlayerSettings.iOS.simulatorSdkArchitecture = previousArch;
+                PlayerSettings.enableFrameTimingStats = previousTiming;
                 AssetDatabase.SaveAssets();
                 if (settingsBytes != null && File.Exists(settingsPath))
                 {

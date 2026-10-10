@@ -167,15 +167,32 @@ namespace OrbitalSalvage.Viewer.Tests
                 MemoryMb = 2794,
                 Thermal = null
             };
-            string summary = perf.FormatSummary(stats, view, counters);
+            var gpu = new DevicePerf.Gpu();
+            var paint = new DevicePerf.Paint();
+            const string tail = " gpu_ms=na submits=0 cmds=0 draws=0 backdrop=0/0 shadows=0 blits=0 cachebuilds=0";
+            string summary = perf.FormatSummary(stats, view, counters, gpu, paint);
             Assert.AreEqual(
-                "[Perf] page=game scale=2.0 cap=2.0 fit=1.5 frames=58 fps=57.5 avg=17.0 p50=16.0 p95=22.5 p99=40.0 max=41.0 over22=4 over50=0 gc0=1 gcm=-128 alloc=10 mono=20 reserved=30 resident=301371520 budget=335544320 mem=2794",
+                "[Perf] page=game scale=2.0 cap=2.0 fit=1.5 frames=58 fps=57.5 avg=17.0 p50=16.0 p95=22.5 p99=40.0 max=41.0 over22=4 over50=0 gc0=1 gcm=-128 alloc=10 mono=20 reserved=30 resident=301371520 budget=335544320 mem=2794" + tail,
                 summary);
             Assert.IsFalse(summary.Contains("thermal"));
 
             counters.Thermal = "nominal";
-            string warm = perf.FormatSummary(stats, view, counters);
-            Assert.IsTrue(warm.EndsWith(" thermal=nominal"));
+            string warm = perf.FormatSummary(stats, view, counters, gpu, paint);
+            Assert.IsTrue(warm.Contains(" thermal=nominal "));
+            Assert.IsTrue(warm.EndsWith(tail.TrimStart()));
+            gpu.Available = true;
+            gpu.Avg = 12f;
+            gpu.Max = 40.04f;
+            paint.Submits = 3;
+            paint.Commands = 9;
+            paint.Draws = 10;
+            paint.BackdropExact = 2;
+            paint.BackdropGpu = 1;
+            paint.Shadows = 4;
+            paint.Blits = 5;
+            paint.CacheBuilds = 1;
+            string timed = perf.FormatSummary(stats, view, counters, gpu, paint);
+            Assert.IsTrue(timed.Contains(" gpu_ms=12.0/40.0 submits=3 cmds=9 draws=10 backdrop=2/1 shadows=4 blits=5 cachebuilds=1"));
             Assert.IsFalse(warm.Contains("page=game page=game"));
 
             var hitch = new DevicePerf.Hitch

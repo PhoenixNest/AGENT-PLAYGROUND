@@ -8,6 +8,34 @@ namespace OrbitalSalvage.Viewer
     /// On-device frame stats. Callers pass times and counters; nothing here touches the GPU,
     /// <c>JsRandom</c>, or the quality governor. The viewer logs one <c>[Perf]</c> line per second
     /// when PlayerPrefs <see cref="PrefKey"/> is 1, and stays silent otherwise.
+    /// When frame timing is available the line adds <c>gpu_ms=avg/max</c>; otherwise <c>gpu_ms=na</c>.
+    /// Paint counters on that line are per-second deltas: <c>submits</c>, <c>cmds</c> (draws executed),
+    /// <c>draws</c> (draws recorded), <c>backdrop=exact/gpu</c>, <c>shadows</c>, <c>blits</c>, <c>cachebuilds</c>.
+    ///
+    /// Experiment prefs, read once at product boot. Absent prefs leave the product path unchanged.
+    /// <list type="table">
+    /// <item><term>os.parity.exp</term><description>Comma-separated flags, default empty (all off). Unknown tokens are ignored.</description></item>
+    /// <item><term>noshadow</term><description>Skip blurred outer and inset shadows. Zero-blur shadows still draw.</description></item>
+    /// <item><term>nobackdrop</term><description>HomeChrome treats this as SimplifyEffects, so BackdropBlur is skipped.</description></item>
+    /// <item><term>noloops</term><description>Freeze CSS ambient loops. The page paints on change (enter, press, toast, quota).</description></item>
+    /// <item><term>nocache</term><description>HomeChrome.UseLayerCache = false.</description></item>
+    /// <item><term>nogamehud</term><description>Game page skips the HUD HomeChrome draw. The playfield still renders. Pause modals still draw.</description></item>
+    /// <item><term>nogamefx</term><description>Game canvas skips blurred ShadowBlur / glow passes. HUD shadows stay.</description></item>
+    /// <item><term>noimgui</term><description>Game page skips the HUD GUI.DrawTexture and blits the playfield only.</description></item>
+    /// <item><term>scale1 / scale1.5 / scale2 / scale3</term><description>Force that raster scale. The governor does not step or save over it. Last scale token wins.</description></item>
+    /// <item><term>f30 / f15</term><description>Application.targetFrameRate. Last of the two wins.</description></item>
+    /// <item><term>rt16</term><description>Canvases created after boot use ARGBHalf for the shadow accum instead of RFloat. Ignored while a bench matrix is running, because those canvases already exist.</description></item>
+    /// <item><term>os.parity.bench</term><description>auto, or one of home, maps, daily, shop, achievements, game, pause, tabs. The app drives itself. A throwaway memory profile is used, and the governor does not read or write the scale pref.</description></item>
+    /// <item><term>os.parity.bench.secs</term><description>Measured window length. Default 12. The first 2 seconds of each idle window are warm-up and are not counted. Tabs dwell 3 seconds on each stop regardless.</description></item>
+    /// </list>
+    /// Bench matrix: home, game, and tabs use none, noshadow, nobackdrop, noloops, nocache, scale1.5, scale1, f30.
+    /// Game also runs nogamehud, noimgui, nogamefx. Maps, pause, daily, shop, and achievements use none, nobackdrop, scale1.
+    /// auto runs home, maps, game, pause, tabs. A single mode runs that scenario's configs.
+    /// Each window logs <c>[Bench] scenario= exp= fps= avg_ms= p50= p95= max= over50= gpu_ms= submits= backdrop= shadows= cachebuilds=</c>.
+    /// <c>gpu_ms</c> is <c>avg/max</c> or <c>na</c>. <c>backdrop</c> is <c>exact/gpu</c>.
+    /// Tabs also log <c>[Bench] switch scenario= exp= from= to= ms= over100= worst=</c> per navigation.
+    /// <c>ms</c> is the time from the click to the next frame. <c>over100</c> and <c>worst</c> cover that present frame plus the following dwell (3 s on a stop, one frame on the home hop between stops).
+    /// The run ends with <c>[Bench] done</c>.
     /// </summary>
     public sealed class DevicePerf
     {
@@ -67,6 +95,25 @@ namespace OrbitalSalvage.Viewer
             public string Thermal;
         }
 
+        public struct Gpu
+        {
+            public bool Available;
+            public float Avg;
+            public float Max;
+        }
+
+        public struct Paint
+        {
+            public int Submits;
+            public int Commands;
+            public int Draws;
+            public int BackdropExact;
+            public int BackdropGpu;
+            public int Shadows;
+            public int Blits;
+            public int CacheBuilds;
+        }
+
         public struct Hitch
         {
             public bool Emit;
@@ -93,6 +140,9 @@ namespace OrbitalSalvage.Viewer
         int over50;
         double sumMs;
         float maxMs;
+        int gpuN;
+        double gpuSum;
+        float gpuMax;
         float windowStart = float.NaN;
         string framePage = "-";
 
@@ -179,6 +229,9 @@ namespace OrbitalSalvage.Viewer
             over50 = 0;
             sumMs = 0;
             maxMs = 0f;
+            gpuN = 0;
+            gpuSum = 0;
+            gpuMax = 0f;
             windowStart = float.NaN;
             framePage = "-";
             for (int i = 0; i < PhaseCount; i++) frameTicks[i] = 0;
@@ -224,6 +277,29 @@ namespace OrbitalSalvage.Viewer
             for (int i = 0; i < PhaseCount; i++) frameTicks[i] = 0;
             haveFrame = true;
             return hitch;
+        }
+
+        public void AddGpu(float ms)
+        {
+            if (!enabled || !(ms > 0f)) return;
+            gpuN++;
+            gpuSum += ms;
+            if (ms > gpuMax) gpuMax = ms;
+        }
+
+        public Gpu TakeGpu()
+        {
+            var gpu = new Gpu();
+            if (gpuN > 0)
+            {
+                gpu.Available = true;
+                gpu.Avg = (float)(gpuSum / gpuN);
+                gpu.Max = gpuMax;
+            }
+            gpuN = 0;
+            gpuSum = 0;
+            gpuMax = 0f;
+            return gpu;
         }
 
         public void AddTicks(Phase phase, long ticks)
@@ -276,7 +352,7 @@ namespace OrbitalSalvage.Viewer
             return true;
         }
 
-        public string FormatSummary(in Stats stats, in View view, in Counters counters)
+        public string FormatSummary(in Stats stats, in View view, in Counters counters, in Gpu gpu, in Paint paint)
         {
             line.Length = 0;
             line.Append("[Perf] page=");
@@ -326,6 +402,30 @@ namespace OrbitalSalvage.Viewer
                 line.Append(" thermal=");
                 line.Append(counters.Thermal);
             }
+            line.Append(" gpu_ms=");
+            if (!gpu.Available) line.Append("na");
+            else
+            {
+                AppendTenths(line, gpu.Avg);
+                line.Append('/');
+                AppendTenths(line, gpu.Max);
+            }
+            line.Append(" submits=");
+            line.Append(paint.Submits);
+            line.Append(" cmds=");
+            line.Append(paint.Commands);
+            line.Append(" draws=");
+            line.Append(paint.Draws);
+            line.Append(" backdrop=");
+            line.Append(paint.BackdropExact);
+            line.Append('/');
+            line.Append(paint.BackdropGpu);
+            line.Append(" shadows=");
+            line.Append(paint.Shadows);
+            line.Append(" blits=");
+            line.Append(paint.Blits);
+            line.Append(" cachebuilds=");
+            line.Append(paint.CacheBuilds);
             return line.ToString();
         }
 
