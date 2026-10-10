@@ -95,6 +95,13 @@ namespace OrbitalSalvage.Render
         double[] baseOpacity;
         bool cacheReady;
         bool cacheOn;
+        bool compositeValid;
+        bool dirtyActive;
+        bool[] dirtyHits;
+        bool[] dirtyLayer;
+        bool[] moverMark;
+        double prevDx0, prevDy0, prevDx1, prevDy1;
+        bool prevDirty;
         int paintOnlyLayer = -1;
         int lastBlit = -2;
         CssFrame frameSlot;
@@ -706,6 +713,11 @@ namespace OrbitalSalvage.Render
         {
             if (!cacheOn || elementLayer == null || elementLayer[k] < 0) return false;
             int layer = elementLayer[k];
+            if (dirtyActive && dirtyLayer != null && layer < dirtyLayer.Length && !dirtyLayer[layer])
+            {
+                lastBlit = layer;
+                return true;
+            }
             if (layer != lastBlit && layerTex != null && layer < layerTex.Length && layerTex[layer] != null)
             {
                 canvas.BlitLayer(layerTex[layer]);
@@ -726,6 +738,8 @@ namespace OrbitalSalvage.Render
             elementLayer = null;
             cacheReady = false;
             staticLayerCount = 0;
+            compositeValid = false;
+            prevDirty = false;
         }
 
         static void ReleaseLayer(Texture tex)
@@ -1229,6 +1243,7 @@ namespace OrbitalSalvage.Render
                 bool settled = frame != null && !frame.PageTransform && frame.PageOpacity >= 0.999;
                 cacheOn = UseLayerCache && !composite && settled && !modalIntro && cacheReady && paintOnlyLayer < 0 && staticLayerCount > 0;
                 lastBlit = -2;
+                BuildDirty();
                 canvas.BeginFrame();
                 canvas.SetTransform(scale, 0, 0, scale, 0, 0);
                 if (composite)
@@ -1255,6 +1270,10 @@ namespace OrbitalSalvage.Render
             }
             finally
             {
+                if (!cacheOn) compositeValid = false;
+                else compositeValid = true;
+                dirtyActive = false;
+                canvas.ScissorOn = false;
                 cacheOn = false;
                 Canvas2D.GradientInterpolatesPremultiplied = savedPremul;
                 frame = null;
@@ -1370,6 +1389,198 @@ namespace OrbitalSalvage.Render
             return false;
         }
 
+        bool DirtyMiss(int k)
+        {
+            return dirtyActive && dirtyHits != null && (uint)k < (uint)dirtyHits.Length && !dirtyHits[k];
+        }
+
+        bool Moves(int k)
+        {
+            if (frame == null) return false;
+            if (frame.Shine[k] || frame.Live[k] || frame.Own[k] || frame.Tree[k]) return true;
+            if (frame.ShadowN[k] > 0 || frame.BorderLive[k]) return true;
+            if (!double.IsNaN(frame.Opacity[k]) || Math.Abs(frame.ExtraY[k]) > 1e-4 || frame.Pressed(k)) return true;
+            string id = S(elements[k], "id");
+            if (id.Length == 0) return false;
+            return TextOverrides.ContainsKey(id) || WidthOverrides.ContainsKey(id)
+                || WidthPercentOverrides.ContainsKey(id) || OpacityOverrides.ContainsKey(id) || HiddenIds.Contains(id);
+        }
+
+        void BoundsOf(int k, out double x0, out double y0, out double x1, out double y1)
+        {
+            var e = elements[k];
+            var r = Rect(e);
+            x0 = r[0];
+            y0 = r[1];
+            x1 = r[0] + r[2];
+            y1 = r[1] + r[3];
+            string id = S(e, "id");
+            if (id.Length > 0 && WidthOverrides.TryGetValue(id, out double widthOverride)) x1 = x0 + widthOverride;
+            if (reflowY != null && k < reflowY.Length)
+            {
+                y0 += reflowY[k];
+                y1 += reflowY[k] + reflowH[k];
+            }
+            if (frame != null && Math.Abs(frame.ExtraY[k]) > 1e-6)
+            {
+                y0 += frame.ExtraY[k];
+                y1 += frame.ExtraY[k];
+            }
+            if (frame != null && (frame.Tree[k] || frame.Own[k]) && frame.Local[k] != null)
+            {
+                var lr = frame.Local[k];
+                double ax0 = double.MaxValue, ay0 = double.MaxValue, ax1 = double.MinValue, ay1 = double.MinValue;
+                for (int corner = 0; corner < 4; corner++)
+                {
+                    double x = lr[0] + ((corner & 1) == 0 ? 0 : lr[2]);
+                    double y = lr[1] + ((corner & 2) == 0 ? 0 : lr[3]);
+                    if (Math.Abs(frame.ExtraY[k]) > 1e-6) y += frame.ExtraY[k];
+                    var p = TransformChain(k, x, y);
+                    if (p.x < ax0) ax0 = p.x;
+                    if (p.y < ay0) ay0 = p.y;
+                    if (p.x > ax1) ax1 = p.x;
+                    if (p.y > ay1) ay1 = p.y;
+                }
+                x0 = ax0;
+                y0 = ay0;
+                x1 = ax1;
+                y1 = ay1;
+            }
+            double reach = 48;
+            if (prepared.TryGetValue(e, out var prep) && prep.style != null && prep.style.shadows != null)
+            {
+                var shadows = prep.style.shadows;
+                for (int i = 0; i < shadows.Count; i++)
+                {
+                    var sh = shadows[i];
+                    double need = sh.blur + Math.Abs(sh.spread) + Math.Abs(sh.dx) + Math.Abs(sh.dy) + 8;
+                    if (need > reach) reach = need;
+                }
+            }
+            x0 -= reach;
+            y0 -= reach;
+            x1 += reach;
+            y1 += reach;
+        }
+
+        Vec2d TransformChain(int index, double x, double y)
+        {
+            frame.Chain.Clear();
+            for (int p = index, hops = 0; p >= 0 && hops < frame.Parent.Length; p = frame.Parent[p], hops++)
+                if (frame.Live[p]) frame.Chain.Add(p);
+            var point = new Vec2d(x, y);
+            for (int i = 0; i < frame.Chain.Count; i++)
+            {
+                int a = frame.Chain[i];
+                var lr = frame.Local[a];
+                if (lr == null) continue;
+                double ox = frame.OriginX[a], oy = frame.OriginY[a];
+                if (double.IsNaN(ox)) ox = lr[2] * 0.5;
+                if (double.IsNaN(oy)) oy = lr[3] * 0.5;
+                double cx = lr[0] + ox, cy = lr[1] + oy + frame.ExtraY[a];
+                double lx = point.x - cx, ly = point.y - cy;
+                var m = frame.Matrix[a];
+                point = new Vec2d(m.a * lx + m.c * ly + m.e + cx, m.b * lx + m.d * ly + m.f + cy);
+            }
+            return point;
+        }
+
+        bool BackdropHitsMotion(double[] rr)
+        {
+            if (frame == null || moverMark == null) return true;
+            int n = elements.Count;
+            double rx1 = rr[0] + rr[2], ry1 = rr[1] + rr[3];
+            for (int k = 0; k < n; k++)
+            {
+                if (!moverMark[k]) continue;
+                BoundsOf(k, out double a, out double b, out double c, out double d);
+                if (c > rr[0] && d > rr[1] && a < rx1 && b < ry1) return true;
+            }
+            return false;
+        }
+
+        void BuildDirty()
+        {
+            dirtyActive = false;
+            canvas.ScissorOn = false;
+            canvas.KeepTarget = false;
+            bool classify = RenderOpts.Dirty || RenderOpts.GameOne || RenderOpts.BackdropLow || RenderOpts.BackdropScope;
+            int n = elements.Count;
+            if (moverMark == null || moverMark.Length < n) moverMark = new bool[n];
+            else Array.Clear(moverMark, 0, n);
+            if (!classify || frame == null) return;
+            int movers = 0;
+            double x0 = double.MaxValue, y0 = double.MaxValue, x1 = double.MinValue, y1 = double.MinValue;
+            for (int k = 0; k < n; k++)
+            {
+                if (!Moves(k)) continue;
+                moverMark[k] = true;
+                movers++;
+                BoundsOf(k, out double a, out double b, out double c, out double d);
+                if (a < x0) x0 = a;
+                if (b < y0) y0 = b;
+                if (c > x1) x1 = c;
+                if (d > y1) y1 = d;
+            }
+            double cx0 = x0, cy0 = y0, cx1 = x1, cy1 = y1;
+            if (prevDirty)
+            {
+                if (prevDx0 < x0) x0 = prevDx0;
+                if (prevDy0 < y0) y0 = prevDy0;
+                if (prevDx1 > x1) x1 = prevDx1;
+                if (prevDy1 > y1) y1 = prevDy1;
+            }
+            if (movers > 0)
+            {
+                prevDx0 = cx0;
+                prevDy0 = cy0;
+                prevDx1 = cx1;
+                prevDy1 = cy1;
+                prevDirty = true;
+            }
+            bool gameHud = RenderOpts.GameOne && SkipPlayfield && ExternalPlayfield == null;
+            if (!(RenderOpts.Dirty || gameHud) || !cacheOn || !compositeValid || !frame.HasMotion || frame.PageTransform || frame.PageOpacity < 0.999)
+                return;
+            if (movers == 0 || x1 <= x0 || y1 <= y0) return;
+            if (x0 < -8) x0 = -8;
+            if (y0 < -8) y0 = -8;
+            if (x1 > cssW + 8) x1 = cssW + 8;
+            if (y1 > cssH + 8) y1 = cssH + 8;
+            if ((x1 - x0) * (y1 - y0) > cssW * cssH * 0.85) return;
+            if (dirtyHits == null || dirtyHits.Length < n) dirtyHits = new bool[n];
+            Array.Clear(dirtyHits, 0, n);
+            if (dirtyLayer == null || dirtyLayer.Length < staticLayerCount) dirtyLayer = new bool[Math.Max(1, staticLayerCount)];
+            Array.Clear(dirtyLayer, 0, dirtyLayer.Length);
+            for (int k = 0; k < n; k++)
+            {
+                BoundsOf(k, out double a, out double b, out double c, out double d);
+                bool hit = c > x0 && d > y0 && a < x1 && b < y1;
+                dirtyHits[k] = hit;
+                if (hit && elementLayer != null && (uint)elementLayer[k] < (uint)dirtyLayer.Length)
+                    dirtyLayer[elementLayer[k]] = true;
+            }
+            int px0 = (int)Math.Floor(x0 * scale) - 2;
+            int py0 = (int)Math.Floor(y0 * scale) - 2;
+            int px1 = (int)Math.Ceiling(x1 * scale) + 2;
+            int py1 = (int)Math.Ceiling(y1 * scale) + 2;
+            if (px0 < 0) px0 = 0;
+            if (py0 < 0) py0 = 0;
+            if (px1 > canvas.Width) px1 = canvas.Width;
+            if (py1 > canvas.Height) py1 = canvas.Height;
+            if (px1 <= px0 || py1 <= py0) return;
+            dirtyActive = true;
+            canvas.KeepTarget = true;
+            canvas.DirtyX = px0;
+            canvas.DirtyY = py0;
+            canvas.DirtyW = px1 - px0;
+            canvas.DirtyH = py1 - py0;
+            canvas.ScissorOn = true;
+            canvas.ScissorX = px0;
+            canvas.ScissorY = canvas.Height - py1;
+            canvas.ScissorW = px1 - px0;
+            canvas.ScissorH = py1 - py0;
+        }
+
         void PaintAll()
         {
             EnsurePaintFlags();
@@ -1448,6 +1659,9 @@ namespace OrbitalSalvage.Render
             {
                 if (ExternalPlayfield != null)
                 {
+                    eff[k] = parentOpacity;
+                    skip[k] = parentSkipped;
+                    if (DirtyMiss(k)) continue;
                     canvas.Save();
                     canvas.SetTransform(scale, 0, 0, scale, 0, 0);
                     canvas.ImageSmoothingEnabled = false;
@@ -1457,6 +1671,7 @@ namespace OrbitalSalvage.Render
                 }
                 if (SkipPlayfield) continue;
                 if (OmitCached(k)) continue;
+                if (DirtyMiss(k)) continue;
                 if (playfield != null)
                 {
                     playfield.Play(canvas);
@@ -1470,6 +1685,7 @@ namespace OrbitalSalvage.Render
                     eff[k] = parentOpacity; skip[k] = parentSkipped;
                     if (parentSkipped) continue;
                     if (OmitCached(k)) continue;
+                    if (DirtyMiss(k)) continue;
                     bool move = Motion(k);
                     if (move) BeginMotion(k);
                     DrawEmoji(e, k, eff[k]);
@@ -1487,6 +1703,7 @@ namespace OrbitalSalvage.Render
                 if (specHidden[k] && !PositiveWidthOverride(eid)) { skip[k] = true; continue; }
                 if (eid.Length > 0 && HiddenIds.Count > 0 && HiddenIds.Contains(eid)) { skip[k] = true; continue; }
                 if (OmitCached(k)) continue;
+                if (DirtyMiss(k)) continue;
                 bool moving = Motion(k);
                 if (moving) BeginMotion(k);
                 if (isShine[k]) { PaintShine(e, pk, eff[k], k); if (moving) canvas.Restore(); continue; }
@@ -1501,7 +1718,11 @@ namespace OrbitalSalvage.Render
                         bool covered = overlay && ExternalPlayfield != null
                             && TryDrawPlayfieldBlur(rr[0], rr[1], rr[2], rr[3], blurSigma[k], eff[k]);
                         if (!covered)
+                        {
+                            if ((RenderOpts.BackdropLow || RenderOpts.BackdropScope) && cacheOn && !BackdropHitsMotion(rr))
+                                canvas.BackdropReuseId = k + 1;
                             canvas.BackdropBlur(rr[0], rr[1], rr[2], rr[3], blurSigma[k]);
+                        }
                     }
                 }
                 else if (!SimplifyEffects && backdropKind[k] == 2) Defer("backdrop-filter");

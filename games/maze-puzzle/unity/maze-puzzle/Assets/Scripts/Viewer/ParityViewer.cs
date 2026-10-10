@@ -248,6 +248,7 @@ namespace OrbitalSalvage.Viewer
 
         void LateUpdate()
         {
+            GpuOpt.Apply();
             SuppressLegacy();
             if (selfTesting && !shipTesting) return;
             CaptureGpu();
@@ -287,6 +288,7 @@ namespace OrbitalSalvage.Viewer
                 session.Renderer.Dispose();
                 session = null;
             }
+            PlayfieldComposite.ReleaseGpu();
             if (pageFill != null) Destroy(pageFill);
             if (readTex != null) Destroy(readTex);
             if (readRt != null)
@@ -759,11 +761,19 @@ namespace OrbitalSalvage.Viewer
             var full = new Rect(0, 0, Screen.width, Screen.height);
             GUI.DrawTexture(full, pageFill, ScaleMode.StretchToFill, false);
             var letter = ToGui(PageRect());
-            if (ShowPlayfield && session.Renderer.Target != null)
-                GUI.DrawTexture(letter, session.Renderer.Target, ScaleMode.StretchToFill, true);
             bool skipChromeBlit = DeviceFlags.Current.NoImgui && ShowPlayfield;
-            if (current != null && current.Target != null && !skipChromeBlit)
-                GUI.DrawTexture(letter, current.Target, ScaleMode.StretchToFill, ShowPlayfield);
+            var combined = GpuOpt.GameOne && ShowPlayfield && !skipChromeBlit && current != null && session.Renderer != null
+                ? PlayfieldComposite.BlitGpu(session.Renderer.Target, current.Target)
+                : null;
+            if (combined != null)
+                GUI.DrawTexture(letter, combined, ScaleMode.StretchToFill, false);
+            else
+            {
+                if (ShowPlayfield && session.Renderer.Target != null)
+                    GUI.DrawTexture(letter, session.Renderer.Target, ScaleMode.StretchToFill, true);
+                if (current != null && current.Target != null && !skipChromeBlit)
+                    GUI.DrawTexture(letter, current.Target, ScaleMode.StretchToFill, ShowPlayfield);
+            }
             DrawQualityHud();
             if (!hintVisible || selfTesting)
             {
