@@ -349,5 +349,38 @@ namespace OrbitalSalvage.Render.Tests
                 Assert.AreEqual(0, At(10, 10).a, "inside the dirty rect");
             }
         }
+
+        static void DrawCard(Canvas2D c)
+        {
+            var s = new CssBoxStyle();
+            s.x = 24;
+            s.y = 20;
+            s.w = 40;
+            s.h = 28;
+            for (int i = 0; i < 4; i++) s.radii[i] = new Vec2d(8, 8);
+            s.hasBg = true;
+            s.bg = new Rgba(0.2f, 0.45f, 0.9f, 1f);
+            s.shadows.Add(new CssShadow { dx = 0, dy = 3, blur = 8, spread = 0, color = new Rgba(0f, 0f, 0f, 0.55f) });
+            CssBox.Draw(c, s, 1);
+        }
+
+        [Test]
+        public void RoundShadow_OffMatchesItselfAndOnStaysSoft()
+        {
+            try
+            {
+                RenderOpts.Clear();
+                var a = RenderAt(96, DrawCard);
+                var b = RenderAt(96, DrawCard);
+                Assert.AreEqual(0, MaxDiff(a, b), "options off drifted");
+                int before = RenderStats.RoundShadow;
+                RenderOpts.RoundShadow = true;
+                var on = RenderAt(96, DrawCard);
+                int diff = MaxDiff(a, on);
+                Assert.Greater(RenderStats.RoundShadow, before, "analytic path did not run");
+                Assert.LessOrEqual(diff, 40, "round shadow max diff " + diff);
+            }
+            finally { RenderOpts.Clear(); }
+        }
     }
 }

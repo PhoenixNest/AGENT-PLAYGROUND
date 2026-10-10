@@ -321,6 +321,8 @@ namespace OrbitalSalvage.Render
             UpdateThrusterPuffs(dt);
             if (!RenderToCanvas || _canvas == null) return;
 
+            if (RenderOpts.PlayHalf && Math.Abs(RenderScale - 0.5) > 0.001)
+                SetRenderScale(0.5);
             var ctx = _canvas;
             if (Canvas2D.SkipGameFx) ctx.SkipBlurredFx = true;
             else if (ctx.SkipBlurredFx) ctx.SkipBlurredFx = false;

@@ -169,7 +169,7 @@ namespace OrbitalSalvage.Viewer.Tests
             };
             var gpu = new DevicePerf.Gpu();
             var paint = new DevicePerf.Paint();
-            const string tail = " gpu_ms=na submits=0 cmds=0 draws=0 backdrop=0/0 shadows=0 blits=0 cachebuilds=0";
+            const string tail = " gpu_ms=na submits=0 cmds=0 draws=0 backdrop=0/0 shadows=0 blits=0 cachebuilds=0 edges=0 opt ss=0 sl=0 scache=0 missclip=0 missfmt=0 misssmall=0 bd=0/0 rr=0 dirty=0/0 cold=0 fullpage=0 area=0";
             string summary = perf.FormatSummary(stats, view, counters, gpu, paint);
             Assert.AreEqual(
                 "[Perf] page=game scale=2.0 cap=2.0 fit=1.5 frames=58 fps=57.5 avg=17.0 p50=16.0 p95=22.5 p99=40.0 max=41.0 over22=4 over50=0 gc0=1 gcm=-128 alloc=10 mono=20 reserved=30 resident=301371520 budget=335544320 mem=2794" + tail,

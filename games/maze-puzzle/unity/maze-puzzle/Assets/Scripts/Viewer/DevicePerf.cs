@@ -118,6 +118,22 @@ namespace OrbitalSalvage.Viewer
             public int Shadows;
             public int Blits;
             public int CacheBuilds;
+            public int Edges;
+            public int ShadowScopeHit;
+            public int ShadowLowHit;
+            public int ShadowCacheHit;
+            public int ShadowMissClip;
+            public int ShadowMissFmt;
+            public int ShadowMissSmall;
+            public int BackdropCacheHit;
+            public int BackdropCacheMiss;
+            public int RoundShadow;
+            public int DirtyFrames;
+            public int DirtyFull;
+            public int DirtyFullCold;
+            public int DirtyFullPage;
+            public int DirtyFullArea;
+            public int DirtyAreaSum;
         }
 
         public struct Hitch
@@ -432,6 +448,41 @@ namespace OrbitalSalvage.Viewer
             line.Append(paint.Blits);
             line.Append(" cachebuilds=");
             line.Append(paint.CacheBuilds);
+            line.Append(" edges=");
+            line.Append(paint.Edges);
+            line.Append(" opt ss=");
+            line.Append(paint.ShadowScopeHit);
+            line.Append(" sl=");
+            line.Append(paint.ShadowLowHit);
+            line.Append(" scache=");
+            line.Append(paint.ShadowCacheHit);
+            line.Append(" missclip=");
+            line.Append(paint.ShadowMissClip);
+            line.Append(" missfmt=");
+            line.Append(paint.ShadowMissFmt);
+            line.Append(" misssmall=");
+            line.Append(paint.ShadowMissSmall);
+            line.Append(" bd=");
+            line.Append(paint.BackdropCacheHit);
+            line.Append('/');
+            line.Append(paint.BackdropCacheMiss);
+            line.Append(" rr=");
+            line.Append(paint.RoundShadow);
+            line.Append(" dirty=");
+            line.Append(paint.DirtyFrames);
+            line.Append('/');
+            line.Append(paint.DirtyFull);
+            line.Append(" cold=");
+            line.Append(paint.DirtyFullCold);
+            line.Append(" fullpage=");
+            line.Append(paint.DirtyFullPage);
+            line.Append(" area=");
+            line.Append(paint.DirtyFullArea);
+            if (paint.DirtyFrames > 0)
+            {
+                line.Append(" areapct=");
+                line.Append(paint.DirtyAreaSum / paint.DirtyFrames);
+            }
             return line.ToString();
         }
 

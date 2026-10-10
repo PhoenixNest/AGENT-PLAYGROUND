@@ -315,7 +315,7 @@ namespace OrbitalSalvage.Render
                     RRect(c, sx + sh.dx, sy + sh.dy, sw, shh, radii);
                     c.Fill();
                 }
-                else
+                else if (!c.TryRoundRectShadow(sx + sh.dx, sy + sh.dy, sw, shh, radii, sh.color, sh.blur))
                 {
                     c.SetShadow(sh.color);
                     ShadowDevice(c, sh.dx, sh.dy, OffCanvas, 0, out var devX, out var devY, out var blurScale);

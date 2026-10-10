@@ -23,10 +23,13 @@ namespace OrbitalSalvage.Viewer
         public static bool BackdropLow { get; private set; }
         public static bool Dirty { get; private set; }
         public static bool GameOne { get; private set; }
+        public static bool RoundShadow { get; private set; }
+        public static bool PlayHalf { get; private set; }
         public static int AmbientHz { get; private set; }
         public static string Active { get; private set; } = "";
 
         static bool latched;
+        static bool bootLogged;
 
         /// <summary>First call reads the pref (or <see cref="Defaults"/>). Later calls are free.</summary>
         public static void Apply()
@@ -40,7 +43,7 @@ namespace OrbitalSalvage.Viewer
         /// <summary>Parse <paramref name="csv"/> and push the flags. Does not latch, so tests can override.</summary>
         public static void Apply(string csv)
         {
-            ShadowScope = ShadowLow = BackdropScope = BackdropLow = Dirty = GameOne = false;
+            ShadowScope = ShadowLow = BackdropScope = BackdropLow = Dirty = GameOne = RoundShadow = PlayHalf = false;
             AmbientHz = 0;
             if (!string.IsNullOrEmpty(csv))
             {
@@ -65,7 +68,14 @@ namespace OrbitalSalvage.Viewer
             RenderOpts.BackdropLow = BackdropLow;
             RenderOpts.Dirty = Dirty;
             RenderOpts.GameOne = GameOne;
+            RenderOpts.RoundShadow = RoundShadow;
+            RenderOpts.PlayHalf = PlayHalf;
             RenderOpts.AmbientHz = AmbientHz;
+            if (!bootLogged && Application.isPlaying)
+            {
+                bootLogged = true;
+                Debug.Log(RenderOpts.BootLine() + " active=" + Active);
+            }
         }
 
         /// <summary>Allow a later <see cref="Apply()"/> to read the pref again. Tests use this.</summary>
@@ -80,6 +90,8 @@ namespace OrbitalSalvage.Viewer
             else if (tok == "backdroplow") BackdropLow = true;
             else if (tok == "dirty") Dirty = true;
             else if (tok == "gameone") GameOne = true;
+            else if (tok == "rrshadow") RoundShadow = true;
+            else if (tok == "playhalf") PlayHalf = true;
             else if (tok.StartsWith("ambhz=", StringComparison.Ordinal))
             {
                 int n;
@@ -102,6 +114,8 @@ namespace OrbitalSalvage.Viewer
             Add(BackdropLow, "backdroplow");
             Add(Dirty, "dirty");
             Add(GameOne, "gameone");
+            Add(RoundShadow, "rrshadow");
+            Add(PlayHalf, "playhalf");
             if (AmbientHz > 0)
             {
                 if (s.Length > 0) s += ",";

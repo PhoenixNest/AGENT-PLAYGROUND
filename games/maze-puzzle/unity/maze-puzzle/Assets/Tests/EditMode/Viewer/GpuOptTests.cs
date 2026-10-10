@@ -42,6 +42,20 @@ namespace OrbitalSalvage.Viewer.Tests
         }
 
         [Test]
+        public void ParsesRoundShadowAndPlayHalf()
+        {
+            GpuOpt.Apply("rrshadow,playhalf");
+            Assert.IsTrue(GpuOpt.RoundShadow);
+            Assert.IsTrue(GpuOpt.PlayHalf);
+            Assert.IsTrue(RenderOpts.RoundShadow);
+            Assert.IsTrue(RenderOpts.PlayHalf);
+            Assert.IsFalse(RenderOpts.ShadowLow);
+            GpuOpt.Apply("");
+            Assert.IsFalse(RenderOpts.RoundShadow);
+            Assert.IsFalse(RenderOpts.PlayHalf);
+        }
+
+        [Test]
         public void AmbhzIgnoresOutOfRange()
         {
             GpuOpt.Apply("ambhz=0,ambhz=90,ambhz=30");
