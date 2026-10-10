@@ -46,6 +46,14 @@ namespace OrbitalSalvage.Render
         public int PhysicsSteps;
         public int RenderFrames;
         public bool RenderEnabled = true;
+
+        /// <summary>Forwards to <see cref="GameRenderer.SubmitEnabled"/>. Default true.</summary>
+        public bool SubmitEnabled
+        {
+            get => Renderer.SubmitEnabled;
+            set => Renderer.SubmitEnabled = value;
+        }
+
         public bool FixedStep;
         public double FixedDt = 16.0 / 1000.0;
 
