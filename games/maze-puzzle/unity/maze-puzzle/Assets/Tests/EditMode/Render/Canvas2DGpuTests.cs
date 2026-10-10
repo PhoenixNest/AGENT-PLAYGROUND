@@ -1,4 +1,6 @@
 using NUnit.Framework;
+using OrbitalSalvage.JsCompat;
+using OrbitalSalvage.Logic;
 using UnityEngine;
 
 namespace OrbitalSalvage.Render.Tests
@@ -76,6 +78,143 @@ namespace OrbitalSalvage.Render.Tests
             });
             Assert.AreEqual(255, At(px, 8, 8).a);
             Assert.AreEqual(255, At(px, 0, 0).a);
+        }
+
+        [Test]
+        public void SkipSubmitOff_EndFrameStillExecutes()
+        {
+            using (var c = new Canvas2D(Size, Size))
+            {
+                Assert.IsFalse(c.SkipSubmit);
+                c.BeginFrame();
+                c.FillStyle = "#00ff00";
+                c.FillRect(0, 0, 4, 4);
+                PaintProfile.Enabled = true;
+                PaintProfile.Reset();
+                try
+                {
+                    c.EndFrame();
+                    Assert.AreEqual(1, c.ExecuteCount);
+                    Assert.AreEqual(1, PaintProfile.Flushes);
+                }
+                finally
+                {
+                    PaintProfile.Enabled = false;
+                    PaintProfile.Reset();
+                }
+                var prev = RenderTexture.active;
+                RenderTexture.active = c.Target;
+                var tex = new Texture2D(Size, Size, TextureFormat.RGBA32, false, true);
+                tex.ReadPixels(new Rect(0, 0, Size, Size), 0, 0, false);
+                RenderTexture.active = prev;
+                var px = tex.GetPixels32();
+                Object.DestroyImmediate(tex);
+                Assert.AreEqual(255, At(px, 1, 1).a);
+            }
+        }
+
+        [Test]
+        public void SkipSubmit_EndFrameDoesNotExecuteAndReusesCpuState()
+        {
+            using (var c = new Canvas2D(Size, Size))
+            {
+                c.SkipSubmit = true;
+                PaintProfile.Enabled = true;
+                PaintProfile.Reset();
+                int edges = 0, prm = 0, glyphs = 0;
+                try
+                {
+                    for (int i = 0; i < 20; i++)
+                    {
+                        c.BeginFrame();
+                        Assert.AreEqual(0, c.EdgeCount);
+                        Assert.AreEqual(0, c.DrawCount);
+                        Assert.AreEqual(0, IntField(c, "glyphRecords"));
+                        Assert.AreEqual(0, ListCount(c, "snapshots"));
+                        c.FillStyle = "#ff0000";
+                        c.FillRect(1, 1, 10, 10);
+                        c.EndFrame();
+                        Assert.AreEqual(0, c.ExecuteCount);
+                        Assert.AreEqual(0, PaintProfile.Flushes);
+                        if (i == 0)
+                        {
+                            edges = ArrayLen(c, "edges");
+                            prm = ArrayLen(c, "prm");
+                            glyphs = ArrayLen(c, "glyphData");
+                        }
+                        else
+                        {
+                            Assert.AreEqual(edges, ArrayLen(c, "edges"));
+                            Assert.AreEqual(prm, ArrayLen(c, "prm"));
+                            Assert.AreEqual(glyphs, ArrayLen(c, "glyphData"));
+                        }
+                    }
+                }
+                finally
+                {
+                    PaintProfile.Enabled = false;
+                    PaintProfile.Reset();
+                }
+                Assert.Throws<System.InvalidOperationException>(() => c.Flush());
+                Assert.Throws<System.InvalidOperationException>(() => c.Replay());
+                Assert.AreEqual(0, c.ExecuteCount);
+            }
+        }
+
+        [Test]
+        public void SkipSubmit_RenderedFramesKeepTheSameRngStream()
+        {
+            const int frames = 24;
+            long submitted = RenderFrames(true, frames, out int executesOn, out int flushesOn);
+            long skipped = RenderFrames(false, frames, out int executesOff, out int flushesOff);
+            Assert.AreEqual(frames, executesOn);
+            Assert.AreEqual(frames, flushesOn);
+            Assert.AreEqual(0, executesOff);
+            Assert.AreEqual(0, flushesOff);
+            Assert.AreEqual(submitted, skipped);
+            Assert.Greater(submitted, 0);
+        }
+
+        static long RenderFrames(bool submit, int frames, out int executes, out int flushes)
+        {
+            JsRandom.Global.Reset(JsRandom.DefaultSeed);
+            var renderer = new GameRenderer(48, 48, 1);
+            PaintProfile.Enabled = true;
+            PaintProfile.Reset();
+            try
+            {
+                renderer.SubmitEnabled = submit;
+                var economy = new EconomyManager(new MemoryKeyValueStore(), new FixedWallClock(0));
+                var session = new LiveGameSession(new PhysicsEngine(new ParityAudioCues(() => 0)), renderer, economy);
+                session.LoadSector(MazeLevelBuilder.GetSectors()[0]);
+                for (int i = 0; i < frames; i++) session.StepWebFrame(0.016, true);
+                executes = renderer.Canvas.ExecuteCount;
+                flushes = PaintProfile.Flushes;
+                return JsRandom.Global.CallCount;
+            }
+            finally
+            {
+                PaintProfile.Enabled = false;
+                PaintProfile.Reset();
+                renderer.Dispose();
+            }
+        }
+
+        static int ArrayLen(Canvas2D canvas, string field)
+        {
+            var value = typeof(Canvas2D).GetField(field, System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic).GetValue(canvas);
+            return ((System.Array)value).Length;
+        }
+
+        static int ListCount(Canvas2D canvas, string field)
+        {
+            var value = typeof(Canvas2D).GetField(field, System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic).GetValue(canvas);
+            return ((System.Collections.ICollection)value).Count;
+        }
+
+        static int IntField(Canvas2D canvas, string field)
+        {
+            return (int)typeof(Canvas2D).GetField(field, System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic).GetValue(canvas);
         }
     }
 }
