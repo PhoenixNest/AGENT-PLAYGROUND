@@ -69,6 +69,7 @@ namespace OrbitalSalvage.App.Tests
                     clock = new ManualAppClock(0, epoch0);
                     app = new AppController(new MemoryProfileStore(), clock);
                     session = LiveGameSession.CreateBound(app.Economy, 430, 932);
+                    session.SubmitEnabled = false;
                     var bound = session;
                     bound.NowMs = () => app.NowMs;
                     app.NotifyAudioInit = () => { if (bound.Cues != null) bound.Cues.PublicInit(); };
