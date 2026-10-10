@@ -212,6 +212,25 @@ namespace OrbitalSalvage.App
             ShowPage("home");
         }
 
+        /// <summary>
+        /// Bench cell boundary. Drops pending debrief timers, modals, and toasts, and reloads sector 0
+        /// with a fresh in-memory profile. No toast, so the next home sample is not a reset banner.
+        /// </summary>
+        public void PrepareBenchCell()
+        {
+            _timers.Clear();
+            _bootTimer = -1;
+            _toasts.Clear();
+            _modals.Clear();
+            Economy.ResetProfile();
+            if (Sectors.Count > 0)
+            {
+                SectorIndex = 0;
+                LoadSector(Sectors[0], false);
+            }
+            ShowPage("home");
+        }
+
         /// <summary>Start the loading-bar interval. Call after the sector-0 random prefix.</summary>
         public void BeginBoot()
         {

@@ -13,9 +13,12 @@ namespace OrbitalSalvage.Viewer
     {
         public static DeviceExp Current;
         public static DeviceExp Manual;
+        public static DeviceExp Boot;
         public static string BenchMode;
+        public static string[] BenchExps;
         public static float BenchSeconds = DeviceBench.DefaultWindowSeconds;
         public static double CommandForced;
+        public static bool RasterRebuild;
 
         static bool read;
         static bool cacheOff;
@@ -27,9 +30,11 @@ namespace OrbitalSalvage.Viewer
             read = true;
             CommandForced = commandForced;
             Manual = DeviceExp.Parse(PlayerPrefs.GetString("os.parity.exp", ""));
+            Boot = DeviceExp.Parse(PlayerPrefs.GetString(DeviceBench.BootExpPrefKey, ""));
             string modePref = PlayerPrefs.GetString(DeviceBench.PrefKey, "");
             if (!DeviceBench.TryMode(modePref, out string mode)) return;
             BenchMode = mode;
+            BenchExps = DeviceBench.ParseExps(PlayerPrefs.GetString(DeviceBench.ExpsPrefKey, ""));
             float secs = PlayerPrefs.GetFloat(DeviceBench.SecsPrefKey, DeviceBench.DefaultWindowSeconds);
             if (secs < 1f) secs = DeviceBench.DefaultWindowSeconds;
             BenchSeconds = secs;
@@ -37,10 +42,20 @@ namespace OrbitalSalvage.Viewer
 
         public static void Apply(DeviceExp exp, bool benchCell)
         {
+            RasterRebuild = false;
             Current = exp;
             Canvas2D.SkipBlurredShadows = exp.NoShadow;
             Canvas2D.SkipGameFx = exp.NoGameFx;
-            if (!benchCell) Canvas2D.HalfAccum = exp.Rt16;
+            bool wantHalf = exp.Rt16 || Boot.Rt16;
+            if (benchCell)
+            {
+                if (wantHalf != Canvas2D.HalfAccum)
+                {
+                    Canvas2D.HalfAccum = wantHalf;
+                    RasterRebuild = true;
+                }
+            }
+            else Canvas2D.HalfAccum = wantHalf;
             if (exp.NoBackdrop) HomeChrome.SimplifyEffects = true;
             if (exp.NoCache)
             {
@@ -90,7 +105,8 @@ namespace OrbitalSalvage.Viewer
                     DeviceFlags.BenchMode,
                     DeviceFlags.BenchSeconds,
                     DeviceBench.WarmupSeconds,
-                    DeviceBench.TabDwellSeconds);
+                    DeviceBench.TabDwellSeconds,
+                    DeviceFlags.BenchExps);
                 benchPlayer = new BenchPlayer(steps, DeviceBench.NavTimeoutSeconds);
                 benchPaintSnap = RenderStats.Read();
                 benchPaintReady = true;
@@ -102,10 +118,12 @@ namespace OrbitalSalvage.Viewer
             var delta = benchPaintReady ? RenderStats.Delta(paintNow, benchPaintSnap) : paintNow;
             benchPaintSnap = paintNow;
             benchPaintReady = true;
+            string page = currentId;
+            if (string.IsNullOrEmpty(page)) page = BenchPage();
             var inn = new DeviceBench.TickIn
             {
                 Now = Time.unscaledTime,
-                Page = BenchPage(),
+                Page = page,
                 Dt = Time.unscaledDeltaTime < 0f ? 0f : Time.unscaledDeltaTime,
                 PresentMs = benchRequestTicks != 0 ? BenchElapsedMs() : -1f,
                 GpuMs = benchGpu,
@@ -117,11 +135,40 @@ namespace OrbitalSalvage.Viewer
             };
             var act = benchPlayer.Tick(inn);
             if (act.ResetGovernor) governor.ResetSession();
-            if (act.Apply) DeviceFlags.Apply(DeviceExp.Parse(act.Exp), true);
+            if (act.Apply)
+            {
+                DeviceFlags.Apply(DeviceExp.Parse(act.Exp), true);
+                if (session != null) session.HoldOutcome = DeviceBench.HoldsPlay(act.Scenario);
+                if (DeviceFlags.RasterRebuild) RebuildBenchRasters();
+                int ambient = DeviceFlags.Current.AmbientFps;
+                if (ambient > 0) ambientInterval = 1.0 / ambient;
+            }
             for (int i = 0; i < benchPlayer.LogCount; i++)
                 UnityEngine.Debug.Log(benchPlayer.Log(i));
+            if (act.ResetState) BenchReset();
             if (act.Click) BenchClick(act.ClickId);
-            if (act.Done) benchRequestTicks = 0;
+            if (act.Done)
+            {
+                benchRequestTicks = 0;
+                if (session != null) session.HoldOutcome = false;
+            }
+        }
+
+        void BenchReset()
+        {
+            if (app == null) return;
+            app.PrepareBenchCell();
+            appliedEpoch = -1;
+            SyncApp(true);
+        }
+
+        void RebuildBenchRasters()
+        {
+            cache.ForEach((key, chrome) =>
+            {
+                if (chrome != null) chrome.RebuildRasterInPlace();
+            });
+            if (session != null && session.Renderer != null) session.Renderer.RebuildCanvas();
         }
 
         string BenchPage()
