@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Text;
 using OrbitalSalvage.App;
@@ -14,8 +15,11 @@ namespace OrbitalSalvage.Viewer
 {
     public sealed partial class ParityViewer
     {
-        readonly Queue<ParityPages.PrewarmEntry> tabPrewarm = new Queue<ParityPages.PrewarmEntry>();
+        ParityPages.PrewarmEntry[] tabPlan = Array.Empty<ParityPages.PrewarmEntry>();
+        int tabPlanCursor;
+        double tabPlanScale;
         bool tabPrewarmArmed;
+        bool residentBudgetReady;
         AppController app;
         IAppClock appClock;
         bool followClock = true;
@@ -97,34 +101,81 @@ namespace OrbitalSalvage.Viewer
         }
 
         /// <summary>
-        /// Queue the five main-tab chromes. One is baked per frame after the loading bar's override set exists.
-        /// Anything still queued when home appears finishes on later frames and never blocks input.
+        /// Plan the five main-tab chromes, home first. One is baked per frame after the loading bar's
+        /// override set exists, and only while the next page fits in the resident byte budget.
+        /// A page that does not fit is baked on first visit. Baking never blocks input.
         /// </summary>
         void BeginTabPrewarm()
         {
             if (!ParityPages.ShouldPrewarmTabs(selfTesting) || app == null || tabPrewarmArmed) return;
             tabPrewarmArmed = true;
+            EnsureResidentBudget();
             string profile = ParityPages.ActiveProfile;
             RefreshTabPins(profile);
-            var entries = ParityPages.PrewarmTemplates(app, profile);
-            for (int i = 0; i < entries.Length; i++)
+            tabPlan = ParityPages.PrewarmTemplates(app, profile);
+            tabPlanCursor = 0;
+            tabPlanScale = 0;
+        }
+
+        void EnsureResidentBudget()
+        {
+            if (residentBudgetReady) return;
+            residentBudgetReady = true;
+            bool phone = QualityGovernor.IsPhone(Application.isMobilePlatform, SystemInfo.deviceType);
+            int memoryMb = SystemInfo.systemMemorySize;
+            cache.ByteBudget = ParityPages.ResidentBudgetBytes(memoryMb, phone);
+            cache.Cost = chrome => chrome == null ? 0L : chrome.ResidentBytes;
+            Debug.Log("[ParityViewer] resident budget " + cache.ByteBudget.ToString(CultureInfo.InvariantCulture)
+                + " bytes, phone=" + phone.ToString()
+                + ", systemMemoryMb=" + memoryMb.ToString(CultureInfo.InvariantCulture));
+        }
+
+        void TrimResident()
+        {
+            if (!residentBudgetReady) return;
+            cache.ProtectKey = shownKey;
+            evicted.Clear();
+            cache.Trim(evicted);
+            DisposeEvictedExcept(current);
+        }
+
+        void DisposeEvictedExcept(HomeChrome keep)
+        {
+            for (int i = 0; i < evicted.Count; i++)
             {
-                if (string.IsNullOrEmpty(entries[i].TemplateId)) continue;
-                if (cache.Contains(entries[i].CacheKey)) continue;
-                tabPrewarm.Enqueue(entries[i]);
+                var chrome = evicted[i];
+                if (chrome == null || ReferenceEquals(chrome, keep)) continue;
+                chrome.Dispose();
             }
+            evicted.Clear();
         }
 
         void PumpTabPrewarm()
         {
-            if (!ParityPages.ShouldPrewarmTabs(selfTesting) || app == null) return;
+            if (!ParityPages.ShouldPrewarmTabs(selfTesting) || app == null || tabPlan == null || tabPlan.Length == 0) return;
             bool hold = string.IsNullOrEmpty(app.LoadingBar) && app.CurrentPage == "loading";
-            if (ParityPages.TryTakeTabPrewarm(tabPrewarm, HomeChrome.DeferLayerCache, hold, out var entry))
+            if (HomeChrome.DeferLayerCache || hold) return;
+            EnsureResidentBudget();
+            double scale = DesiredRasterScale();
+            if (tabPlanScale <= 0 || ParityPages.RasterScaleIsStale(tabPlanScale, scale))
             {
-                BakeTabEntry(entry);
-                return;
+                tabPlanCursor = 0;
+                tabPlanScale = scale;
             }
-            if (tabPrewarm.Count == 0) RepairOneResident();
+            while (tabPlanCursor < tabPlan.Length && cache.Contains(tabPlan[tabPlanCursor].CacheKey))
+                tabPlanCursor++;
+            if (tabPlanCursor < tabPlan.Length)
+            {
+                var entry = tabPlan[tabPlanCursor];
+                long estimate = ParityPages.EstimateResidentBytes(entry.TemplateId, scale);
+                if (ParityPages.MayRebakeResident(ResidentCacheBytes, 0, estimate, cache.ByteBudget, false))
+                {
+                    BakeTabEntry(entry);
+                    tabPlanCursor++;
+                    return;
+                }
+            }
+            RepairOneResident();
         }
 
         void BakeTabEntry(ParityPages.PrewarmEntry entry)
@@ -139,9 +190,10 @@ namespace OrbitalSalvage.Viewer
                 chrome.UseClaimedGiftBanner(entry.Page == "shop" && !app.Economy.CanClaimDailyGift());
                 WriteDynamicOverrides(chrome, entry.Page, entry.TemplateId);
                 chrome.BakeStaticLayers();
+                cache.ProtectKey = shownKey;
                 evicted.Clear();
                 cache.Add(entry.CacheKey, chrome, evicted);
-                for (int i = 0; i < evicted.Count; i++) evicted[i].Dispose();
+                DisposeEvictedExcept(current);
                 chrome = null;
             }
             catch (Exception ex)
@@ -151,7 +203,11 @@ namespace OrbitalSalvage.Viewer
             }
         }
 
-        /// <summary>After a raster change, one resident page per frame is resized and re-baked. Deferred while the governor asks.</summary>
+        /// <summary>
+        /// After a raster change, one resident pinned page per frame is resized and re-baked.
+        /// A scale-up that would pass the byte budget is left until that page is shown.
+        /// A scale-down is baked because it frees memory. Deferred while the governor asks.
+        /// </summary>
         void RepairOneResident()
         {
             if (HomeChrome.DeferLayerCache || !HomeChrome.UseLayerCache) return;
@@ -159,20 +215,36 @@ namespace OrbitalSalvage.Viewer
             HomeChrome job = null;
             cache.ForEach((key, chrome) =>
             {
-                if (job != null || chrome == null || !cache.IsPinned(key)) return;
-                if (ParityPages.RasterScaleIsStale(chrome.RasterScale, want) || !chrome.LayerCacheReady)
-                    job = chrome;
+                if (job != null || chrome == null || !cache.IsPinned(key) || key == shownKey) return;
+                bool stale = ParityPages.RasterScaleIsStale(chrome.RasterScale, want);
+                if (!stale && chrome.LayerCacheReady) return;
+                long projected = ParityPages.EstimateResidentBytes(TemplateOf(key), want);
+                long others = ResidentCacheBytes - chrome.ResidentBytes;
+                if (!ParityPages.MayRebakeResident(others, chrome.ResidentBytes, projected, cache.ByteBudget, false))
+                    return;
+                job = chrome;
             });
             if (job == null) return;
             try
             {
                 job.InvalidateIfScaleDiffers(want);
                 job.BakeStaticLayers();
+                TrimResident();
             }
             catch (Exception ex)
             {
                 Debug.LogError("[ParityViewer] rebake: " + ex.Message);
             }
+        }
+
+        static string TemplateOf(string key)
+        {
+            if (string.IsNullOrEmpty(key)) return "";
+            int at = key.IndexOf('@');
+            int hash = key.IndexOf('#');
+            int end = at >= 0 ? at : (hash >= 0 ? hash : key.Length);
+            if (end < 0) end = 0;
+            return key.Substring(0, end);
         }
 
         /// <summary>Profile volumes plus physics cues into the DSP player. Parity boots leave <c>Audible</c> null.</summary>

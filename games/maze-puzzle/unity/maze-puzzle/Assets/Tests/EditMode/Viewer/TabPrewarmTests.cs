@@ -195,6 +195,112 @@ namespace OrbitalSalvage.Viewer.Tests
             }
         }
 
+        sealed class Blob
+        {
+            public Blob(long bytes) { Bytes = bytes; }
+            public long Bytes;
+        }
+
+        [Test]
+        public void ResidentBudget_MatchesDeviceMemory()
+        {
+            Assert.AreEqual(ParityPages.Phone4GbBudgetBytes, ParityPages.ResidentBudgetBytes(4096, true), "4 GB phone");
+            Assert.AreEqual(320L * 1024 * 1024, ParityPages.ResidentBudgetBytes(4096, true));
+            Assert.AreEqual(ParityPages.Phone6GbBudgetBytes, ParityPages.ResidentBudgetBytes(6144, true), "6 GB phone");
+            Assert.AreEqual(ParityPages.Phone6GbBudgetBytes, ParityPages.ResidentBudgetBytes(8192, true), "8 GB phone stays on the 6 GB cap");
+            Assert.AreEqual(ParityPages.DesktopBudgetBytes, ParityPages.ResidentBudgetBytes(16384, false), "desktop");
+            Assert.AreEqual(ParityPages.DesktopBudgetBytes, ParityPages.ResidentBudgetBytes(4096, false), "editor on a small machine still uses the desktop cap");
+            long small = ParityPages.ResidentBudgetBytes(512, true);
+            Assert.AreEqual(512L * 1024 * 1024 * ParityPages.PhoneBudgetPercent / 100, small);
+            Assert.Less(small, ParityPages.Phone4GbBudgetBytes, "the 35% share binds below the 4 GB cap");
+            Assert.AreEqual(ParityPages.Phone4GbBudgetBytes, ParityPages.ResidentBudgetBytes(6000, true), "just under 6 GB stays on the 4 GB cap");
+        }
+
+        [Test]
+        public void PrewarmPrefix_StopsWhenTheNextPageWouldExceed()
+        {
+            long phone4 = ParityPages.ResidentBudgetBytes(4096, true);
+            long phone6 = ParityPages.ResidentBudgetBytes(6144, true);
+            long desk = ParityPages.ResidentBudgetBytes(16384, false);
+            long[] at2 = ParityPages.MainTabBytes(2);
+            long[] at3 = ParityPages.MainTabBytes(3);
+            Assert.AreEqual(ParityPages.HomeBytesAt2x, at2[0]);
+            Assert.AreEqual(346256640L, at3[0], "3× is 2.25× the 2× measurement");
+            Assert.AreEqual(2, ParityPages.CountFitting(at2, phone4), "4 GB phone at 2× keeps home and maps");
+            Assert.AreEqual(0, ParityPages.CountFitting(at3, phone4), "4 GB phone at 3× cannot pre-bake home");
+            Assert.AreEqual(3, ParityPages.CountFitting(at2, phone6), "6 GB phone at 2× keeps home, maps, and daily");
+            Assert.AreEqual(1, ParityPages.CountFitting(at3, phone6), "6 GB phone at 3× keeps home only");
+            Assert.AreEqual(5, ParityPages.CountFitting(at2, desk));
+            Assert.AreEqual(4, ParityPages.CountFitting(at3, desk), "desktop at 3× stops before the fifth tab");
+            long homeAndMaps = at2[0] + at2[1];
+            Assert.LessOrEqual(homeAndMaps, phone4);
+            Assert.Greater(homeAndMaps + at2[2], phone4);
+            Assert.AreEqual(0, ParityPages.CountFitting(at2, phone4, phone4), "nothing else fits once the budget is already full");
+        }
+
+        [Test]
+        public void ByteBudget_EvictsUnpinnedThenOldestPinned_KeepsTheCurrentPage()
+        {
+            var lru = new ChromeLru<Blob>(8);
+            lru.Cost = blob => blob.Bytes;
+            lru.ByteBudget = 100;
+            lru.ProtectKey = "home";
+            var evicted = new List<Blob>();
+            var home = new Blob(60);
+            var modal = new Blob(60);
+            lru.Pin("home");
+            lru.Add("home", home, evicted);
+            lru.Add("modal", modal, evicted);
+            Assert.AreEqual(1, evicted.Count, "the unpinned modal leaves before the pinned tab");
+            Assert.AreSame(modal, evicted[0]);
+            Assert.IsTrue(lru.Contains("home"));
+            Assert.IsFalse(lru.Contains("modal"));
+
+            evicted.Clear();
+            lru.ByteBudget = 150;
+            var maps = new Blob(100);
+            var daily = new Blob(100);
+            lru.Pin("maps");
+            lru.Pin("daily");
+            lru.ProtectKey = "daily";
+            lru.Add("maps", maps, evicted);
+            lru.Add("daily", daily, evicted);
+            Assert.IsFalse(lru.Contains("home"), "the oldest pinned tab leaves once unpinned entries are gone");
+            Assert.IsFalse(lru.Contains("maps"), "maps is older than the current page");
+            Assert.IsTrue(lru.Contains("daily"));
+            Assert.Greater(evicted.Count, 0);
+
+            evicted.Clear();
+            lru.ByteBudget = 50;
+            lru.Trim(evicted);
+            Assert.AreEqual(0, evicted.Count, "the current page stays even when it alone is over the budget");
+            Assert.IsTrue(lru.Contains("daily"));
+            Assert.AreEqual(1, lru.Count);
+            Assert.Greater(lru.TotalBytes, lru.ByteBudget);
+        }
+
+        [Test]
+        public void ScaleRaise_DoesNotRebakeBackgroundPagesPastTheBudget()
+        {
+            long budget = ParityPages.ResidentBudgetBytes(4096, true);
+            long home2 = ParityPages.EstimateResidentBytes("home_default", 2);
+            long maps2 = ParityPages.EstimateResidentBytes("maps_world_1_fresh", 2);
+            long home3 = ParityPages.EstimateResidentBytes("home_default", 3);
+            long maps3 = ParityPages.EstimateResidentBytes("maps_world_1_fresh", 3);
+            long daily2 = ParityPages.EstimateResidentBytes("daily_default", 2);
+            Assert.IsTrue(ParityPages.MayRebakeResident(home2, 0, maps2, budget, false), "home + maps at 2× still fits");
+            Assert.IsFalse(ParityPages.MayRebakeResident(home2 + maps2, 0, daily2, budget, false), "daily would pass the 4 GB budget");
+            Assert.IsFalse(
+                ParityPages.MayRebakeResident(home2, maps2, maps3, budget, false),
+                "raising maps to 3× beside home at 2× passes the budget");
+            Assert.IsTrue(
+                ParityPages.MayRebakeResident(home3, maps3, maps2, budget, false),
+                "dropping maps from 3× to 2× frees memory");
+            Assert.IsTrue(
+                ParityPages.MayRebakeResident(maps3, home2, home3, budget, true),
+                "the current page is shown even when the rebake passes the budget");
+        }
+
         [Test]
         public void MainTabs_ReportBakedBytesAt3xAnd2x()
         {
@@ -203,11 +309,13 @@ namespace OrbitalSalvage.Viewer.Tests
             var app = FreshLoadingApp();
             var entries = ParityPages.PrewarmTemplates(app, "zero");
             var report = new StringBuilder();
+            long budget = ParityPages.ResidentBudgetBytes(4096, true);
             try
             {
                 for (int s = 0; s < 2; s++)
                 {
                     double scale = s == 0 ? 3 : 2;
+                    var totals = new long[entries.Length];
                     for (int i = 0; i < entries.Length; i++)
                     {
                         var chrome = HomeChrome.Load(entries[i].TemplateId, "zero");
@@ -219,10 +327,27 @@ namespace OrbitalSalvage.Viewer.Tests
                             Assert.Greater(chrome.BakedLayerCount, 0, entries[i].TemplateId);
                             Assert.Greater(chrome.BakedLayerBytes, 0, entries[i].TemplateId);
                             Assert.AreEqual(scale, chrome.RasterScale, 0.01, entries[i].TemplateId);
+                            long expect = ParityPages.EstimateResidentBytes(entries[i].TemplateId, scale);
+                            Assert.AreEqual(expect, chrome.ResidentBytes, entries[i].TemplateId + " @" + scale);
+                            totals[i] = chrome.ResidentBytes;
+                            int skipped = chrome.SkippedLayerCount;
+                            int clear = 0;
+                            int identical = 0;
+                            if (scale < 2.5)
+                            {
+                                var audit = chrome.AuditLayerIdentity();
+                                skipped = audit.Skipped;
+                                clear = audit.FullyClear;
+                                identical = audit.IdenticalToAnother;
+                                Assert.AreEqual(0, audit.Unreadable, entries[i].TemplateId + " layer readback");
+                            }
                             string line = entries[i].TemplateId
                                 + " scale=" + scale.ToString("0.#")
                                 + " layers=" + chrome.BakedLayerCount
                                 + " slots=" + chrome.BakedLayerSlots
+                                + " skipped=" + skipped
+                                + " clear=" + clear
+                                + " identical=" + identical
                                 + " px=" + chrome.PixelWidth + "x" + chrome.PixelHeight
                                 + " layerBytes=" + chrome.BakedLayerBytes
                                 + " canvasBytes=" + chrome.CanvasResidentBytes
@@ -235,6 +360,20 @@ namespace OrbitalSalvage.Viewer.Tests
                             chrome.Dispose();
                         }
                     }
+                    int fit = ParityPages.CountFitting(totals, budget);
+                    long resident = 0;
+                    for (int i = 0; i < fit; i++) resident += totals[i];
+                    string summary = "4gb-phone scale=" + scale.ToString("0.#")
+                        + " budget=" + budget
+                        + " fit=" + fit
+                        + " resident=" + resident;
+                    report.Append(summary).Append('\n');
+                    Debug.Log("[TabBake] " + summary);
+                    if (scale > 2.5) Assert.AreEqual(0, fit, "3× home alone is over the 4 GB phone budget");
+                    else Assert.AreEqual(2, fit, "2× keeps home and maps under the 4 GB phone budget");
+                    if (fit < totals.Length)
+                        Assert.Greater(resident + totals[fit], budget);
+                    if (fit > 0) Assert.LessOrEqual(resident, budget);
                 }
                 File.WriteAllText("/tmp/prebake-tabs/memory.txt", report.ToString());
             }

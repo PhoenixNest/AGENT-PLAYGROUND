@@ -4,8 +4,10 @@ using System.Collections.Generic;
 namespace OrbitalSalvage.Viewer
 {
     /// <summary>
-    /// Small most-recently-used map. Pinned keys (the main tabs) are kept; overflow evicts the
-    /// oldest unpinned entry so modals stay bounded and cannot push a tab out.
+    /// Small most-recently-used map. Without a byte cost, pinned keys stay even past the
+    /// count cap so a modal cannot push a tab out. When <see cref="Cost"/> is set,
+    /// a resident set over <see cref="ByteBudget"/> evicts the oldest unpinned entry and then the
+    /// oldest pinned entry. <see cref="ProtectKey"/> (the page on screen) is never evicted.
     /// </summary>
     public sealed class ChromeLru<T> where T : class
     {
@@ -20,7 +22,30 @@ namespace OrbitalSalvage.Viewer
             this.capacity = capacity;
         }
 
+        /// <summary>Resident byte ceiling. Ignored until <see cref="Cost"/> is set. The default is no byte ceiling.</summary>
+        public long ByteBudget = long.MaxValue;
+
+        /// <summary>Bytes charged for a resident value. Null keeps the cache on the count cap only.</summary>
+        public Func<T, long> Cost;
+
+        /// <summary>Key that stays resident even when it alone is over <see cref="ByteBudget"/>.</summary>
+        public string ProtectKey;
+
         public int Count => map.Count;
+
+        public long TotalBytes
+        {
+            get
+            {
+                if (Cost == null) return 0;
+                long n = 0;
+                foreach (var kv in map)
+                {
+                    if (kv.Value != null) n += Cost(kv.Value);
+                }
+                return n;
+            }
+        }
 
         public bool Contains(string key) => map.ContainsKey(key);
 
@@ -71,6 +96,7 @@ namespace OrbitalSalvage.Viewer
                 Touch(key);
                 map[key] = value;
                 if (!ReferenceEquals(old, value) && old != null && evicted != null) evicted.Add(old);
+                EvictOverflow(evicted);
                 return;
             }
 
@@ -79,22 +105,49 @@ namespace OrbitalSalvage.Viewer
             EvictOverflow(evicted);
         }
 
+        /// <summary>Evict until the count cap and the byte budget both hold, appending removed values to <paramref name="evicted"/>.</summary>
+        public void Trim(IList<T> evicted) => EvictOverflow(evicted);
+
         void EvictOverflow(IList<T> evicted)
         {
-            while (map.Count > capacity)
+            while (OverCapacity())
             {
-                int victim = -1;
-                for (int i = 0; i < order.Count; i++)
+                int victim = Oldest(skipPinned: true);
+                if (victim < 0)
                 {
-                    if (!pinned.Contains(order[i])) { victim = i; break; }
+                    // Count overflow leaves pins in place. Byte pressure may release them, oldest first.
+                    if (!BytesOver()) break;
+                    victim = Oldest(skipPinned: false);
+                    if (victim < 0) break;
                 }
-                if (victim < 0) break;
                 string oldest = order[victim];
                 order.RemoveAt(victim);
                 var doomed = map[oldest];
                 map.Remove(oldest);
                 if (doomed != null && evicted != null) evicted.Add(doomed);
             }
+        }
+
+        bool OverCapacity()
+        {
+            return map.Count > capacity || BytesOver();
+        }
+
+        bool BytesOver()
+        {
+            return Cost != null && TotalBytes > ByteBudget;
+        }
+
+        int Oldest(bool skipPinned)
+        {
+            for (int i = 0; i < order.Count; i++)
+            {
+                string key = order[i];
+                if (ProtectKey != null && key == ProtectKey) continue;
+                if (skipPinned && pinned.Contains(key)) continue;
+                return i;
+            }
+            return -1;
         }
 
         public void Clear(Action<T> dispose)
