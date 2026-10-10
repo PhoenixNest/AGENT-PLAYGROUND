@@ -17,11 +17,18 @@ Shader "Hidden/Canvas2D/Fill"
         Texture2D<float> _C2D_Accum;
         Texture2D<float> _C2D_Mask;
         Texture2D<float> _C2D_ClipTex;
+        // xy = canvas origin of a bounds-sized mask, z > 0.5 enables it, w = mask height. Zero keeps the full-target load.
+        float4 _C2D_MaskOrigin;
 
         float Coverage(float2 pc)
         {
             float4 fl = C2D_P(IDX_FLAGS);
             int2 tx = C2D_CanvasToTexel(int2(floor(pc)));
+            if (fl.x >= 0.5 && _C2D_MaskOrigin.z > 0.5)
+            {
+                float2 local = floor(pc) - _C2D_MaskOrigin.xy;
+                tx = int2((int)local.x, (int)_C2D_MaskOrigin.w - 1 - (int)local.y);
+            }
             float cov;
             if (fl.x < 0.5) cov = C2D_ApplyRule(_C2D_Accum.Load(int3(tx, 0)), fl.y);
             else cov = _C2D_Mask.Load(int3(tx, 0));

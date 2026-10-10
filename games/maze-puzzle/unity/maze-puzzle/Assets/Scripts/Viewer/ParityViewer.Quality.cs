@@ -143,9 +143,11 @@ namespace OrbitalSalvage.Viewer
 
         bool HoldAmbientDraw(bool ambient)
         {
-            if (selfTesting || !ambient || ambientInterval <= 0) return false;
+            if (selfTesting || !ambient) return false;
+            double interval = GpuOpt.AmbientHz > 0 ? 1.0 / GpuOpt.AmbientHz : ambientInterval;
+            if (interval <= 0) return false;
             if (Time.unscaledTime < nextAmbientDraw) return true;
-            nextAmbientDraw = Time.unscaledTime + (float)ambientInterval;
+            nextAmbientDraw = Time.unscaledTime + (float)interval;
             return false;
         }
 

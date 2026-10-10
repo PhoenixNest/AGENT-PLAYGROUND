@@ -24,6 +24,7 @@ namespace OrbitalSalvage.Render
         static readonly int IdMask = Shader.PropertyToID("_C2D_Mask");
         static readonly int IdClipTex = Shader.PropertyToID("_C2D_ClipTex");
         static readonly int IdLayerTex = Shader.PropertyToID("_C2D_Layer");
+        static readonly int IdMaskOrigin = Shader.PropertyToID("_C2D_MaskOrigin");
         static readonly float[] gradOff = new float[8];
 
         readonly RenderTexture target;
@@ -71,6 +72,18 @@ namespace OrbitalSalvage.Render
         /// calls <see cref="BeginFrame"/> and <see cref="EndFrame"/> (no backdrop readback). Default false.
         /// </summary>
         public bool SkipSubmit;
+
+        /// <summary>When true, <see cref="BeginFrame"/> does not clear the colour target. <see cref="DirtyX"/> is the canvas-pixel rect (y down) to clear instead.</summary>
+        public bool KeepTarget;
+        public int DirtyX, DirtyY, DirtyW, DirtyH;
+
+        /// <summary>Device scissor in render-target pixels, origin bottom-left. Off unless a dirty repaint set it.</summary>
+        public bool ScissorOn;
+        public int ScissorX, ScissorY, ScissorW, ScissorH;
+        bool scissorLive;
+
+        /// <summary>Non-zero asks the GPU backdrop path to reuse a cached blur of this element while its rect is unchanged.</summary>
+        public int BackdropReuseId;
 
         /// <summary>Times this canvas called <see cref="Graphics.ExecuteCommandBuffer"/>.</summary>
         public int ExecuteCount { get; private set; }
@@ -122,6 +135,7 @@ namespace OrbitalSalvage.Render
             DisposeText();
             edgeBuffer?.Dispose();
             paramBuffer?.Dispose();
+            ReleaseOptBuffers();
             DestroyOwned(matLayer);
             DestroyOwned(matBlur);
             for (int i = 0; i < blurPairN; i++) ReleasePair(blurPairs[i]);
@@ -168,8 +182,22 @@ namespace OrbitalSalvage.Render
             stack.Clear();
             path.Reset();
             BeginFrameText();
+            if (scissorLive)
+            {
+                cmd.DisableScissorRect();
+                scissorLive = false;
+            }
             cmd.SetRenderTarget(target);
-            cmd.ClearRenderTarget(false, true, Color.clear);
+            if (!KeepTarget)
+                cmd.ClearRenderTarget(false, true, Color.clear);
+            else if (DirtyW > 0 && DirtyH > 0)
+                ClearKeepRect(DirtyX, DirtyY, DirtyX + DirtyW, DirtyY + DirtyH);
+            KeepTarget = false;
+            if (ScissorOn && ScissorW > 0 && ScissorH > 0)
+            {
+                cmd.EnableScissorRect(new Rect(ScissorX, ScissorY, ScissorW, ScissorH));
+                scissorLive = true;
+            }
         }
 
         public void EndFrame() { Submit(false); }
@@ -217,6 +245,7 @@ namespace OrbitalSalvage.Render
             Shader.SetGlobalBuffer(IdEdges, edgeBuffer);
             Shader.SetGlobalBuffer(IdParams, paramBuffer);
             Shader.SetGlobalVector(IdTarget, new Vector4(Width, Height, 1f / Width, 1f / Height));
+            Shader.SetGlobalVector(IdMaskOrigin, Vector4.zero);
             Shader.SetGlobalFloat(IdFlipY, 1f);
             Shader.SetGlobalTexture(IdAccum, accum);
             UploadText();
@@ -354,6 +383,10 @@ namespace OrbitalSalvage.Render
             int cy1 = Clamp(y1 + radSum, 0, Height);
             int cw = cx1 - cx0, ch = cy1 - cy0;
             if (cw < 1 || ch < 1) return;
+            if ((RenderOpts.BackdropLow || RenderOpts.BackdropScope) && BackdropOpt(radii, sx, sy, sw, sh, x, y, w, h, cx0, cy0, cw, ch))
+                return;
+            bool holdScissor = ScissorOn;
+            if (holdScissor) cmd.DisableScissorRect();
             BlurPair pair = BlurPairFor(cw, ch);
             cmd.CopyTexture(target, 0, 0, cx0, cy0, cw, ch, pair.a, 0, 0, 0, 0);
             for (int pass = 0; pass < radii.Length; pass++)
@@ -366,6 +399,7 @@ namespace OrbitalSalvage.Render
             }
             bool smooth = state.imageSmoothing;
             state.imageSmoothing = false;
+            if (holdScissor) EnableLiveScissor();
             double localSx = sx - cx0;
             double localSy = sy - (Height - cy1);
             DrawTexture(pair.a, localSx, localSy, sw, sh, x, y, w, h);
@@ -849,9 +883,22 @@ namespace OrbitalSalvage.Render
             PaintProfile.CountShadow();
             RenderStats.Shadows++;
             if (!EmitEdges(ps, dx, dy, out var rect, out int ebase, out int ecount, snap)) { PaintProfile.End(PaintProfile.Shadow); return; }
+            if (radius > 0 && state.clip == null && (RenderOpts.ShadowScope || RenderOpts.ShadowLow)
+                && TryShadowOpt(rect, ebase, ecount, evenOdd, stroke, alpha, sigma, radius))
+            {
+                PaintProfile.End(PaintProfile.Shadow);
+                return;
+            }
+            bool resumeScissor = ScissorOn;
+            if (resumeScissor) cmd.DisableScissorRect();
             var full = new PixelRect(0, 0, Width, Height);
             int pbA = NewParams();
-            if (!WritePaint(pbA, stroke, alpha)) { PaintProfile.End(PaintProfile.Shadow); return; }
+            if (!WritePaint(pbA, stroke, alpha))
+            {
+                if (resumeScissor) EnableLiveScissor();
+                PaintProfile.End(PaintProfile.Shadow);
+                return;
+            }
             prm[pbA + IdxFlags] = new Vector4(0, evenOdd ? 1 : 0, 0, 1);
             prm[pbA + IdxShadow] = new Vector4(st.shadowColor.r, st.shadowColor.g, st.shadowColor.b, st.shadowColor.a);
             BindClip(pbA);
@@ -859,6 +906,7 @@ namespace OrbitalSalvage.Render
             if (radius == 0)
             {
                 cmd.SetRenderTarget(target);
+                if (resumeScissor) EnableLiveScissor();
                 Draw(matFill, FillSourceOver, 6, pbA);
                 PaintProfile.End(PaintProfile.Shadow);
                 return;
@@ -892,6 +940,7 @@ namespace OrbitalSalvage.Render
             BindClip(pbF);
             cmd.SetRenderTarget(target);
             cmd.SetGlobalTexture(IdMask, maskA);
+            if (resumeScissor) EnableLiveScissor();
             Draw(matFill, FillSourceOver, 6, pbF);
             PaintProfile.End(PaintProfile.Shadow);
         }
