@@ -5,7 +5,7 @@ alwaysApply: true
 
 # AGENT-GLOBAL-BASE Knowledge Base Mount
 
-Treat `C:\Users\ASUS\Documents\Code\Local\AGENT-GLOBAL-BASE` (**AGB**) as a **mounted knowledge base** for this workspace. Read and apply its contents when planning, researching, or producing work here. Prefer its documents over inventing parallel structure.
+Treat the `AGENT-GLOBAL-BASE` folder that sits next to this workspace, at `../AGENT-GLOBAL-BASE` (for example `.../Code/Local/AGENT-GLOBAL-BASE` on Windows and macOS), as a **mounted knowledge base** (**AGB**) for this workspace. Resolve it to an absolute path from the workspace root before reading. Read and apply its contents when planning, researching, or producing work here. Prefer its documents over inventing parallel structure.
 
 **Abbreviation:** `AGB` = AGENT-GLOBAL-BASE. Use either form in conversation and artifacts; paths remain under the mount root below.
 
@@ -38,7 +38,7 @@ Treat `C:\Users\ASUS\Documents\Code\Local\AGENT-GLOBAL-BASE` (**AGB**) as a **mo
 ## Quick lookup
 
 ```text
-C:\Users\ASUS\Documents\Code\Local\AGENT-GLOBAL-BASE\   ← AGB
+<workspace>/../AGENT-GLOBAL-BASE/   ← AGB
 ├── AGENTS.md                 ← read first
 ├── company/                  ← product org, departments, pipelines
 ├── studio/casual-games/      ← Unity casual-games studio

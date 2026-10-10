@@ -7,7 +7,7 @@ alwaysApply: true
 
 Complement the AGENT-GLOBAL-BASE knowledge-base mount by treating AGENT-GLOBAL-BASE’s Claude Code configuration as the **tooling layer** for this playground. Cursor does not auto-load Claude Code’s `.claude/` hooks/settings; **read and apply them manually** via tools.
 
-**Root:** `C:\Users\ASUS\Documents\Code\Local\AGENT-GLOBAL-BASE`  
+**Root:** `../AGENT-GLOBAL-BASE` (the folder next to this workspace; resolve it to an absolute path from the workspace root)  
 **Tooling root:** `<AGENT-GLOBAL-BASE>/.claude/`  
 **Operating layer:** `<AGENT-GLOBAL-BASE>/CLAUDE.md` (global Claude guardrails — shell, gates, Prettier)
 
@@ -61,7 +61,13 @@ AGENT-GLOBAL-BASE hooks resolve via git root → `$root/.claude/hooks/…` and *
 To **execute** a hook script against AGENT-GLOBAL-BASE state (when useful):
 
 ```powershell
-pwsh -ExecutionPolicy Bypass -File "C:\Users\ASUS\Documents\Code\Local\AGENT-GLOBAL-BASE\.claude\hooks\<name>.ps1"
+# Windows (use the absolute path of ../AGENT-GLOBAL-BASE)
+pwsh -ExecutionPolicy Bypass -File "<AGENT-GLOBAL-BASE>\.claude\hooks\<name>.ps1"
+```
+
+```bash
+# macOS / Linux: run the matching .sh hook
+bash "<AGENT-GLOBAL-BASE>/.claude/hooks/<name>.sh"
 ```
 
 (Many hooks expect Claude Code JSON on stdin — if invocation fails without that payload, apply the rule text instead of forcing a run.)
