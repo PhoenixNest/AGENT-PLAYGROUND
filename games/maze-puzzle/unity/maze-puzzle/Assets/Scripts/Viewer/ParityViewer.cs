@@ -252,6 +252,7 @@ namespace OrbitalSalvage.Viewer
             if (selfTesting && !shipTesting) return;
             if (!selfTesting) GovernQuality();
             PumpTabPrewarm();
+            if (!selfTesting) TrimResident();
             if (app != null) SyncApp();
             HandleInput();
             Tick();
@@ -303,11 +304,12 @@ namespace OrbitalSalvage.Viewer
         double DesiredRasterScale()
         {
             double forced = PlayQuality.Forced;
-            if (forced > 0) return SnapStep(forced);
+            if (forced > 0) return QualityGovernor.SnapStep(forced, false);
             if (current != null) return current.RasterScale;
-            double target = Math.Min(qualityCap, latchedFit);
+            bool phone = QualityGovernor.IsPhone(Application.isMobilePlatform, SystemInfo.deviceType);
+            double target = Math.Min(governor.Cap, latchedFit);
             if (target < 1) target = 1;
-            return SnapStep(target);
+            return QualityGovernor.SnapStep(target, phone);
         }
 
         void RefreshTabPins(string profile)
@@ -331,6 +333,8 @@ namespace OrbitalSalvage.Viewer
             string profile = ParityPages.ResolveProfile(stateId, ParityPages.ActiveProfile);
             string key = ParityPages.CacheKey(stateId, profile, cardKinds);
             if (shownKey == key && current != null) return;
+            EnsureResidentBudget();
+            cache.ProtectKey = key;
             if (app != null) RefreshTabPins(profile);
             double want = DesiredRasterScale();
             if (!cache.TryGet(key, out var chrome))
@@ -343,11 +347,12 @@ namespace OrbitalSalvage.Viewer
                 catch (Exception ex)
                 {
                     Debug.LogError("[ParityViewer] " + ex.Message);
+                    cache.ProtectKey = shownKey;
                     return;
                 }
                 evicted.Clear();
                 cache.Add(key, chrome, evicted);
-                for (int i = 0; i < evicted.Count; i++) evicted[i].Dispose();
+                DisposeEvictedExcept(chrome);
                 if (WantLiveChrome(stateId)) chrome.SkipPlayfield = true;
             }
             else if (WantLiveChrome(stateId) && !chrome.SkipPlayfield)
@@ -364,6 +369,7 @@ namespace OrbitalSalvage.Viewer
             clock.Restart();
             BindModalPlayfield(chrome);
             PaintCurrent(true);
+            TrimResident();
         }
 
         /// <summary>

@@ -102,6 +102,114 @@ namespace OrbitalSalvage.Viewer
             return Math.Abs(baked - live) >= 0.05;
         }
 
+        /// <summary>Phone resident cap below 6 GB. One home page at 3× is already past this, so a 4 GB phone pre-bakes at 2× only.</summary>
+        public const long Phone4GbBudgetBytes = 320L * 1024L * 1024L;
+        /// <summary>Phone resident cap at 6 GB and above. Three of the five tabs fit at 2×; one fits at 3×.</summary>
+        public const long Phone6GbBudgetBytes = 480L * 1024L * 1024L;
+        /// <summary>Editor and desktop resident cap. Four tabs fit at 3×; all five fit at 2×.</summary>
+        public const long DesktopBudgetBytes = 1536L * 1024L * 1024L;
+        /// <summary><see cref="SystemInfo.systemMemorySize"/> at which a phone uses <see cref="Phone6GbBudgetBytes"/>.</summary>
+        public const int Phone6GbMemoryMb = 6144;
+        /// <summary>Phone budgets also stay under this share of physical RAM, so a 1 GB device is not given the 4 GB cap.</summary>
+        public const int PhoneBudgetPercent = 35;
+
+        /// <summary>Measured <c>home_default</c> canvas + layers at 2× (860×1864) on this Mac.</summary>
+        public const long HomeBytesAt2x = 153891840L;
+        /// <summary>Measured <c>maps_world_1_fresh</c> at 2×.</summary>
+        public const long MapsBytesAt2x = 147479680L;
+        /// <summary>Measured <c>daily_default</c> at 2×. Shop and trophies match it.</summary>
+        public const long DailyBytesAt2x = 141067520L;
+        /// <summary>Measured <c>shop_rings_default</c> at 2×.</summary>
+        public const long ShopBytesAt2x = 141067520L;
+        /// <summary>Measured <c>achievements_none</c> at 2×.</summary>
+        public const long TrophiesBytesAt2x = 141067520L;
+
+        /// <summary>
+        /// Bytes of baked layers plus canvas the page cache may hold.
+        /// Phones take the lesser of <see cref="PhoneBudgetPercent"/> of RAM and a hard cap:
+        /// <see cref="Phone4GbBudgetBytes"/> under <see cref="Phone6GbMemoryMb"/>, otherwise <see cref="Phone6GbBudgetBytes"/>.
+        /// Desktop and the editor use <see cref="DesktopBudgetBytes"/>. The page on screen may pass the cap;
+        /// callers treat that one page as advisory.
+        /// </summary>
+        public static long ResidentBudgetBytes(int systemMemoryMb, bool phone)
+        {
+            if (!phone) return DesktopBudgetBytes;
+            if (systemMemoryMb < 0) systemMemoryMb = 0;
+            long cap = systemMemoryMb >= Phone6GbMemoryMb ? Phone6GbBudgetBytes : Phone4GbBudgetBytes;
+            long fraction = (long)systemMemoryMb * 1024L * 1024L * PhoneBudgetPercent / 100L;
+            if (fraction < cap) return fraction;
+            return cap;
+        }
+
+        /// <summary>Canvas + layers for a main-tab template at <paramref name="scale"/>, from the 2× measurement. Scale² is exact for 2 and 3.</summary>
+        public static long EstimateResidentBytes(string templateId, double scale)
+        {
+            long at2 = BytesAt2x(templateId);
+            if (scale < 1) scale = 1;
+            double factor = (scale / 2.0) * (scale / 2.0);
+            return (long)Math.Round(at2 * factor);
+        }
+
+        /// <summary>Home, maps, daily, shop, trophies, in pre-bake order, at <paramref name="scale"/>.</summary>
+        public static long[] MainTabBytes(double scale)
+        {
+            return new[]
+            {
+                EstimateResidentBytes("home_default", scale),
+                EstimateResidentBytes("maps_world_1_fresh", scale),
+                EstimateResidentBytes("daily_default", scale),
+                EstimateResidentBytes("shop_rings_default", scale),
+                EstimateResidentBytes("achievements_none", scale)
+            };
+        }
+
+        /// <summary>
+        /// How many leading pages fit in <paramref name="budget"/> when <paramref name="alreadyResident"/> is already charged.
+        /// Stops at the first page that would pass the budget. Does not skip ahead.
+        /// </summary>
+        public static int CountFitting(long[] orderedBytes, long budget, long alreadyResident = 0)
+        {
+            long used = alreadyResident < 0 ? 0 : alreadyResident;
+            if (orderedBytes == null) return 0;
+            int n = 0;
+            for (int i = 0; i < orderedBytes.Length; i++)
+            {
+                long next = orderedBytes[i] < 0 ? 0 : orderedBytes[i];
+                if (used > budget || used + next > budget) break;
+                used += next;
+                n++;
+            }
+            return n;
+        }
+
+        /// <summary>
+        /// Whether a background page may be baked at <paramref name="projectedBytes"/>.
+        /// A shrink (or a same-size rebake) is always allowed. Growth is allowed only when the other
+        /// resident pages plus the projection stay inside <paramref name="budget"/>. The current page is always allowed.
+        /// </summary>
+        public static bool MayRebakeResident(long otherBytes, long currentBytes, long projectedBytes, long budget, bool currentPage)
+        {
+            if (currentPage) return true;
+            if (otherBytes < 0) otherBytes = 0;
+            if (currentBytes < 0) currentBytes = 0;
+            if (projectedBytes < 0) projectedBytes = 0;
+            if (projectedBytes <= currentBytes) return true;
+            return otherBytes + projectedBytes <= budget;
+        }
+
+        static long BytesAt2x(string templateId)
+        {
+            switch (templateId)
+            {
+                case "home_default": return HomeBytesAt2x;
+                case "maps_world_1_fresh": return MapsBytesAt2x;
+                case "daily_default": return DailyBytesAt2x;
+                case "shop_rings_default": return ShopBytesAt2x;
+                case "achievements_none": return TrophiesBytesAt2x;
+                default: return DailyBytesAt2x;
+            }
+        }
+
         /// <summary>
         /// One queued template per call. Nothing is taken while layer baking is deferred, or while the
         /// loading bar has not been written yet (its width key is part of the baked override set).

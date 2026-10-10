@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Security.Cryptography;
 using System.Text.RegularExpressions;
 using OrbitalSalvage.Logic;
 using UnityEngine;
@@ -193,6 +194,89 @@ namespace OrbitalSalvage.Render
 
         /// <summary>Canvas buffers plus baked layer textures.</summary>
         public long ResidentBytes => CanvasResidentBytes + BakedLayerBytes;
+
+        /// <summary>Layer slots that were not allocated. Those layers had nothing visible to bake.</summary>
+        public int SkippedLayerCount => BakedLayerSlots - BakedLayerCount;
+
+        /// <summary>One-shot readback of the baked layers. Does not change pixels or release textures.</summary>
+        public struct LayerAudit
+        {
+            public int Slots;
+            public int Allocated;
+            public int Skipped;
+            public int FullyClear;
+            public int IdenticalToAnother;
+            public int Unreadable;
+        }
+
+        /// <summary>
+        /// Hashes each allocated layer. <see cref="LayerAudit.Skipped"/> counts slots that were never allocated.
+        /// <see cref="LayerAudit.FullyClear"/> counts allocated layers whose pixels are all zero.
+        /// <see cref="LayerAudit.IdenticalToAnother"/> counts allocated layers that share a SHA-256 with another layer.
+        /// Callers report this; baking does not drop or share layers from it.
+        /// </summary>
+        public LayerAudit AuditLayerIdentity()
+        {
+            var audit = new LayerAudit
+            {
+                Slots = BakedLayerSlots,
+                Allocated = BakedLayerCount
+            };
+            audit.Skipped = audit.Slots - audit.Allocated;
+            if (layerTex == null) return audit;
+            var seen = new Dictionary<string, int>();
+            for (int i = 0; i < layerTex.Length; i++)
+            {
+                if (!(layerTex[i] is RenderTexture rt) || !rt.IsCreated()) continue;
+                if (!TryHashLayer(rt, out string hash, out bool clear))
+                {
+                    audit.Unreadable++;
+                    continue;
+                }
+                if (clear) audit.FullyClear++;
+                if (seen.TryGetValue(hash, out int n))
+                {
+                    if (n == 1) audit.IdenticalToAnother++;
+                    audit.IdenticalToAnother++;
+                    seen[hash] = n + 1;
+                }
+                else seen[hash] = 1;
+            }
+            return audit;
+        }
+
+        static bool TryHashLayer(RenderTexture rt, out string hash, out bool clear)
+        {
+            hash = null;
+            clear = false;
+            var prev = RenderTexture.active;
+            Texture2D tex = null;
+            try
+            {
+                RenderTexture.active = rt;
+                tex = new Texture2D(rt.width, rt.height, TextureFormat.RGBA32, false, true);
+                tex.ReadPixels(new Rect(0, 0, rt.width, rt.height), 0, 0, false);
+                tex.Apply(false, false);
+                byte[] raw = tex.GetRawTextureData();
+                clear = true;
+                for (int i = 0; i < raw.Length; i++)
+                {
+                    if (raw[i] != 0) { clear = false; break; }
+                }
+                using (var sha = SHA256.Create())
+                    hash = BitConverter.ToString(sha.ComputeHash(raw)).Replace("-", "");
+                return true;
+            }
+            catch (Exception)
+            {
+                return false;
+            }
+            finally
+            {
+                RenderTexture.active = prev;
+                if (tex != null) UnityEngine.Object.DestroyImmediate(tex);
+            }
+        }
 
         /// <summary>How many times this chrome has baked its static layers.</summary>
         public int CacheBuilds { get; private set; }
