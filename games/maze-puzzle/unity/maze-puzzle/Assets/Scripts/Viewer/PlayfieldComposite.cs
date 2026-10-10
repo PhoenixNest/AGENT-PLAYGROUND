@@ -52,6 +52,59 @@ namespace OrbitalSalvage.Viewer
             return png;
         }
 
+        static RenderTexture gpu;
+        static Material overMat;
+
+        /// <summary>
+        /// One GPU pass of <paramref name="under"/> with premultiplied <paramref name="over"/> on top.
+        /// Returns null when either texture is missing so the caller keeps the two GUI draws.
+        /// </summary>
+        public static RenderTexture BlitGpu(RenderTexture under, RenderTexture over)
+        {
+            if (under == null || over == null) return null;
+            if (gpu == null || gpu.width != over.width || gpu.height != over.height)
+            {
+                if (gpu != null)
+                {
+                    gpu.Release();
+                    UnityEngine.Object.Destroy(gpu);
+                }
+                gpu = new RenderTexture(over.width, over.height, 0, RenderTextureFormat.ARGB32, RenderTextureReadWrite.Linear)
+                {
+                    name = "PlayfieldComposite.Gpu",
+                    filterMode = FilterMode.Bilinear,
+                    hideFlags = HideFlags.HideAndDontSave,
+                };
+                gpu.Create();
+            }
+            if (overMat == null)
+            {
+                var shader = Resources.Load<Shader>("Canvas2D/PremulOver");
+                if (shader == null) shader = Shader.Find("Hidden/Canvas2D/PremulOver");
+                if (shader == null) return null;
+                overMat = new Material(shader) { hideFlags = HideFlags.HideAndDontSave };
+            }
+            overMat.SetTexture("_Over", over);
+            Graphics.Blit(under, gpu, overMat);
+            return gpu;
+        }
+
+        public static void ReleaseGpu()
+        {
+            Kill(gpu);
+            gpu = null;
+            Kill(overMat);
+            overMat = null;
+        }
+
+        static void Kill(UnityEngine.Object obj)
+        {
+            if (obj == null) return;
+            if (obj is RenderTexture rt) rt.Release();
+            if (Application.isPlaying) UnityEngine.Object.Destroy(obj);
+            else UnityEngine.Object.DestroyImmediate(obj);
+        }
+
         static Color32[] Read(RenderTexture source)
         {
             var rt = new RenderTexture(source.width, source.height, 0, RenderTextureFormat.ARGB32, RenderTextureReadWrite.Linear)

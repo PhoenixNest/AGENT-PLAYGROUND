@@ -216,5 +216,138 @@ namespace OrbitalSalvage.Render.Tests
         {
             return (int)typeof(Canvas2D).GetField(field, System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic).GetValue(canvas);
         }
+
+        static Color32[] RenderAt(int size, System.Action<Canvas2D> draw)
+        {
+            using (var c = new Canvas2D(size, size))
+            {
+                c.BeginFrame();
+                draw(c);
+                c.EndFrame();
+                var prev = RenderTexture.active;
+                RenderTexture.active = c.Target;
+                var tex = new Texture2D(size, size, TextureFormat.RGBA32, false, true);
+                tex.ReadPixels(new Rect(0, 0, size, size), 0, 0, false);
+                RenderTexture.active = prev;
+                var px = tex.GetPixels32();
+                Object.DestroyImmediate(tex);
+                return px;
+            }
+        }
+
+        static void Shadow(Canvas2D c)
+        {
+            c.ShadowColor = "rgba(0,0,0,0.65)";
+            c.ShadowBlur = 6;
+            c.ShadowOffsetX = 3;
+            c.ShadowOffsetY = 2;
+            c.FillStyle = "#33aaee";
+            c.FillRect(16, 18, 20, 14);
+        }
+
+        static int MaxDiff(Color32[] a, Color32[] b)
+        {
+            int max = 0;
+            for (int i = 0; i < a.Length; i++)
+            {
+                max = System.Math.Max(max, System.Math.Abs(a[i].r - b[i].r));
+                max = System.Math.Max(max, System.Math.Abs(a[i].g - b[i].g));
+                max = System.Math.Max(max, System.Math.Abs(a[i].b - b[i].b));
+                max = System.Math.Max(max, System.Math.Abs(a[i].a - b[i].a));
+            }
+            return max;
+        }
+
+        [Test]
+        public void ShadowScope_StaysNearTheFullTargetShadow()
+        {
+            RenderOpts.Clear();
+            try
+            {
+                var off = RenderAt(64, Shadow);
+                RenderOpts.ShadowScope = true;
+                var on = RenderAt(64, Shadow);
+                int diff = MaxDiff(off, on);
+                Assert.LessOrEqual(diff, 8, "max channel diff " + diff);
+            }
+            finally { RenderOpts.Clear(); }
+        }
+
+        [Test]
+        public void ShadowLow_ReusesTheBitmapAndStaysSoft()
+        {
+            RenderOpts.Clear();
+            try
+            {
+                RenderOpts.ShadowLow = true;
+                var a = RenderAt(64, Shadow);
+                var b = RenderAt(64, c =>
+                {
+                    Shadow(c);
+                    c.ShadowColor = "rgba(0,0,0,0.65)";
+                    c.ShadowBlur = 6;
+                    c.ShadowOffsetX = 3;
+                    c.ShadowOffsetY = 2;
+                    c.FillStyle = "#33aaee";
+                    c.FillRect(40, 18, 20, 14);
+                });
+                Assert.Greater(a[30 * 64 + 20].a, 0, "shadow has coverage");
+                Assert.Greater(b[30 * 64 + 44].a, 0, "second card reused a shadow");
+            }
+            finally { RenderOpts.Clear(); }
+        }
+
+        [Test]
+        public void BackdropScope_MatchesTheGpuBlur()
+        {
+            RenderOpts.Clear();
+            try
+            {
+                System.Action<Canvas2D> draw = c =>
+                {
+                    c.ExactBackdrop = false;
+                    c.FillStyle = "#2040c0";
+                    c.FillRect(0, 0, 48, 48);
+                    c.FillStyle = "#e0c040";
+                    c.FillRect(4, 30, 40, 8);
+                    c.BackdropBlur(10, 12, 28, 18, 3);
+                };
+                var off = RenderAt(48, draw);
+                RenderOpts.BackdropScope = true;
+                var on = RenderAt(48, draw);
+                int diff = MaxDiff(off, on);
+                Assert.LessOrEqual(diff, 2, "backdrop scope max diff " + diff);
+            }
+            finally { RenderOpts.Clear(); }
+        }
+
+        [Test]
+        public void KeepTarget_ClearsOnlyTheDirtyRect()
+        {
+            using (var c = new Canvas2D(32, 32))
+            {
+                c.BeginFrame();
+                c.FillStyle = "#ff0000";
+                c.FillRect(0, 0, 32, 32);
+                c.EndFrame();
+                c.KeepTarget = true;
+                c.DirtyX = 8;
+                c.DirtyY = 8;
+                c.DirtyW = 8;
+                c.DirtyH = 8;
+                c.BeginFrame();
+                c.EndFrame();
+                var prev = RenderTexture.active;
+                RenderTexture.active = c.Target;
+                var tex = new Texture2D(32, 32, TextureFormat.RGBA32, false, true);
+                tex.ReadPixels(new Rect(0, 0, 32, 32), 0, 0, false);
+                RenderTexture.active = prev;
+                var px = tex.GetPixels32();
+                Object.DestroyImmediate(tex);
+                Color32 At(int x, int yTop) => px[(32 - 1 - yTop) * 32 + x];
+                Assert.AreEqual(255, At(1, 1).r, "outside the dirty rect");
+                Assert.AreEqual(0, At(10, 10).a, "inside the dirty rect");
+            }
+        }
     }
 }
