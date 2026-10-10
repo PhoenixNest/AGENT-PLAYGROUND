@@ -91,6 +91,12 @@ namespace OrbitalSalvage.Render
         bool needMove = true;
         Vec2d lastUser;
         Vec2d startPoint;
+        /// <summary>0 none, 1 circle, 2 ellipse, 3 round-rect, 4 axis-aligned rect. User space, one subpath.</summary>
+        public int Simple;
+        public double SimX, SimY, SimW, SimH, SimRx, SimRy, SimRot;
+        public double SimR0, SimR1, SimR2, SimR3;
+
+        public void ClearSimple() { Simple = 0; }
 
         public int Count => subpaths.Count;
         public Subpath this[int i] => subpaths[i];
@@ -103,6 +109,7 @@ namespace OrbitalSalvage.Render
             subpaths.Clear();
             cur = null;
             needMove = true;
+            ClearSimple();
         }
 
         Subpath NewSubpath()
@@ -117,6 +124,7 @@ namespace OrbitalSalvage.Render
         public void MoveTo(Matrix2D m, double x, double y)
         {
             if (!IsFinite(x, y)) return;
+            ClearSimple();
             var s = NewSubpath();
             var p = m.Apply(x, y);
             s.pts.Add(p);
@@ -128,6 +136,7 @@ namespace OrbitalSalvage.Render
         public void LineTo(Matrix2D m, double x, double y)
         {
             if (!IsFinite(x, y)) return;
+            ClearSimple();
             if (!PrepareConnect(m, x, y)) return;
             cur.pts.Add(m.Apply(x, y));
             lastUser = new Vec2d(x, y);
@@ -150,6 +159,7 @@ namespace OrbitalSalvage.Render
 
         public void ClosePath()
         {
+            ClearSimple();
             if (cur == null || needMove && cur.closed) return;
             if (cur.pts.Count == 0) return;
             cur.closed = true;
@@ -170,11 +180,20 @@ namespace OrbitalSalvage.Render
             needMove = true;
             lastUser = new Vec2d(x, y);
             startPoint = lastUser;
+            if (subpaths.Count == 1)
+            {
+                Simple = 4;
+                SimX = x;
+                SimY = y;
+                SimW = w;
+                SimH = h;
+            }
         }
 
         public void QuadTo(Matrix2D m, double cx, double cy, double x, double y)
         {
             if (!IsFinite(cx, cy) || !IsFinite(x, y)) return;
+            ClearSimple();
             PrepareConnect(m, cx, cy);
             var p0 = cur.pts[cur.pts.Count - 1];
             var p1 = m.Apply(cx, cy);
@@ -193,6 +212,7 @@ namespace OrbitalSalvage.Render
         public void BezierTo(Matrix2D m, double c1x, double c1y, double c2x, double c2y, double x, double y)
         {
             if (!IsFinite(c1x, c1y) || !IsFinite(c2x, c2y) || !IsFinite(x, y)) return;
+            ClearSimple();
             PrepareConnect(m, c1x, c1y);
             var p0 = cur.pts[cur.pts.Count - 1];
             var p1 = m.Apply(c1x, c1y);
@@ -241,7 +261,9 @@ namespace OrbitalSalvage.Render
             if (rx == 0 && ry == 0 || sweep == 0) { lastUser = start; return; }
             double scale = m.MaxScale();
             double rmax = Math.Max(rx, ry) * scale;
-            double step = rmax < 1e-6 ? Math.PI : 2 * Math.Acos(Math.Max(0, 1 - FlattenTolerance / Math.Max(rmax, FlattenTolerance * 1.0001)));
+            double tol = FlattenTolerance;
+            if (RenderOpts.FastShape && rmax < 12) tol = 0.35;
+            double step = rmax < 1e-6 ? Math.PI : 2 * Math.Acos(Math.Max(0, 1 - tol / Math.Max(rmax, tol * 1.0001)));
             step = Math.Min(step, Math.PI / 4);
             int n = Math.Max(1, (int)Math.Ceiling(Math.Abs(sweep) / step));
             for (int i = 1; i <= n; i++)
@@ -259,6 +281,16 @@ namespace OrbitalSalvage.Render
                 needMove = true;
                 startPoint = end;
             }
+            if (full && !connected && subpaths.Count == 1)
+            {
+                Simple = Math.Abs(rx - ry) < 1e-6 && Math.Abs(rotation) < 1e-6 ? 1 : 2;
+                SimX = cx;
+                SimY = cy;
+                SimRx = rx;
+                SimRy = ry;
+                SimRot = rotation;
+            }
+            else ClearSimple();
         }
 
         public void Arc(Matrix2D m, double x, double y, double r, double a0, double a1, bool ccw)
@@ -270,6 +302,7 @@ namespace OrbitalSalvage.Render
         public void ArcTo(Matrix2D m, double x1, double y1, double x2, double y2, double r)
         {
             if (!IsFinite(x1, y1) || !IsFinite(x2, y2) || !IsFinite(r) || r < 0) return;
+            ClearSimple();
             if (!PrepareConnect(m, x1, y1)) return;
             var p0 = lastUser;
             var p1 = new Vec2d(x1, y1);
@@ -330,6 +363,18 @@ namespace OrbitalSalvage.Render
             ClosePath();
             startPoint = new Vec2d(x + tlx, y);
             lastUser = new Vec2d(x + tlx, y);
+            if (subpaths.Count == 1)
+            {
+                Simple = 3;
+                SimX = x;
+                SimY = y;
+                SimW = w;
+                SimH = h;
+                SimR0 = tlx;
+                SimR1 = trx;
+                SimR2 = brx;
+                SimR3 = blx;
+            }
         }
 
         public bool GetBounds(out double minX, out double minY, out double maxX, out double maxY)

@@ -56,6 +56,23 @@ namespace OrbitalSalvage.Viewer.Tests
         }
 
         [Test]
+        public void ParsesFollowUpTokens()
+        {
+            GpuOpt.Apply("dirtyclip,bdhold,rrplus,fastshape,noprewarm");
+            Assert.IsTrue(RenderOpts.DirtyClip);
+            Assert.IsTrue(RenderOpts.BackdropHold);
+            Assert.IsTrue(RenderOpts.RoundPlus);
+            Assert.IsTrue(RenderOpts.FastShape);
+            Assert.IsTrue(RenderOpts.NoPrewarm);
+            Assert.IsFalse(RenderOpts.Dirty);
+            Assert.IsFalse(RenderOpts.RoundShadow);
+            GpuOpt.Apply("");
+            Assert.IsFalse(RenderOpts.DirtyClip);
+            Assert.IsFalse(RenderOpts.FastShape);
+            Assert.IsFalse(RenderOpts.NoPrewarm);
+        }
+
+        [Test]
         public void AmbhzIgnoresOutOfRange()
         {
             GpuOpt.Apply("ambhz=0,ambhz=90,ambhz=30");

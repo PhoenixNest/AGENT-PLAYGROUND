@@ -20,7 +20,7 @@ namespace OrbitalSalvage.Render
 
         sealed class BackdropSlot
         {
-            public int id, div, w, h;
+            public int id, div, w, h, age;
             public double x, y, rw, rh;
             public RenderTexture tex;
         }
@@ -33,6 +33,7 @@ namespace OrbitalSalvage.Render
         int backdropLoW, backdropLoH;
         Material matShadowBlit;
         Material matRound;
+        Material matFast;
 
         void ClearKeepRect(int x0, int y0, int x1, int y1)
         {
@@ -66,6 +67,8 @@ namespace OrbitalSalvage.Render
             matShadowBlit = null;
             DestroyOwned(matRound);
             matRound = null;
+            DestroyOwned(matFast);
+            matFast = null;
         }
 
         static void ReleaseSlot(ShadowSlot slot)
@@ -366,6 +369,11 @@ namespace OrbitalSalvage.Render
                     if (slot == null || slot.tex == null || slot.id != id || slot.div != div) continue;
                     if (Math.Abs(slot.x - x) > 0.51 || Math.Abs(slot.y - y) > 0.51 || Math.Abs(slot.rw - w) > 0.51 || Math.Abs(slot.rh - h) > 0.51)
                         continue;
+                    if (RenderOpts.BackdropHold)
+                    {
+                        slot.age++;
+                        if (slot.age % 4 == 0) continue;
+                    }
                     bool prev = state.imageSmoothing;
                     state.imageSmoothing = div > 1;
                     double scale = slot.w / (double)cw;
@@ -496,16 +504,37 @@ namespace OrbitalSalvage.Render
         /// One-quad gaussian of an axis-aligned rounded rect. Returns false when the option is off,
         /// the transform is rotated, or the shader did not load, so the caller keeps the mask blur.
         /// </summary>
+        public bool TryAnalyticInset(double x, double y, double w, double h, Vec2d[] radii, Rgba color, double blurCss)
+        {
+            if (!RenderOpts.RoundPlus)
+            {
+                if (RenderOpts.RoundShadow) RenderStats.RoundMissInset++;
+                return false;
+            }
+            return TryRoundRectShadow(x, y, w, h, radii, color, blurCss, true);
+        }
+
         public bool TryRoundRectShadow(double x, double y, double w, double h, Vec2d[] radii, Rgba color, double blurCss)
         {
-            if (!RenderOpts.RoundShadow || w <= 0 || h <= 0 || blurCss <= 0 || color.a <= 0) return false;
+            return TryRoundRectShadow(x, y, w, h, radii, color, blurCss, false);
+        }
+
+        bool TryRoundRectShadow(double x, double y, double w, double h, Vec2d[] radii, Rgba color, double blurCss, bool inset)
+        {
+            bool want = inset ? RenderOpts.RoundPlus : RenderOpts.RoundShadow || RenderOpts.RoundPlus;
+            if (!want || w <= 0 || h <= 0 || blurCss <= 0 || color.a <= 0) return false;
             var m = state.ctm;
-            if (Math.Abs(m.b) > 1e-3 || Math.Abs(m.c) > 1e-3 || m.a <= 1e-6 || m.d <= 1e-6) return false;
+            bool rotated = Math.Abs(m.b) > 1e-3 || Math.Abs(m.c) > 1e-3 || m.a <= 1e-6 || m.d <= 1e-6;
+            if (rotated || !m.IsInvertible)
+            {
+                if (!RenderOpts.RoundPlus || !m.IsInvertible) { RenderStats.RoundMissXform++; return false; }
+                return DrawLocalShadow(m, x, y, w, h, radii, color, blurCss, inset);
+            }
             if (matRound == null)
             {
                 var sh = Resources.Load<Shader>("Canvas2D/RoundShadow");
                 if (sh == null) sh = Shader.Find("Hidden/Canvas2D/RoundShadow");
-                if (sh == null) return false;
+                if (sh == null) { RenderStats.RoundMissShader++; return false; }
                 matRound = new Material(sh) { hideFlags = HideFlags.HideAndDontSave };
             }
             float bx = (float)(m.a * x + m.e);
@@ -535,16 +564,184 @@ namespace OrbitalSalvage.Render
             prm[pb + IdxGa] = new Vector4(bx, by, bw, bh);
             prm[pb + IdxGb] = new Vector4(Rad(0), Rad(1), Rad(2), Rad(3));
             prm[pb + IdxBlur] = new Vector4(sigma, 0, 0, 0);
-            if (state.clip != null)
+            if (inset || state.clip != null)
             {
-                prm[pb + IdxFlags] = new Vector4(0, 0, 1, 0);
-                cmd.SetGlobalTexture(IdClipTex, state.clip);
+                prm[pb + IdxFlags] = new Vector4(0, inset ? 1f : 0f, state.clip != null ? 1f : 0f, 0);
+                if (state.clip != null) cmd.SetGlobalTexture(IdClipTex, state.clip);
             }
             cmd.SetRenderTarget(target);
             if (ScissorOn) EnableLiveScissor();
             Draw(matRound, 0, 6, pb);
             RenderStats.RoundShadow++;
             return true;
+        }
+
+        bool DrawLocalShadow(Matrix2D m, double x, double y, double w, double h, Vec2d[] radii, Rgba color, double blurCss, bool inset)
+        {
+            if (matRound == null)
+            {
+                var sh = Resources.Load<Shader>("Canvas2D/RoundShadow");
+                if (sh == null) sh = Shader.Find("Hidden/Canvas2D/RoundShadow");
+                if (sh == null) { RenderStats.RoundMissShader++; return false; }
+                matRound = new Material(sh) { hideFlags = HideFlags.HideAndDontSave };
+            }
+            float sigma = (float)(blurCss * 0.5);
+            if (sigma < 0.2f) sigma = 0.2f;
+            float pad = sigma * 3f + 2f;
+            float minX = float.MaxValue, minY = float.MaxValue, maxX = float.MinValue, maxY = float.MinValue;
+            for (int i = 0; i < 4; i++)
+            {
+                double lx = (i & 1) == 0 ? x - pad : x + w + pad;
+                double ly = (i & 2) == 0 ? y - pad : y + h + pad;
+                var p = m.Apply(lx, ly);
+                if (p.x < minX) minX = (float)p.x;
+                if (p.y < minY) minY = (float)p.y;
+                if (p.x > maxX) maxX = (float)p.x;
+                if (p.y > maxY) maxY = (float)p.y;
+            }
+            int x0 = Clamp((int)Math.Floor(minX), 0, Width);
+            int y0 = Clamp((int)Math.Floor(minY), 0, Height);
+            int x1 = Clamp((int)Math.Ceiling(maxX), 0, Width);
+            int y1 = Clamp((int)Math.Ceiling(maxY), 0, Height);
+            if (x1 <= x0 || y1 <= y0) return false;
+            float Rad(int i)
+            {
+                if (radii == null || i >= radii.Length) return 0f;
+                return Math.Max(0f, (float)((radii[i].x + radii[i].y) * 0.5));
+            }
+            var inv = m.Inverse();
+            int pb = NewParams();
+            SetRect(pb, x0, y0, x1, y1);
+            prm[pb + IdxAlpha] = new Vector4((float)state.globalAlpha, 0, 0, 0);
+            prm[pb + IdxShadow] = new Vector4(color.r, color.g, color.b, color.a);
+            prm[pb + IdxGa] = new Vector4((float)x, (float)y, (float)w, (float)h);
+            prm[pb + IdxGb] = new Vector4(Rad(0), Rad(1), Rad(2), Rad(3));
+            prm[pb + IdxBlur] = new Vector4(sigma, 0, 0, 0);
+            prm[pb + IdxImgA] = new Vector4((float)inv.a, (float)inv.c, (float)inv.e, 1f);
+            prm[pb + IdxImgB] = new Vector4((float)inv.b, (float)inv.d, (float)inv.f, 0f);
+            prm[pb + IdxFlags] = new Vector4(0, inset ? 1f : 0f, state.clip != null ? 1f : 0f, 0);
+            if (state.clip != null) cmd.SetGlobalTexture(IdClipTex, state.clip);
+            cmd.SetRenderTarget(target);
+            if (ScissorOn) EnableLiveScissor();
+            Draw(matRound, 0, 6, pb);
+            RenderStats.RoundShadow++;
+            return true;
+        }
+
+        bool EnsureFast()
+        {
+            if (matFast != null) return true;
+            var sh = Resources.Load<Shader>("Canvas2D/FastShape");
+            if (sh == null) sh = Shader.Find("Hidden/Canvas2D/FastShape");
+            if (sh == null) return false;
+            matFast = new Material(sh) { hideFlags = HideFlags.HideAndDontSave };
+            return true;
+        }
+
+        bool AxisScale(out Matrix2D m)
+        {
+            m = state.ctm;
+            return Math.Abs(m.b) <= 1e-3 && Math.Abs(m.c) <= 1e-3 && m.a > 1e-6 && m.d > 1e-6;
+        }
+
+        bool TryFastFill(PathData src)
+        {
+            if (src == null || src.Simple == 0 || state.fillGrad != null) return false;
+            if (state.shadowColor.a > 0 && (state.shadowBlur > 0 || state.shadowOffsetX != 0 || state.shadowOffsetY != 0)) return false;
+            if (!AxisScale(out var m) || !EnsureFast()) return false;
+            if (!FastGeom(src, m, false, out int mode, out var ga, out var gb, out int x0, out int y0, out int x1, out int y1)) return false;
+            DrawFast(mode, ga, gb, x0, y0, x1, y1, state.fillColor);
+            if (src.Simple == 1) RenderStats.FastCirc++;
+            else if (src.Simple == 2) RenderStats.FastEll++;
+            else if (src.Simple == 3) RenderStats.FastRr++;
+            else RenderStats.FastRect++;
+            return true;
+        }
+
+        bool TryFastStroke(PathData src)
+        {
+            if (src == null || (src.Simple != 1 && src.Simple != 2)) return false;
+            if (state.strokeGrad != null || state.lineWidth <= 0) return false;
+            if (state.lineDash != null && state.lineDash.Length > 0) return false;
+            if (state.shadowColor.a > 0 && (state.shadowBlur > 0 || state.shadowOffsetX != 0 || state.shadowOffsetY != 0)) return false;
+            if (!AxisScale(out var m) || !EnsureFast()) return false;
+            if (src.Simple == 2 && Math.Abs(m.a - m.d) > 1e-3 && Math.Abs(src.SimRot) > 1e-3) return false;
+            if (!FastGeom(src, m, true, out int mode, out var ga, out var gb, out int x0, out int y0, out int x1, out int y1)) return false;
+            DrawFast(mode, ga, gb, x0, y0, x1, y1, state.strokeColor);
+            RenderStats.FastLine++;
+            return true;
+        }
+
+        bool FastGeom(PathData src, Matrix2D m, bool stroke, out int mode, out Vector4 ga, out Vector4 gb, out int x0, out int y0, out int x1, out int y1)
+        {
+            mode = 0;
+            ga = gb = default;
+            x0 = y0 = x1 = y1 = 0;
+            float half = stroke ? (float)(state.lineWidth * m.MaxScale() * 0.5) : 0f;
+            if (src.Simple == 4)
+            {
+                float bx = (float)(m.a * src.SimX + m.e);
+                float by = (float)(m.d * src.SimY + m.f);
+                float bw = (float)(m.a * src.SimW);
+                float bh = (float)(m.d * src.SimH);
+                if (bw < 0) { bx += bw; bw = -bw; }
+                if (bh < 0) { by += bh; bh = -bh; }
+                mode = 0;
+                x0 = Clamp((int)Math.Floor(bx), 0, Width);
+                y0 = Clamp((int)Math.Floor(by), 0, Height);
+                x1 = Clamp((int)Math.Ceiling(bx + bw), 0, Width);
+                y1 = Clamp((int)Math.Ceiling(by + bh), 0, Height);
+                return x1 > x0 && y1 > y0;
+            }
+            if (src.Simple == 1 || src.Simple == 2)
+            {
+                if (src.Simple == 2 && Math.Abs(m.a - m.d) > 1e-3 && Math.Abs(src.SimRot) > 1e-3) return false;
+                float cx = (float)(m.a * src.SimX + m.c * src.SimY + m.e);
+                float cy = (float)(m.b * src.SimX + m.d * src.SimY + m.f);
+                float rx = Math.Abs((float)(src.SimRx * m.a));
+                float ry = Math.Abs((float)(src.SimRy * m.d));
+                mode = stroke ? 4 : 1;
+                ga = new Vector4(cx, cy, rx, ry);
+                gb = new Vector4((float)src.SimRot, half, 0, 0);
+                float pad = Math.Max(rx, ry) + half + 1f;
+                x0 = Clamp((int)Math.Floor(cx - pad), 0, Width);
+                y0 = Clamp((int)Math.Floor(cy - pad), 0, Height);
+                x1 = Clamp((int)Math.Ceiling(cx + pad), 0, Width);
+                y1 = Clamp((int)Math.Ceiling(cy + pad), 0, Height);
+                return x1 > x0 && y1 > y0 && rx > 0.2f && ry > 0.2f;
+            }
+            if (src.Simple == 3 && !stroke)
+            {
+                float bx = (float)(m.a * src.SimX + m.e);
+                float by = (float)(m.d * src.SimY + m.f);
+                float bw = Math.Abs((float)(m.a * src.SimW));
+                float bh = Math.Abs((float)(m.d * src.SimH));
+                float s = Math.Abs((float)m.a);
+                mode = 2;
+                ga = new Vector4(bx, by, bw, bh);
+                gb = new Vector4((float)src.SimR0 * s, (float)src.SimR1 * s, (float)src.SimR2 * s, (float)src.SimR3 * s);
+                x0 = Clamp((int)Math.Floor(bx), 0, Width);
+                y0 = Clamp((int)Math.Floor(by), 0, Height);
+                x1 = Clamp((int)Math.Ceiling(bx + bw), 0, Width);
+                y1 = Clamp((int)Math.Ceiling(by + bh), 0, Height);
+                return x1 > x0 && y1 > y0;
+            }
+            return false;
+        }
+
+        void DrawFast(int mode, Vector4 ga, Vector4 gb, int x0, int y0, int x1, int y1, Rgba color)
+        {
+            int pb = NewParams();
+            SetRect(pb, x0, y0, x1, y1);
+            prm[pb + IdxAlpha] = new Vector4((float)state.globalAlpha, 0, 0, 0);
+            prm[pb + IdxColor] = new Vector4(color.r, color.g, color.b, color.a);
+            prm[pb + IdxFlags] = new Vector4(mode, 0, state.clip != null ? 1f : 0f, 0);
+            prm[pb + IdxGa] = ga;
+            prm[pb + IdxGb] = gb;
+            if (state.clip != null) cmd.SetGlobalTexture(IdClipTex, state.clip);
+            cmd.SetRenderTarget(target);
+            if (ScissorOn) EnableLiveScissor();
+            Draw(matFast, 0, 6, pb);
         }
     }
 }

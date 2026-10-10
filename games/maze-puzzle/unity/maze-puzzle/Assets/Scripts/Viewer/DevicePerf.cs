@@ -134,6 +134,15 @@ namespace OrbitalSalvage.Viewer
             public int DirtyFullPage;
             public int DirtyFullArea;
             public int DirtyAreaSum;
+            public int ShapeRect, ShapeCirc, ShapeEll, ShapeRr, ShapeStroke, ShapeOther;
+            public int EdgeRect, EdgeCirc, EdgeEll, EdgeRr, EdgeStroke, EdgeOther;
+            public int GameRect, GameCirc, GameEll, GameRr, GameStroke, GameOther;
+            public int GameEdgeRect, GameEdgeCirc, GameEdgeEll, GameEdgeRr, GameEdgeStroke, GameEdgeOther;
+            public int FastRect, FastCirc, FastEll, FastRr, FastLine;
+            public int RoundMissXform, RoundMissInset, RoundMissText, RoundMissShader;
+            public int PrewarmBake;
+            public string Wide;
+            public int WidePct;
         }
 
         public struct Hitch
@@ -483,6 +492,34 @@ namespace OrbitalSalvage.Viewer
                 line.Append(" areapct=");
                 line.Append(paint.DirtyAreaSum / paint.DirtyFrames);
             }
+            line.Append(" shp=");
+            Append6(line, paint.ShapeRect, paint.ShapeCirc, paint.ShapeEll, paint.ShapeRr, paint.ShapeStroke, paint.ShapeOther);
+            line.Append(" se=");
+            Append6(line, paint.EdgeRect, paint.EdgeCirc, paint.EdgeEll, paint.EdgeRr, paint.EdgeStroke, paint.EdgeOther);
+            line.Append(" gshp=");
+            Append6(line, paint.GameRect, paint.GameCirc, paint.GameEll, paint.GameRr, paint.GameStroke, paint.GameOther);
+            line.Append(" gse=");
+            Append6(line, paint.GameEdgeRect, paint.GameEdgeCirc, paint.GameEdgeEll, paint.GameEdgeRr, paint.GameEdgeStroke, paint.GameEdgeOther);
+            line.Append(" fast=");
+            Append6(line, paint.FastRect, paint.FastCirc, paint.FastEll, paint.FastRr, paint.FastLine, 0);
+            line.Append(" rrwhy=");
+            line.Append(paint.RoundMissXform);
+            line.Append('/');
+            line.Append(paint.RoundMissInset);
+            line.Append('/');
+            line.Append(paint.RoundMissText);
+            line.Append('/');
+            line.Append(paint.RoundMissShader);
+            line.Append(" bake=");
+            line.Append(paint.PrewarmBake);
+            line.Append(" wide=");
+            if (string.IsNullOrEmpty(paint.Wide)) line.Append('-');
+            else
+            {
+                line.Append(paint.Wide);
+                line.Append('@');
+                line.Append(paint.WidePct);
+            }
             return line.ToString();
         }
 
@@ -554,6 +591,21 @@ namespace OrbitalSalvage.Viewer
             sumMs += ms;
             if (count >= Capacity) return;
             samples[count++] = ms;
+        }
+
+        static void Append6(StringBuilder line, int a, int b, int c, int d, int e, int f)
+        {
+            line.Append(a);
+            line.Append('/');
+            line.Append(b);
+            line.Append('/');
+            line.Append(c);
+            line.Append('/');
+            line.Append(d);
+            line.Append('/');
+            line.Append(e);
+            line.Append('/');
+            line.Append(f);
         }
 
         static void AppendTenths(StringBuilder sb, double value)

@@ -131,7 +131,16 @@ namespace OrbitalSalvage.Viewer
                 DirtyFullCold = snap.DirtyFullCold,
                 DirtyFullPage = snap.DirtyFullPage,
                 DirtyFullArea = snap.DirtyFullArea,
-                DirtyAreaSum = snap.DirtyAreaSum
+                DirtyAreaSum = snap.DirtyAreaSum,
+                ShapeRect = snap.ShapeRect, ShapeCirc = snap.ShapeCirc, ShapeEll = snap.ShapeEll, ShapeRr = snap.ShapeRr, ShapeStroke = snap.ShapeStroke, ShapeOther = snap.ShapeOther,
+                EdgeRect = snap.EdgeRect, EdgeCirc = snap.EdgeCirc, EdgeEll = snap.EdgeEll, EdgeRr = snap.EdgeRr, EdgeStroke = snap.EdgeStroke, EdgeOther = snap.EdgeOther,
+                GameRect = snap.GameRect, GameCirc = snap.GameCirc, GameEll = snap.GameEll, GameRr = snap.GameRr, GameStroke = snap.GameStroke, GameOther = snap.GameOther,
+                GameEdgeRect = snap.GameEdgeRect, GameEdgeCirc = snap.GameEdgeCirc, GameEdgeEll = snap.GameEdgeEll, GameEdgeRr = snap.GameEdgeRr, GameEdgeStroke = snap.GameEdgeStroke, GameEdgeOther = snap.GameEdgeOther,
+                FastRect = snap.FastRect, FastCirc = snap.FastCirc, FastEll = snap.FastEll, FastRr = snap.FastRr, FastLine = snap.FastLine,
+                RoundMissXform = snap.RoundMissXform, RoundMissInset = snap.RoundMissInset, RoundMissText = snap.RoundMissText, RoundMissShader = snap.RoundMissShader,
+                PrewarmBake = snap.PrewarmBake,
+                Wide = RenderStats.DirtyWide,
+                WidePct = RenderStats.DirtyWidePct
             };
         }
 

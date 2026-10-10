@@ -154,6 +154,7 @@ namespace OrbitalSalvage.Viewer
 
         void PumpTabPrewarm()
         {
+            if (RenderOpts.NoPrewarm && app != null && app.CurrentPage == "game") return;
             if (!ParityPages.ShouldPrewarmTabs(selfTesting) || app == null || tabPlan == null || tabPlan.Length == 0) return;
             bool hold = string.IsNullOrEmpty(app.LoadingBar) && app.CurrentPage == "loading";
             if (HomeChrome.DeferLayerCache || hold) return;
@@ -194,6 +195,7 @@ namespace OrbitalSalvage.Viewer
                 chrome.UseClaimedGiftBanner(entry.Page == "shop" && !app.Economy.CanClaimDailyGift());
                 WriteDynamicOverrides(chrome, entry.Page, entry.TemplateId);
                 chrome.BakeStaticLayers();
+                RenderStats.PrewarmBake++;
                 cache.ProtectKey = shownKey;
                 evicted.Clear();
                 cache.Add(entry.CacheKey, chrome, evicted);
@@ -233,6 +235,7 @@ namespace OrbitalSalvage.Viewer
             {
                 job.InvalidateIfScaleDiffers(want);
                 job.BakeStaticLayers();
+                RenderStats.PrewarmBake++;
                 TrimResident();
             }
             catch (Exception ex)

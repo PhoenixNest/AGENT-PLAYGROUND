@@ -35,7 +35,14 @@ Shader "Hidden/Canvas2D/RoundShadow"
 
             float4 frag(float4 svpos : SV_POSITION) : SV_Target
             {
-                float2 pc = C2D_FragToCanvas(svpos);
+                float2 canvas = C2D_FragToCanvas(svpos);
+                float2 pc = canvas;
+                float4 ia = C2D_P(IDX_IMGA);
+                if (ia.w > 0.5)
+                {
+                    float4 ib = C2D_P(IDX_IMGB);
+                    pc = float2(ia.x * canvas.x + ia.y * canvas.y + ia.z, ib.x * canvas.x + ib.y * canvas.y + ib.z);
+                }
                 float4 box = C2D_P(IDX_GA);
                 float4 rad4 = C2D_P(IDX_GB);
                 float2 half = box.zw * 0.5;
@@ -45,10 +52,14 @@ Shader "Hidden/Canvas2D/RoundShadow"
                 rad = min(rad, min(half.x, half.y));
                 float sd = SdRound(p, half, max(rad, 0.0));
                 float sigma = max(C2D_P(IDX_BLUR).x, 0.35);
-                float cov = saturate(0.5 * ErfcApprox(sd / (sigma * 1.41421356)));
                 float4 fl = C2D_P(IDX_FLAGS);
+                float cov;
+                if (fl.y > 0.5)
+                    cov = sd < 0.0 ? exp(-(sd * sd) / (2.0 * sigma * sigma)) : 0.0;
+                else
+                    cov = saturate(0.5 * ErfcApprox(sd / (sigma * 1.41421356)));
                 if (fl.z > 0.5)
-                    cov *= _C2D_ClipTex.Load(int3(C2D_CanvasToTexel(int2(floor(pc))), 0));
+                    cov *= _C2D_ClipTex.Load(int3(C2D_CanvasToTexel(int2(floor(canvas))), 0));
                 float4 sc = C2D_P(IDX_SHADOW);
                 float a = cov * sc.a * C2D_P(IDX_ALPHA).x;
                 return float4(sc.rgb * a, a);
