@@ -44,7 +44,7 @@ Priorities are 100 (Preview), 200 (Build), 300 (Play), and 400 (Tools). Adjacent
 | `Orbital Salvage/Play/Parity Viewer Enabled`          | Toggles EditorPrefs `OrbitalSalvage.ParityViewer.Enabled` (default on). Applied the next time Play starts.                                                                                                        | Turn the Canvas2D viewer off for a comparison.                                 |
 | `Orbital Salvage/Tools/Reset Saved Profile`           | Deletes `orbital-salvage-profile.json` under `Application.persistentDataPath` after a confirmation dialog. Batch mode skips the dialog and deletes. The log line is `[ParityViewer] reset profile` plus the path. | Clear a local profile. Cancel leaves the file in place.                        |
 
-Auto steps the product raster through 1, 1.5, 2, and 3. Phones stay on 2 or 3. A forced menu value or `-parity-quality` still wins, including 1×. The settled scale is stored as `os.parity.scale.v2.<width>x<height>` after it has stayed put. F3 toggles the frame-time readout. A four-finger tap does the same in the Editor, in a Development build, or when PlayerPrefs `os.parity.hud` is 1.
+Auto steps the product raster through 1, 1.5, 2, and 3. Phones stay on 2 or 3. A scale that falls back is not tried again until the next launch. A forced menu value or `-parity-quality` still wins, including 1×. The settled scale is stored as `os.parity.scale.v2.<width>x<height>` after it has stayed put. F3 toggles the frame-time readout. A four-finger tap does the same in the Editor, in a Development build, or when PlayerPrefs `os.parity.hud` is 1.
 
 ## Page Preview
 
