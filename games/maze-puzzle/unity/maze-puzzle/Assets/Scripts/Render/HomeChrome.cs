@@ -52,6 +52,9 @@ namespace OrbitalSalvage.Render
         /// <summary>Page already drawn underneath a modal. App pages in this spec are skipped so the overlay blurs this texture.</summary>
         public RenderTexture Underlay;
 
+        /// <summary>How many times the paused playfield was blurred for a modal. A size change counts again.</summary>
+        public int PlayfieldBlurBuilds { get; private set; }
+
         public struct ToastPaint
         {
             public string Text;
@@ -650,6 +653,7 @@ namespace OrbitalSalvage.Render
 
         public void Dispose()
         {
+            ReleasePlayfieldBlur();
             DropLayerCache();
             playfield?.Dispose();
             canvas.Dispose();
@@ -1193,11 +1197,14 @@ namespace OrbitalSalvage.Render
             bool savedPremul = Canvas2D.GradientInterpolatesPremultiplied;
             Canvas2D.GradientInterpolatesPremultiplied = true; // CSS gradients interpolate premultiplied
             Deferred.Clear(); DrawnBoxes = DrawnRuns = DrawnEmoji = 0;
+            if (ExternalPlayfield == null) ReleasePlayfieldBlur();
             try
             {
                 BuildClassText();
                 bool composite = Underlay != null;
-                if (frame != null && UseLayerCache && !composite)
+                // The sheet intro moves the card. A baked layer is the settled pose, so blitting it
+                // pops the sheet open on frame 0.
+                if (frame != null && UseLayerCache && !composite && !modalIntro)
                 {
                     PaintProfile.Begin(PaintProfile.Cache);
                     if (ProbeBake)
@@ -1211,7 +1218,7 @@ namespace OrbitalSalvage.Render
                     PaintProfile.End(PaintProfile.Cache);
                 }
                 bool settled = frame != null && !frame.PageTransform && frame.PageOpacity >= 0.999;
-                cacheOn = UseLayerCache && !composite && settled && cacheReady && paintOnlyLayer < 0 && staticLayerCount > 0;
+                cacheOn = UseLayerCache && !composite && settled && !modalIntro && cacheReady && paintOnlyLayer < 0 && staticLayerCount > 0;
                 lastBlit = -2;
                 canvas.BeginFrame();
                 canvas.SetTransform(scale, 0, 0, scale, 0, 0);
@@ -1392,11 +1399,13 @@ namespace OrbitalSalvage.Render
                     if (S(elements[k], "t") == "canvas") { playfieldIndex = k; break; }
             }
 
+            overflowClipN = 0;
             for (int k = 0; k < n; k++)
             {
                 if (DebugStopAfter >= 0 && k > DebugStopAfter) break;
                 var e = elements[k];
                 if (paintOnlyLayer >= 0 && (elementLayer == null || elementLayer[k] != paintOnlyLayer)) continue;
+                SyncOverflowClips(k);
                 int parent = (int)N(e, "p", -1);
                 int pk = parent >= 0 && byIndex.TryGetValue(parent, out var pp) ? pp : -1;
                 bool appPage = isAppPage[k];
@@ -1478,7 +1487,12 @@ namespace OrbitalSalvage.Render
                     if (eff[k] > 0.001)
                     {
                         var rr = Rect(e);
-                        canvas.BackdropBlur(rr[0], rr[1], rr[2], rr[3], blurSigma[k]);
+                        // The live playfield is composited under this texture, so a backdrop readback cannot see it.
+                        bool overlay = HasToken(S(e, "c"), "modal-overlay");
+                        bool covered = overlay && ExternalPlayfield != null
+                            && TryDrawPlayfieldBlur(rr[0], rr[1], rr[2], rr[3], blurSigma[k], eff[k]);
+                        if (!covered)
+                            canvas.BackdropBlur(rr[0], rr[1], rr[2], rr[3], blurSigma[k]);
                     }
                 }
                 else if (!SimplifyEffects && backdropKind[k] == 2) Defer("backdrop-filter");
@@ -1492,7 +1506,9 @@ namespace OrbitalSalvage.Render
                 if (e.TryGetValue("aft", out var aft) && aft is Dictionary<string, object> ad) PaintBox(ad, k, eff[k], false);
                 if (e.TryGetValue("th", out var th) && th is Dictionary<string, object> td) PaintBox(td, k, eff[k], false);
                 if (moving) canvas.Restore();
+                PushModalCardClip(e, k);
             }
+            ClearOverflowClips();
         }
 
         bool PositiveWidthOverride(string id)

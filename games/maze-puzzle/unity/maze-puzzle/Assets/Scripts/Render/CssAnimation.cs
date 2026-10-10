@@ -395,13 +395,26 @@ namespace OrbitalSalvage.Render
             {
                 double uo = CssEasing.Ease("ease", Clamp(timeMs / 250.0));
                 double us = CssEasing.CubicBezier(0.34, 1.56, 0.64, 1, Clamp(timeMs / 300.0));
-                int card = -1;
+                // Every modal lives in the same spec. Fading all of them stacks four extra
+                // full-screen dims on the sheet (flat overlay on Mac, a slab on device).
+                int overlay = -1;
                 for (int k = 0; k < n; k++)
                 {
                     string c = SpecStr(elements[k], "c");
-                    if (c.IndexOf("modal-overlay", StringComparison.Ordinal) >= 0 && c.IndexOf("modal-card", StringComparison.Ordinal) < 0)
-                        frame.Opacity[k] = uo;
-                    if (card < 0 && c.IndexOf("modal-card", StringComparison.Ordinal) >= 0) card = k;
+                    if (!ClassToken(c, "modal-overlay") || ClassToken(c, "modal-card") || !ClassToken(c, "active")) continue;
+                    frame.Opacity[k] = uo;
+                    if (overlay < 0) overlay = k;
+                }
+                int card = -1;
+                if (overlay >= 0)
+                {
+                    for (int k = 0; k < n; k++)
+                    {
+                        if (!ClassToken(SpecStr(elements[k], "c"), "modal-card")) continue;
+                        for (int p = k, hops = 0; p >= 0 && hops < n; p = frame.Parent[p], hops++)
+                            if (p == overlay) { card = k; break; }
+                        if (card >= 0) break;
+                    }
                 }
                 if (card >= 0)
                 {
@@ -426,6 +439,20 @@ namespace OrbitalSalvage.Render
                 frame.PressMatrix = CssTransform.ToMatrix(pressCss, w, h, 0);
             }
             return frame;
+        }
+
+        static bool ClassToken(string classes, string token)
+        {
+            if (string.IsNullOrEmpty(classes) || string.IsNullOrEmpty(token)) return false;
+            int i = 0;
+            while (i < classes.Length)
+            {
+                while (i < classes.Length && classes[i] == ' ') i++;
+                int start = i;
+                while (i < classes.Length && classes[i] != ' ') i++;
+                if (i - start == token.Length && string.CompareOrdinal(classes, start, token, 0, token.Length) == 0) return true;
+            }
+            return false;
         }
 
         public bool Pressed(int index)
