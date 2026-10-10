@@ -25,6 +25,11 @@ namespace OrbitalSalvage.Viewer
             Application.runInBackground = true;
             double forced = PlayQuality.FromCommandLine();
             if (forced > 0) PlayQuality.Forced = forced;
+            DeviceFlags.Read(forced);
+            if (DeviceFlags.BenchMode != null)
+                benchSession = true;
+            else
+                DeviceFlags.Apply(DeviceFlags.Manual, false);
         }
 
         /// <summary>
@@ -51,7 +56,7 @@ namespace OrbitalSalvage.Viewer
             if (!qualityBooted)
             {
                 qualityBooted = true;
-                if (forced <= 0)
+                if (forced <= 0 && !benchSession)
                 {
                     double saved = QualityGovernor.LoadScale(ScalePrefsStore.Instance, Screen.width, Screen.height, phone);
                     if (saved > 0) governor.Cap = saved;
@@ -88,7 +93,7 @@ namespace OrbitalSalvage.Viewer
                 else if (p95 < 0.016f) ambientInterval = 0;
             }
 
-            HomeChrome.SimplifyEffects = decision.SimplifyEffects;
+            HomeChrome.SimplifyEffects = decision.SimplifyEffects || DeviceFlags.Current.NoBackdrop;
             bool resized = current != null && Math.Abs(current.RasterScale - target) >= 0.05;
             if (resized)
             {
@@ -98,7 +103,7 @@ namespace OrbitalSalvage.Viewer
             }
             HomeChrome.DeferLayerCache = forced <= 0 && cacheDeferUntil > 0f && now < cacheDeferUntil;
             if (resized) PaintCurrent(true);
-            if (decision.Persist)
+            if (decision.Persist && !benchSession)
                 QualityGovernor.SaveScale(ScalePrefsStore.Instance, true, Screen.width, Screen.height, decision.PersistScale, phone);
             qualityReady = true;
             if (decision.SteppedDown || decision.SteppedUp)

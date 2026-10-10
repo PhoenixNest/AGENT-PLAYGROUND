@@ -915,6 +915,7 @@ namespace OrbitalSalvage.Render
             frame = saved;
             cacheReady = true;
             CacheBuilds++;
+            RenderStats.CacheBuilds++;
         }
 
         bool BannerAlreadyClaimed()

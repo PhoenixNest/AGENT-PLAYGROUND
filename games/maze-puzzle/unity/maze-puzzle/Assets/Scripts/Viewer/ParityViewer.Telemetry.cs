@@ -21,6 +21,10 @@ namespace OrbitalSalvage.Viewer
         int perfGc0;
         long perfGcMem;
         bool perfGcReady;
+        FrameTiming[] gpuTimings;
+        float benchGpu = -1f;
+        RenderStats.Snap perfPaintSnap;
+        bool perfPaintReady;
 
         void PerfSet(bool on)
         {
@@ -31,6 +35,8 @@ namespace OrbitalSalvage.Viewer
                 perf.Enabled = true;
                 LiveGameSession.PhaseTiming = true;
                 perfOn = true;
+                perfPaintSnap = RenderStats.Read();
+                perfPaintReady = true;
                 return;
             }
             perfOn = false;
@@ -42,6 +48,28 @@ namespace OrbitalSalvage.Viewer
             perfSwitchOpen = false;
             perfUpdateStamp = 0;
             perfBakeExtra = 0;
+        }
+
+        void CaptureGpu()
+        {
+            benchGpu = -1f;
+            if (!perfOn && !benchSession) return;
+            if (gpuTimings == null) gpuTimings = new FrameTiming[4];
+            FrameTimingManager.CaptureFrameTimings();
+            uint n = FrameTimingManager.GetLatestTimings((uint)gpuTimings.Length, gpuTimings);
+            if (n == 0) return;
+            FrameTiming timing = gpuTimings[0];
+            double gpu = timing.gpuFrameTime;
+            double cpu = timing.cpuFrameTime;
+            double main = timing.cpuMainThreadFrameTime;
+            double render = timing.cpuRenderThreadFrameTime;
+            if (gpu > 0d)
+            {
+                benchGpu = (float)gpu;
+                if (perfOn && perf != null) perf.AddGpu(benchGpu);
+            }
+            else if (cpu == 0d && main == 0d && render == 0d)
+                benchGpu = -1f;
         }
 
         void PerfOpen()
@@ -69,7 +97,26 @@ namespace OrbitalSalvage.Viewer
                 Cap = governor.Cap,
                 Fit = latchedFit
             };
-            Debug.Log(perf.FormatSummary(stats, view, PerfCounters()));
+            var paintNow = RenderStats.Read();
+            var paint = perfPaintReady ? RenderStats.Delta(paintNow, perfPaintSnap) : paintNow;
+            perfPaintSnap = paintNow;
+            perfPaintReady = true;
+            Debug.Log(perf.FormatSummary(stats, view, PerfCounters(), perf.TakeGpu(), ToPaint(paint)));
+        }
+
+        static DevicePerf.Paint ToPaint(RenderStats.Snap snap)
+        {
+            return new DevicePerf.Paint
+            {
+                Submits = snap.Submits,
+                Commands = snap.Commands,
+                Draws = snap.Draws,
+                BackdropExact = snap.BackdropExact,
+                BackdropGpu = snap.BackdropGpu,
+                Shadows = snap.Shadows,
+                Blits = snap.Blits,
+                CacheBuilds = snap.CacheBuilds
+            };
         }
 
         DevicePerf.Counters PerfCounters()

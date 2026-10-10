@@ -388,6 +388,27 @@ namespace OrbitalSalvage.Viewer
             return decision;
         }
 
+        /// <summary>Drop samples and step memory so a bench cell starts from the boot cap. Not used on the product path.</summary>
+        public void ResetSession()
+        {
+            count = 0;
+            head = 0;
+            Cap = 3;
+            LastStepAt = float.NegativeInfinity;
+            IgnoreUntil = 0f;
+            SlowSince = float.NaN;
+            StableSince = float.NaN;
+            SteppedDownFrom = 0;
+            BlockedUpFrom = 0;
+            climbedTo = 0;
+            BootNoted = false;
+            PageId = null;
+            HasPersisted = false;
+            PersistedScale = 0;
+            haveTick = false;
+            lastTickNow = 0f;
+        }
+
         void Arm(float now)
         {
             float until = now + HitchSeconds;

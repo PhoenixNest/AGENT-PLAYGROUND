@@ -70,7 +70,9 @@ namespace OrbitalSalvage.Viewer
                 if (File.Exists(path)) File.Delete(path);
             }
             JsRandom.Global.Reset(JsRandom.DefaultSeed);
-            var store = new FileProfileStore(Application.persistentDataPath);
+            IProfileStore store = benchSession
+                ? (IProfileStore)new MemoryProfileStore()
+                : new FileProfileStore(Application.persistentDataPath);
             app = new AppController(store, clock, new PlayerAudio(gameObject));
             if (session != null) session.Renderer.Dispose();
             session = LiveGameSession.CreateBound(app.Economy, ParityPages.CssWidth, ParityPages.CssHeight);

@@ -11,6 +11,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 Paths written as `tools/parity/...` in entries dated before 2026-10-08 are the location on that day. Those files now live under `games/maze-puzzle/tools/parity/...`. Entries that name `tools/parity/unity/*.ps1` or `canvas-conformance/run-unity.ps1` record the path used that day. Those Windows wrappers now live under `games/maze-puzzle/tools/parity/windows/`.
 
+### Added
+
+#### Unity on-device bench harness (2026-10-10, `agent/perf/device-bench`)
+
+- PlayerPrefs `os.parity.log=1` still logs one `[Perf]` line per second. The line now ends with `gpu_ms=avg/max` when `FrameTimingManager` reports a GPU time, or `gpu_ms=na` when it does not, plus per-second Canvas2D deltas: `submits`, `cmds`, `draws`, `backdrop=exact/gpu`, `shadows`, `blits`, `cachebuilds`. The counters are static ints. With the pref absent, nothing extra is allocated per frame.
+- iOS export turns `PlayerSettings.enableFrameTimingStats` on before `BuildPipeline.BuildPlayer` and restores the previous value afterwards. `ProjectSettings.asset` is still written back to the bytes from before the export.
+- PlayerPrefs `os.parity.exp` is a comma-separated experiment string, read once at product boot. Flags: `noshadow`, `nobackdrop`, `noloops`, `nocache`, `nogamehud`, `nogamefx`, `noimgui`, `scale1`, `scale1.5`, `scale2`, `scale3`, `f30`, `f15`, `rt16`. All default off. The table is on `DevicePerf`.
+- PlayerPrefs `os.parity.bench` (`auto`, or `home`, `maps`, `daily`, `shop`, `achievements`, `game`, `pause`, `tabs`) drives the app with the same click path as a tap. `os.parity.bench.secs` sets the measured window (default 12; the first 2 seconds are warm-up). Tabs dwell 3 seconds per stop and log `[Bench] switch` lines. The run logs `[Bench] done`. Bench uses an in-memory profile, so `orbital-salvage-profile.json` is not written, and the governor does not load or save a scale pref.
+
 ### Fixed
 
 #### Unity maps tile state (2026-10-10, `agent/fix/maps-tiles`)
