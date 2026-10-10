@@ -287,6 +287,7 @@ namespace OrbitalSalvage.Render
                 RenderTexture.active = rt;
                 tex = new Texture2D(rt.width, rt.height, TextureFormat.RGBA32, false, true);
                 tex.ReadPixels(new Rect(0, 0, rt.width, rt.height), 0, 0, false);
+                RenderStats.ReadPx++;
                 tex.Apply(false, false);
                 byte[] raw = tex.GetRawTextureData();
                 clear = true;

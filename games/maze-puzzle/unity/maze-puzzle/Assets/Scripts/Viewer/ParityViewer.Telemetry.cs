@@ -21,6 +21,8 @@ namespace OrbitalSalvage.Viewer
         int perfGc0;
         long perfGcMem;
         bool perfGcReady;
+        int perfAlloc, perfRead, perfHitchGc, perfHitchBake;
+        bool perfHitchReady;
         FrameTiming[] gpuTimings;
         float benchGpu = -1f;
         RenderStats.Snap perfPaintSnap;
@@ -88,6 +90,18 @@ namespace OrbitalSalvage.Viewer
             if (!perfOn || perf == null) return;
             float dt = Time.unscaledDeltaTime;
             var hitch = perf.BeginFrame(dt, now);
+            if (hitch.Emit && perfHitchReady)
+            {
+                hitch.Alloc = RenderStats.GpuAlloc - perfAlloc;
+                hitch.ReadPx = RenderStats.ReadPx - perfRead;
+                hitch.Gc0 = System.GC.CollectionCount(0) - perfHitchGc;
+                hitch.Bake = RenderStats.PrewarmBake - perfHitchBake;
+            }
+            perfAlloc = RenderStats.GpuAlloc;
+            perfRead = RenderStats.ReadPx;
+            perfHitchGc = System.GC.CollectionCount(0);
+            perfHitchBake = RenderStats.PrewarmBake;
+            perfHitchReady = true;
             if (hitch.Emit) Debug.Log(perf.FormatHitch(hitch));
             if (!perf.TrySnapshot(now, out var stats)) return;
             var view = new DevicePerf.View
@@ -136,7 +150,10 @@ namespace OrbitalSalvage.Viewer
                 EdgeRect = snap.EdgeRect, EdgeCirc = snap.EdgeCirc, EdgeEll = snap.EdgeEll, EdgeRr = snap.EdgeRr, EdgeStroke = snap.EdgeStroke, EdgeOther = snap.EdgeOther,
                 GameRect = snap.GameRect, GameCirc = snap.GameCirc, GameEll = snap.GameEll, GameRr = snap.GameRr, GameStroke = snap.GameStroke, GameOther = snap.GameOther,
                 GameEdgeRect = snap.GameEdgeRect, GameEdgeCirc = snap.GameEdgeCirc, GameEdgeEll = snap.GameEdgeEll, GameEdgeRr = snap.GameEdgeRr, GameEdgeStroke = snap.GameEdgeStroke, GameEdgeOther = snap.GameEdgeOther,
-                FastRect = snap.FastRect, FastCirc = snap.FastCirc, FastEll = snap.FastEll, FastRr = snap.FastRr, FastLine = snap.FastLine,
+                FastRect = snap.FastRect, FastCirc = snap.FastCirc, FastEll = snap.FastEll, FastRr = snap.FastRr, FastLine = snap.FastLine, FastArc = snap.FastArc,
+                FastBatch = snap.FastBatch, FastBatchInst = snap.FastBatchInst,
+                GpuAlloc = snap.GpuAlloc, ReadPx = snap.ReadPx,
+                SecDraw = snap.SecDraw, SecEdge = snap.SecEdge,
                 RoundMissXform = snap.RoundMissXform, RoundMissInset = snap.RoundMissInset, RoundMissText = snap.RoundMissText, RoundMissShader = snap.RoundMissShader,
                 PrewarmBake = snap.PrewarmBake,
                 Wide = RenderStats.DirtyWide,

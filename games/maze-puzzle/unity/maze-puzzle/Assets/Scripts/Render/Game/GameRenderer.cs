@@ -333,6 +333,8 @@ namespace OrbitalSalvage.Render
             ctx.BeginFrame();
             double s = Dpr * RenderScale;
             ctx.SetTransform(s, 0, 0, s, 0, 0);
+            int secDraw = ctx.DrawCount;
+            int secEdge = ctx.EdgeCount;
             ctx.ClearRect(0, 0, Width, Height);
 
             string ringId = economy != null && economy.Profile != null ? economy.Profile.Equipped.Get("ring") : null;
@@ -345,24 +347,40 @@ namespace OrbitalSalvage.Render
             var sw = System.Diagnostics.Stopwatch.StartNew();
             RenderCartoonSky(ctx, skyboxSkin);
             SectionMs[0] = sw.Elapsed.TotalMilliseconds;
+            TakeSec(ctx, ref secDraw, ref secEdge, 0);
             RenderNibblesBlackHole(ctx, physics, singularitySkin);
             SectionMs[1] = sw.Elapsed.TotalMilliseconds;
+            TakeSec(ctx, ref secDraw, ref secEdge, 1);
             RenderCartoonRing(ctx, physics, ringSkin);
             SectionMs[2] = sw.Elapsed.TotalMilliseconds;
+            TakeSec(ctx, ref secDraw, ref secEdge, 2);
             RenderOneWayFlappers(ctx, physics);
             SectionMs[3] = sw.Elapsed.TotalMilliseconds;
+            TakeSec(ctx, ref secDraw, ref secEdge, 3);
             RenderCartoonBumpers(ctx, physics);
             SectionMs[4] = sw.Elapsed.TotalMilliseconds;
+            TakeSec(ctx, ref secDraw, ref secEdge, 4);
             RenderCartoonGates(ctx, physics);
             SectionMs[5] = sw.Elapsed.TotalMilliseconds;
+            TakeSec(ctx, ref secDraw, ref secEdge, 5);
             RenderCartoonDebris(ctx, physics.DebrisList);
             SectionMs[6] = sw.Elapsed.TotalMilliseconds;
+            TakeSec(ctx, ref secDraw, ref secEdge, 6);
             RenderVfx(ctx, dt);
             SectionMs[7] = sw.Elapsed.TotalMilliseconds;
+            TakeSec(ctx, ref secDraw, ref secEdge, 7);
             ctx.EndFrame();
             SectionMs[8] = sw.Elapsed.TotalMilliseconds;
             }
             finally { RenderStats.Caller = caller; }
+        }
+
+        static void TakeSec(Canvas2D ctx, ref int draw, ref int edge, int slot)
+        {
+            ctx.FlushFastBatch();
+            RenderStats.NoteSec(slot, ctx.DrawCount - draw, ctx.EdgeCount - edge);
+            draw = ctx.DrawCount;
+            edge = ctx.EdgeCount;
         }
 
         void UpdateNibblesFace(PhysicsEngine physics, double dt, RenderProgress progress)

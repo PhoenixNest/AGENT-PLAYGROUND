@@ -30,6 +30,8 @@ namespace OrbitalSalvage.Viewer
         public static bool RoundPlus { get; private set; }
         public static bool FastShape { get; private set; }
         public static bool NoPrewarm { get; private set; }
+        public static bool FastArc { get; private set; }
+        public static bool PlayBatch { get; private set; }
         public static int AmbientHz { get; private set; }
         public static string Active { get; private set; } = "";
 
@@ -49,7 +51,7 @@ namespace OrbitalSalvage.Viewer
         public static void Apply(string csv)
         {
             ShadowScope = ShadowLow = BackdropScope = BackdropLow = Dirty = GameOne = RoundShadow = PlayHalf = false;
-            DirtyClip = BackdropHold = RoundPlus = FastShape = NoPrewarm = false;
+            DirtyClip = BackdropHold = RoundPlus = FastShape = NoPrewarm = FastArc = PlayBatch = false;
             AmbientHz = 0;
             if (!string.IsNullOrEmpty(csv))
             {
@@ -81,6 +83,8 @@ namespace OrbitalSalvage.Viewer
             RenderOpts.RoundPlus = RoundPlus;
             RenderOpts.FastShape = FastShape;
             RenderOpts.NoPrewarm = NoPrewarm;
+            RenderOpts.FastArc = FastArc;
+            RenderOpts.PlayBatch = PlayBatch;
             RenderOpts.AmbientHz = AmbientHz;
             if (!bootLogged && Application.isPlaying)
             {
@@ -108,6 +112,8 @@ namespace OrbitalSalvage.Viewer
             else if (tok == "rrplus") RoundPlus = true;
             else if (tok == "fastshape") FastShape = true;
             else if (tok == "noprewarm") NoPrewarm = true;
+            else if (tok == "fastarc") FastArc = true;
+            else if (tok == "playbatch") PlayBatch = true;
             else if (tok.StartsWith("ambhz=", StringComparison.Ordinal))
             {
                 int n;
@@ -137,6 +143,8 @@ namespace OrbitalSalvage.Viewer
             Add(RoundPlus, "rrplus");
             Add(FastShape, "fastshape");
             Add(NoPrewarm, "noprewarm");
+            Add(FastArc, "fastarc");
+            Add(PlayBatch, "playbatch");
             if (AmbientHz > 0)
             {
                 if (s.Length > 0) s += ",";

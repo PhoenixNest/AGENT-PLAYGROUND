@@ -34,6 +34,11 @@ namespace OrbitalSalvage.Render
         Material matShadowBlit;
         Material matRound;
         Material matFast;
+        GraphicsBuffer fastBuf;
+        uint[] fastBase = new uint[64];
+        int fastN;
+        bool fastFlushing;
+        static readonly int IdFastBase = Shader.PropertyToID("_C2D_FastBase");
 
         void ClearKeepRect(int x0, int y0, int x1, int y1)
         {
@@ -69,6 +74,9 @@ namespace OrbitalSalvage.Render
             matRound = null;
             DestroyOwned(matFast);
             matFast = null;
+            fastBuf?.Dispose();
+            fastBuf = null;
+            fastN = 0;
         }
 
         static void ReleaseSlot(ShadowSlot slot)
@@ -644,11 +652,30 @@ namespace OrbitalSalvage.Render
             return Math.Abs(m.b) <= 1e-3 && Math.Abs(m.c) <= 1e-3 && m.a > 1e-6 && m.d > 1e-6;
         }
 
+        bool FastSimilarity(out Matrix2D m)
+        {
+            m = state.ctm;
+            double l0 = m.a * m.a + m.b * m.b;
+            double l1 = m.c * m.c + m.d * m.d;
+            double dot = m.a * m.c + m.b * m.d;
+            if (l0 < 1e-8 || m.Determinant <= 1e-8) return false;
+            if (Math.Abs(l0 - l1) > 1e-3 * l0) return false;
+            if (Math.Abs(dot) > 1e-3 * l0) return false;
+            return true;
+        }
+
         bool TryFastFill(PathData src)
         {
-            if (src == null || src.Simple == 0 || state.fillGrad != null) return false;
+            if (src == null || src.Simple == 0 || src.Simple == 5 || state.fillGrad != null) return false;
             if (state.shadowColor.a > 0 && (state.shadowBlur > 0 || state.shadowOffsetX != 0 || state.shadowOffsetY != 0)) return false;
-            if (!AxisScale(out var m) || !EnsureFast()) return false;
+            bool axis = AxisScale(out var m);
+            if (!axis)
+            {
+                if (!RenderOpts.FastArc || (src.Simple != 1 && src.Simple != 2)) return false;
+                if (!FastSimilarity(out m)) return false;
+            }
+            else if (!RenderOpts.FastShape) return false;
+            if (!EnsureFast()) return false;
             if (!FastGeom(src, m, false, out int mode, out var ga, out var gb, out int x0, out int y0, out int x1, out int y1)) return false;
             DrawFast(mode, ga, gb, x0, y0, x1, y1, state.fillColor);
             if (src.Simple == 1) RenderStats.FastCirc++;
@@ -660,15 +687,26 @@ namespace OrbitalSalvage.Render
 
         bool TryFastStroke(PathData src)
         {
-            if (src == null || (src.Simple != 1 && src.Simple != 2)) return false;
+            if (src == null) return false;
+            bool arc = src.Simple == 5;
+            bool ell = src.Simple == 1 || src.Simple == 2;
+            if (!arc && !ell) return false;
+            if (arc && !RenderOpts.FastArc) return false;
             if (state.strokeGrad != null || state.lineWidth <= 0) return false;
             if (state.lineDash != null && state.lineDash.Length > 0) return false;
             if (state.shadowColor.a > 0 && (state.shadowBlur > 0 || state.shadowOffsetX != 0 || state.shadowOffsetY != 0)) return false;
-            if (!AxisScale(out var m) || !EnsureFast()) return false;
-            if (src.Simple == 2 && Math.Abs(m.a - m.d) > 1e-3 && Math.Abs(src.SimRot) > 1e-3) return false;
+            bool axis = AxisScale(out var m);
+            if (axis)
+            {
+                if (!arc && !RenderOpts.FastShape) return false;
+                if (src.Simple == 2 && Math.Abs(m.a - m.d) > 1e-3 && Math.Abs(src.SimRot) > 1e-3) return false;
+            }
+            else if (!RenderOpts.FastArc || !FastSimilarity(out m)) return false;
+            if (!EnsureFast()) return false;
             if (!FastGeom(src, m, true, out int mode, out var ga, out var gb, out int x0, out int y0, out int x1, out int y1)) return false;
             DrawFast(mode, ga, gb, x0, y0, x1, y1, state.strokeColor);
-            RenderStats.FastLine++;
+            if (arc) RenderStats.FastArc++;
+            else RenderStats.FastLine++;
             return true;
         }
 
@@ -693,17 +731,45 @@ namespace OrbitalSalvage.Render
                 y1 = Clamp((int)Math.Ceiling(by + bh), 0, Height);
                 return x1 > x0 && y1 > y0;
             }
-            if (src.Simple == 1 || src.Simple == 2)
+            if (src.Simple == 1 || src.Simple == 2 || src.Simple == 5)
             {
-                if (src.Simple == 2 && Math.Abs(m.a - m.d) > 1e-3 && Math.Abs(src.SimRot) > 1e-3) return false;
+                if (src.Simple == 2 && Math.Abs(m.b) <= 1e-3 && Math.Abs(m.c) <= 1e-3 && Math.Abs(m.a - m.d) > 1e-3 && Math.Abs(src.SimRot) > 1e-3) return false;
+                bool turned = Math.Abs(m.b) > 1e-3 || Math.Abs(m.c) > 1e-3;
                 float cx = (float)(m.a * src.SimX + m.c * src.SimY + m.e);
                 float cy = (float)(m.b * src.SimX + m.d * src.SimY + m.f);
-                float rx = Math.Abs((float)(src.SimRx * m.a));
-                float ry = Math.Abs((float)(src.SimRy * m.d));
+                float rx, ry, rot;
+                if (turned)
+                {
+                    float scale = (float)Math.Sqrt(m.a * m.a + m.b * m.b);
+                    rx = Math.Abs((float)src.SimRx * scale);
+                    ry = Math.Abs((float)src.SimRy * scale);
+                    rot = (float)(src.SimRot + Math.Atan2(m.b, m.a));
+                }
+                else
+                {
+                    rx = Math.Abs((float)(src.SimRx * m.a));
+                    ry = Math.Abs((float)(src.SimRy * m.d));
+                    rot = (float)src.SimRot;
+                }
+                float padR = Math.Max(rx, ry);
+                if (src.Simple == 5)
+                {
+                    float hw = half;
+                    mode = 5;
+                    ga = new Vector4(cx, cy, rx, rx);
+                    float a0 = turned ? (float)(src.SimA0 + Math.Atan2(m.b, m.a)) : (float)src.SimA0;
+                    gb = new Vector4(a0, (float)src.SimSweep, hw, (float)state.lineCap);
+                    padR = rx + hw + 1f;
+                    x0 = Clamp((int)Math.Floor(cx - padR), 0, Width);
+                    y0 = Clamp((int)Math.Floor(cy - padR), 0, Height);
+                    x1 = Clamp((int)Math.Ceiling(cx + padR), 0, Width);
+                    y1 = Clamp((int)Math.Ceiling(cy + padR), 0, Height);
+                    return x1 > x0 && y1 > y0 && rx > 0.2f && hw > 0f;
+                }
                 mode = stroke ? 4 : 1;
                 ga = new Vector4(cx, cy, rx, ry);
-                gb = new Vector4((float)src.SimRot, half, 0, 0);
-                float pad = Math.Max(rx, ry) + half + 1f;
+                gb = new Vector4(rot, half, 0, 0);
+                float pad = padR + half + 1f;
                 x0 = Clamp((int)Math.Floor(cx - pad), 0, Width);
                 y0 = Clamp((int)Math.Floor(cy - pad), 0, Height);
                 x1 = Clamp((int)Math.Ceiling(cx + pad), 0, Width);
@@ -739,9 +805,42 @@ namespace OrbitalSalvage.Render
             prm[pb + IdxGa] = ga;
             prm[pb + IdxGb] = gb;
             if (state.clip != null) cmd.SetGlobalTexture(IdClipTex, state.clip);
+            if (RenderOpts.PlayBatch && state.clip == null && !ScissorOn)
+            {
+                if (fastN == fastBase.Length) System.Array.Resize(ref fastBase, fastBase.Length * 2);
+                fastBase[fastN++] = (uint)pb;
+                return;
+            }
             cmd.SetRenderTarget(target);
             if (ScissorOn) EnableLiveScissor();
             Draw(matFast, 0, 6, pb);
+        }
+
+        /// <summary>Emits one instanced draw for analytic quads queued by <c>playbatch</c>. No-op when the queue is empty.</summary>
+        public void FlushFastBatch()
+        {
+            if (fastN <= 0 || fastFlushing) return;
+            fastFlushing = true;
+            int n = fastN;
+            if (fastBuf == null || fastBuf.count < n)
+            {
+                fastBuf?.Dispose();
+                int cap = 64;
+                while (cap < n) cap *= 2;
+                fastBuf = new GraphicsBuffer(GraphicsBuffer.Target.Structured, cap, 4);
+                RenderStats.GpuAlloc++;
+            }
+            // Record the copy. A later flush in this frame must not overwrite the GPU buffer
+            // before the earlier draw executes.
+            cmd.SetBufferData(fastBuf, fastBase, 0, 0, n);
+            fastN = 0;
+            cmd.SetGlobalBuffer(IdFastBase, fastBuf);
+            cmd.SetRenderTarget(target);
+            if (ScissorOn) EnableLiveScissor();
+            EmitDraw(matFast, 1, 6, n);
+            RenderStats.FastBatch++;
+            RenderStats.FastBatchInst += n;
+            fastFlushing = false;
         }
     }
 }

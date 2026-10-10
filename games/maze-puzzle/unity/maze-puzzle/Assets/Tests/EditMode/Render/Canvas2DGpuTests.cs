@@ -422,6 +422,91 @@ namespace OrbitalSalvage.Render.Tests
             finally { RenderOpts.Clear(); }
         }
 
+        [Test]
+        public void FastArc_OffKeepsEdgesAndOnCoversTheStroke()
+        {
+            try
+            {
+                RenderOpts.Clear();
+                int edges = RenderStats.Edges;
+                var a = RenderAt(96, DrawArc);
+                var b = RenderAt(96, DrawArc);
+                int slow = RenderStats.Edges - edges;
+                Assert.AreEqual(0, MaxDiff(a, b), "options off drifted");
+                Assert.Greater(slow, 40, "arc did not flatten");
+                int before = RenderStats.FastArc;
+                int mid = RenderStats.Edges;
+                RenderOpts.FastArc = true;
+                var on = RenderAt(96, DrawArc);
+                Assert.Greater(RenderStats.FastArc, before);
+                Assert.Less(RenderStats.Edges - mid, 8, "analytic arc still emitted edges");
+                Assert.Greater(Px(on, 48, 78).a, 180, "stroke pixel empty");
+                Assert.Less(Px(on, 48, 48).a, 30, "arc filled the disk");
+                RenderOpts.Clear();
+                RenderOpts.FastArc = true;
+                var turned = RenderAt(96, DrawTurnedArc);
+                Assert.Greater(Px(turned, 34, 74).a, 150, "rotated stroke missed");
+            }
+            finally { RenderOpts.Clear(); }
+        }
+
+        [Test]
+        public void PlayBatch_DrawsInstancesInOneCall()
+        {
+            try
+            {
+                RenderOpts.Clear();
+                RenderOpts.FastShape = true;
+                int draws = RenderStats.Draws;
+                var alone = RenderAt(96, DrawDots);
+                int many = RenderStats.Draws - draws;
+                RenderOpts.PlayBatch = true;
+                int draws2 = RenderStats.Draws;
+                int batch = RenderStats.FastBatchInst;
+                var batched = RenderAt(96, DrawDots);
+                Assert.Greater(many, RenderStats.Draws - draws2, "batch did not collapse draws");
+                Assert.GreaterOrEqual(RenderStats.FastBatchInst - batch, 4);
+                Assert.Greater(Px(batched, 80, 48).a, 180, "last instance missing");
+                Assert.LessOrEqual(MaxDiff(alone, batched), 8, "batch pixels drifted");
+            }
+            finally { RenderOpts.Clear(); }
+        }
+
+        static Color32 Px(Color32[] px, int x, int yTop) => px[(96 - 1 - yTop) * 96 + x];
+
+        static void DrawArc(Canvas2D c)
+        {
+            c.StrokeStyle = "#38bdf8";
+            c.LineWidth = 8;
+            c.LineCap = "round";
+            c.BeginPath();
+            c.Arc(48, 48, 30, 0, System.Math.PI);
+            c.Stroke();
+        }
+
+        static void DrawTurnedArc(Canvas2D c)
+        {
+            c.Translate(48, 48);
+            c.Rotate(0.5);
+            c.StrokeStyle = "#38bdf8";
+            c.LineWidth = 8;
+            c.LineCap = "round";
+            c.BeginPath();
+            c.Arc(0, 0, 30, 0, System.Math.PI);
+            c.Stroke();
+        }
+
+        static void DrawDots(Canvas2D c)
+        {
+            c.FillStyle = "#f472b6";
+            for (int i = 0; i < 4; i++)
+            {
+                c.BeginPath();
+                c.Arc(20 + i * 20, 48, 6, 0, System.Math.PI * 2);
+                c.Fill();
+            }
+        }
+
         static void DrawCirc(Canvas2D c)
         {
             c.SetFill(new Rgba(0.9f, 0.2f, 0.1f, 1f));
