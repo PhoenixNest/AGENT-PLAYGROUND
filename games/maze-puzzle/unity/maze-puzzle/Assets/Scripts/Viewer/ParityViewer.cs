@@ -251,6 +251,7 @@ namespace OrbitalSalvage.Viewer
             SuppressLegacy();
             if (selfTesting && !shipTesting) return;
             if (!selfTesting) GovernQuality();
+            PumpTabPrewarm();
             if (app != null) SyncApp();
             HandleInput();
             Tick();
@@ -284,13 +285,54 @@ namespace OrbitalSalvage.Viewer
         /// <summary>Same entry the keyboard, the mouse, and the player self-test use.</summary>
         public void Show(string stateId) => Show(stateId, null);
 
+        /// <summary>Sum of resident page canvases and their baked layer textures. Zero when the cache is empty.</summary>
+        public long ResidentCacheBytes
+        {
+            get
+            {
+                long n = 0;
+                cache.ForEach((key, chrome) =>
+                {
+                    if (chrome != null) n += chrome.ResidentBytes;
+                });
+                return n;
+            }
+        }
+
+        /// <summary>Raster the governor (or a forced quality step) is painting at. Other resident pages must match it.</summary>
+        double DesiredRasterScale()
+        {
+            double forced = PlayQuality.Forced;
+            if (forced > 0) return SnapStep(forced);
+            if (current != null) return current.RasterScale;
+            double target = Math.Min(qualityCap, latchedFit);
+            if (target < 1) target = 1;
+            return SnapStep(target);
+        }
+
+        void RefreshTabPins(string profile)
+        {
+            if (app == null) return;
+            var entries = ParityPages.PrewarmTemplates(app, profile);
+            var keep = new HashSet<string>();
+            for (int i = 0; i < entries.Length; i++)
+            {
+                if (string.IsNullOrEmpty(entries[i].CacheKey)) continue;
+                keep.Add(entries[i].CacheKey);
+                cache.Pin(entries[i].CacheKey);
+            }
+            cache.RetainPins(keep);
+        }
+
         /// <summary>Load <paramref name="stateId"/>. When <paramref name="cardKinds"/> is set, shop cards are instanced from the measured sub-templates.</summary>
         public void Show(string stateId, string cardKinds)
         {
             if (!ParityPages.IsState(stateId) && !HomeChrome.Applies(stateId)) return;
             string profile = ParityPages.ResolveProfile(stateId, ParityPages.ActiveProfile);
-            string key = string.IsNullOrEmpty(cardKinds) ? stateId + "@" + profile : stateId + "@" + profile + "#" + cardKinds;
+            string key = ParityPages.CacheKey(stateId, profile, cardKinds);
             if (shownKey == key && current != null) return;
+            if (app != null) RefreshTabPins(profile);
+            double want = DesiredRasterScale();
             if (!cache.TryGet(key, out var chrome))
             {
                 try
@@ -310,7 +352,7 @@ namespace OrbitalSalvage.Viewer
             }
             else if (WantLiveChrome(stateId) && !chrome.SkipPlayfield)
                 chrome.SkipPlayfield = true;
-            bool modal = stateId.StartsWith("modal_", StringComparison.Ordinal);
+            chrome.InvalidateIfScaleDiffers(want);
             current = chrome;
             currentId = stateId;
             shownKey = key;

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using OrbitalSalvage.App;
 using UnityEngine;
 
 namespace OrbitalSalvage.Viewer
@@ -35,7 +36,83 @@ namespace OrbitalSalvage.Viewer
     {
         public const int CssWidth = 430;
         public const int CssHeight = 932;
-        public const int CacheCapacity = 3;
+        /// <summary>Extra LRU slots past the main-tab set, so a modal can open without evicting a tab.</summary>
+        public const int ModalCacheMargin = 3;
+        /// <summary>Dock destinations from home, in dock order, plus home itself. Not settings or game.</summary>
+        public static readonly string[] MainTabPages = { "home", "maps", "daily", "shop", "achievements" };
+        /// <summary>Main tabs stay resident. The margin is the only room for modals and other pages.</summary>
+        public static int CacheCapacity => MainTabPages.Length + ModalCacheMargin;
+
+        public struct PrewarmEntry
+        {
+            public string Page;
+            public string TemplateId;
+            public string CardStamp;
+            public string Profile;
+            public string CacheKey;
+        }
+
+        /// <summary>
+        /// Templates <see cref="AppController"/> would show for the five main tabs, including the live maps
+        /// and shop variants and the safe-area profile. Does not change the controller's current page.
+        /// </summary>
+        public static PrewarmEntry[] PrewarmTemplates(AppController app, string preferredProfile)
+        {
+            if (app == null) return Array.Empty<PrewarmEntry>();
+            var list = new PrewarmEntry[MainTabPages.Length];
+            for (int i = 0; i < MainTabPages.Length; i++)
+            {
+                string page = MainTabPages[i];
+                string template = app.PeekPageTemplate(page, out string stamp);
+                if (string.IsNullOrEmpty(stamp)) stamp = null;
+                string profile = ResolveProfile(template, preferredProfile);
+                list[i] = new PrewarmEntry
+                {
+                    Page = page,
+                    TemplateId = template,
+                    CardStamp = stamp,
+                    Profile = profile,
+                    CacheKey = CacheKey(template, profile, stamp)
+                };
+            }
+            return list;
+        }
+
+        /// <summary>Same key <see cref="ParityViewer.Show"/> uses: template, profile, and an optional shop card stamp.</summary>
+        public static string CacheKey(string stateId, string profile, string cardKinds)
+        {
+            string key = (stateId ?? "") + "@" + (string.IsNullOrEmpty(profile) ? Profile : profile);
+            if (!string.IsNullOrEmpty(cardKinds)) key = key + "#" + cardKinds;
+            return key;
+        }
+
+        /// <summary>
+        /// Product boot pre-bakes the main tabs. Self-tests and parity captures leave it off so their
+        /// frames stay on the path they already paint. <see cref="PlayQuality.Forced"/> does not disable
+        /// it: stills are painted by Page Preview, which never boots the viewer.
+        /// </summary>
+        public static bool ShouldPrewarmTabs(bool selfTesting)
+        {
+            return !selfTesting;
+        }
+
+        /// <summary>True when a baked page's raster is not the live quality step. Matches <c>ResizeRaster</c>'s 0.05 band.</summary>
+        public static bool RasterScaleIsStale(double baked, double live)
+        {
+            return Math.Abs(baked - live) >= 0.05;
+        }
+
+        /// <summary>
+        /// One queued template per call. Nothing is taken while layer baking is deferred, or while the
+        /// loading bar has not been written yet (its width key is part of the baked override set).
+        /// </summary>
+        public static bool TryTakeTabPrewarm<T>(Queue<T> pending, bool deferred, bool holdForLoadingBar, out T entry)
+        {
+            entry = default;
+            if (deferred || holdForLoadingBar || pending == null || pending.Count == 0) return false;
+            entry = pending.Dequeue();
+            return true;
+        }
         /// <summary>Parity captures, Page Preview's default, and editor windows with a full safe area.</summary>
         public const string Profile = "zero";
         public const string IphoneProfile = "iphone";

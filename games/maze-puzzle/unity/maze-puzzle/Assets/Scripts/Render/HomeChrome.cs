@@ -154,8 +154,76 @@ namespace OrbitalSalvage.Render
         /// <summary>True after a live draw has cached static runs.</summary>
         public bool UsesLayerCache => UseLayerCache && cacheReady && staticLayerCount > 0;
 
+        /// <summary>True once <see cref="EnsureCache"/> has finished, including a page with no static layers.</summary>
+        public bool LayerCacheReady => cacheReady;
+
+        /// <summary>Static layer slots from the last bake. Empty slots are layers that were fully skipped.</summary>
+        public int BakedLayerSlots => layerTex == null ? 0 : staticLayerCount;
+
+        /// <summary>Layer textures that were actually allocated.</summary>
+        public int BakedLayerCount
+        {
+            get
+            {
+                if (layerTex == null) return 0;
+                int n = 0;
+                for (int i = 0; i < layerTex.Length; i++)
+                    if (layerTex[i] != null) n++;
+                return n;
+            }
+        }
+
+        /// <summary>Sum of baked layer RenderTextures, width × height × bytes per pixel of each format.</summary>
+        public long BakedLayerBytes
+        {
+            get
+            {
+                if (layerTex == null) return 0;
+                long n = 0;
+                for (int i = 0; i < layerTex.Length; i++) n += TextureBytes(layerTex[i]);
+                return n;
+            }
+        }
+
+        /// <summary>
+        /// The four permanent Canvas2D buffers (ARGB32 + RFloat + RHalf + RHalf = 12 bytes per pixel).
+        /// Blur scratch and clip textures allocated during a paint are not included.
+        /// </summary>
+        public long CanvasResidentBytes => (long)PixelWidth * PixelHeight * 12;
+
+        /// <summary>Canvas buffers plus baked layer textures.</summary>
+        public long ResidentBytes => CanvasResidentBytes + BakedLayerBytes;
+
         /// <summary>How many times this chrome has baked its static layers.</summary>
         public int CacheBuilds { get; private set; }
+
+        /// <summary>Build the static layer cache the product draw uses. No-op while baking is deferred.</summary>
+        public void BakeStaticLayers()
+        {
+            if (!UseLayerCache || DeferLayerCache) return;
+            Draw(4000);
+        }
+
+        public static long TextureBytes(Texture tex)
+        {
+            if (tex == null) return 0;
+            int bpp = 4;
+            if (tex is RenderTexture rt)
+            {
+                switch (rt.format)
+                {
+                    case RenderTextureFormat.R8: bpp = 1; break;
+                    case RenderTextureFormat.RHalf: bpp = 2; break;
+                    case RenderTextureFormat.RGHalf: bpp = 4; break;
+                    case RenderTextureFormat.ARGBHalf: bpp = 8; break;
+                    case RenderTextureFormat.RFloat:
+                    case RenderTextureFormat.ARGB32:
+                    case RenderTextureFormat.BGRA32: bpp = 4; break;
+                    default: bpp = 4; break;
+                }
+            }
+            return (long)tex.width * tex.height * bpp;
+        }
 
         /// <summary>
         /// Paint the daily-gift banner from <c>shop_gift_claimed</c>.
@@ -273,6 +341,17 @@ namespace OrbitalSalvage.Render
             canvas = next;
             scale = newScale;
             DropLayerCache();
+        }
+
+        /// <summary>
+        /// Drop baked layers when <paramref name="liveScale"/> is a different raster step.
+        /// Returns false when the chrome is already at that step, so a matching page is left untouched.
+        /// </summary>
+        public bool InvalidateIfScaleDiffers(double liveScale)
+        {
+            double before = scale;
+            ResizeRaster(liveScale);
+            return Math.Abs(scale - before) >= 0.05;
         }
 
         HomeChrome(string profile, Canvas2D canvas, StreamPlayer playfield, List<Dictionary<string, object>> elements, int cssW, int cssH, double scale)

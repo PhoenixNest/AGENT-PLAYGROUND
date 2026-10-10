@@ -14,6 +14,8 @@ namespace OrbitalSalvage.Viewer
 {
     public sealed partial class ParityViewer
     {
+        readonly Queue<ParityPages.PrewarmEntry> tabPrewarm = new Queue<ParityPages.PrewarmEntry>();
+        bool tabPrewarmArmed;
         AppController app;
         IAppClock appClock;
         bool followClock = true;
@@ -91,6 +93,86 @@ namespace OrbitalSalvage.Viewer
             app.BeginBoot();
             if (realtime) WireLiveAudio();
             SyncApp(true);
+            if (realtime) BeginTabPrewarm();
+        }
+
+        /// <summary>
+        /// Queue the five main-tab chromes. One is baked per frame after the loading bar's override set exists.
+        /// Anything still queued when home appears finishes on later frames and never blocks input.
+        /// </summary>
+        void BeginTabPrewarm()
+        {
+            if (!ParityPages.ShouldPrewarmTabs(selfTesting) || app == null || tabPrewarmArmed) return;
+            tabPrewarmArmed = true;
+            string profile = ParityPages.ActiveProfile;
+            RefreshTabPins(profile);
+            var entries = ParityPages.PrewarmTemplates(app, profile);
+            for (int i = 0; i < entries.Length; i++)
+            {
+                if (string.IsNullOrEmpty(entries[i].TemplateId)) continue;
+                if (cache.Contains(entries[i].CacheKey)) continue;
+                tabPrewarm.Enqueue(entries[i]);
+            }
+        }
+
+        void PumpTabPrewarm()
+        {
+            if (!ParityPages.ShouldPrewarmTabs(selfTesting) || app == null) return;
+            bool hold = string.IsNullOrEmpty(app.LoadingBar) && app.CurrentPage == "loading";
+            if (ParityPages.TryTakeTabPrewarm(tabPrewarm, HomeChrome.DeferLayerCache, hold, out var entry))
+            {
+                BakeTabEntry(entry);
+                return;
+            }
+            if (tabPrewarm.Count == 0) RepairOneResident();
+        }
+
+        void BakeTabEntry(ParityPages.PrewarmEntry entry)
+        {
+            if (string.IsNullOrEmpty(entry.TemplateId) || cache.Contains(entry.CacheKey)) return;
+            HomeChrome chrome = null;
+            try
+            {
+                chrome = HomeChrome.Load(entry.TemplateId, entry.Profile);
+                if (!string.IsNullOrEmpty(entry.CardStamp)) StampShop(chrome, entry.CardStamp);
+                chrome.InvalidateIfScaleDiffers(DesiredRasterScale());
+                chrome.UseClaimedGiftBanner(entry.Page == "shop" && !app.Economy.CanClaimDailyGift());
+                WriteDynamicOverrides(chrome, entry.Page, entry.TemplateId);
+                chrome.BakeStaticLayers();
+                evicted.Clear();
+                cache.Add(entry.CacheKey, chrome, evicted);
+                for (int i = 0; i < evicted.Count; i++) evicted[i].Dispose();
+                chrome = null;
+            }
+            catch (Exception ex)
+            {
+                Debug.LogError("[ParityViewer] prewarm " + entry.TemplateId + ": " + ex.Message);
+                if (chrome != null) chrome.Dispose();
+            }
+        }
+
+        /// <summary>After a raster change, one resident page per frame is resized and re-baked. Deferred while the governor asks.</summary>
+        void RepairOneResident()
+        {
+            if (HomeChrome.DeferLayerCache || !HomeChrome.UseLayerCache) return;
+            double want = DesiredRasterScale();
+            HomeChrome job = null;
+            cache.ForEach((key, chrome) =>
+            {
+                if (job != null || chrome == null || !cache.IsPinned(key)) return;
+                if (ParityPages.RasterScaleIsStale(chrome.RasterScale, want) || !chrome.LayerCacheReady)
+                    job = chrome;
+            });
+            if (job == null) return;
+            try
+            {
+                job.InvalidateIfScaleDiffers(want);
+                job.BakeStaticLayers();
+            }
+            catch (Exception ex)
+            {
+                Debug.LogError("[ParityViewer] rebake: " + ex.Message);
+            }
         }
 
         /// <summary>Profile volumes plus physics cues into the DSP player. Parity boots leave <c>Audible</c> null.</summary>
@@ -196,6 +278,51 @@ namespace OrbitalSalvage.Viewer
             SyncApp(false);
         }
 
+        /// <summary>Copy the controller's live text, shop footers, and maps stamp onto a chrome that may not be on screen.</summary>
+        void WriteDynamicOverrides(HomeChrome chrome, string page, string templateId)
+        {
+            chrome.TextOverrides.Clear();
+            chrome.WidthOverrides.Clear();
+            chrome.WidthPercentOverrides.Clear();
+            chrome.OpacityOverrides.Clear();
+            chrome.HiddenIds.Clear();
+            chrome.ClassTextOverrides.Clear();
+            foreach (var kv in app.Model.Elements)
+            {
+                var o = kv.Value;
+                if (o.HasText && o.Text != null) chrome.TextOverrides[kv.Key] = o.Text;
+                if (o.WidthPx.HasValue) chrome.WidthOverrides[kv.Key] = o.WidthPx.Value;
+                if (o.WidthPercent.HasValue) chrome.WidthPercentOverrides[kv.Key] = o.WidthPercent.Value;
+                if (o.Opacity.HasValue) chrome.OpacityOverrides[kv.Key] = o.Opacity.Value;
+                if (o.Visible == false) chrome.HiddenIds.Add(kv.Key);
+            }
+            int buy = 0, wear = 0, equipped = 0;
+            for (int i = 0; i < app.ShopFooters.Count; i++)
+            {
+                string footer = app.ShopFooters[i];
+                if (footer == "Wear") chrome.ClassTextOverrides["btn-equip-item#" + wear++] = footer;
+                else if (footer.StartsWith("EQUIPPED", StringComparison.Ordinal)) chrome.ClassTextOverrides["badge-equipped#" + equipped++] = footer;
+                else chrome.ClassTextOverrides["btn-buy-item#" + buy++] = footer;
+            }
+            chrome.Toasts.Clear();
+            if (app.Model.Toasts.Count > 0)
+            {
+                for (int i = 0; i < app.Model.Toasts.Count; i++)
+                {
+                    var toast = app.Model.Toasts[i];
+                    double age = app.NowMs - (toast.ExpiresAtMs - AppController.ToastMs);
+                    if (age < 0) age = 0;
+                    chrome.Toasts.Add(new HomeChrome.ToastPaint { Text = toast.Text, AgeMs = age });
+                }
+            }
+            if (page == "maps")
+            {
+                int level = CampaignLevel(app);
+                bool match = TemplateSelector.MapsCaptureMatches(templateId, app.WorldIndex, level);
+                chrome.StampMapsCurrent(app.WorldIndex, level, match);
+            }
+        }
+
         /// <summary>Copy the controller's sector, layout, and win flags onto the session before replay.</summary>
         void SyncPlayfield()
         {
@@ -293,46 +420,7 @@ namespace OrbitalSalvage.Viewer
             current.UseClaimedGiftBanner(app.CurrentPage == "shop" && !app.Economy.CanClaimDailyGift());
             if (!forceDraw && OverridesUnchanged()) return;
             RememberOverrides();
-            current.TextOverrides.Clear();
-            current.WidthOverrides.Clear();
-            current.WidthPercentOverrides.Clear();
-            current.OpacityOverrides.Clear();
-            current.HiddenIds.Clear();
-            current.ClassTextOverrides.Clear();
-            foreach (var kv in app.Model.Elements)
-            {
-                var o = kv.Value;
-                if (o.HasText && o.Text != null) current.TextOverrides[kv.Key] = o.Text;
-                if (o.WidthPx.HasValue) current.WidthOverrides[kv.Key] = o.WidthPx.Value;
-                if (o.WidthPercent.HasValue) current.WidthPercentOverrides[kv.Key] = o.WidthPercent.Value;
-                if (o.Opacity.HasValue) current.OpacityOverrides[kv.Key] = o.Opacity.Value;
-                if (o.Visible == false) current.HiddenIds.Add(kv.Key);
-            }
-            int buy = 0, wear = 0, equipped = 0;
-            for (int i = 0; i < app.ShopFooters.Count; i++)
-            {
-                string footer = app.ShopFooters[i];
-                if (footer == "Wear") current.ClassTextOverrides["btn-equip-item#" + wear++] = footer;
-                else if (footer.StartsWith("EQUIPPED", StringComparison.Ordinal)) current.ClassTextOverrides["badge-equipped#" + equipped++] = footer;
-                else current.ClassTextOverrides["btn-buy-item#" + buy++] = footer;
-            }
-            current.Toasts.Clear();
-            if (app.Model.Toasts.Count > 0)
-            {
-                for (int i = 0; i < app.Model.Toasts.Count; i++)
-                {
-                    var toast = app.Model.Toasts[i];
-                    double age = app.NowMs - (toast.ExpiresAtMs - AppController.ToastMs);
-                    if (age < 0) age = 0;
-                    current.Toasts.Add(new HomeChrome.ToastPaint { Text = toast.Text, AgeMs = age });
-                }
-            }
-            if (app.CurrentPage == "maps")
-            {
-                int level = CampaignLevel(app);
-                bool match = TemplateSelector.MapsCaptureMatches(app.TemplateId, app.WorldIndex, level);
-                current.StampMapsCurrent(app.WorldIndex, level, match);
-            }
+            WriteDynamicOverrides(current, app.CurrentPage, app.TemplateId);
             BindModalPlayfield(current);
             current.Underlay = null;
             if (flowClockActive) BindFlowUnderlay(current);
