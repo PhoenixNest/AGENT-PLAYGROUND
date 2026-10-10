@@ -1093,6 +1093,24 @@ namespace OrbitalSalvage.App
             return ChooseTemplate(Economy.CanClaimDailyMasterBonus(), out cardStamp, true);
         }
 
+        /// <summary>
+        /// Spec <see cref="ChooseTemplate"/> would pick for <paramref name="pageId"/> without leaving the current page.
+        /// An open modal is ignored so a tab prewarm asks for the page itself.
+        /// </summary>
+        public string PeekPageTemplate(string pageId, out string cardStamp)
+        {
+            string saved = CurrentPage;
+            CurrentPage = pageId ?? "";
+            try
+            {
+                return ChooseTemplate(Economy.CanClaimDailyMasterBonus(), out cardStamp, true);
+            }
+            finally
+            {
+                CurrentPage = saved;
+            }
+        }
+
         string ChooseTemplate(bool canMaster, out string cardStamp, bool suppressModal = false)
         {
             var current = CurrentWorld();
