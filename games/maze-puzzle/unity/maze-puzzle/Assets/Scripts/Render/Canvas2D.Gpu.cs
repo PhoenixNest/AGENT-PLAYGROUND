@@ -43,6 +43,21 @@ namespace OrbitalSalvage.Render
         /// <summary>Frozen captures keep the CPU box blur. Live draws record a GPU box blur and do not read the frame back.</summary>
         public bool ExactBackdrop = true;
 
+        /// <summary>
+        /// When true, <see cref="EndFrame"/> still records the frame on the CPU but returns before
+        /// buffer uploads, <c>Shader.SetGlobal*</c>, <see cref="UploadText"/>, and
+        /// <see cref="Graphics.ExecuteCommandBuffer"/>. The next <see cref="BeginFrame"/> clears the
+        /// command buffer, edge and param counts, glyph records, and backdrop snapshots, as it does
+        /// after a submitted frame. Edge, param, and glyph arrays keep a high-water capacity.
+        /// <see cref="Flush"/> and <see cref="Replay"/> throw: both execute so a caller can read
+        /// pixels, and a skipped submit has nothing to read. <see cref="GameRenderer.Render"/> only
+        /// calls <see cref="BeginFrame"/> and <see cref="EndFrame"/> (no backdrop readback). Default false.
+        /// </summary>
+        public bool SkipSubmit;
+
+        /// <summary>Times this canvas called <see cref="Graphics.ExecuteCommandBuffer"/>.</summary>
+        public int ExecuteCount { get; private set; }
+
         public RenderTexture Target => target;
         public CommandBuffer Commands => cmd;
         public int EdgeCount => edgeCount;
@@ -167,6 +182,12 @@ namespace OrbitalSalvage.Render
 
         void Submit(bool keepDrawing)
         {
+            if (SkipSubmit)
+            {
+                if (keepDrawing)
+                    throw new InvalidOperationException("Canvas2D.SkipSubmit refuses Flush: it would execute the command buffer and read pixels back.");
+                return;
+            }
             PaintProfile.Begin(PaintProfile.Submit);
             PaintProfile.CountFlush();
             EnsureBuffer(ref edgeBuffer, edgeCount, 16);
@@ -179,7 +200,7 @@ namespace OrbitalSalvage.Render
             Shader.SetGlobalFloat(IdFlipY, 1f);
             Shader.SetGlobalTexture(IdAccum, accum);
             UploadText();
-            Graphics.ExecuteCommandBuffer(cmd);
+            ExecuteRecorded();
             PaintProfile.End(PaintProfile.Submit);
             if (!keepDrawing) return;
             cmd.Clear();
@@ -551,7 +572,18 @@ namespace OrbitalSalvage.Render
             }
         }
 
-        public void Replay() { Graphics.ExecuteCommandBuffer(cmd); }
+        public void Replay()
+        {
+            if (SkipSubmit)
+                throw new InvalidOperationException("Canvas2D.SkipSubmit refuses Replay: it would execute the command buffer.");
+            ExecuteRecorded();
+        }
+
+        void ExecuteRecorded()
+        {
+            Graphics.ExecuteCommandBuffer(cmd);
+            ExecuteCount++;
+        }
 
         static void EnsureBuffer(ref GraphicsBuffer buf, int count, int stride)
         {
