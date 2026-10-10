@@ -391,7 +391,10 @@ namespace OrbitalSalvage.Viewer
             {
                 int level = CampaignLevel(app);
                 bool match = TemplateSelector.MapsCaptureMatches(templateId, app.WorldIndex, level);
-                chrome.StampMapsCurrent(app.WorldIndex, level, match);
+                ICollection<string> completed = app.Economy != null && app.Economy.Profile != null
+                    ? app.Economy.Profile.CompletedSectors
+                    : null;
+                chrome.StampMapsCurrent(app.WorldIndex, level, match, completed);
             }
         }
 

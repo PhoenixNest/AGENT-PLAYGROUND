@@ -121,6 +121,28 @@ namespace OrbitalSalvage.Viewer.Tests
             }
         }
 
+        /// <summary>
+        /// The unstamped fresh maps still from <see cref="PagePreviewPainter"/> matches a direct
+        /// HomeChrome readback. The published pin E8DB1961… is not asserted: on this Mac it was
+        /// recorded next to the Windows game hash, which Metal does not reproduce.
+        /// </summary>
+        [Test]
+        public void MapsWorld1Fresh_PainterMatchesDirectReadback()
+        {
+            OutlineFonts.Clear();
+            byte[] painter = Paint("maps_world_1_fresh", true, 0);
+            byte[] direct = IndependentCapturePose("maps_world_1_fresh");
+            Assert.IsTrue(BytesEqual(painter, direct), "PagePreviewPainter and direct readback diverged");
+            using (var sha = System.Security.Cryptography.SHA256.Create())
+            {
+                byte[] hash = sha.ComputeHash(painter);
+                var sb = new System.Text.StringBuilder(hash.Length * 2);
+                for (int i = 0; i < hash.Length; i++) sb.Append(hash[i].ToString("X2"));
+                Directory.CreateDirectory("/tmp/maze-maps");
+                File.WriteAllText(Path.Combine("/tmp/maze-maps", "painter-maps-fresh-sha256.txt"), sb.ToString());
+            }
+        }
+
         [Test]
         public void AnimationClock_IsDeterministic()
         {
