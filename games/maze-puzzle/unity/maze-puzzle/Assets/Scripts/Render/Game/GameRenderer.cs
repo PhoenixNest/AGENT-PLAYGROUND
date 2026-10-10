@@ -60,6 +60,22 @@ namespace OrbitalSalvage.Render
         double skyGradW, skyGradH;
         public bool RenderToCanvas = true;
 
+        bool _submitEnabled = true;
+
+        /// <summary>
+        /// When false, draws and <see cref="GameDraw.Rand"/> still run, and <see cref="Canvas2D.EndFrame"/>
+        /// does not execute the command buffer. Default true (Play mode and stills).
+        /// </summary>
+        public bool SubmitEnabled
+        {
+            get => _submitEnabled;
+            set
+            {
+                _submitEnabled = value;
+                if (_canvas != null) _canvas.SkipSubmit = !value;
+            }
+        }
+
         public Canvas2D Canvas => _canvas;
         public UnityEngine.RenderTexture Target => _canvas != null ? _canvas.Target : null;
 
@@ -100,6 +116,7 @@ namespace OrbitalSalvage.Render
             if (_canvas != null && _canvas.Width == pw && _canvas.Height == ph) return;
             if (_canvas != null) _canvas.Dispose();
             _canvas = new Canvas2D(pw, ph);
+            _canvas.SkipSubmit = !_submitEnabled;
         }
 
         public void SetRenderScale(double scale)
