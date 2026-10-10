@@ -119,6 +119,18 @@ namespace OrbitalSalvage.Render
             _canvas.SkipSubmit = !_submitEnabled;
         }
 
+        /// <summary>Replace the shadow accum at the current size. Does not touch the level random stream.</summary>
+        public void RebuildCanvas()
+        {
+            if (_canvas == null) return;
+            int pw = _canvas.Width;
+            int ph = _canvas.Height;
+            bool submit = _submitEnabled;
+            _canvas.Dispose();
+            _canvas = new Canvas2D(pw, ph);
+            _canvas.SkipSubmit = !submit;
+        }
+
         public void SetRenderScale(double scale)
         {
             RenderScale = scale > 0 ? scale : 1;

@@ -431,6 +431,15 @@ namespace OrbitalSalvage.Render
             DropLayerCache();
         }
 
+        /// <summary>New shadow accum at the same raster size, and a dropped layer cache. Bench uses this when rt16 flips.</summary>
+        public void RebuildRasterInPlace()
+        {
+            var next = new Canvas2D(Math.Max(1, canvas.Width), Math.Max(1, canvas.Height));
+            canvas.Dispose();
+            canvas = next;
+            DropLayerCache();
+        }
+
         /// <summary>
         /// Drop baked layers when <paramref name="liveScale"/> is a different raster step.
         /// Returns false when the chrome is already at that step, so a matching page is left untouched.

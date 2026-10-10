@@ -21,6 +21,8 @@ namespace OrbitalSalvage.Viewer
         public bool Rt16;
         public double Scale;
         public int FrameRate;
+        /// <summary>Ambient loop cap in frames per second. Zero leaves the governor in charge.</summary>
+        public int AmbientFps;
 
         public string Text()
         {
@@ -38,6 +40,10 @@ namespace OrbitalSalvage.Viewer
             else if (Scale == 3d) Add(sb, true, "scale3");
             if (FrameRate == 15) Add(sb, true, "f15");
             else if (FrameRate == 30) Add(sb, true, "f30");
+            if (AmbientFps == 30) Add(sb, true, "amb30");
+            else if (AmbientFps == 20) Add(sb, true, "amb20");
+            else if (AmbientFps == 15) Add(sb, true, "amb15");
+            else if (AmbientFps == 10) Add(sb, true, "amb10");
             Add(sb, Rt16, "rt16");
             return sb.Length == 0 ? "none" : sb.ToString();
         }
@@ -83,6 +89,10 @@ namespace OrbitalSalvage.Viewer
             else if (Equals(tok, "scale3")) exp.Scale = 3;
             else if (Equals(tok, "f15")) exp.FrameRate = 15;
             else if (Equals(tok, "f30")) exp.FrameRate = 30;
+            else if (Equals(tok, "amb30")) exp.AmbientFps = 30;
+            else if (Equals(tok, "amb20")) exp.AmbientFps = 20;
+            else if (Equals(tok, "amb15")) exp.AmbientFps = 15;
+            else if (Equals(tok, "amb10")) exp.AmbientFps = 10;
         }
 
         static bool Equals(string tok, string name)
