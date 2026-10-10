@@ -24,17 +24,23 @@ namespace OrbitalSalvage.Viewer
     /// <item><term>noimgui</term><description>Game page skips the HUD GUI.DrawTexture and blits the playfield only.</description></item>
     /// <item><term>scale1 / scale1.5 / scale2 / scale3</term><description>Force that raster scale. The governor does not step or save over it. Last scale token wins.</description></item>
     /// <item><term>f30 / f15</term><description>Application.targetFrameRate. Last of the two wins.</description></item>
-    /// <item><term>rt16</term><description>Canvases created after boot use ARGBHalf for the shadow accum instead of RFloat. Ignored while a bench matrix is running, because those canvases already exist.</description></item>
-    /// <item><term>os.parity.bench</term><description>auto, or one of home, maps, daily, shop, achievements, game, pause, tabs. The app drives itself. A throwaway memory profile is used, and the governor does not read or write the scale pref.</description></item>
-    /// <item><term>os.parity.bench.secs</term><description>Measured window length. Default 12. The first 2 seconds of each idle window are warm-up and are not counted. Tabs dwell 3 seconds on each stop regardless.</description></item>
+    /// <item><term>amb30 / amb20 / amb15 / amb10</term><description>Cap ambient CSS-loop repaints at that many frames per second. The governor does not overwrite it. Last of the four wins. noloops still freezes the loops entirely.</description></item>
+    /// <item><term>rt16</term><description>Shadow accum is ARGBHalf instead of RFloat. os.parity.exp or os.parity.boot.exp applies it before the first canvas, including while a bench is set. A bench cell that flips it rebuilds the canvases.</description></item>
+    /// <item><term>os.parity.boot.exp</term><description>Creation-time flags, read once. rt16 here stays on for the whole process, including bench cells that do not name it.</description></item>
+    /// <item><term>os.parity.bench</term><description>auto, or one of home, maps, daily, shop, achievements, game, pause, tabs, gamestart, pauseopen. Each cell closes modals, returns home, and reloads level 1 on a throwaway profile. The governor does not read or write the scale pref.</description></item>
+    /// <item><term>os.parity.bench.secs</term><description>Measured window length. Default 12. The first 2 seconds of each idle window are warm-up and are not counted. Tabs and gamestart dwell 3 seconds. pauseopen dwells 2 seconds.</description></item>
+    /// <item><term>os.parity.bench.exps</term><description>Semicolon-separated flag sets, such as none;rt16;noloops;amb15. Replaces the default config list for every scenario in the run.</description></item>
     /// </list>
-    /// Bench matrix: home, game, and tabs use none, noshadow, nobackdrop, noloops, nocache, scale1.5, scale1, f30.
-    /// Game also runs nogamehud, noimgui, nogamefx. Maps, pause, daily, shop, and achievements use none, nobackdrop, scale1.
-    /// auto runs home, maps, game, pause, tabs. A single mode runs that scenario's configs.
+    /// Bench matrix: home, game, tabs, and gamestart use none, noshadow, nobackdrop, noloops, nocache, scale1.5, scale1, f30.
+    /// Game also runs nogamehud, noimgui, nogamefx. Maps, pause, pauseopen, daily, shop, and achievements use none, nobackdrop, scale1.
+    /// auto runs home, maps, game, pause, tabs, gamestart, pauseopen. A single mode runs that scenario's configs.
+    /// Every cell checks the chrome page id before measuring. Pause requires an id that starts with modal_pause.
+    /// A mismatch logs [Bench] state mismatch and retries once from a clean home. Game, pause, gamestart, and pauseopen keep the sector from opening a debrief or defeat modal.
+    /// gamestart logs the Home to game click. pauseopen logs the pause click. Tabs logs each dock click from Home.
     /// Each window logs <c>[Bench] scenario= exp= fps= avg_ms= p50= p95= max= over50= gpu_ms= submits= backdrop= shadows= cachebuilds=</c>.
     /// <c>gpu_ms</c> is <c>avg/max</c> or <c>na</c>. <c>backdrop</c> is <c>exact/gpu</c>.
-    /// Tabs also log <c>[Bench] switch scenario= exp= from= to= ms= over100= worst=</c> per navigation.
-    /// <c>ms</c> is the time from the click to the next frame. <c>over100</c> and <c>worst</c> cover that present frame plus the following dwell (3 s on a stop, one frame on the home hop between stops).
+    /// Tabs, gamestart, and pauseopen also log <c>[Bench] switch scenario= exp= from= to= ms= over100= worst=</c>.
+    /// <c>ms</c> is the time from the click to the next frame. <c>over100</c> and <c>worst</c> cover that present frame plus the following dwell. The return to Home between tab stops is not a measured switch.
     /// The run ends with <c>[Bench] done</c>.
     /// </summary>
     public sealed class DevicePerf

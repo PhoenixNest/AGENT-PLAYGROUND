@@ -12,9 +12,13 @@ namespace OrbitalSalvage.Viewer
     {
         public const string PrefKey = "os.parity.bench";
         public const string SecsPrefKey = "os.parity.bench.secs";
+        public const string ExpsPrefKey = "os.parity.bench.exps";
+        public const string BootExpPrefKey = "os.parity.boot.exp";
         public const float DefaultWindowSeconds = 12f;
         public const float WarmupSeconds = 2f;
         public const float TabDwellSeconds = 3f;
+        public const float GameStartDwellSeconds = 3f;
+        public const float PauseOpenDwellSeconds = 2f;
         public const float NavTimeoutSeconds = 8f;
         public const float Over100Seconds = 0.1f;
         public const int SampleCapacity = 4096;
@@ -25,7 +29,7 @@ namespace OrbitalSalvage.Viewer
         };
         static readonly string[] GameExtra = { "nogamehud", "noimgui", "nogamefx" };
         static readonly string[] Light = { "none", "nobackdrop", "scale1" };
-        static readonly string[] AutoScenarios = { "home", "maps", "game", "pause", "tabs" };
+        static readonly string[] AutoScenarios = { "home", "maps", "game", "pause", "tabs", "gamestart", "pauseopen" };
 
         public enum Op
         {
@@ -34,7 +38,9 @@ namespace OrbitalSalvage.Viewer
             Warmup = 2,
             Sample = 3,
             Dwell = 4,
-            Report = 5
+            Report = 5,
+            Reset = 6,
+            Expect = 7
         }
 
         /// <summary>
@@ -78,6 +84,7 @@ namespace OrbitalSalvage.Viewer
             public bool ResetGovernor;
             public bool Click;
             public string ClickId;
+            public bool ResetState;
             public bool Done;
         }
 
@@ -113,6 +120,8 @@ namespace OrbitalSalvage.Viewer
                 case "game":
                 case "pause":
                 case "tabs":
+                case "gamestart":
+                case "pauseopen":
                     return true;
                 default:
                     return false;
@@ -121,10 +130,21 @@ namespace OrbitalSalvage.Viewer
 
         public static string[] Configs(string scenario)
         {
+            return Configs(scenario, null);
+        }
+
+        /// <summary>
+        /// <paramref name="exps"/> replaces the built-in list for every scenario when it has entries.
+        /// Null or empty keeps the defaults.
+        /// </summary>
+        public static string[] Configs(string scenario, string[] exps)
+        {
+            if (exps != null && exps.Length > 0) return Copy(exps);
             switch (scenario)
             {
                 case "maps":
                 case "pause":
+                case "pauseopen":
                 case "daily":
                 case "shop":
                 case "achievements":
@@ -139,25 +159,71 @@ namespace OrbitalSalvage.Viewer
             }
         }
 
+        /// <summary>
+        /// Semicolon-separated flag sets. Null when the pref is absent or only separators.
+        /// Tokens are trimmed. <c>none</c> is kept.
+        /// </summary>
+        public static string[] ParseExps(string pref)
+        {
+            if (string.IsNullOrEmpty(pref)) return null;
+            var list = new List<string>();
+            int i = 0;
+            while (i <= pref.Length)
+            {
+                int semi = pref.IndexOf(';', i);
+                if (semi < 0) semi = pref.Length;
+                int start = i;
+                int end = semi;
+                while (start < end && char.IsWhiteSpace(pref[start])) start++;
+                while (end > start && char.IsWhiteSpace(pref[end - 1])) end--;
+                if (end > start) list.Add(pref.Substring(start, end - start));
+                if (semi >= pref.Length) break;
+                i = semi + 1;
+            }
+            return list.Count == 0 ? null : list.ToArray();
+        }
+
+        /// <summary>True when <paramref name="page"/> is the logical page or its chrome id.</summary>
+        public static bool PageMatches(string expected, string page)
+        {
+            if (string.IsNullOrEmpty(expected) || string.IsNullOrEmpty(page)) return false;
+            if (string.Equals(page, expected, StringComparison.Ordinal)) return true;
+            switch (expected)
+            {
+                case "home": return page.StartsWith("home", StringComparison.Ordinal);
+                case "maps": return page.StartsWith("maps", StringComparison.Ordinal);
+                case "daily": return page.StartsWith("daily", StringComparison.Ordinal);
+                case "shop": return page.StartsWith("shop", StringComparison.Ordinal);
+                case "achievements": return page.StartsWith("achievements", StringComparison.Ordinal);
+                case "game": return page.StartsWith("game", StringComparison.Ordinal);
+                case "pause": return page.StartsWith("modal_pause", StringComparison.Ordinal);
+                default: return false;
+            }
+        }
+
+        public static bool HoldsPlay(string scenario)
+        {
+            return scenario == "game" || scenario == "pause" || scenario == "gamestart" || scenario == "pauseopen";
+        }
+
         public static Step[] Build(string mode)
         {
             return Build(mode, DefaultWindowSeconds, WarmupSeconds, TabDwellSeconds);
         }
 
-        public static Step[] Build(string mode, float windowSeconds, float warmupSeconds, float tabDwellSeconds)
+        public static Step[] Build(string mode, float windowSeconds, float warmupSeconds, float tabDwellSeconds, string[] exps = null)
         {
             if (windowSeconds < 0.05f) windowSeconds = 0.05f;
             if (warmupSeconds < 0f) warmupSeconds = 0f;
             if (tabDwellSeconds < 0f) tabDwellSeconds = 0f;
             var steps = new List<Step>(128);
-            string cursor = "home";
             if (mode == "auto")
             {
                 for (int i = 0; i < AutoScenarios.Length; i++)
-                    cursor = AddScenario(steps, AutoScenarios[i], cursor, windowSeconds, warmupSeconds, tabDwellSeconds);
+                    AddScenario(steps, AutoScenarios[i], windowSeconds, warmupSeconds, tabDwellSeconds, exps);
             }
             else
-                AddScenario(steps, mode, cursor, windowSeconds, warmupSeconds, tabDwellSeconds);
+                AddScenario(steps, mode, windowSeconds, warmupSeconds, tabDwellSeconds, exps);
             return steps.ToArray();
         }
 
@@ -184,38 +250,50 @@ namespace OrbitalSalvage.Viewer
             }
         }
 
-        static string AddScenario(List<Step> steps, string scenario, string cursor, float window, float warmup, float dwell)
+        static void AddScenario(List<Step> steps, string scenario, float window, float warmup, float dwell, string[] exps)
         {
-            string[] configs = Configs(scenario);
-            string entry = scenario == "tabs" ? "home" : scenario;
+            string[] configs = Configs(scenario, exps);
+            string entry = scenario == "tabs" || scenario == "gamestart" ? "home" : scenario;
             for (int c = 0; c < configs.Length; c++)
             {
                 steps.Add(new Step { Op = Op.Apply, A = configs[c], B = scenario });
-                cursor = AddRoute(steps, cursor, entry, false, 0f);
-                steps.Add(new Step { Op = Op.Warmup, Seconds = warmup });
+                steps.Add(new Step { Op = Op.Reset });
+                if (scenario == "gamestart")
+                {
+                    steps.Add(new Step { Op = Op.Expect, B = "home" });
+                    AddRoute(steps, "home", "game", true, GameStartDwellSeconds);
+                    continue;
+                }
+                if (scenario == "pauseopen")
+                {
+                    AddRoute(steps, "home", "game", false, 0f);
+                    steps.Add(new Step { Op = Op.Expect, B = "game" });
+                    AddRoute(steps, "game", "pause", true, PauseOpenDwellSeconds);
+                    continue;
+                }
+                AddRoute(steps, "home", entry, false, 0f);
+                steps.Add(new Step { Op = Op.Expect, B = entry });
                 if (scenario == "tabs")
-                    cursor = AddTabs(steps, dwell);
+                    AddTabs(steps, dwell);
                 else
                 {
+                    steps.Add(new Step { Op = Op.Warmup, Seconds = warmup });
                     steps.Add(new Step { Op = Op.Sample, Seconds = window });
-                    cursor = entry;
                 }
                 steps.Add(new Step { Op = Op.Report, A = scenario, B = configs[c] });
             }
-            return cursor;
         }
 
-        static string AddTabs(List<Step> steps, float dwell)
+        static void AddTabs(List<Step> steps, float dwell)
         {
             AddRoute(steps, "home", "maps", true, dwell);
-            AddRoute(steps, "maps", "home", true, 0f);
+            AddRoute(steps, "maps", "home", false, 0f);
             AddRoute(steps, "home", "daily", true, dwell);
-            AddRoute(steps, "daily", "home", true, 0f);
+            AddRoute(steps, "daily", "home", false, 0f);
             AddRoute(steps, "home", "shop", true, dwell);
-            AddRoute(steps, "shop", "home", true, 0f);
+            AddRoute(steps, "shop", "home", false, 0f);
             AddRoute(steps, "home", "achievements", true, dwell);
-            AddRoute(steps, "achievements", "home", true, dwell);
-            return "home";
+            AddRoute(steps, "achievements", "home", false, 0f);
         }
 
         static string AddRoute(List<Step> steps, string from, string to, bool measureLast, float dwellLast)
@@ -475,6 +553,20 @@ namespace OrbitalSalvage.Viewer
             return sb.ToString();
         }
 
+        public static string FormatMismatch(string scenario, string exp, string page, string expected)
+        {
+            var sb = new StringBuilder(160);
+            sb.Append("[Bench] state mismatch scenario=");
+            sb.Append(string.IsNullOrEmpty(scenario) ? "-" : scenario);
+            sb.Append(" exp=");
+            sb.Append(string.IsNullOrEmpty(exp) ? "none" : exp);
+            sb.Append(" page=");
+            sb.Append(string.IsNullOrEmpty(page) ? "-" : page);
+            sb.Append(" expected=");
+            sb.Append(string.IsNullOrEmpty(expected) ? "-" : expected);
+            return sb.ToString();
+        }
+
         public static string FormatTimeout(string scenario, string exp, string clickId, string page)
         {
             var sb = new StringBuilder(128);
@@ -515,6 +607,10 @@ namespace OrbitalSalvage.Viewer
         readonly string[] logs = new string[4];
 
         int index;
+        int cellStart;
+        int cellRetries;
+        bool retrying;
+        bool resetSent;
         float phaseStart;
         bool clickSent;
         float clickStart;
@@ -568,6 +664,9 @@ namespace OrbitalSalvage.Viewer
                 switch (step.Op)
                 {
                     case DeviceBench.Op.Apply:
+                        if (!retrying) cellRetries = 0;
+                        retrying = false;
+                        cellStart = index;
                         cellExp = string.IsNullOrEmpty(step.A) ? "none" : step.A;
                         cellScenario = step.B ?? "";
                         act.Apply = true;
@@ -576,6 +675,36 @@ namespace OrbitalSalvage.Viewer
                         act.ResetGovernor = true;
                         index++;
                         phaseStart = inn.Now;
+                        continue;
+                    case DeviceBench.Op.Reset:
+                        if (!resetSent)
+                        {
+                            act.ResetState = true;
+                            resetSent = true;
+                            phaseStart = inn.Now;
+                            return act;
+                        }
+                        if (DeviceBench.PageMatches("home", page))
+                        {
+                            resetSent = false;
+                            index++;
+                            phaseStart = inn.Now;
+                            continue;
+                        }
+                        if (inn.Now - phaseStart >= timeout)
+                        {
+                            NoteMismatch(page, "home");
+                            continue;
+                        }
+                        return act;
+                    case DeviceBench.Op.Expect:
+                        if (DeviceBench.PageMatches(step.B, page))
+                        {
+                            index++;
+                            phaseStart = inn.Now;
+                            continue;
+                        }
+                        NoteMismatch(page, step.B);
                         continue;
                     case DeviceBench.Op.Click:
                         if (!clickSent)
@@ -586,7 +715,7 @@ namespace OrbitalSalvage.Viewer
                             clickStart = inn.Now;
                             return act;
                         }
-                        if (page == step.B)
+                        if (DeviceBench.PageMatches(step.B, page))
                         {
                             float ms = inn.PresentMs >= 0f ? inn.PresentMs : (inn.Now - clickStart) * 1000f;
                             clickSent = false;
@@ -662,10 +791,32 @@ namespace OrbitalSalvage.Viewer
             Add(BenchWindow.FormatSwitch(cellScenario, cellExp, switchFrom, switchTo, presentMs, over100, worstMs));
         }
 
+        void NoteMismatch(string page, string expected)
+        {
+            Add(BenchWindow.FormatMismatch(cellScenario, cellExp, page, expected));
+            resetSent = false;
+            clickSent = false;
+            switchOpen = false;
+            collect = false;
+            window.Clear();
+            if (cellRetries >= 1)
+            {
+                cellRetries = 0;
+                retrying = false;
+                SkipCell();
+                return;
+            }
+            cellRetries++;
+            retrying = true;
+            index = cellStart;
+        }
+
         void SkipCell()
         {
             switchOpen = false;
             collect = false;
+            resetSent = false;
+            clickSent = false;
             window.Clear();
             index++;
             while (index < steps.Length && steps[index].Op != DeviceBench.Op.Apply)
