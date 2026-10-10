@@ -14,7 +14,6 @@ namespace OrbitalSalvage.Viewer
         public const float SustainedSlowSeconds = 1.5f;
         public const float StepDownCooldownSeconds = 0.8f;
         public const float StepUpCooldownSeconds = 10f;
-        public const float FallbackHoldSeconds = 60f;
         public const float StablePersistSeconds = 10f;
         public const float SlowSeconds = 0.022f;
         public const float ComfortFactor = 1.1f;
@@ -35,9 +34,10 @@ namespace OrbitalSalvage.Viewer
         public float IgnoreUntil;
         public float SlowSince = float.NaN;
         public float StableSince = float.NaN;
-        public float HoldUpUntil = float.NegativeInfinity;
         public double SteppedDownFrom;
-        public bool ClimbedBack;
+        /// <summary>Scale of a climb that later fell back. Zero means no block. That scale and anything above it are not tried again this session.</summary>
+        public double BlockedUpFrom;
+        double climbedTo;
         public bool BootNoted;
         public string PageId;
         public bool HasPersisted;
@@ -320,11 +320,10 @@ namespace OrbitalSalvage.Viewer
                         double next = implied < cur - 0.05 ? implied : one;
                         if (next < cur - 0.05)
                         {
-                            if (ClimbedBack && SteppedDownFrom > 0 && Math.Abs(cur - SteppedDownFrom) < 0.05)
-                            {
-                                HoldUpUntil = o.Now + FallbackHoldSeconds;
-                                ClimbedBack = false;
-                            }
+                            if (climbedTo > 0 && cur >= climbedTo - 0.05
+                                && (BlockedUpFrom <= 0 || climbedTo < BlockedUpFrom - 0.01))
+                                BlockedUpFrom = climbedTo;
+                            climbedTo = 0;
                             SteppedDownFrom = cur;
                             Cap = next;
                             LastStepAt = o.Now;
@@ -336,12 +335,13 @@ namespace OrbitalSalvage.Viewer
                 else
                 {
                     SlowSince = float.NaN;
-                    if (o.P95 <= ComfortCeiling(o.TargetFrameRate) && o.Now - LastStepAt >= StepUpCooldownSeconds && o.Now >= HoldUpUntil)
+                    if (o.P95 <= ComfortCeiling(o.TargetFrameRate) && o.Now - LastStepAt >= StepUpCooldownSeconds)
                     {
                         double up = StepUp(Cap, phone);
-                        if (up <= o.Fit + 0.01 && up > Cap + 0.05)
+                        bool blocked = BlockedUpFrom > 0 && up >= BlockedUpFrom - 0.05;
+                        if (!blocked && up <= o.Fit + 0.01 && up > Cap + 0.05)
                         {
-                            ClimbedBack = SteppedDownFrom > 0 && Math.Abs(up - SteppedDownFrom) < 0.05;
+                            climbedTo = up;
                             Cap = up;
                             LastStepAt = o.Now;
                             steppedUp = true;
@@ -368,7 +368,9 @@ namespace OrbitalSalvage.Viewer
 
             float stableFor = float.IsNaN(StableSince) ? 0f : o.Now - StableSince;
             bool warmedNow = o.SampleCount >= WarmSamples && o.SampleAccepted;
+            bool aboveBlock = BlockedUpFrom > 0 && target >= BlockedUpFrom - 0.05;
             if (o.Width >= 2 && o.Height >= 2
+                && !aboveBlock
                 && ShouldPersist(phone, target, stableFor, warmedNow, forced)
                 && (!HasPersisted || Math.Abs(PersistedScale - target) >= 0.05))
             {

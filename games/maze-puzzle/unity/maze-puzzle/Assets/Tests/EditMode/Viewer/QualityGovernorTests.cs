@@ -214,13 +214,58 @@ namespace OrbitalSalvage.Viewer.Tests
             var fell = gov.Tick(Frame(23.6f, 0.023f, false, 3));
             Assert.AreEqual(2, fell.Target, 0.001);
 
-            var blocked = gov.Tick(Frame(40f, 0.0168f, false, 3));
+            var blocked = gov.Tick(Frame(40f, 0.0168f, false, 3, raster: 2));
             Assert.AreEqual(2, blocked.Target, 0.001, "fallback holds the lower scale");
             Assert.IsFalse(blocked.SteppedUp);
 
-            var later = gov.Tick(Frame(83.6f, 0.0168f, false, 3));
-            Assert.AreEqual(3, later.Target, 0.001);
-            Assert.IsTrue(later.SteppedUp);
+            var later = gov.Tick(Frame(83.6f, 0.0168f, false, 3, raster: 2));
+            Assert.AreEqual(2, later.Target, 0.001, "the 60s hold must not retry the climbed scale");
+            Assert.IsFalse(later.SteppedUp);
+
+            var minutes = gov.Tick(Frame(23.6f + 600f, 0.0168f, false, 3, raster: 2));
+            Assert.AreEqual(2, minutes.Target, 0.001);
+            Assert.IsFalse(minutes.SteppedUp);
+        }
+
+        [Test]
+        public void Fallback_DoesNotReclimbForTheRestOfTheSession()
+        {
+            var gov = new QualityGovernor { Cap = 2 };
+            var climbed = gov.Tick(Frame(0f, 0.0168f, true, 3, raster: 2));
+            Assert.AreEqual(3, climbed.Target, 0.001);
+            Assert.IsTrue(climbed.SteppedUp);
+            Assert.IsFalse(climbed.Persist, "a climb is not saved on the step frame");
+
+            gov.Tick(Frame(0.1f, 0.0168f, true, 3, raster: 3));
+            var beforeWindow = gov.Tick(Frame(9f, 0.0168f, true, 3, raster: 3));
+            Assert.AreEqual(3, beforeWindow.Target, 0.001);
+            Assert.IsFalse(beforeWindow.Persist);
+
+            gov.Tick(Frame(20f, 0.023f, true, 3, raster: 3));
+            var fell = gov.Tick(Frame(21.6f, 0.023f, true, 3, raster: 3));
+            Assert.AreEqual(2, fell.Target, 0.001);
+            Assert.IsTrue(fell.SteppedDown);
+            Assert.IsFalse(fell.Persist);
+
+            gov.Tick(Frame(21.7f, 0.0168f, true, 3, raster: 2));
+            var saved = gov.Tick(Frame(31.7f, 0.0168f, true, 3, raster: 2));
+            Assert.AreEqual(2, saved.Target, 0.001);
+            Assert.IsFalse(saved.SteppedUp);
+            Assert.IsTrue(saved.Persist);
+            Assert.AreEqual(2, saved.PersistScale, 0.001, "the saved scale stays at the fallen-back ceiling");
+
+            var minutes = gov.Tick(Frame(21.6f + 600f, 0.0168f, true, 3, raster: 2));
+            Assert.AreEqual(2, minutes.Target, 0.001);
+            Assert.IsFalse(minutes.SteppedUp);
+        }
+
+        [Test]
+        public void FreshGovernor_MayClimbAgain()
+        {
+            var gov = new QualityGovernor { Cap = 2 };
+            var climbed = gov.Tick(Frame(5f, 0.0168f, true, 3, raster: 2));
+            Assert.AreEqual(3, climbed.Target, 0.001);
+            Assert.IsTrue(climbed.SteppedUp);
         }
 
         [Test]
