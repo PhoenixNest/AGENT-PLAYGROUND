@@ -184,7 +184,9 @@ namespace OrbitalSalvage.Viewer
             HomeChrome chrome = null;
             try
             {
+                long loadStamp = PerfLoadStamp();
                 chrome = HomeChrome.Load(entry.TemplateId, entry.Profile);
+                PerfLoadAdd(loadStamp);
                 if (!string.IsNullOrEmpty(entry.CardStamp)) StampShop(chrome, entry.CardStamp);
                 chrome.InvalidateIfScaleDiffers(DesiredRasterScale());
                 chrome.UseClaimedGiftBanner(entry.Page == "shop" && !app.Economy.CanClaimDailyGift());
