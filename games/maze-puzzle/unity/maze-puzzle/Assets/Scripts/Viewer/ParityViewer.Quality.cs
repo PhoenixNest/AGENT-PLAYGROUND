@@ -26,6 +26,8 @@ namespace OrbitalSalvage.Viewer
             double forced = PlayQuality.FromCommandLine();
             if (forced > 0) PlayQuality.Forced = forced;
             DeviceFlags.Read(forced);
+            if (DeviceFlags.Manual.Rt16 || DeviceFlags.Boot.Rt16)
+                Canvas2D.HalfAccum = true;
             if (DeviceFlags.BenchMode != null)
                 benchSession = true;
             else
@@ -84,7 +86,9 @@ namespace OrbitalSalvage.Viewer
             });
 
             double target = decision.Target;
-            if (forced > 0) ambientInterval = 0;
+            int ambientFps = DeviceFlags.Current.AmbientFps;
+            if (ambientFps > 0) ambientInterval = 1.0 / ambientFps;
+            else if (forced > 0) ambientInterval = 0;
             else
             {
                 float p95 = governor.P95();

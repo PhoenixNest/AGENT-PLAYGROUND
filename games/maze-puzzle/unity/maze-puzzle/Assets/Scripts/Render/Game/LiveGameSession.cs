@@ -48,6 +48,9 @@ namespace OrbitalSalvage.Render
         public bool IsLevelCleared;
         public bool IsLevelFailed;
         public double FailureCheckTimer;
+        /// <summary>Bench only. When set, a near win or an empty board restarts the sector instead of opening a modal.</summary>
+        public bool HoldOutcome;
+        bool pendingHoldRestart;
         public bool UsedBackupPod;
         public int PhysicsSteps;
         public int RenderFrames;
@@ -262,6 +265,11 @@ namespace OrbitalSalvage.Render
 
         public void Update(double dt)
         {
+            if (pendingHoldRestart)
+            {
+                pendingHoldRestart = false;
+                if (HoldOutcome) Restart();
+            }
             if (Accumulate && !FixedStep)
             {
                 UpdateAccumulated(dt);
@@ -314,7 +322,17 @@ namespace OrbitalSalvage.Render
                         break;
                     }
                 }
-                if (!any && CollectedMass < ActiveSector.Quota)
+                if (HoldOutcome)
+                {
+                    if (CollectedMass >= ActiveSector.Quota * 0.85) pendingHoldRestart = true;
+                    else if (!any)
+                    {
+                        FailureCheckTimer += step;
+                        if (FailureCheckTimer >= FailDelay) pendingHoldRestart = true;
+                    }
+                    else FailureCheckTimer = 0;
+                }
+                else if (!any && CollectedMass < ActiveSector.Quota)
                 {
                     FailureCheckTimer += step;
                     if (FailureCheckTimer >= FailDelay) HandleDefeat();
@@ -420,7 +438,9 @@ namespace OrbitalSalvage.Render
             Renderer.AddPopRing(Physics.BlackHole.X, Physics.BlackHole.Y, 46, "#facc15");
             RecentUnlocks = Economy.RecordDebrisSwallowed(1);
             if (OnSwallow != null) OnSwallow(d);
-            if (!IsLevelCleared && ActiveSector != null && CollectedMass >= ActiveSector.Quota)
+            if (HoldOutcome && ActiveSector != null && CollectedMass >= ActiveSector.Quota * 0.85)
+                pendingHoldRestart = true;
+            else if (!IsLevelCleared && ActiveSector != null && CollectedMass >= ActiveSector.Quota)
                 HandleVictory();
         }
 

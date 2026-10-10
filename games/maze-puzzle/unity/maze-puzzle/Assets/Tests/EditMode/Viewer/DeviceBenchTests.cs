@@ -28,6 +28,15 @@ namespace OrbitalSalvage.Viewer.Tests
             Assert.IsTrue(game.NoGameHud && game.NoGameFx && game.NoImgui && game.NoCache && game.NoLoops);
             Assert.AreEqual(1.5d, game.Scale);
             Assert.AreEqual("noloops,nocache,nogamehud,nogamefx,noimgui,scale1.5", game.Text());
+
+            var amb = DeviceExp.Parse("amb30, amb10, rt16");
+            Assert.AreEqual(10, amb.AmbientFps);
+            Assert.IsTrue(amb.Rt16);
+            Assert.AreEqual("amb10,rt16", amb.Text());
+            Assert.IsNull(DeviceBench.ParseExps(null));
+            Assert.IsNull(DeviceBench.ParseExps(""));
+            Assert.IsNull(DeviceBench.ParseExps(" ; ; "));
+            CollectionAssert.AreEqual(new[] { "none", "rt16", "noloops", "amb15" }, DeviceBench.ParseExps(" none;rt16; noloops;amb15 "));
         }
 
         [Test]
@@ -42,6 +51,13 @@ namespace OrbitalSalvage.Viewer.Tests
             Assert.AreEqual("daily", daily);
             Assert.IsFalse(DeviceBench.IsScenario("tabsx"));
             Assert.IsTrue(DeviceBench.IsScenario("achievements"));
+            Assert.IsTrue(DeviceBench.TryMode("gamestart", out string start));
+            Assert.AreEqual("gamestart", start);
+            Assert.IsTrue(DeviceBench.IsScenario("pauseopen"));
+            Assert.IsTrue(DeviceBench.PageMatches("pause", "modal_pause"));
+            Assert.IsFalse(DeviceBench.PageMatches("game", "modal_debrief_exact"));
+            Assert.IsTrue(DeviceBench.PageMatches("game", "game_lvl01_t1000ms"));
+            Assert.IsTrue(DeviceBench.PageMatches("home", "home_default"));
         }
 
         [Test]
@@ -57,22 +73,29 @@ namespace OrbitalSalvage.Viewer.Tests
             Assert.AreEqual("scale1", DeviceBench.Configs("maps")[2]);
 
             var auto = DeviceBench.Build("auto", 0.2f, 0f, 0.2f);
-            Assert.AreEqual(33, Count(auto, DeviceBench.Op.Apply));
+            Assert.AreEqual(44, Count(auto, DeviceBench.Op.Apply));
             Assert.AreEqual("home", First(auto, DeviceBench.Op.Apply).B);
-            Assert.AreEqual("tabs", LastApplyScenario(auto));
+            Assert.AreEqual("pauseopen", LastApplyScenario(auto));
+            Assert.AreEqual(Count(auto, DeviceBench.Op.Apply), Count(auto, DeviceBench.Op.Reset));
             Assert.AreEqual("btn-home-play", ClickGoingTo(auto, "game"));
             Assert.AreEqual("btn-game-pause", ClickGoingTo(auto, "pause"));
             Assert.IsFalse(HasClick(DeviceBench.Build("home", 0.2f, 0f, 0.2f), "btn-home-play"));
 
             var tabs = DeviceBench.Build("tabs", 0.2f, 0f, 0.2f);
             var ids = MeasuredClicks(tabs);
+            Assert.AreEqual(32, ids.Count);
             CollectionAssert.AreEqual(new[]
             {
-                "btn-open-maps-page", "btn-back-maps",
-                "btn-open-daily-shift", "btn-back-daily",
-                "btn-open-shop-page", "btn-back-shop",
-                "btn-open-trophies-page", "btn-back-achievements"
-            }, FirstCycle(ids));
+                "btn-open-maps-page",
+                "btn-open-daily-shift",
+                "btn-open-shop-page",
+                "btn-open-trophies-page"
+            }, ids.GetRange(0, 4));
+            Assert.IsFalse(ids.Contains("btn-back-maps"));
+
+            var focused = DeviceBench.Build("game", 0.2f, 0f, 0.2f, new[] { "none", "amb15" });
+            Assert.AreEqual(2, Count(focused, DeviceBench.Op.Apply));
+            Assert.AreEqual("amb15", LastExp(focused));
         }
 
         [Test]
@@ -138,6 +161,48 @@ namespace OrbitalSalvage.Viewer.Tests
         }
 
         [Test]
+        public void Player_GameStartAndPauseOpenLogTheSwitch()
+        {
+            var start = Run("gamestart", 0.2f, 0f, 0.2f, true, 0.15f);
+            Assert.IsTrue(start.Exists(s => s.StartsWith("[Bench] switch scenario=gamestart exp=none from=home to=game ", System.StringComparison.Ordinal)), string.Join("\n", start));
+            Assert.Greater(Over100(LineWith(start, " to=game ")), 0);
+
+            var open = Run("pauseopen", 0.2f, 0f, 0.2f, true, 0.15f, new[] { "none" });
+            string sw = LineWith(open, " to=pause ");
+            Assert.IsTrue(sw.StartsWith("[Bench] switch scenario=pauseopen exp=none from=game to=pause ", System.StringComparison.Ordinal), sw);
+            Assert.AreEqual("[Bench] done", open[open.Count - 1]);
+        }
+
+        [Test]
+        public void Player_StateMismatchRetriesOnceThenSkips()
+        {
+            var player = new BenchPlayer(DeviceBench.Build("home", 0.2f, 0f, 0.2f, new[] { "none" }), 0.05f);
+            var logs = new List<string>();
+            float now = 0f;
+            for (int n = 0; n < 400 && !player.Done; n++)
+            {
+                var act = player.Tick(new DeviceBench.TickIn
+                {
+                    Now = now,
+                    Page = "modal_debrief_exact",
+                    Dt = n == 0 ? 0f : 0.05f,
+                    PresentMs = -1f,
+                    GpuMs = -1f
+                });
+                for (int i = 0; i < player.LogCount; i++) logs.Add(player.Log(i));
+                Assert.IsFalse(act.Click);
+                now += 0.05f;
+            }
+            Assert.IsTrue(player.Done, string.Join("\n", logs));
+            int mismatches = 0;
+            for (int i = 0; i < logs.Count; i++)
+                if (logs[i].StartsWith("[Bench] state mismatch scenario=home exp=none page=modal_debrief_exact expected=home", System.StringComparison.Ordinal))
+                    mismatches++;
+            Assert.AreEqual(2, mismatches, string.Join("\n", logs));
+            Assert.AreEqual("[Bench] done", logs[logs.Count - 1]);
+        }
+
+        [Test]
         public void GovernorReset_DropsSamplesAndRestoresTheBootCap()
         {
             var governor = new QualityGovernor();
@@ -150,9 +215,9 @@ namespace OrbitalSalvage.Viewer.Tests
             Assert.IsFalse(governor.BootNoted);
         }
 
-        static List<string> Run(string mode, float window, float warmup, float dwell, bool followClicks, float dt)
+        static List<string> Run(string mode, float window, float warmup, float dwell, bool followClicks, float dt, string[] exps = null)
         {
-            var player = new BenchPlayer(DeviceBench.Build(mode, window, warmup, dwell), 8f);
+            var player = new BenchPlayer(DeviceBench.Build(mode, window, warmup, dwell, exps), 8f);
             var logs = new List<string>();
             string page = "home";
             string issued = null;
@@ -206,6 +271,22 @@ namespace OrbitalSalvage.Viewer.Tests
             return default;
         }
 
+        static string LineWith(List<string> logs, string piece)
+        {
+            for (int i = 0; i < logs.Count; i++)
+                if (logs[i].Contains(piece)) return logs[i];
+            Assert.Fail(string.Join("\n", logs));
+            return "";
+        }
+
+        static string LastExp(DeviceBench.Step[] steps)
+        {
+            string exp = null;
+            for (int i = 0; i < steps.Length; i++)
+                if (steps[i].Op == DeviceBench.Op.Apply) exp = steps[i].A;
+            return exp;
+        }
+
         static string LastApplyScenario(DeviceBench.Step[] steps)
         {
             string scenario = null;
@@ -239,10 +320,5 @@ namespace OrbitalSalvage.Viewer.Tests
             return ids;
         }
 
-        static List<string> FirstCycle(List<string> ids)
-        {
-            Assert.GreaterOrEqual(ids.Count, 8);
-            return ids.GetRange(0, 8);
-        }
     }
 }
