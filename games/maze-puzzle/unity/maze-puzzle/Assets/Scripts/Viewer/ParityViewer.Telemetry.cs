@@ -98,18 +98,8 @@ namespace OrbitalSalvage.Viewer
 
         static string PerfThermal()
         {
-#if UNITY_IOS && !UNITY_EDITOR
-            switch (UnityEngine.iOS.Device.thermalState)
-            {
-                case UnityEngine.iOS.ThermalState.Nominal: return "nominal";
-                case UnityEngine.iOS.ThermalState.Fair: return "fair";
-                case UnityEngine.iOS.ThermalState.Serious: return "serious";
-                case UnityEngine.iOS.ThermalState.Critical: return "critical";
-                default: return null;
-            }
-#else
+            // Unity 6000.4 exposes no thermal-state API on iOS; the field stays null and is omitted from the line.
             return null;
-#endif
         }
 
         void PerfLogGovernor(bool steppedDown, bool steppedUp, double fromScale, double toScale, float p95Seconds)
