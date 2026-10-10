@@ -323,7 +323,11 @@ namespace OrbitalSalvage.Render
 
             if (RenderOpts.PlayHalf && Math.Abs(RenderScale - 0.5) > 0.001)
                 SetRenderScale(0.5);
+            int caller = RenderStats.Caller;
+            RenderStats.Caller = 1;
             var ctx = _canvas;
+            try
+            {
             if (Canvas2D.SkipGameFx) ctx.SkipBlurredFx = true;
             else if (ctx.SkipBlurredFx) ctx.SkipBlurredFx = false;
             ctx.BeginFrame();
@@ -357,6 +361,8 @@ namespace OrbitalSalvage.Render
             SectionMs[7] = sw.Elapsed.TotalMilliseconds;
             ctx.EndFrame();
             SectionMs[8] = sw.Elapsed.TotalMilliseconds;
+            }
+            finally { RenderStats.Caller = caller; }
         }
 
         void UpdateNibblesFace(PhysicsEngine physics, double dt, RenderProgress progress)

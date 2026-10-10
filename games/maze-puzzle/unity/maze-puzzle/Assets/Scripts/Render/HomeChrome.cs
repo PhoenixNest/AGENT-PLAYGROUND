@@ -98,6 +98,7 @@ namespace OrbitalSalvage.Render
         bool compositeValid;
         bool dirtyActive;
         bool[] dirtyHits;
+        bool[] dirtyLive;
         bool[] dirtyLayer;
         bool[] moverMark;
         const int DirtyCap = 24;
@@ -121,6 +122,7 @@ namespace OrbitalSalvage.Render
         readonly double[] curY0 = new double[DirtyCap];
         readonly double[] curX1 = new double[DirtyCap];
         readonly double[] curY1 = new double[DirtyCap];
+        readonly int[] curK = new int[DirtyCap];
         int paintOnlyLayer = -1;
         int lastBlit = -2;
         CssFrame frameSlot;
@@ -731,6 +733,8 @@ namespace OrbitalSalvage.Render
         bool OmitCached(int k)
         {
             if (!cacheOn || elementLayer == null || elementLayer[k] < 0) return false;
+            // A baked layer is the capture pose. Descendants of a live backdrop must paint after that blur.
+            if (dirtyActive && dirtyLive != null && (uint)k < (uint)dirtyLive.Length && dirtyLive[k]) return false;
             int layer = elementLayer[k];
             if (dirtyActive && dirtyLayer != null && layer < dirtyLayer.Length && !dirtyLayer[layer])
             {
@@ -1236,6 +1240,8 @@ namespace OrbitalSalvage.Render
 
         public void Draw(double timeMs, int pressed, string pressCss, bool modalIntro, bool pinPageEnter)
         {
+            int caller = RenderStats.Caller;
+            RenderStats.Caller = 0;
             long prof = PaintProfile.Stamp();
             frame = double.IsNaN(timeMs) ? null : CssFrame.Build(elements, timeMs, pinPageEnter, modalIntro, pressed, pressCss, frameSlot);
             if (frame != null) frameSlot = frame;
@@ -1309,6 +1315,7 @@ namespace OrbitalSalvage.Render
                 Canvas2D.GradientInterpolatesPremultiplied = savedPremul;
                 frame = null;
                 PaintProfile.AddWall(PaintProfile.Stamp() - prof);
+                RenderStats.Caller = caller;
             }
         }
 
@@ -1530,14 +1537,50 @@ namespace OrbitalSalvage.Render
                 || WidthPercentOverrides.ContainsKey(id) || OpacityOverrides.ContainsKey(id) || HiddenIds.Contains(id);
         }
 
-        void NoteCur(double a, double b, double c, double d)
+        void NoteCur(int k, double a, double b, double c, double d)
         {
             if (curN >= DirtyCap) { curOverflow = true; return; }
+            curK[curN] = k;
             curX0[curN] = a;
             curY0[curN] = b;
             curX1[curN] = c;
             curY1[curN] = d;
             curN++;
+        }
+
+        bool TryShineClip(int k, out double x0, out double y0, out double x1, out double y1)
+        {
+            x0 = y0 = x1 = y1 = 0;
+            if (S(elements[k], "c").IndexOf("play-btn-glow", StringComparison.Ordinal) < 0) return false;
+            if (frame == null) return false;
+            int p = frame.Parent[k];
+            if (p < 0 || p >= elements.Count) return false;
+            var r = Rect(elements[p]);
+            if (r[2] <= 1 || r[3] <= 1) return false;
+            // The swept band is clipped to the button, but the clip mask and the soft edge
+            // land a little outside the border box. The unclipped AABB is most of the page.
+            x0 = r[0] - 36;
+            y0 = r[1] - 36;
+            x1 = r[0] + r[2] + 36;
+            y1 = r[1] + r[3] + 36;
+            return true;
+        }
+
+        void NoteWide(int k, double x, double y, double w, double h, double pct)
+        {
+            var e = elements[k];
+            string id = S(e, "id");
+            string label = id.Length > 0 ? id : S(e, "c");
+            if (label.Length == 0) label = "k" + k.ToString();
+            if (label.Length > 48) label = label.Substring(0, 48);
+            int ip = (int)Math.Round(pct * 100);
+            RenderStats.DirtyWide = label;
+            RenderStats.DirtyWidePct = ip;
+            if (RenderStats.DirtyWideLogged == label) return;
+            RenderStats.DirtyWideLogged = label;
+            Debug.Log("[Perf] wide " + label + " pct=" + ip.ToString()
+                + " xy=" + x.ToString("0") + "," + y.ToString("0")
+                + " wh=" + w.ToString("0") + "x" + h.ToString("0"));
         }
 
         bool OverlapsHits(double a, double b, double c, double d)
@@ -1576,6 +1619,38 @@ namespace OrbitalSalvage.Render
             }
         }
 
+        bool HiddenBox(int k)
+        {
+            for (int p = k, hops = 0; p >= 0 && hops < 16; hops++)
+            {
+                var e = elements[p];
+                string classes = " " + S(e, "c") + " ";
+                if (N(e, "v", 1) == 0 || S(e, "vis") == "hidden" || classes.IndexOf(" page-hidden ", StringComparison.Ordinal) >= 0)
+                    return true;
+                if (frame == null || frame.Parent == null) break;
+                p = frame.Parent[p];
+            }
+            return false;
+        }
+
+        void InheritBackdropHits(int n)
+        {
+            if (frame == null || frame.Parent == null || backdropKind == null) return;
+            if (dirtyLive == null || dirtyLive.Length < n) dirtyLive = new bool[n];
+            Array.Clear(dirtyLive, 0, n);
+            for (int k = 0; k < n; k++)
+            {
+                int p = frame.Parent[k];
+                if (p < 0) continue;
+                bool fromBackdrop = dirtyLive[p] || (dirtyHits[p] && backdropKind[p] == 1);
+                if (!fromBackdrop) continue;
+                dirtyHits[k] = true;
+                dirtyLive[k] = true;
+                if (elementLayer != null && elementLayer[k] >= 0 && (uint)elementLayer[k] < (uint)dirtyLayer.Length)
+                    dirtyLayer[elementLayer[k]] = true;
+            }
+        }
+
         void BuildDirty()
         {
             dirtyActive = false;
@@ -1583,7 +1658,7 @@ namespace OrbitalSalvage.Render
             canvas.ScissorOn = false;
             canvas.KeepTarget = false;
             canvas.DirtyW = 0;
-            bool want = RenderOpts.Dirty || (RenderOpts.GameOne && SkipPlayfield && ExternalPlayfield == null);
+            bool want = RenderOpts.Dirty || RenderOpts.DirtyClip || (RenderOpts.GameOne && SkipPlayfield && ExternalPlayfield == null);
             bool classify = want || RenderOpts.BackdropLow || RenderOpts.BackdropScope;
             int n = elements.Count;
             if (moverMark == null || moverMark.Length < n) moverMark = new bool[n];
@@ -1596,8 +1671,10 @@ namespace OrbitalSalvage.Render
             {
                 if (!MotionSource(k)) continue;
                 moverMark[k] = true;
-                BoundsOf(k, out double a, out double b, out double c, out double d);
-                NoteCur(a, b, c, d);
+                double a, b, c, d;
+                if (!(RenderOpts.DirtyClip && TryShineClip(k, out a, out b, out c, out d)))
+                    BoundsOf(k, out a, out b, out c, out d);
+                NoteCur(k, a, b, c, d);
             }
             if (!want)
             {
@@ -1631,6 +1708,7 @@ namespace OrbitalSalvage.Render
                 double ah = Math.Max(0, curY1[i] - curY0[i]);
                 if (aw * ah > page * 0.85)
                 {
+                    NoteWide(curK[i], curX0[i], curY0[i], aw, ah, aw * ah / page);
                     RenderStats.DirtyFull++;
                     RenderStats.DirtyFullArea++;
                     RememberMovers();
@@ -1661,7 +1739,29 @@ namespace OrbitalSalvage.Render
                 dirtyN++;
             }
             for (int i = 0; i < curN; i++) Push(curX0[i], curY0[i], curX1[i], curY1[i]);
+            if (RenderOpts.DirtyClip) PushBackdropHoles(page);
             for (int i = 0; i < prevN; i++) Push(prevX0[i], prevY0[i], prevX1[i], prevY1[i]);
+
+            void PushBackdropHoles(double pageArea)
+            {
+                if (backdropKind == null) return;
+                int movers = dirtyN;
+                int count = elements.Count;
+                for (int k = 0; k < count; k++)
+                {
+                    if (backdropKind[k] != 1 || HiddenBox(k)) continue;
+                    var r = Rect(elements[k]);
+                    if (r[2] < 1 || r[3] < 1) continue;
+                    double pad = blurSigma != null && k < blurSigma.Length ? blurSigma[k] * 2 : 16;
+                    if (pad < 8) pad = 8;
+                    double a = r[0] - pad, b = r[1] - pad, c = r[0] + r[2] + pad, d = r[1] + r[3] + pad;
+                    if (Math.Max(0, c - a) * Math.Max(0, d - b) > pageArea * 0.45) continue;
+                    bool overlap = false;
+                    for (int i = 0; i < movers; i++)
+                        if (c > hitX0[i] && d > hitY0[i] && a < hitX1[i] && b < hitY1[i]) { overlap = true; break; }
+                    if (overlap) Push(a, b, c, d);
+                }
+            }
             RememberMovers();
             if (dirtyN == 0)
             {
@@ -1681,6 +1781,7 @@ namespace OrbitalSalvage.Render
                 if (hit && elementLayer != null && (uint)elementLayer[k] < (uint)dirtyLayer.Length)
                     dirtyLayer[elementLayer[k]] = true;
             }
+            if (RenderOpts.DirtyClip) InheritBackdropHits(n);
             long area = 0;
             for (int i = 0; i < dirtyN; i++) area += (long)(dirtyX1[i] - dirtyX0[i]) * (dirtyY1[i] - dirtyY0[i]);
             long pagePx = (long)canvas.Width * canvas.Height;
@@ -1819,7 +1920,17 @@ namespace OrbitalSalvage.Render
                 ClipToHits(k);
                 bool moving = Motion(k);
                 if (moving) BeginMotion(k);
-                if (isShine[k]) { PaintShine(e, pk, eff[k], k); if (moving) canvas.Restore(); continue; }
+                if (isShine[k])
+                {
+                    // The button clip is the painted bound. A dirty scissor would also clip the
+                    // offscreen clip mask, which drops the band.
+                    bool heldScissor = canvas.ScissorOn;
+                    if (heldScissor) canvas.SetScissorPx(0, 0, 0, 0);
+                    PaintShine(e, pk, eff[k], k);
+                    if (moving) canvas.Restore();
+                    if (heldScissor) ClipToHits(k);
+                    continue;
+                }
 
                 if (!SimplifyEffects && backdropKind[k] == 1)
                 {
@@ -1832,7 +1943,8 @@ namespace OrbitalSalvage.Render
                             && TryDrawPlayfieldBlur(rr[0], rr[1], rr[2], rr[3], blurSigma[k], eff[k]);
                         if (!covered)
                         {
-                            if ((RenderOpts.BackdropLow || RenderOpts.BackdropScope) && cacheOn && !BackdropHitsMotion(rr))
+                            bool backdropOpt = RenderOpts.BackdropLow || RenderOpts.BackdropScope || RenderOpts.BackdropHold;
+                            if (backdropOpt && cacheOn && (RenderOpts.BackdropHold || !BackdropHitsMotion(rr)))
                                 canvas.BackdropReuseId = k + 1;
                             canvas.BackdropBlur(rr[0], rr[1], rr[2], rr[3], blurSigma[k]);
                         }

@@ -423,6 +423,7 @@ namespace OrbitalSalvage.Render
                     for (int k = 0; k < 4; k++) hole[k] = new Vec2d(Math.Max(0, inner[k].x - spread), Math.Max(0, inner[k].y - spread));
                 }
                 else { hx = ix + sh.dx; hy = iy + sh.dy; hw = iw; hh = ih; }
+                if (c.TryAnalyticInset(ix + sh.dx, iy + sh.dy, iw, ih, inner, sh.color, sh.blur)) continue;
                 double pad = sh.blur + Math.Abs(sh.dx) + Math.Abs(sh.dy) + Math.Abs(sh.spread) + 4;
                 c.Save();
                 c.BeginPath();
@@ -532,8 +533,15 @@ namespace OrbitalSalvage.Render
                         c.SetFill(sh.color);
                         c.FillText(text, x + sh.dx, baseline + sh.dy);
                     }
+                    else if (RenderOpts.RoundPlus)
+                    {
+                        c.SetFill(sh.color);
+                        c.FillText(text, x + sh.dx, baseline + sh.dy);
+                        RenderStats.RoundShadow++;
+                    }
                     else
                     {
+                        if (RenderOpts.RoundShadow) RenderStats.RoundMissText++;
                         c.FillStyle = "rgba(0,0,0,1)";
                         c.SetShadow(sh.color);
                         ShadowDevice(c, sh.dx, sh.dy, OffCanvas, 0, out var devX, out var devY, out var blurScale);

@@ -16,6 +16,11 @@ namespace OrbitalSalvage.Render
         public static bool GameOne;
         public static bool RoundShadow;
         public static bool PlayHalf;
+        public static bool DirtyClip;
+        public static bool BackdropHold;
+        public static bool RoundPlus;
+        public static bool FastShape;
+        public static bool NoPrewarm;
         public static int AmbientHz;
 
         public static void Clear()
@@ -28,6 +33,11 @@ namespace OrbitalSalvage.Render
             GameOne = false;
             RoundShadow = false;
             PlayHalf = false;
+            DirtyClip = false;
+            BackdropHold = false;
+            RoundPlus = false;
+            FastShape = false;
+            NoPrewarm = false;
             AmbientHz = 0;
         }
 
@@ -42,10 +52,11 @@ namespace OrbitalSalvage.Render
             string blit = ShaderState("Canvas2D/ShadowBlit", "Hidden/Canvas2D/ShadowBlit");
             string over = ShaderState("Canvas2D/PremulOver", "Hidden/Canvas2D/PremulOver");
             string round = ShaderState("Canvas2D/RoundShadow", "Hidden/Canvas2D/RoundShadow");
+            string fast = ShaderState("Canvas2D/FastShape", "Hidden/Canvas2D/FastShape");
             string fill = Shader.Find("Hidden/Canvas2D/Fill") != null ? "find" : "missing";
             return "[Perf] boot r8=" + r8 + " rhalf=" + rh + " rfloat=" + rf
                 + " argb32=" + a32 + " argbhalf=" + ah
-                + " shadowblit=" + blit + " premul=" + over + " roundshadow=" + round + " fill=" + fill;
+                + " shadowblit=" + blit + " premul=" + over + " roundshadow=" + round + " fastshape=" + fast + " fill=" + fill;
         }
 
         static string ShaderState(string resource, string name)

@@ -382,5 +382,68 @@ namespace OrbitalSalvage.Render.Tests
             }
             finally { RenderOpts.Clear(); }
         }
+
+        [Test]
+        public void FastCircle_OffIsStableAndOnStaysFilled()
+        {
+            try
+            {
+                RenderOpts.Clear();
+                var a = RenderAt(96, DrawCirc);
+                var b = RenderAt(96, DrawCirc);
+                Assert.AreEqual(0, MaxDiff(a, b), "options off drifted");
+                int before = RenderStats.FastCirc;
+                RenderOpts.FastShape = true;
+                var on = RenderAt(96, DrawCirc);
+                Assert.Greater(RenderStats.FastCirc, before);
+                Assert.LessOrEqual(MaxDiff(a, on), 48, "circle max diff");
+                Assert.Greater(on[(96 - 1 - 48) * 96 + 48].a, 200);
+            }
+            finally { RenderOpts.Clear(); }
+        }
+
+        [Test]
+        public void RoundPlus_CountsRotatedRejectsUntilEnabled()
+        {
+            try
+            {
+                RenderOpts.Clear();
+                RenderOpts.RoundShadow = true;
+                int miss = RenderStats.RoundMissXform;
+                int hit = RenderStats.RoundShadow;
+                RenderAt(96, DrawRotatedCard);
+                Assert.Greater(RenderStats.RoundMissXform, miss, "rotated shadow was not rejected");
+                RenderOpts.RoundPlus = true;
+                int miss2 = RenderStats.RoundMissXform;
+                RenderAt(96, DrawRotatedCard);
+                Assert.AreEqual(miss2, RenderStats.RoundMissXform);
+                Assert.Greater(RenderStats.RoundShadow, hit);
+            }
+            finally { RenderOpts.Clear(); }
+        }
+
+        static void DrawCirc(Canvas2D c)
+        {
+            c.SetFill(new Rgba(0.9f, 0.2f, 0.1f, 1f));
+            c.BeginPath();
+            c.Arc(48, 48, 18, 0, System.Math.PI * 2);
+            c.Fill();
+        }
+
+        static void DrawRotatedCard(Canvas2D c)
+        {
+            c.Translate(48, 48);
+            c.Rotate(0.45);
+            var s = new CssBoxStyle();
+            s.x = -16;
+            s.y = -12;
+            s.w = 32;
+            s.h = 22;
+            for (int i = 0; i < 4; i++) s.radii[i] = new Vec2d(6, 6);
+            s.hasBg = true;
+            s.bg = new Rgba(0.2f, 0.45f, 0.9f, 1f);
+            s.shadows.Add(new CssShadow { dx = 0, dy = 2, blur = 6, spread = 0, color = new Rgba(0f, 0f, 0f, 0.6f) });
+            CssBox.Draw(c, s, 1);
+        }
     }
 }

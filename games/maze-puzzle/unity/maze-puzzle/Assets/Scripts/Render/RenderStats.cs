@@ -30,6 +30,74 @@ namespace OrbitalSalvage.Render
         public static int DirtyFullPage;
         public static int DirtyFullArea;
         public static int DirtyAreaSum;
+        public static int ShapeRect, ShapeCirc, ShapeEll, ShapeRr, ShapeStroke, ShapeOther;
+        public static int EdgeRect, EdgeCirc, EdgeEll, EdgeRr, EdgeStroke, EdgeOther;
+        public static int GameRect, GameCirc, GameEll, GameRr, GameStroke, GameOther;
+        public static int GameEdgeRect, GameEdgeCirc, GameEdgeEll, GameEdgeRr, GameEdgeStroke, GameEdgeOther;
+        public static int FastRect, FastCirc, FastEll, FastRr, FastLine;
+        public static int RoundMissXform, RoundMissInset, RoundMissText, RoundMissShader;
+        public static int PrewarmBake;
+        /// <summary>0 chrome, 1 playfield. Shape counters split on this.</summary>
+        public static int Caller;
+        /// <summary>When true, <see cref="RenderShape"/> adds its edge count to the pending kind.</summary>
+        public static bool CountShape;
+        public static int PendingKind;
+        /// <summary>Last mover whose bounds exceeded 85% of the page. Not cleared per frame.</summary>
+        public static string DirtyWide = "";
+        public static int DirtyWidePct;
+        public static string DirtyWideLogged = "";
+
+        /// <summary>kind: 0 other, 1 rect, 2 circle, 3 ellipse, 4 round-rect, 5 stroke.</summary>
+        public static void NoteCmd(int kind)
+        {
+            BumpCmd(kind, false);
+            if (Caller == 1) BumpCmd(kind, true);
+        }
+
+        public static void NoteEdge(int n)
+        {
+            if (!CountShape || n <= 0) return;
+            BumpEdge(PendingKind, n, false);
+            if (Caller == 1) BumpEdge(PendingKind, n, true);
+        }
+
+        static void BumpCmd(int kind, bool game)
+        {
+            if (game)
+            {
+                if (kind == 1) GameRect++;
+                else if (kind == 2) GameCirc++;
+                else if (kind == 3) GameEll++;
+                else if (kind == 4) GameRr++;
+                else if (kind == 5) GameStroke++;
+                else GameOther++;
+            }
+            else if (kind == 1) ShapeRect++;
+            else if (kind == 2) ShapeCirc++;
+            else if (kind == 3) ShapeEll++;
+            else if (kind == 4) ShapeRr++;
+            else if (kind == 5) ShapeStroke++;
+            else ShapeOther++;
+        }
+
+        static void BumpEdge(int kind, int n, bool game)
+        {
+            if (game)
+            {
+                if (kind == 1) GameEdgeRect += n;
+                else if (kind == 2) GameEdgeCirc += n;
+                else if (kind == 3) GameEdgeEll += n;
+                else if (kind == 4) GameEdgeRr += n;
+                else if (kind == 5) GameEdgeStroke += n;
+                else GameEdgeOther += n;
+            }
+            else if (kind == 1) EdgeRect += n;
+            else if (kind == 2) EdgeCirc += n;
+            else if (kind == 3) EdgeEll += n;
+            else if (kind == 4) EdgeRr += n;
+            else if (kind == 5) EdgeStroke += n;
+            else EdgeOther += n;
+        }
 
         public struct Snap
         {
@@ -57,6 +125,13 @@ namespace OrbitalSalvage.Render
             public int DirtyFullPage;
             public int DirtyFullArea;
             public int DirtyAreaSum;
+            public int ShapeRect, ShapeCirc, ShapeEll, ShapeRr, ShapeStroke, ShapeOther;
+            public int EdgeRect, EdgeCirc, EdgeEll, EdgeRr, EdgeStroke, EdgeOther;
+            public int GameRect, GameCirc, GameEll, GameRr, GameStroke, GameOther;
+            public int GameEdgeRect, GameEdgeCirc, GameEdgeEll, GameEdgeRr, GameEdgeStroke, GameEdgeOther;
+            public int FastRect, FastCirc, FastEll, FastRr, FastLine;
+            public int RoundMissXform, RoundMissInset, RoundMissText, RoundMissShader;
+            public int PrewarmBake;
         }
 
         public static Snap Read()
@@ -86,7 +161,14 @@ namespace OrbitalSalvage.Render
                 DirtyFullCold = DirtyFullCold,
                 DirtyFullPage = DirtyFullPage,
                 DirtyFullArea = DirtyFullArea,
-                DirtyAreaSum = DirtyAreaSum
+                DirtyAreaSum = DirtyAreaSum,
+                ShapeRect = ShapeRect, ShapeCirc = ShapeCirc, ShapeEll = ShapeEll, ShapeRr = ShapeRr, ShapeStroke = ShapeStroke, ShapeOther = ShapeOther,
+                EdgeRect = EdgeRect, EdgeCirc = EdgeCirc, EdgeEll = EdgeEll, EdgeRr = EdgeRr, EdgeStroke = EdgeStroke, EdgeOther = EdgeOther,
+                GameRect = GameRect, GameCirc = GameCirc, GameEll = GameEll, GameRr = GameRr, GameStroke = GameStroke, GameOther = GameOther,
+                GameEdgeRect = GameEdgeRect, GameEdgeCirc = GameEdgeCirc, GameEdgeEll = GameEdgeEll, GameEdgeRr = GameEdgeRr, GameEdgeStroke = GameEdgeStroke, GameEdgeOther = GameEdgeOther,
+                FastRect = FastRect, FastCirc = FastCirc, FastEll = FastEll, FastRr = FastRr, FastLine = FastLine,
+                RoundMissXform = RoundMissXform, RoundMissInset = RoundMissInset, RoundMissText = RoundMissText, RoundMissShader = RoundMissShader,
+                PrewarmBake = PrewarmBake
             };
         }
 
@@ -117,7 +199,20 @@ namespace OrbitalSalvage.Render
                 DirtyFullCold = now.DirtyFullCold - then.DirtyFullCold,
                 DirtyFullPage = now.DirtyFullPage - then.DirtyFullPage,
                 DirtyFullArea = now.DirtyFullArea - then.DirtyFullArea,
-                DirtyAreaSum = now.DirtyAreaSum - then.DirtyAreaSum
+                DirtyAreaSum = now.DirtyAreaSum - then.DirtyAreaSum,
+                ShapeRect = now.ShapeRect - then.ShapeRect, ShapeCirc = now.ShapeCirc - then.ShapeCirc, ShapeEll = now.ShapeEll - then.ShapeEll,
+                ShapeRr = now.ShapeRr - then.ShapeRr, ShapeStroke = now.ShapeStroke - then.ShapeStroke, ShapeOther = now.ShapeOther - then.ShapeOther,
+                EdgeRect = now.EdgeRect - then.EdgeRect, EdgeCirc = now.EdgeCirc - then.EdgeCirc, EdgeEll = now.EdgeEll - then.EdgeEll,
+                EdgeRr = now.EdgeRr - then.EdgeRr, EdgeStroke = now.EdgeStroke - then.EdgeStroke, EdgeOther = now.EdgeOther - then.EdgeOther,
+                GameRect = now.GameRect - then.GameRect, GameCirc = now.GameCirc - then.GameCirc, GameEll = now.GameEll - then.GameEll,
+                GameRr = now.GameRr - then.GameRr, GameStroke = now.GameStroke - then.GameStroke, GameOther = now.GameOther - then.GameOther,
+                GameEdgeRect = now.GameEdgeRect - then.GameEdgeRect, GameEdgeCirc = now.GameEdgeCirc - then.GameEdgeCirc, GameEdgeEll = now.GameEdgeEll - then.GameEdgeEll,
+                GameEdgeRr = now.GameEdgeRr - then.GameEdgeRr, GameEdgeStroke = now.GameEdgeStroke - then.GameEdgeStroke, GameEdgeOther = now.GameEdgeOther - then.GameEdgeOther,
+                FastRect = now.FastRect - then.FastRect, FastCirc = now.FastCirc - then.FastCirc, FastEll = now.FastEll - then.FastEll,
+                FastRr = now.FastRr - then.FastRr, FastLine = now.FastLine - then.FastLine,
+                RoundMissXform = now.RoundMissXform - then.RoundMissXform, RoundMissInset = now.RoundMissInset - then.RoundMissInset,
+                RoundMissText = now.RoundMissText - then.RoundMissText, RoundMissShader = now.RoundMissShader - then.RoundMissShader,
+                PrewarmBake = now.PrewarmBake - then.PrewarmBake
             };
         }
     }

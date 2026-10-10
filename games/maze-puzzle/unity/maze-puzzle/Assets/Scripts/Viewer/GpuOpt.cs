@@ -25,6 +25,11 @@ namespace OrbitalSalvage.Viewer
         public static bool GameOne { get; private set; }
         public static bool RoundShadow { get; private set; }
         public static bool PlayHalf { get; private set; }
+        public static bool DirtyClip { get; private set; }
+        public static bool BackdropHold { get; private set; }
+        public static bool RoundPlus { get; private set; }
+        public static bool FastShape { get; private set; }
+        public static bool NoPrewarm { get; private set; }
         public static int AmbientHz { get; private set; }
         public static string Active { get; private set; } = "";
 
@@ -44,6 +49,7 @@ namespace OrbitalSalvage.Viewer
         public static void Apply(string csv)
         {
             ShadowScope = ShadowLow = BackdropScope = BackdropLow = Dirty = GameOne = RoundShadow = PlayHalf = false;
+            DirtyClip = BackdropHold = RoundPlus = FastShape = NoPrewarm = false;
             AmbientHz = 0;
             if (!string.IsNullOrEmpty(csv))
             {
@@ -70,6 +76,11 @@ namespace OrbitalSalvage.Viewer
             RenderOpts.GameOne = GameOne;
             RenderOpts.RoundShadow = RoundShadow;
             RenderOpts.PlayHalf = PlayHalf;
+            RenderOpts.DirtyClip = DirtyClip;
+            RenderOpts.BackdropHold = BackdropHold;
+            RenderOpts.RoundPlus = RoundPlus;
+            RenderOpts.FastShape = FastShape;
+            RenderOpts.NoPrewarm = NoPrewarm;
             RenderOpts.AmbientHz = AmbientHz;
             if (!bootLogged && Application.isPlaying)
             {
@@ -92,6 +103,11 @@ namespace OrbitalSalvage.Viewer
             else if (tok == "gameone") GameOne = true;
             else if (tok == "rrshadow") RoundShadow = true;
             else if (tok == "playhalf") PlayHalf = true;
+            else if (tok == "dirtyclip") DirtyClip = true;
+            else if (tok == "bdhold") BackdropHold = true;
+            else if (tok == "rrplus") RoundPlus = true;
+            else if (tok == "fastshape") FastShape = true;
+            else if (tok == "noprewarm") NoPrewarm = true;
             else if (tok.StartsWith("ambhz=", StringComparison.Ordinal))
             {
                 int n;
@@ -116,6 +132,11 @@ namespace OrbitalSalvage.Viewer
             Add(GameOne, "gameone");
             Add(RoundShadow, "rrshadow");
             Add(PlayHalf, "playhalf");
+            Add(DirtyClip, "dirtyclip");
+            Add(BackdropHold, "bdhold");
+            Add(RoundPlus, "rrplus");
+            Add(FastShape, "fastshape");
+            Add(NoPrewarm, "noprewarm");
             if (AmbientHz > 0)
             {
                 if (s.Length > 0) s += ",";

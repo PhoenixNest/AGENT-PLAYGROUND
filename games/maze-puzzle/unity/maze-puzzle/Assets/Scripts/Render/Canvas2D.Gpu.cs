@@ -385,7 +385,7 @@ namespace OrbitalSalvage.Render
             int cy1 = Clamp(y1 + radSum, 0, Height);
             int cw = cx1 - cx0, ch = cy1 - cy0;
             if (cw < 1 || ch < 1) return;
-            if ((RenderOpts.BackdropLow || RenderOpts.BackdropScope) && BackdropOpt(radii, sx, sy, sw, sh, x, y, w, h, cx0, cy0, cw, ch))
+            if ((RenderOpts.BackdropLow || RenderOpts.BackdropScope || RenderOpts.BackdropHold) && BackdropOpt(radii, sx, sy, sw, sh, x, y, w, h, cx0, cy0, cw, ch))
                 return;
             bool holdScissor = ScissorOn;
             if (holdScissor) cmd.DisableScissorRect();
@@ -858,6 +858,7 @@ namespace OrbitalSalvage.Render
             if (shadow) RenderShadow(ps, evenOdd, stroke, alpha, snap);
 
             if (!EmitEdges(ps, 0, 0, out var rect, out int ebase, out int ecount, snap)) { PaintProfile.End(PaintProfile.RenderShape); return; }
+            RenderStats.NoteEdge(ecount);
             int pb = NewParams();
             if (!WritePaint(pb, stroke, alpha)) { PaintProfile.End(PaintProfile.RenderShape); return; }
             prm[pb + IdxFlags] = new Vector4(0, evenOdd ? 1 : 0, 0, 0);
@@ -970,7 +971,14 @@ namespace OrbitalSalvage.Render
 
         void ApplyClip(PolygonSet ps, bool evenOdd)
         {
-            var full = new PixelRect(0, 0, Width, Height);
+            // The clip mask is offscreen. A dirty-rect scissor would write only a corner of it
+            // and the following fill would disappear inside the hole.
+            bool resumeScissor = ScissorOn;
+            if (resumeScissor && scissorLive)
+            {
+                cmd.DisableScissorRect();
+                scissorLive = false;
+            }
             var next = NextClipRT();
             int pb = NewParams();
             SetRect(pb, 0, 0, Width, Height);
@@ -987,6 +995,7 @@ namespace OrbitalSalvage.Render
             if (state.clip != null) cmd.SetGlobalTexture(IdClipTex, state.clip);
             Draw(matMask, MaskClip, 6, pb);
             state.clip = next;
+            if (resumeScissor) EnableLiveScissor();
         }
     }
 }

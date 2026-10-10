@@ -248,13 +248,39 @@ namespace OrbitalSalvage.Render
 
         public void Fill(string rule = "nonzero")
         {
-            BuildFillPolygons(path, polys);
-            RenderShape(polys, rule == "evenodd", false, 1f);
+            int kind = KindOf(path.Simple);
+            RenderStats.NoteCmd(kind);
+            RenderStats.PendingKind = kind;
+            RenderStats.CountShape = true;
+            try
+            {
+                if (RenderOpts.FastShape && TryFastFill(path)) return;
+                BuildFillPolygons(path, polys);
+                RenderShape(polys, rule == "evenodd", false, 1f);
+            }
+            finally { RenderStats.CountShape = false; }
         }
 
         public void Stroke()
         {
-            StrokePath(path);
+            RenderStats.NoteCmd(5);
+            RenderStats.PendingKind = 5;
+            RenderStats.CountShape = true;
+            try
+            {
+                if (RenderOpts.FastShape && TryFastStroke(path)) return;
+                StrokePath(path);
+            }
+            finally { RenderStats.CountShape = false; }
+        }
+
+        static int KindOf(int simple)
+        {
+            if (simple == 1) return 2;
+            if (simple == 2) return 3;
+            if (simple == 3) return 4;
+            if (simple == 4) return 1;
+            return 0;
         }
 
         public void Clip(string rule = "nonzero")
@@ -268,8 +294,16 @@ namespace OrbitalSalvage.Render
             if (!Finite(x, y) || !Finite(w, h) || w == 0 || h == 0) return;
             tmpPath.Reset();
             tmpPath.Rect(state.ctm, x, y, w, h);
-            BuildFillPolygons(tmpPath, polys);
-            RenderShape(polys, false, false, 1f, SnapRects);
+            RenderStats.NoteCmd(1);
+            RenderStats.PendingKind = 1;
+            RenderStats.CountShape = true;
+            try
+            {
+                if (RenderOpts.FastShape && TryFastFill(tmpPath)) return;
+                BuildFillPolygons(tmpPath, polys);
+                RenderShape(polys, false, false, 1f, SnapRects);
+            }
+            finally { RenderStats.CountShape = false; }
         }
 
         public void StrokeRect(double x, double y, double w, double h)
