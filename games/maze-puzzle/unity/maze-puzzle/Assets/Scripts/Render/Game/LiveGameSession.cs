@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using OrbitalSalvage.JsCompat;
 using OrbitalSalvage.Logic;
 
@@ -29,6 +30,11 @@ namespace OrbitalSalvage.Render
         public const double DoubleTapPx = 45;
 
         static readonly string[] NomWords = { "NOM! 😋", "YUM! ✨", "GULP! 🍩", "TASTY! ⭐" };
+
+        /// <summary>When true, the physics step and <see cref="Present"/> record Stopwatch ticks. Default false, so play and stills are unchanged.</summary>
+        public static bool PhaseTiming;
+        public static long PhaseSimTicks;
+        public static long PhasePresentTicks;
 
         public readonly PhysicsEngine Physics;
         public readonly GameRenderer Renderer;
@@ -291,6 +297,8 @@ namespace OrbitalSalvage.Render
 
         void AdvanceUnpaused(double step)
         {
+            bool measure = PhaseTiming;
+            long t0 = measure ? Stopwatch.GetTimestamp() : 0;
             Physics.Update(step);
             PhysicsSteps++;
             if (!IsLevelCleared && !IsLevelFailed && ActiveSector != null)
@@ -313,10 +321,13 @@ namespace OrbitalSalvage.Render
                 }
                 else FailureCheckTimer = 0;
             }
+            if (measure) PhaseSimTicks += Stopwatch.GetTimestamp() - t0;
         }
 
         void Present(double step)
         {
+            bool measure = PhaseTiming;
+            long t0 = measure ? Stopwatch.GetTimestamp() : 0;
             if (ForceRcs) Physics.RcsThrusting = true;
             if (RenderEnabled)
             {
@@ -325,6 +336,7 @@ namespace OrbitalSalvage.Render
                 Renderer.Render(Physics, Economy, step, progress);
             }
             RenderFrames++;
+            if (measure) PhasePresentTicks += Stopwatch.GetTimestamp() - t0;
         }
 
         public void PointerDown(double clientX, double canvasLeft, double canvasWidth)

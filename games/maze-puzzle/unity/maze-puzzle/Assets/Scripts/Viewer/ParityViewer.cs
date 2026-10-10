@@ -250,17 +250,28 @@ namespace OrbitalSalvage.Viewer
         {
             SuppressLegacy();
             if (selfTesting && !shipTesting) return;
+            PerfOpen();
+            if (perfOn) PerfResumeUpdate();
+            if (perfOn)
+                PerfMaybeBeginSwitch(DevicePerf.PageId(app != null ? app.CurrentPage : null, currentId));
             if (!selfTesting) GovernQuality();
+            PerfSuspendUpdate();
+            long prewarmStamp = PerfStamp();
             PumpTabPrewarm();
+            PerfAdd(DevicePerf.Phase.Prewarm, prewarmStamp);
+            PerfResumeUpdate();
             if (!selfTesting) TrimResident();
             if (app != null) SyncApp();
             HandleInput();
+            PerfSuspendUpdate();
             Tick();
             TickLive();
+            PerfAfterFrame();
         }
 
         void OnDestroy()
         {
+            PerfShutdown();
             if (RequestReset == ResetRunningProgress) RequestReset = null;
             cache.Clear(chrome => chrome.Dispose());
             current = null;
@@ -333,6 +344,7 @@ namespace OrbitalSalvage.Viewer
             string profile = ParityPages.ResolveProfile(stateId, ParityPages.ActiveProfile);
             string key = ParityPages.CacheKey(stateId, profile, cardKinds);
             if (shownKey == key && current != null) return;
+            PerfBeginShow(stateId);
             EnsureResidentBudget();
             cache.ProtectKey = key;
             if (app != null) RefreshTabPins(profile);
@@ -341,13 +353,16 @@ namespace OrbitalSalvage.Viewer
             {
                 try
                 {
+                    long loadStamp = PerfLoadStamp();
                     chrome = HomeChrome.Load(stateId, profile);
+                    PerfLoadAdd(loadStamp);
                     if (!string.IsNullOrEmpty(cardKinds)) StampShop(chrome, cardKinds);
                 }
                 catch (Exception ex)
                 {
                     Debug.LogError("[ParityViewer] " + ex.Message);
                     cache.ProtectKey = shownKey;
+                    PerfCancelSwitch();
                     return;
                 }
                 evicted.Clear();
@@ -432,25 +447,37 @@ namespace OrbitalSalvage.Viewer
         void PaintCurrent(bool pinEnter)
         {
             if (current == null) return;
-            ProductDraws++;
-            if (selfTesting)
-            {
-                current.Draw();
-                return;
-            }
-            double ms = clock.Milliseconds;
-            bool modal = currentId != null && currentId.StartsWith("modal_", StringComparison.Ordinal);
-            bool intro = modal && ms < 400;
-            // Product path: never start a page at pageEnter opacity 0 (that is a clear RT, drawn
-            // without alpha, so the Game view is a black letterbox). Loops still run.
-            bool pin = true;
+            bool resumeUpdate = perfUpdateStamp != 0;
+            if (resumeUpdate) PerfSuspendUpdate();
+            long drawStamp = PerfStamp();
             try
             {
-                current.Draw(ms, pressIndex, pressCss, intro, pin);
+                ProductDraws++;
+                if (selfTesting)
+                {
+                    current.Draw();
+                    return;
+                }
+                double ms = clock.Milliseconds;
+                bool modal = currentId != null && currentId.StartsWith("modal_", StringComparison.Ordinal);
+                bool intro = modal && ms < 400;
+                // Product path: never start a page at pageEnter opacity 0 (that is a clear RT, drawn
+                // without alpha, so the Game view is a black letterbox). Loops still run.
+                bool pin = true;
+                try
+                {
+                    current.Draw(ms, pressIndex, pressCss, intro, pin);
+                }
+                catch (Exception ex)
+                {
+                    Debug.LogError("[ParityViewer] draw " + currentId + ": " + ex);
+                }
             }
-            catch (Exception ex)
+            finally
             {
-                Debug.LogError("[ParityViewer] draw " + currentId + ": " + ex);
+                PerfAdd(DevicePerf.Phase.Draw, drawStamp);
+                if (resumeUpdate) PerfResumeUpdate();
+                if (!selfTesting) PerfDrawn();
             }
         }
 
@@ -719,6 +746,7 @@ namespace OrbitalSalvage.Viewer
         void OnGUI()
         {
             if (pageFill == null || Screen.width < 2 || Screen.height < 2) return;
+            long guiStamp = PerfStamp();
             var full = new Rect(0, 0, Screen.width, Screen.height);
             GUI.DrawTexture(full, pageFill, ScaleMode.StretchToFill, false);
             var letter = ToGui(PageRect());
@@ -727,7 +755,11 @@ namespace OrbitalSalvage.Viewer
             if (current != null && current.Target != null)
                 GUI.DrawTexture(letter, current.Target, ScaleMode.StretchToFill, ShowPlayfield);
             DrawQualityHud();
-            if (!hintVisible || selfTesting) return;
+            if (!hintVisible || selfTesting)
+            {
+                PerfAdd(DevicePerf.Phase.Gui, guiStamp);
+                return;
+            }
             if (hintStyle == null)
             {
                 hintStyle = new GUIStyle(GUI.skin.label) { fontSize = 13 };
@@ -736,6 +768,7 @@ namespace OrbitalSalvage.Viewer
             string label = (currentId ?? "") + "    <- / -> to switch pages";
             var hint = new Rect(8, Screen.height - 22, Screen.width - 16, 20);
             GUI.Label(hint, label, hintStyle);
+            PerfAdd(DevicePerf.Phase.Gui, guiStamp);
         }
 
         void SuppressLegacy()
@@ -843,7 +876,17 @@ namespace OrbitalSalvage.Viewer
             bool modal = currentId != null && currentId.StartsWith("modal_", StringComparison.Ordinal);
             session.IsPaused = (app != null && app.IsPaused) || modal;
             session.Accumulate = true;
+            if (perfOn)
+            {
+                LiveGameSession.PhaseSimTicks = 0;
+                LiveGameSession.PhasePresentTicks = 0;
+            }
             session.Update(Time.unscaledDeltaTime);
+            if (perfOn && perf != null)
+            {
+                perf.AddTicks(DevicePerf.Phase.Sim, LiveGameSession.PhaseSimTicks);
+                perf.AddTicks(DevicePerf.Phase.Submit, LiveGameSession.PhasePresentTicks);
+            }
             if (app != null) app.SetLiveMass(session.CollectedMass, session.SpilledMass);
             ApplyQuota();
         }
@@ -862,9 +905,12 @@ namespace OrbitalSalvage.Viewer
             if (selfTesting) current.Draw();
             else
             {
+                long drawStamp = PerfStamp();
                 double ms = clock.Milliseconds;
                 bool modal = currentId != null && currentId.StartsWith("modal_", StringComparison.Ordinal);
                 current.Draw(ms, pressIndex, pressCss, modal && ms < 400, modal);
+                PerfAdd(DevicePerf.Phase.Draw, drawStamp);
+                PerfDrawn();
             }
         }
 

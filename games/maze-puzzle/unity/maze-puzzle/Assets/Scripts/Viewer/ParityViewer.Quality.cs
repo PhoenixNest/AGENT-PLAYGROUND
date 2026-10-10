@@ -60,6 +60,7 @@ namespace OrbitalSalvage.Viewer
 
             double fit = LatchedFit(now, phone);
             int fps = Application.targetFrameRate > 1 ? Application.targetFrameRate : 60;
+            double capBefore = governor.Cap;
             var decision = governor.Tick(new QualityGovernor.Observation
             {
                 Now = now,
@@ -100,6 +101,11 @@ namespace OrbitalSalvage.Viewer
             if (decision.Persist)
                 QualityGovernor.SaveScale(ScalePrefsStore.Instance, true, Screen.width, Screen.height, decision.PersistScale, phone);
             qualityReady = true;
+            if (decision.SteppedDown || decision.SteppedUp)
+            {
+                double fromScale = decision.SteppedDown ? governor.SteppedDownFrom : capBefore;
+                PerfLogGovernor(decision.SteppedDown, decision.SteppedUp, fromScale, decision.Target, governor.P95());
+            }
         }
 
         double LatchedFit(float now, bool phone)

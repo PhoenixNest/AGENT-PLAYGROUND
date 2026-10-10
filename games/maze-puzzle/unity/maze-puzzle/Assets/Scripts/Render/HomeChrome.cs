@@ -281,6 +281,10 @@ namespace OrbitalSalvage.Render
         /// <summary>How many times this chrome has baked its static layers.</summary>
         public int CacheBuilds { get; private set; }
 
+        /// <summary>When true, <see cref="EnsureCache"/> records its duration in <see cref="ProbeBakeTicks"/>. Stays false unless a device-perf page switch is open.</summary>
+        public static bool ProbeBake;
+        public static long ProbeBakeTicks;
+
         /// <summary>Build the static layer cache the product draw uses. No-op while baking is deferred.</summary>
         public void BakeStaticLayers()
         {
@@ -1192,7 +1196,19 @@ namespace OrbitalSalvage.Render
             {
                 BuildClassText();
                 bool composite = Underlay != null;
-                if (frame != null && UseLayerCache && !composite) { PaintProfile.Begin(PaintProfile.Cache); EnsureCache(); PaintProfile.End(PaintProfile.Cache); }
+                if (frame != null && UseLayerCache && !composite)
+                {
+                    PaintProfile.Begin(PaintProfile.Cache);
+                    if (ProbeBake)
+                    {
+                        long bakeStamp = System.Diagnostics.Stopwatch.GetTimestamp();
+                        EnsureCache();
+                        ProbeBakeTicks += System.Diagnostics.Stopwatch.GetTimestamp() - bakeStamp;
+                    }
+                    else
+                        EnsureCache();
+                    PaintProfile.End(PaintProfile.Cache);
+                }
                 bool settled = frame != null && !frame.PageTransform && frame.PageOpacity >= 0.999;
                 cacheOn = UseLayerCache && !composite && settled && cacheReady && paintOnlyLayer < 0 && staticLayerCount > 0;
                 lastBlit = -2;
