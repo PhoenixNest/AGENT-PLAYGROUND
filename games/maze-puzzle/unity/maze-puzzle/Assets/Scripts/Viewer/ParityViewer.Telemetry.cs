@@ -115,7 +115,23 @@ namespace OrbitalSalvage.Viewer
                 BackdropGpu = snap.BackdropGpu,
                 Shadows = snap.Shadows,
                 Blits = snap.Blits,
-                CacheBuilds = snap.CacheBuilds
+                CacheBuilds = snap.CacheBuilds,
+                Edges = snap.Edges,
+                ShadowScopeHit = snap.ShadowScopeHit,
+                ShadowLowHit = snap.ShadowLowHit,
+                ShadowCacheHit = snap.ShadowCacheHit,
+                ShadowMissClip = snap.ShadowMissClip,
+                ShadowMissFmt = snap.ShadowMissFmt,
+                ShadowMissSmall = snap.ShadowMissSmall,
+                BackdropCacheHit = snap.BackdropCacheHit,
+                BackdropCacheMiss = snap.BackdropCacheMiss,
+                RoundShadow = snap.RoundShadow,
+                DirtyFrames = snap.DirtyFrames,
+                DirtyFull = snap.DirtyFull,
+                DirtyFullCold = snap.DirtyFullCold,
+                DirtyFullPage = snap.DirtyFullPage,
+                DirtyFullArea = snap.DirtyFullArea,
+                DirtyAreaSum = snap.DirtyAreaSum
             };
         }
 

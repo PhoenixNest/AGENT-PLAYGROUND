@@ -32,6 +32,7 @@ namespace OrbitalSalvage.Render
         RenderTexture backdropLoA, backdropLoB;
         int backdropLoW, backdropLoH;
         Material matShadowBlit;
+        Material matRound;
 
         void ClearKeepRect(int x0, int y0, int x1, int y1)
         {
@@ -63,6 +64,8 @@ namespace OrbitalSalvage.Render
             backdropLoA = backdropLoB = null;
             DestroyOwned(matShadowBlit);
             matShadowBlit = null;
+            DestroyOwned(matRound);
+            matRound = null;
         }
 
         static void ReleaseSlot(ShadowSlot slot)
@@ -151,7 +154,11 @@ namespace OrbitalSalvage.Render
         bool TryShadowOpt(PixelRect rect, int ebase, int ecount, bool evenOdd, bool stroke, float alpha, double sigma, int radius)
         {
             var big = rect.Expand(radius).Intersect(new PixelRect(0, 0, Width, Height));
-            if (big.Width < 2 || big.Height < 2 || ecount < 1) return false;
+            if (big.Width < 2 || big.Height < 2 || ecount < 1)
+            {
+                RenderStats.ShadowMissSmall++;
+                return false;
+            }
             int div = 1;
             if (RenderOpts.ShadowLow) div = radius >= 8 ? 4 : 2;
             int lw = Math.Max(1, big.Width / div);
@@ -172,6 +179,7 @@ namespace OrbitalSalvage.Render
                     var b = shadowBitmaps[i];
                     if (b != null && b.hash == hash && b.w == lw && b.h == lh)
                     {
+                        RenderStats.ShadowCacheHit++;
                         BlitShadow(b.tex, big, true);
                         return true;
                     }
@@ -179,7 +187,11 @@ namespace OrbitalSalvage.Render
             }
 
             var slot = SlotFor(lw, lh, div > 1);
-            if (slot == null) return false;
+            if (slot == null)
+            {
+                RenderStats.ShadowMissFmt++;
+                return false;
+            }
             if (ScissorOn) cmd.DisableScissorRect();
 
             int lb = edgeCount;
@@ -252,6 +264,7 @@ namespace OrbitalSalvage.Render
                 prm[pbF + IdxShadow] = new Vector4(col.r, col.g, col.b, col.a);
                 Draw(matFill, FillSourceOver, 6, pbF);
                 cmd.SetGlobalVector(IdMaskOrigin, Vector4.zero);
+                RenderStats.ShadowScopeHit++;
                 return true;
             }
 
@@ -267,6 +280,7 @@ namespace OrbitalSalvage.Render
             if (cacheable) RememberShadow(hash, lw, lh, slot.color);
             BindFullTarget();
             BlitShadow(slot.color, big, true);
+            RenderStats.ShadowLowHit++;
             return true;
         }
 
@@ -359,6 +373,7 @@ namespace OrbitalSalvage.Render
                     double localSy = (sy - (Height - (cy0 + ch))) * scale;
                     DrawTexture(slot.tex, localSx, localSy, sw * scale, sh * scale, x, y, w, h);
                     state.imageSmoothing = prev;
+                    RenderStats.BackdropCacheHit++;
                     return true;
                 }
             }
@@ -406,6 +421,7 @@ namespace OrbitalSalvage.Render
             DrawTexture(result, (sx - cx0) * s, (sy - (Height - (cy0 + ch))) * s, sw * s, sh * s, x, y, w, h);
             state.imageSmoothing = smooth;
             if (id > 0) StoreBackdrop(id, div, result, bw, bh, x, y, w, h);
+            RenderStats.BackdropCacheMiss++;
             return true;
         }
 
@@ -445,6 +461,90 @@ namespace OrbitalSalvage.Render
             slot.rw = rw;
             slot.rh = rh;
             cmd.CopyTexture(src, slot.tex);
+        }
+
+        /// <summary>Clear one canvas-pixel rect (y down) without touching the rest of the target.</summary>
+        public void ClearDirty(int x0, int y0, int x1, int y1)
+        {
+            if (x1 <= x0 || y1 <= y0) return;
+            ClearKeepRect(x0, y0, x1, y1);
+        }
+
+        /// <summary>Scissor in canvas pixels, y down. A zero rect disables it.</summary>
+        public void SetScissorPx(int x0, int y0, int x1, int y1)
+        {
+            if (x1 <= x0 || y1 <= y0)
+            {
+                ScissorOn = false;
+                if (scissorLive)
+                {
+                    cmd.DisableScissorRect();
+                    scissorLive = false;
+                }
+                return;
+            }
+            ScissorOn = true;
+            ScissorX = x0;
+            ScissorY = Height - y1;
+            ScissorW = x1 - x0;
+            ScissorH = y1 - y0;
+            cmd.EnableScissorRect(new Rect(ScissorX, ScissorY, ScissorW, ScissorH));
+            scissorLive = true;
+        }
+
+        /// <summary>
+        /// One-quad gaussian of an axis-aligned rounded rect. Returns false when the option is off,
+        /// the transform is rotated, or the shader did not load, so the caller keeps the mask blur.
+        /// </summary>
+        public bool TryRoundRectShadow(double x, double y, double w, double h, Vec2d[] radii, Rgba color, double blurCss)
+        {
+            if (!RenderOpts.RoundShadow || w <= 0 || h <= 0 || blurCss <= 0 || color.a <= 0) return false;
+            var m = state.ctm;
+            if (Math.Abs(m.b) > 1e-3 || Math.Abs(m.c) > 1e-3 || m.a <= 1e-6 || m.d <= 1e-6) return false;
+            if (matRound == null)
+            {
+                var sh = Resources.Load<Shader>("Canvas2D/RoundShadow");
+                if (sh == null) sh = Shader.Find("Hidden/Canvas2D/RoundShadow");
+                if (sh == null) return false;
+                matRound = new Material(sh) { hideFlags = HideFlags.HideAndDontSave };
+            }
+            float bx = (float)(m.a * x + m.e);
+            float by = (float)(m.d * y + m.f);
+            float bw = (float)(m.a * w);
+            float bh = (float)(m.d * h);
+            float blurScale = (float)Math.Sqrt(m.a * m.a + m.b * m.b);
+            float sigma = (float)(blurCss * blurScale * 0.5);
+            if (sigma < 0.35f) sigma = 0.35f;
+            float pad = sigma * 3f + 2f;
+            int x0 = Clamp((int)Math.Floor(bx - pad), 0, Width);
+            int y0 = Clamp((int)Math.Floor(by - pad), 0, Height);
+            int x1 = Clamp((int)Math.Ceiling(bx + bw + pad), 0, Width);
+            int y1 = Clamp((int)Math.Ceiling(by + bh + pad), 0, Height);
+            if (x1 <= x0 || y1 <= y0) return false;
+            float Rad(int i)
+            {
+                if (radii == null || i >= radii.Length) return 0f;
+                float rx = (float)(radii[i].x * m.a);
+                float ry = (float)(radii[i].y * m.d);
+                return Math.Max(0f, (rx + ry) * 0.5f);
+            }
+            int pb = NewParams();
+            SetRect(pb, x0, y0, x1, y1);
+            prm[pb + IdxAlpha] = new Vector4((float)state.globalAlpha, 0, 0, 0);
+            prm[pb + IdxShadow] = new Vector4(color.r, color.g, color.b, color.a);
+            prm[pb + IdxGa] = new Vector4(bx, by, bw, bh);
+            prm[pb + IdxGb] = new Vector4(Rad(0), Rad(1), Rad(2), Rad(3));
+            prm[pb + IdxBlur] = new Vector4(sigma, 0, 0, 0);
+            if (state.clip != null)
+            {
+                prm[pb + IdxFlags] = new Vector4(0, 0, 1, 0);
+                cmd.SetGlobalTexture(IdClipTex, state.clip);
+            }
+            cmd.SetRenderTarget(target);
+            if (ScissorOn) EnableLiveScissor();
+            Draw(matRound, 0, 6, pb);
+            RenderStats.RoundShadow++;
+            return true;
         }
     }
 }

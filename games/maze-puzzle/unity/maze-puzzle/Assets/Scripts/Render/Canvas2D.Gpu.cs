@@ -218,6 +218,7 @@ namespace OrbitalSalvage.Render
             prm[pb + IdxRect] = new Vector4(0, 0, Width, Height);
             prm[pb + IdxAlpha] = new Vector4((float)state.globalAlpha, 0, 0, 0);
             cmd.SetRenderTarget(target);
+            if (ScissorOn) EnableLiveScissor();
             cmd.SetGlobalTexture(IdLayerTex, tex);
             Draw(matLayer, 0, 6, pb);
             RenderStats.Blits++;
@@ -242,6 +243,7 @@ namespace OrbitalSalvage.Render
             EnsureBuffer(ref paramBuffer, prmCount, 16);
             if (edgeCount > 0) edgeBuffer.SetData(edges, 0, 0, edgeCount);
             if (prmCount > 0) paramBuffer.SetData(prm, 0, 0, prmCount);
+            RenderStats.Edges += edgeCount;
             Shader.SetGlobalBuffer(IdEdges, edgeBuffer);
             Shader.SetGlobalBuffer(IdParams, paramBuffer);
             Shader.SetGlobalVector(IdTarget, new Vector4(Width, Height, 1f / Width, 1f / Height));
@@ -883,11 +885,15 @@ namespace OrbitalSalvage.Render
             PaintProfile.CountShadow();
             RenderStats.Shadows++;
             if (!EmitEdges(ps, dx, dy, out var rect, out int ebase, out int ecount, snap)) { PaintProfile.End(PaintProfile.Shadow); return; }
-            if (radius > 0 && state.clip == null && (RenderOpts.ShadowScope || RenderOpts.ShadowLow)
-                && TryShadowOpt(rect, ebase, ecount, evenOdd, stroke, alpha, sigma, radius))
+            if (radius > 0 && (RenderOpts.ShadowScope || RenderOpts.ShadowLow))
             {
-                PaintProfile.End(PaintProfile.Shadow);
-                return;
+                // Product box-shadows are painted inside an even-odd clip, so this stays on the old path.
+                if (state.clip != null) RenderStats.ShadowMissClip++;
+                else if (TryShadowOpt(rect, ebase, ecount, evenOdd, stroke, alpha, sigma, radius))
+                {
+                    PaintProfile.End(PaintProfile.Shadow);
+                    return;
+                }
             }
             bool resumeScissor = ScissorOn;
             if (resumeScissor) cmd.DisableScissorRect();
