@@ -410,7 +410,7 @@ namespace OrbitalSalvage.Viewer
         {
             if (Input.GetKeyDown(KeyCode.F1)) hintVisible = !hintVisible;
             if (Input.GetKeyDown(KeyCode.F2)) debugNav = !debugNav;
-            if (Input.GetKeyDown(KeyCode.F3)) qualityHud = !qualityHud;
+            if (Input.GetKeyDown(KeyCode.F3) || QualityHudTouchDown()) qualityHud = !qualityHud;
             if (debugNav)
             {
                 if (Input.GetKeyDown(KeyCode.Escape)) Show(ParityPages.HomeId);
