@@ -21,6 +21,8 @@ namespace OrbitalSalvage.Render
         public static bool RoundPlus;
         public static bool FastShape;
         public static bool NoPrewarm;
+        public static bool FastArc;
+        public static bool PlayBatch;
         public static int AmbientHz;
 
         public static void Clear()
@@ -38,6 +40,8 @@ namespace OrbitalSalvage.Render
             RoundPlus = false;
             FastShape = false;
             NoPrewarm = false;
+            FastArc = false;
+            PlayBatch = false;
             AmbientHz = 0;
         }
 

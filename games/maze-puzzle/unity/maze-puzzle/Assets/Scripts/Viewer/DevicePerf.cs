@@ -138,7 +138,10 @@ namespace OrbitalSalvage.Viewer
             public int EdgeRect, EdgeCirc, EdgeEll, EdgeRr, EdgeStroke, EdgeOther;
             public int GameRect, GameCirc, GameEll, GameRr, GameStroke, GameOther;
             public int GameEdgeRect, GameEdgeCirc, GameEdgeEll, GameEdgeRr, GameEdgeStroke, GameEdgeOther;
-            public int FastRect, FastCirc, FastEll, FastRr, FastLine;
+            public int FastRect, FastCirc, FastEll, FastRr, FastLine, FastArc;
+            public int FastBatch, FastBatchInst;
+            public int GpuAlloc, ReadPx;
+            public int[] SecDraw, SecEdge;
             public int RoundMissXform, RoundMissInset, RoundMissText, RoundMissShader;
             public int PrewarmBake;
             public string Wide;
@@ -156,6 +159,10 @@ namespace OrbitalSalvage.Viewer
             public float SimMs;
             public float SubmitMs;
             public float GuiMs;
+            public int Alloc;
+            public int ReadPx;
+            public int Gc0;
+            public int Bake;
         }
 
         readonly float[] samples = new float[Capacity];
@@ -501,7 +508,17 @@ namespace OrbitalSalvage.Viewer
             line.Append(" gse=");
             Append6(line, paint.GameEdgeRect, paint.GameEdgeCirc, paint.GameEdgeEll, paint.GameEdgeRr, paint.GameEdgeStroke, paint.GameEdgeOther);
             line.Append(" fast=");
-            Append6(line, paint.FastRect, paint.FastCirc, paint.FastEll, paint.FastRr, paint.FastLine, 0);
+            Append6(line, paint.FastRect, paint.FastCirc, paint.FastEll, paint.FastRr, paint.FastLine, paint.FastArc);
+            line.Append(" sec=");
+            AppendSec(line, paint.SecDraw, paint.SecEdge);
+            line.Append(" batch=");
+            line.Append(paint.FastBatch);
+            line.Append('/');
+            line.Append(paint.FastBatchInst);
+            line.Append(" alloc=");
+            line.Append(paint.GpuAlloc);
+            line.Append(" readpx=");
+            line.Append(paint.ReadPx);
             line.Append(" rrwhy=");
             line.Append(paint.RoundMissXform);
             line.Append('/');
@@ -542,6 +559,14 @@ namespace OrbitalSalvage.Viewer
             AppendTenths(line, hitch.SubmitMs);
             line.Append(" gui=");
             AppendTenths(line, hitch.GuiMs);
+            line.Append(" alloc=");
+            line.Append(hitch.Alloc);
+            line.Append(" readpx=");
+            line.Append(hitch.ReadPx);
+            line.Append(" gc=");
+            line.Append(hitch.Gc0);
+            line.Append(" bake=");
+            line.Append(hitch.Bake);
             return line.ToString();
         }
 
@@ -591,6 +616,19 @@ namespace OrbitalSalvage.Viewer
             sumMs += ms;
             if (count >= Capacity) return;
             samples[count++] = ms;
+        }
+
+        static void AppendSec(StringBuilder line, int[] draws, int[] edges)
+        {
+            for (int i = 0; i < 8; i++)
+            {
+                if (i > 0) line.Append(',');
+                int d = draws != null && i < draws.Length ? draws[i] : 0;
+                int e = edges != null && i < edges.Length ? edges[i] : 0;
+                line.Append(d);
+                line.Append('/');
+                line.Append(e);
+            }
         }
 
         static void Append6(StringBuilder line, int a, int b, int c, int d, int e, int f)

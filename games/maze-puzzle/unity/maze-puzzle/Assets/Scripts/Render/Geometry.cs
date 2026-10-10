@@ -91,10 +91,11 @@ namespace OrbitalSalvage.Render
         bool needMove = true;
         Vec2d lastUser;
         Vec2d startPoint;
-        /// <summary>0 none, 1 circle, 2 ellipse, 3 round-rect, 4 axis-aligned rect. User space, one subpath.</summary>
+        /// <summary>0 none, 1 circle, 2 ellipse, 3 round-rect, 4 axis-aligned rect, 5 lone circular arc. User space, one subpath.</summary>
         public int Simple;
         public double SimX, SimY, SimW, SimH, SimRx, SimRy, SimRot;
         public double SimR0, SimR1, SimR2, SimR3;
+        public double SimA0, SimSweep;
 
         public void ClearSimple() { Simple = 0; }
 
@@ -289,6 +290,19 @@ namespace OrbitalSalvage.Render
                 SimRx = rx;
                 SimRy = ry;
                 SimRot = rotation;
+            }
+            else if (RenderOpts.FastArc && !connected && subpaths.Count == 1
+                && Math.Abs(rx - ry) < 1e-6 && Math.Abs(rotation) < 1e-6
+                && Math.Abs(sweep) > 1e-4 && Math.Abs(sweep) < TwoPi - 1e-3)
+            {
+                Simple = 5;
+                SimX = cx;
+                SimY = cy;
+                SimRx = rx;
+                SimRy = ry;
+                SimRot = rotation;
+                SimA0 = a0;
+                SimSweep = sweep;
             }
             else ClearSimple();
         }

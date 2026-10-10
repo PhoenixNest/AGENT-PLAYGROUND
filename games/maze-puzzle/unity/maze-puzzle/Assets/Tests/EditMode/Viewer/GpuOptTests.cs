@@ -58,18 +58,22 @@ namespace OrbitalSalvage.Viewer.Tests
         [Test]
         public void ParsesFollowUpTokens()
         {
-            GpuOpt.Apply("dirtyclip,bdhold,rrplus,fastshape,noprewarm");
+            GpuOpt.Apply("dirtyclip,bdhold,rrplus,fastshape,noprewarm,fastarc,playbatch");
             Assert.IsTrue(RenderOpts.DirtyClip);
             Assert.IsTrue(RenderOpts.BackdropHold);
             Assert.IsTrue(RenderOpts.RoundPlus);
             Assert.IsTrue(RenderOpts.FastShape);
             Assert.IsTrue(RenderOpts.NoPrewarm);
+            Assert.IsTrue(RenderOpts.FastArc);
+            Assert.IsTrue(RenderOpts.PlayBatch);
             Assert.IsFalse(RenderOpts.Dirty);
             Assert.IsFalse(RenderOpts.RoundShadow);
             GpuOpt.Apply("");
             Assert.IsFalse(RenderOpts.DirtyClip);
             Assert.IsFalse(RenderOpts.FastShape);
             Assert.IsFalse(RenderOpts.NoPrewarm);
+            Assert.IsFalse(RenderOpts.FastArc);
+            Assert.IsFalse(RenderOpts.PlayBatch);
         }
 
         [Test]

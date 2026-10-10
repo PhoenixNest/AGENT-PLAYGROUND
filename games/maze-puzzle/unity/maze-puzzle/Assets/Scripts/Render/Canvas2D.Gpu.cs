@@ -114,6 +114,7 @@ namespace OrbitalSalvage.Render
                 name = name, filterMode = FilterMode.Point, wrapMode = TextureWrapMode.Clamp, useMipMap = false, autoGenerateMips = false,
             };
             rt.Create();
+            RenderStats.GpuAlloc++;
             return rt;
         }
 
@@ -177,6 +178,7 @@ namespace OrbitalSalvage.Render
             edgeCount = 0;
             prmCount = 0;
             DrawCount = 0;
+            fastN = 0;
             clipUsed = 0;
             state = new State();
             stack.Clear();
@@ -230,6 +232,7 @@ namespace OrbitalSalvage.Render
 
         void Submit(bool keepDrawing)
         {
+            FlushFastBatch();
             if (SkipSubmit)
             {
                 pendingDraws = 0;
@@ -316,6 +319,7 @@ namespace OrbitalSalvage.Render
             shot.ReadPixels(new Rect(wx0, wy0, ww, wh), 0, 0, false);
             PaintProfile.ReadPixelsTicks += PaintProfile.Stamp() - rp0;
             PaintProfile.CountReadPixels();
+            RenderStats.ReadPx++;
             shot.Apply(false, false);
             RenderTexture.active = prev;
             snapshots.Add(shot);
@@ -649,6 +653,7 @@ namespace OrbitalSalvage.Render
         static void EnsureBuffer(ref GraphicsBuffer buf, int count, int stride)
         {
             if (buf != null && buf.count >= Math.Max(count, 1)) return;
+            RenderStats.GpuAlloc++;
             buf?.Dispose();
             int n = 1024;
             while (n < count) n *= 2;
@@ -666,12 +671,18 @@ namespace OrbitalSalvage.Render
 
         void Draw(Material m, int pass, int verts, int pb)
         {
+            if (fastN > 0 && !fastFlushing) FlushFastBatch();
             cmd.SetGlobalFloat(IdParamBase, pb);
-            cmd.DrawProcedural(Matrix4x4.identity, m, pass, MeshTopology.Triangles, verts);
+            EmitDraw(m, pass, verts, 1);
+        }
+
+        void EmitDraw(Material m, int pass, int verts, int instances)
+        {
+            cmd.DrawProcedural(Matrix4x4.identity, m, pass, MeshTopology.Triangles, verts, instances);
             DrawCount++;
             pendingDraws++;
             RenderStats.Draws++;
-            PaintProfile.CountDraw(verts);
+            PaintProfile.CountDraw(verts * Math.Max(instances, 1));
         }
 
         void SetRect(int pb, int x0, int y0, int x1, int y1) { prm[pb + IdxRect] = new Vector4(x0, y0, x1, y1); }

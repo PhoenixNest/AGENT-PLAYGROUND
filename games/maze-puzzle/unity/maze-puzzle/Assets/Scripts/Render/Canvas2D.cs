@@ -254,7 +254,7 @@ namespace OrbitalSalvage.Render
             RenderStats.CountShape = true;
             try
             {
-                if (RenderOpts.FastShape && TryFastFill(path)) return;
+                if ((RenderOpts.FastShape || RenderOpts.FastArc) && TryFastFill(path)) return;
                 BuildFillPolygons(path, polys);
                 RenderShape(polys, rule == "evenodd", false, 1f);
             }
@@ -268,7 +268,7 @@ namespace OrbitalSalvage.Render
             RenderStats.CountShape = true;
             try
             {
-                if (RenderOpts.FastShape && TryFastStroke(path)) return;
+                if ((RenderOpts.FastShape || RenderOpts.FastArc) && TryFastStroke(path)) return;
                 StrokePath(path);
             }
             finally { RenderStats.CountShape = false; }

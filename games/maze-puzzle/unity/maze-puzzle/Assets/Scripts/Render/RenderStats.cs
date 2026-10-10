@@ -34,7 +34,12 @@ namespace OrbitalSalvage.Render
         public static int EdgeRect, EdgeCirc, EdgeEll, EdgeRr, EdgeStroke, EdgeOther;
         public static int GameRect, GameCirc, GameEll, GameRr, GameStroke, GameOther;
         public static int GameEdgeRect, GameEdgeCirc, GameEdgeEll, GameEdgeRr, GameEdgeStroke, GameEdgeOther;
-        public static int FastRect, FastCirc, FastEll, FastRr, FastLine;
+        public static int FastRect, FastCirc, FastEll, FastRr, FastLine, FastArc;
+        public static int FastBatch, FastBatchInst;
+        public static int GpuAlloc, ReadPx;
+        /// <summary>Playfield section draws. sky, hole, ring, flappers, bumpers, gates, debris, vfx.</summary>
+        public static readonly int[] SecDraw = new int[8];
+        public static readonly int[] SecEdge = new int[8];
         public static int RoundMissXform, RoundMissInset, RoundMissText, RoundMissShader;
         public static int PrewarmBake;
         /// <summary>0 chrome, 1 playfield. Shape counters split on this.</summary>
@@ -52,6 +57,13 @@ namespace OrbitalSalvage.Render
         {
             BumpCmd(kind, false);
             if (Caller == 1) BumpCmd(kind, true);
+        }
+
+        public static void NoteSec(int slot, int draws, int edges)
+        {
+            if ((uint)slot >= 8) return;
+            SecDraw[slot] += draws;
+            SecEdge[slot] += edges;
         }
 
         public static void NoteEdge(int n)
@@ -129,9 +141,35 @@ namespace OrbitalSalvage.Render
             public int EdgeRect, EdgeCirc, EdgeEll, EdgeRr, EdgeStroke, EdgeOther;
             public int GameRect, GameCirc, GameEll, GameRr, GameStroke, GameOther;
             public int GameEdgeRect, GameEdgeCirc, GameEdgeEll, GameEdgeRr, GameEdgeStroke, GameEdgeOther;
-            public int FastRect, FastCirc, FastEll, FastRr, FastLine;
+            public int FastRect, FastCirc, FastEll, FastRr, FastLine, FastArc;
+            public int FastBatch, FastBatchInst;
+            public int GpuAlloc, ReadPx;
+            public int[] SecDraw, SecEdge;
             public int RoundMissXform, RoundMissInset, RoundMissText, RoundMissShader;
             public int PrewarmBake;
+        }
+
+        static int[] Copy8(int[] src)
+        {
+            var d = new int[8];
+            if (src != null)
+            {
+                int n = src.Length < 8 ? src.Length : 8;
+                for (int i = 0; i < n; i++) d[i] = src[i];
+            }
+            return d;
+        }
+
+        static int[] Sub8(int[] now, int[] then)
+        {
+            var d = new int[8];
+            for (int i = 0; i < 8; i++)
+            {
+                int a = now != null && i < now.Length ? now[i] : 0;
+                int b = then != null && i < then.Length ? then[i] : 0;
+                d[i] = a - b;
+            }
+            return d;
         }
 
         public static Snap Read()
@@ -166,7 +204,10 @@ namespace OrbitalSalvage.Render
                 EdgeRect = EdgeRect, EdgeCirc = EdgeCirc, EdgeEll = EdgeEll, EdgeRr = EdgeRr, EdgeStroke = EdgeStroke, EdgeOther = EdgeOther,
                 GameRect = GameRect, GameCirc = GameCirc, GameEll = GameEll, GameRr = GameRr, GameStroke = GameStroke, GameOther = GameOther,
                 GameEdgeRect = GameEdgeRect, GameEdgeCirc = GameEdgeCirc, GameEdgeEll = GameEdgeEll, GameEdgeRr = GameEdgeRr, GameEdgeStroke = GameEdgeStroke, GameEdgeOther = GameEdgeOther,
-                FastRect = FastRect, FastCirc = FastCirc, FastEll = FastEll, FastRr = FastRr, FastLine = FastLine,
+                FastRect = FastRect, FastCirc = FastCirc, FastEll = FastEll, FastRr = FastRr, FastLine = FastLine, FastArc = FastArc,
+                FastBatch = FastBatch, FastBatchInst = FastBatchInst,
+                GpuAlloc = GpuAlloc, ReadPx = ReadPx,
+                SecDraw = Copy8(SecDraw), SecEdge = Copy8(SecEdge),
                 RoundMissXform = RoundMissXform, RoundMissInset = RoundMissInset, RoundMissText = RoundMissText, RoundMissShader = RoundMissShader,
                 PrewarmBake = PrewarmBake
             };
@@ -209,7 +250,10 @@ namespace OrbitalSalvage.Render
                 GameEdgeRect = now.GameEdgeRect - then.GameEdgeRect, GameEdgeCirc = now.GameEdgeCirc - then.GameEdgeCirc, GameEdgeEll = now.GameEdgeEll - then.GameEdgeEll,
                 GameEdgeRr = now.GameEdgeRr - then.GameEdgeRr, GameEdgeStroke = now.GameEdgeStroke - then.GameEdgeStroke, GameEdgeOther = now.GameEdgeOther - then.GameEdgeOther,
                 FastRect = now.FastRect - then.FastRect, FastCirc = now.FastCirc - then.FastCirc, FastEll = now.FastEll - then.FastEll,
-                FastRr = now.FastRr - then.FastRr, FastLine = now.FastLine - then.FastLine,
+                FastRr = now.FastRr - then.FastRr, FastLine = now.FastLine - then.FastLine, FastArc = now.FastArc - then.FastArc,
+                FastBatch = now.FastBatch - then.FastBatch, FastBatchInst = now.FastBatchInst - then.FastBatchInst,
+                GpuAlloc = now.GpuAlloc - then.GpuAlloc, ReadPx = now.ReadPx - then.ReadPx,
+                SecDraw = Sub8(now.SecDraw, then.SecDraw), SecEdge = Sub8(now.SecEdge, then.SecEdge),
                 RoundMissXform = now.RoundMissXform - then.RoundMissXform, RoundMissInset = now.RoundMissInset - then.RoundMissInset,
                 RoundMissText = now.RoundMissText - then.RoundMissText, RoundMissShader = now.RoundMissShader - then.RoundMissShader,
                 PrewarmBake = now.PrewarmBake - then.PrewarmBake
