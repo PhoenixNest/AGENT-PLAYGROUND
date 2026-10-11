@@ -319,12 +319,20 @@ namespace OrbitalSalvage.Viewer
         double DesiredRasterScale()
         {
             double forced = PlayQuality.Forced;
-            if (forced > 0) return QualityGovernor.SnapStep(forced, false);
-            if (current != null) return current.RasterScale;
             bool phone = QualityGovernor.IsPhone(Application.isMobilePlatform, SystemInfo.deviceType);
-            double target = Math.Min(governor.Cap, latchedFit);
-            if (target < 1) target = 1;
-            return QualityGovernor.SnapStep(target, phone);
+            int memoryMb = SystemInfo.systemMemorySize;
+            double scale;
+            if (forced > 0) scale = QualityGovernor.SnapStep(forced, false);
+            else if (current != null) scale = current.RasterScale;
+            else
+            {
+                scale = Math.Min(governor.Cap, latchedFit);
+                if (scale < 1) scale = 1;
+                scale = QualityGovernor.SnapStep(scale, phone, memoryMb);
+            }
+            if (phone && QualityGovernor.CapsRasterAt2(memoryMb) && scale > QualityGovernor.PhoneFloor + 0.01)
+                scale = QualityGovernor.PhoneFloor;
+            return scale;
         }
 
         void RefreshTabPins(string profile)

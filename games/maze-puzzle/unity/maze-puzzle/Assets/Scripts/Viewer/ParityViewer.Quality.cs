@@ -50,6 +50,7 @@ namespace OrbitalSalvage.Viewer
             float dt = Time.unscaledDeltaTime;
             if (dt < 0) dt = 0;
             bool phone = QualityGovernor.IsPhone(Application.isMobilePlatform, SystemInfo.deviceType);
+            int memoryMb = SystemInfo.systemMemorySize;
             if (!governor.BootNoted) governor.NoteBoot(now);
             governor.WatchPage(currentId, now);
             bool accepted = governor.AcceptSample(now, dt);
@@ -60,12 +61,17 @@ namespace OrbitalSalvage.Viewer
                 qualityBooted = true;
                 if (forced <= 0 && !benchSession)
                 {
-                    double saved = QualityGovernor.LoadScale(ScalePrefsStore.Instance, Screen.width, Screen.height, phone);
+                    double saved = QualityGovernor.LoadScale(ScalePrefsStore.Instance, Screen.width, Screen.height, phone, memoryMb);
                     if (saved > 0) governor.Cap = saved;
+                }
+                if (QualityGovernor.CapsRasterAt2(memoryMb))
+                {
+                    if (governor.Cap > QualityGovernor.PhoneFloor + 0.01) governor.Cap = QualityGovernor.PhoneFloor;
+                    if (latchedFit > QualityGovernor.PhoneFloor + 0.01) latchedFit = QualityGovernor.PhoneFloor;
                 }
             }
 
-            double fit = LatchedFit(now, phone);
+            double fit = LatchedFit(now, phone, memoryMb);
             int fps = Application.targetFrameRate > 1 ? Application.targetFrameRate : 60;
             double capBefore = governor.Cap;
             var decision = governor.Tick(new QualityGovernor.Observation
@@ -82,7 +88,8 @@ namespace OrbitalSalvage.Viewer
                 Width = Screen.width,
                 Height = Screen.height,
                 HasRaster = current != null,
-                RasterScale = current != null ? current.RasterScale : fit
+                RasterScale = current != null ? current.RasterScale : fit,
+                MemoryMb = memoryMb
             });
 
             double target = decision.Target;
@@ -117,11 +124,11 @@ namespace OrbitalSalvage.Viewer
             }
         }
 
-        double LatchedFit(float now, bool phone)
+        double LatchedFit(float now, bool phone, int memoryMb)
         {
             int w = Screen.width, h = Screen.height;
             if (w < 2 || h < 2) return latchedFit;
-            double fit = QualityGovernor.SnapStep(Math.Min(w / (double)ParityPages.CssWidth, h / (double)ParityPages.CssHeight), phone);
+            double fit = QualityGovernor.SnapStep(Math.Min(w / (double)ParityPages.CssWidth, h / (double)ParityPages.CssHeight), phone, memoryMb);
             if (Math.Abs(fit - latchedFit) < 0.2)
             {
                 fitChangedAt = -1f;

@@ -6,16 +6,26 @@ namespace OrbitalSalvage.Viewer
 {
     /// <summary>
     /// Device A/B switches. PlayerPrefs <see cref="PrefKey"/> is a comma-separated list.
-    /// When the pref is missing or empty, <see cref="Defaults"/> is used (empty = every option off).
-    /// Flip <see cref="Defaults"/> to turn a confirmed set on without another code change.
+    /// An empty pref uses <see cref="MobileDefaults"/> on an iOS or Android player and
+    /// <see cref="Defaults"/> everywhere else (empty, so editor stills stay pinned).
+    /// A saved pref replaces that set entirely. <c>none</c> and <c>default</c> leave every option off.
     /// The product reads the pref once, on the first <see cref="Apply()"/> call.
     /// </summary>
     public static class GpuOpt
     {
         public const string PrefKey = "os.parity.opt";
 
-        /// <summary>One-line default. Empty keeps the product path. Example: "shadowscope,shadowlow,backdroplow,dirty".</summary>
+        /// <summary>Desktop and editor default. Empty keeps the pinned stills and reference hashes.</summary>
         public static string Defaults = "";
+
+        /// <summary>iOS and Android player default. A non-empty <see cref="PrefKey"/> replaces this entirely.</summary>
+        public const string MobileDefaults = "rrshadow,rrplus,backdroplow,playhalf,fastshape,fastarc,playbatch";
+
+        /// <summary>True on an iOS or Android player. Tests replace this; the editor stays false.</summary>
+        public static Func<bool> IsMobilePlayer = DetectMobilePlayer;
+
+        /// <summary>Platform default chosen by the last <see cref="Apply()"/>, before a pref override.</summary>
+        public static string ChosenDefaults { get; private set; } = "";
 
         public static bool ShadowScope { get; private set; }
         public static bool ShadowLow { get; private set; }
@@ -44,7 +54,26 @@ namespace OrbitalSalvage.Viewer
             if (latched) return;
             latched = true;
             string pref = PlayerPrefs.GetString(PrefKey, "");
-            Apply(string.IsNullOrEmpty(pref) ? Defaults : pref);
+            ChosenDefaults = PlatformDefaults(IsMobilePlayer());
+            Apply(Resolve(pref, IsMobilePlayer()));
+        }
+
+        public static bool DetectMobilePlayer()
+        {
+            RuntimePlatform platform = Application.platform;
+            return platform == RuntimePlatform.IPhonePlayer || platform == RuntimePlatform.Android;
+        }
+
+        public static string PlatformDefaults(bool mobile)
+        {
+            return mobile ? MobileDefaults : Defaults;
+        }
+
+        /// <summary>A saved pref wins outright, including <c>none</c> and <c>default</c>. Empty uses the platform default.</summary>
+        public static string Resolve(string pref, bool mobile)
+        {
+            if (!string.IsNullOrEmpty(pref)) return pref;
+            return PlatformDefaults(mobile);
         }
 
         /// <summary>Parse <paramref name="csv"/> and push the flags. Does not latch, so tests can override.</summary>
@@ -89,7 +118,8 @@ namespace OrbitalSalvage.Viewer
             if (!bootLogged && Application.isPlaying)
             {
                 bootLogged = true;
-                Debug.Log(RenderOpts.BootLine() + " active=" + Active);
+                string defaults = string.IsNullOrEmpty(ChosenDefaults) ? "none" : ChosenDefaults;
+                Debug.Log(RenderOpts.BootLine() + " active=" + Active + " defaults=" + defaults);
             }
         }
 
@@ -98,7 +128,7 @@ namespace OrbitalSalvage.Viewer
 
         static void Token(string tok)
         {
-            if (tok.Length == 0 || tok == "none") return;
+            if (tok.Length == 0 || tok == "none" || tok == "default") return;
             if (tok == "shadowscope") ShadowScope = true;
             else if (tok == "shadowlow") ShadowLow = true;
             else if (tok == "backdropscope") BackdropScope = true;
