@@ -77,6 +77,55 @@ namespace OrbitalSalvage.Viewer.Tests
         }
 
         [Test]
+        public void MobileDefaults_ApplyOnlyWhenThePlatformSaysSo()
+        {
+            Assert.AreEqual("", GpuOpt.Defaults);
+            Assert.AreEqual("", GpuOpt.Resolve("", false));
+            Assert.AreEqual(GpuOpt.MobileDefaults, GpuOpt.Resolve("", true));
+            Assert.AreEqual("none", GpuOpt.Resolve("none", true));
+            Assert.AreEqual("fastarc", GpuOpt.Resolve("fastarc", true));
+
+            GpuOpt.Apply(GpuOpt.Resolve("", false));
+            Assert.IsFalse(RenderOpts.RoundShadow);
+            Assert.IsFalse(RenderOpts.PlayHalf);
+            Assert.IsFalse(RenderOpts.PlayBatch);
+
+            GpuOpt.Apply(GpuOpt.Resolve("", true));
+            Assert.IsTrue(RenderOpts.RoundShadow);
+            Assert.IsTrue(RenderOpts.RoundPlus);
+            Assert.IsTrue(RenderOpts.BackdropLow);
+            Assert.IsTrue(RenderOpts.PlayHalf);
+            Assert.IsTrue(RenderOpts.FastShape);
+            Assert.IsTrue(RenderOpts.FastArc);
+            Assert.IsTrue(RenderOpts.PlayBatch);
+            Assert.IsFalse(RenderOpts.Dirty);
+            Assert.IsFalse(RenderOpts.DirtyClip);
+            Assert.IsFalse(RenderOpts.BackdropHold);
+            Assert.IsFalse(RenderOpts.NoPrewarm);
+            Assert.That(GpuOpt.Active, Does.Contain("rrshadow"));
+            Assert.That(GpuOpt.Active, Does.Contain("playbatch"));
+            Assert.That(GpuOpt.Active, Does.Not.Contain("dirty"));
+
+            bool previous = GpuOpt.IsMobilePlayer();
+            GpuOpt.IsMobilePlayer = () => !previous;
+            try
+            {
+                Assert.AreNotEqual(previous, GpuOpt.IsMobilePlayer());
+            }
+            finally
+            {
+                GpuOpt.IsMobilePlayer = GpuOpt.DetectMobilePlayer;
+            }
+
+            GpuOpt.Apply("none");
+            Assert.IsFalse(RenderOpts.RoundShadow);
+            Assert.IsFalse(RenderOpts.PlayBatch);
+            GpuOpt.Apply("default");
+            Assert.IsFalse(RenderOpts.FastArc);
+            Assert.IsFalse(RenderOpts.PlayHalf);
+        }
+
+        [Test]
         public void AmbhzIgnoresOutOfRange()
         {
             GpuOpt.Apply("ambhz=0,ambhz=90,ambhz=30");

@@ -180,6 +180,8 @@ namespace OrbitalSalvage.Viewer
                 Resident = ResidentCacheBytes,
                 Budget = cache.ByteBudget,
                 MemoryMb = SystemInfo.systemMemorySize,
+                FootprintMb = DeviceMemory.FootprintMb(),
+                AvailMb = DeviceMemory.AvailableMb(),
                 Thermal = PerfThermal()
             };
             return counters;

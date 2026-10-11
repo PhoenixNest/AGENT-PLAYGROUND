@@ -98,6 +98,8 @@ namespace OrbitalSalvage.Viewer
             public long Resident;
             public long Budget;
             public int MemoryMb;
+            public long FootprintMb;
+            public long AvailMb;
             public string Thermal;
         }
 
@@ -435,6 +437,10 @@ namespace OrbitalSalvage.Viewer
             line.Append(counters.Budget);
             line.Append(" mem=");
             line.Append(counters.MemoryMb);
+            line.Append(" footprint=");
+            line.Append(counters.FootprintMb);
+            line.Append(" avail=");
+            line.Append(counters.AvailMb);
             if (!string.IsNullOrEmpty(counters.Thermal))
             {
                 line.Append(" thermal=");

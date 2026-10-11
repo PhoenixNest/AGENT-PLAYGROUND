@@ -145,13 +145,44 @@ namespace OrbitalSalvage.Viewer.Tests
             Assert.IsFalse(QualityGovernor.ShouldSimplify(false, true, 0, 1));
             Assert.IsTrue(QualityGovernor.ShouldSimplify(true, true, 0, 3));
 
-            var gov = new QualityGovernor { Cap = 3 };
-            gov.Tick(Frame(0f, 0.200f, true, 3));
-            var down = gov.Tick(Frame(1.6f, 0.200f, true, 3));
+            var phone = new QualityGovernor { Cap = 3 };
+            phone.Tick(Frame(0f, 0.200f, true, 3));
+            var down = phone.Tick(Frame(1.6f, 0.200f, true, 3));
             Assert.AreEqual(2, down.Target, 0.001);
-            gov.Tick(Frame(1.7f, 0.200f, true, 2));
-            var held = gov.Tick(Frame(3.4f, 0.200f, true, 2));
+            phone.Tick(Frame(1.7f, 0.200f, true, 2));
+            var held = phone.Tick(Frame(3.4f, 0.200f, true, 2));
             Assert.AreEqual(2, held.Target, 0.001);
+        }
+
+        [Test]
+        public void LowRamPhone_NeverUsesScale3()
+        {
+            Assert.IsTrue(QualityGovernor.CapsRasterAt2(3072));
+            Assert.IsTrue(QualityGovernor.CapsRasterAt2(3500));
+            Assert.IsFalse(QualityGovernor.CapsRasterAt2(3501));
+            Assert.IsFalse(QualityGovernor.CapsRasterAt2(0));
+            CollectionAssert.AreEqual(new[] { 2d }, QualityGovernor.Steps(true, 3072));
+            CollectionAssert.AreEqual(new[] { 2d, 3d }, QualityGovernor.Steps(true, 4096));
+            Assert.AreEqual(2, QualityGovernor.SnapStep(3, true, 3072), 0.001);
+            Assert.AreEqual(3, QualityGovernor.SnapStep(3, true, 4096), 0.001);
+            Assert.AreEqual(2, QualityGovernor.FitScale(1170, 2532, 430, 932, true, 3000), 0.001);
+            Assert.AreEqual(3, QualityGovernor.FitScale(1170, 2532, 430, 932, true, 6000), 0.001);
+            Assert.AreEqual(2, QualityGovernor.StepUp(2, true, 3072), 0.001);
+            Assert.AreEqual(3, QualityGovernor.StepUp(2, true, 4096), 0.001);
+
+            var prefs = new MemoryPrefs();
+            prefs.SetFloat(QualityGovernor.ScalePrefKey(1125, 2436), 3f);
+            Assert.AreEqual(2, QualityGovernor.LoadScale(prefs, 1125, 2436, true, 3072), 0.001);
+            Assert.AreEqual(3, QualityGovernor.LoadScale(prefs, 1125, 2436, true, 4096), 0.001);
+
+            var gov = new QualityGovernor { Cap = 3 };
+            var decision = gov.Tick(Frame(20f, 0.010f, true, 3, memoryMb: 3072));
+            Assert.AreEqual(2, decision.Target, 0.001);
+            Assert.AreEqual(2, gov.Cap, 0.001);
+
+            var roomy = new QualityGovernor { Cap = 2 };
+            var climbed = roomy.Tick(Frame(20f, 0.010f, true, 3, memoryMb: 4096));
+            Assert.AreEqual(3, climbed.Target, 0.001);
         }
 
         [Test]
@@ -331,7 +362,7 @@ namespace OrbitalSalvage.Viewer.Tests
         static QualityGovernor.Observation Frame(
             float now, float p95, bool phone, double fit,
             int count = 40, bool accepted = true, double forced = 0,
-            int fps = 60, bool hasRaster = true, double raster = -1)
+            int fps = 60, bool hasRaster = true, double raster = -1, int memoryMb = 0)
         {
             return new QualityGovernor.Observation
             {
@@ -347,7 +378,8 @@ namespace OrbitalSalvage.Viewer.Tests
                 Height = 2532,
                 HasRaster = hasRaster,
                 RasterScale = raster < 0 ? fit : raster,
-                ProbeSkipBlur = false
+                ProbeSkipBlur = false,
+                MemoryMb = memoryMb
             };
         }
 

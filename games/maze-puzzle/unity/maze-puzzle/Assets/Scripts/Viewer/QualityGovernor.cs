@@ -23,6 +23,9 @@ namespace OrbitalSalvage.Viewer
 
         public static readonly double[] DesktopSteps = { 1, 1.5, 2, 3 };
         public static readonly double[] PhoneSteps = { 2, 3 };
+        public static readonly double[] LowRamPhoneSteps = { 2 };
+        /// <summary>Phones at or under this <see cref="SystemInfo.systemMemorySize"/> never use raster scale 3. iPhone X reports about 3 GB.</summary>
+        public const int LowRamMb = 3500;
 
         readonly float[] samples = new float[SampleWindow];
         readonly float[] sort = new float[SampleWindow];
@@ -69,6 +72,8 @@ namespace OrbitalSalvage.Viewer
             public int Height;
             public bool HasRaster;
             public double RasterScale;
+            /// <summary><see cref="SystemInfo.systemMemorySize"/>. Zero means unknown and is not treated as low-RAM.</summary>
+            public int MemoryMb;
         }
 
         public struct Decision
@@ -82,7 +87,18 @@ namespace OrbitalSalvage.Viewer
             public bool SimplifyEffects;
         }
 
-        public static double[] Steps(bool phone) => phone ? PhoneSteps : DesktopSteps;
+        /// <summary>A reported size of 1..3500 MB caps the phone at scale 2. Zero and desktop sizes do not.</summary>
+        public static bool CapsRasterAt2(int systemMemoryMb)
+        {
+            return systemMemoryMb > 0 && systemMemoryMb <= LowRamMb;
+        }
+
+        public static double[] Steps(bool phone, int systemMemoryMb = int.MaxValue)
+        {
+            if (!phone) return DesktopSteps;
+            if (CapsRasterAt2(systemMemoryMb)) return LowRamPhoneSteps;
+            return PhoneSteps;
+        }
 
         public static bool IsPhone(bool isMobilePlatform, DeviceType deviceType)
         {
@@ -99,8 +115,9 @@ namespace OrbitalSalvage.Viewer
             return "os.parity.scale." + w.ToString(CultureInfo.InvariantCulture) + "x" + h.ToString(CultureInfo.InvariantCulture);
         }
 
-        public static double SnapStep(double value, bool phone)
+        public static double SnapStep(double value, bool phone, int systemMemoryMb = int.MaxValue)
         {
+            if (phone && CapsRasterAt2(systemMemoryMb)) return PhoneFloor;
             if (phone)
             {
                 if (value >= 2.6) return 3;
@@ -112,25 +129,25 @@ namespace OrbitalSalvage.Viewer
             return 1;
         }
 
-        public static double StepDown(double scale, bool phone)
+        public static double StepDown(double scale, bool phone, int systemMemoryMb = int.MaxValue)
         {
-            double[] steps = Steps(phone);
+            double[] steps = Steps(phone, systemMemoryMb);
             for (int i = steps.Length - 1; i >= 0; i--)
                 if (steps[i] < scale - 0.05) return steps[i];
             return steps[0];
         }
 
-        public static double StepUp(double scale, bool phone)
+        public static double StepUp(double scale, bool phone, int systemMemoryMb = int.MaxValue)
         {
-            double[] steps = Steps(phone);
+            double[] steps = Steps(phone, systemMemoryMb);
             for (int i = 0; i < steps.Length; i++)
                 if (steps[i] > scale + 0.05) return steps[i];
             return steps[steps.Length - 1];
         }
 
-        public static double ImpliedScale(double scale, float p95, bool phone)
+        public static double ImpliedScale(double scale, float p95, bool phone, int systemMemoryMb = int.MaxValue)
         {
-            double[] steps = Steps(phone);
+            double[] steps = Steps(phone, systemMemoryMb);
             double floor = steps[0];
             const double budget = 0.0166;
             if (p95 <= budget) return scale;
@@ -144,12 +161,12 @@ namespace OrbitalSalvage.Viewer
             return best;
         }
 
-        public static double FitScale(int width, int height, double cssWidth, double cssHeight, bool phone)
+        public static double FitScale(int width, int height, double cssWidth, double cssHeight, bool phone, int systemMemoryMb = int.MaxValue)
         {
             if (width < 2 || height < 2 || cssWidth < 1 || cssHeight < 1)
                 return phone ? PhoneFloor : 3;
             double raw = Math.Min(width / cssWidth, height / cssHeight);
-            return SnapStep(raw, phone);
+            return SnapStep(raw, phone, systemMemoryMb);
         }
 
         public static double ComfortCeiling(int targetFrameRate)
@@ -209,7 +226,7 @@ namespace OrbitalSalvage.Viewer
             return showing;
         }
 
-        public static double LoadScale(IScalePrefs prefs, int w, int h, bool phone)
+        public static double LoadScale(IScalePrefs prefs, int w, int h, bool phone, int systemMemoryMb = int.MaxValue)
         {
             if (prefs == null || w < 2 || h < 2) return 0;
             string key = ScalePrefKey(w, h);
@@ -217,7 +234,7 @@ namespace OrbitalSalvage.Viewer
             float saved = prefs.GetFloat(key, 0f);
             if (saved <= 0f) return 0;
             if (phone && saved < PhoneFloor - 0.01) return 0;
-            return SnapStep(saved, phone);
+            return SnapStep(saved, phone, systemMemoryMb);
         }
 
         public static bool SaveScale(IScalePrefs prefs, bool persist, int w, int h, double scale, bool phone)
@@ -315,8 +332,8 @@ namespace OrbitalSalvage.Viewer
                     if (sustained && cooled)
                     {
                         double cur = Math.Min(Cap, o.Fit);
-                        double implied = ImpliedScale(cur, o.P95, phone);
-                        double one = StepDown(cur, phone);
+                        double implied = ImpliedScale(cur, o.P95, phone, o.MemoryMb);
+                        double one = StepDown(cur, phone, o.MemoryMb);
                         double next = implied < cur - 0.05 ? implied : one;
                         if (next < cur - 0.05)
                         {
@@ -337,7 +354,7 @@ namespace OrbitalSalvage.Viewer
                     SlowSince = float.NaN;
                     if (o.P95 <= ComfortCeiling(o.TargetFrameRate) && o.Now - LastStepAt >= StepUpCooldownSeconds)
                     {
-                        double up = StepUp(Cap, phone);
+                        double up = StepUp(Cap, phone, o.MemoryMb);
                         bool blocked = BlockedUpFrom > 0 && up >= BlockedUpFrom - 0.05;
                         if (!blocked && up <= o.Fit + 0.01 && up > Cap + 0.05)
                         {
@@ -351,6 +368,12 @@ namespace OrbitalSalvage.Viewer
 
                 target = Math.Min(Cap, o.Fit);
                 if (phone && target < PhoneFloor - 0.01) target = PhoneFloor;
+            }
+
+            if (phone && CapsRasterAt2(o.MemoryMb))
+            {
+                if (Cap > PhoneFloor + 0.01) Cap = PhoneFloor;
+                if (target > PhoneFloor + 0.01) target = PhoneFloor;
             }
 
             bool resized = o.HasRaster && Math.Abs(o.RasterScale - target) >= 0.05;
