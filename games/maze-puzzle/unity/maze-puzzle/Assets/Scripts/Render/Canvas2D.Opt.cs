@@ -37,8 +37,10 @@ namespace OrbitalSalvage.Render
         GraphicsBuffer fastBuf;
         uint[] fastBase = new uint[64];
         int fastN;
+        int fastFlushed;
         bool fastFlushing;
         static readonly int IdFastBase = Shader.PropertyToID("_C2D_FastBase");
+        static readonly int IdFastOffset = Shader.PropertyToID("_C2D_FastOffset");
 
         void ClearKeepRect(int x0, int y0, int x1, int y1)
         {
@@ -77,6 +79,7 @@ namespace OrbitalSalvage.Render
             fastBuf?.Dispose();
             fastBuf = null;
             fastN = 0;
+            fastFlushed = 0;
         }
 
         static void ReleaseSlot(ShadowSlot slot)
@@ -220,6 +223,9 @@ namespace OrbitalSalvage.Render
             if (lx1 <= lx0) lx1 = Math.Min(lw, lx0 + 1);
             if (ly1 <= ly0) ly1 = Math.Min(lh, ly0 + 1);
 
+            // The batch belongs on the canvas. Flushing after this target switch
+            // would paint the coverage pass onto the canvas and leave the slot empty.
+            FlushFastBatch();
             cmd.SetGlobalVector(IdTarget, new Vector4(lw, lh, 1f / lw, 1f / lh));
             cmd.SetGlobalVector(IdMaskOrigin, Vector4.zero);
             cmd.SetGlobalTexture(IdAccum, slot.accum);
@@ -395,6 +401,7 @@ namespace OrbitalSalvage.Render
             }
 
             if (ScissorOn) cmd.DisableScissorRect();
+            FlushFastBatch();
             BlurPair hi = BlurPairFor(cw, ch);
             cmd.CopyTexture(target, 0, 0, cx0, cy0, cw, ch, hi.a, 0, 0, 0, 0);
             RenderTexture result = hi.a;
@@ -816,31 +823,48 @@ namespace OrbitalSalvage.Render
             Draw(matFast, 0, 6, pb);
         }
 
-        /// <summary>Emits one instanced draw for analytic quads queued by <c>playbatch</c>. No-op when the queue is empty.</summary>
+        /// <summary>
+        /// One draw for the analytic quads queued since the previous flush.
+        /// Indices append for the whole submit. The GPU buffer is filled once, in
+        /// <see cref="UploadFastIndices"/>, before the command buffer runs.
+        /// </summary>
         public void FlushFastBatch()
         {
-            if (fastN <= 0 || fastFlushing) return;
+            if (fastN <= fastFlushed || fastFlushing) return;
             fastFlushing = true;
-            int n = fastN;
-            if (fastBuf == null || fastBuf.count < n)
+            int start = fastFlushed;
+            int n = fastN - start;
+            fastFlushed = fastN;
+            // Per-draw uniform on the command buffer. One shared value updated with
+            // SetGlobalFloat before execute would still be the last batch's offset.
+            cmd.SetGlobalFloat(IdFastOffset, start);
+            cmd.SetRenderTarget(target);
+            if (ScissorOn) EnableLiveScissor();
+            EmitDraw(matFast, 1, 6 * n, 1);
+            RenderStats.FastBatch++;
+            RenderStats.FastBatchInst += n;
+            RenderStats.FastBatchOffsetSum += start;
+            fastFlushing = false;
+        }
+
+        /// <summary>
+        /// Copy the whole index list now. A recorded SetBufferData would read this array
+        /// again at execute time, so a later batch's rewrite of the same prefix became
+        /// every earlier draw on the A11.
+        /// </summary>
+        internal void UploadFastIndices()
+        {
+            if (fastN <= 0) return;
+            if (fastBuf == null || fastBuf.count < fastN)
             {
                 fastBuf?.Dispose();
                 int cap = 64;
-                while (cap < n) cap *= 2;
+                while (cap < fastN) cap *= 2;
                 fastBuf = new GraphicsBuffer(GraphicsBuffer.Target.Structured, cap, 4);
                 RenderStats.GpuAlloc++;
             }
-            // Record the copy. A later flush in this frame must not overwrite the GPU buffer
-            // before the earlier draw executes.
-            cmd.SetBufferData(fastBuf, fastBase, 0, 0, n);
-            fastN = 0;
-            cmd.SetGlobalBuffer(IdFastBase, fastBuf);
-            cmd.SetRenderTarget(target);
-            if (ScissorOn) EnableLiveScissor();
-            EmitDraw(matFast, 1, 6, n);
-            RenderStats.FastBatch++;
-            RenderStats.FastBatchInst += n;
-            fastFlushing = false;
+            fastBuf.SetData(fastBase, 0, 0, fastN);
+            Shader.SetGlobalBuffer(IdFastBase, fastBuf);
         }
     }
 }

@@ -472,6 +472,28 @@ namespace OrbitalSalvage.Render.Tests
             finally { RenderOpts.Clear(); }
         }
 
+        [Test]
+        public void PlayBatch_SecondBatchDoesNotReuseIndexZero()
+        {
+            try
+            {
+                RenderOpts.Clear();
+                RenderOpts.FastShape = true;
+                var alone = RenderAt(96, DrawSplitFast);
+                int batches = RenderStats.FastBatch;
+                int offsets = RenderStats.FastBatchOffsetSum;
+                RenderOpts.PlayBatch = true;
+                var batched = RenderAt(96, DrawSplitFast);
+                Assert.GreaterOrEqual(RenderStats.FastBatch - batches, 2, "gradient did not split the batches");
+                Assert.Greater(RenderStats.FastBatchOffsetSum - offsets, 0, "later batch restarted at index 0");
+                Assert.LessOrEqual(MaxDiff(alone, batched), 8, "split batches drifted");
+                Assert.Greater(Px(batched, 24, 30).a, 180, "first batch missing");
+                Assert.Greater(Px(batched, 72, 70).a, 180, "second batch missing");
+                Assert.Greater(Px(batched, 48, 50).a, 180, "gradient between the batches missing");
+            }
+            finally { RenderOpts.Clear(); }
+        }
+
         static Color32 Px(Color32[] px, int x, int yTop) => px[(96 - 1 - yTop) * 96 + x];
 
         static void DrawArc(Canvas2D c)
@@ -494,6 +516,62 @@ namespace OrbitalSalvage.Render.Tests
             c.BeginPath();
             c.Arc(0, 0, 30, 0, System.Math.PI);
             c.Stroke();
+        }
+
+        static void DrawSplitFast(Canvas2D c)
+        {
+            c.FillStyle = "#f472b6";
+            c.BeginPath();
+            c.Arc(24, 30, 8, 0, System.Math.PI * 2);
+            c.Fill();
+            c.BeginPath();
+            c.Arc(72, 30, 8, 0, System.Math.PI * 2);
+            c.Fill();
+            var band = c.CreateLinearGradient(0, 0, 96, 0);
+            band.AddColorStop(0, "#112233");
+            band.AddColorStop(1, "#334455");
+            c.FillStyle = band;
+            c.FillRect(40, 46, 16, 8);
+            c.FillStyle = "#38bdf8";
+            c.BeginPath();
+            c.Arc(24, 70, 8, 0, System.Math.PI * 2);
+            c.Fill();
+            c.FillStyle = "#facc15";
+            c.BeginPath();
+            c.Arc(72, 70, 8, 0, System.Math.PI * 2);
+            c.Fill();
+        }
+
+        [Test]
+        public void PlayBatch_IndexPastFp16MantissaMatchesUnbatched()
+        {
+            // 300 solid circles. The last param index is 299 * 28 = 8372, which fp16
+            // (ulp 8 above 8192) cannot store. One float slot would shade the wrong block.
+            const int n = 300;
+            try
+            {
+                RenderOpts.Clear();
+                RenderOpts.FastShape = true;
+                var alone = RenderAt(64, c => DrawStacked(c, n));
+                int batch = RenderStats.FastBatchInst;
+                RenderOpts.PlayBatch = true;
+                var batched = RenderAt(64, c => DrawStacked(c, n));
+                Assert.GreaterOrEqual(RenderStats.FastBatchInst - batch, n, "stack was not one batch");
+                Assert.LessOrEqual(MaxDiff(alone, batched), 8, "high param index drifted");
+                Assert.Greater(batched[(64 - 1 - 32) * 64 + 32].r, 240, "last circle missing");
+            }
+            finally { RenderOpts.Clear(); }
+        }
+
+        static void DrawStacked(Canvas2D c, int n)
+        {
+            for (int i = 0; i < n; i++)
+            {
+                c.SetFill(new Rgba(i / (float)(n - 1), 0.15f, 0.4f, 1f));
+                c.BeginPath();
+                c.Arc(32, 32, 10, 0, System.Math.PI * 2);
+                c.Fill();
+            }
         }
 
         static void DrawDots(Canvas2D c)

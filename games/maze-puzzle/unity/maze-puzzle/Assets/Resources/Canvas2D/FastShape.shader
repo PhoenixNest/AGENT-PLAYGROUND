@@ -120,6 +120,7 @@ Shader "Hidden/Canvas2D/FastShape"
 
             Texture2D<float> _C2D_ClipTex;
             StructuredBuffer<uint> _C2D_FastBase;
+            float _C2D_FastOffset;
 
             float SdRound(float2 p, float2 b, float rad)
             {
@@ -196,23 +197,30 @@ Shader "Hidden/Canvas2D/FastShape"
             struct V2F
             {
                 float4 pos : SV_POSITION;
-                nointerpolation float slot : TEXCOORD0;
+                // Two bytes as floats. A11 stores TEXCOORD as fp16, exact only through 2048.
+                // A param index (stride 28) past that rounds, so the quad stays put and shades the wrong block.
+                float slotHi : TEXCOORD0;
+                float slotLo : TEXCOORD1;
             };
 
-            V2F vert(uint vid : SV_VertexID, uint inst : SV_InstanceID)
+            // 6 vertices per quad, one instance. SV_InstanceID on A11 ignores a base instance.
+            V2F vert(uint vid : SV_VertexID)
             {
                 V2F o;
-                uint b = _C2D_FastBase[inst];
-                o.slot = (float)b;
+                uint local = vid / 6;
+                uint corner = vid - local * 6;
+                uint b = _C2D_FastBase[(uint)(_C2D_FastOffset + 0.5) + local];
+                o.slotHi = (float)(b >> 8);
+                o.slotLo = (float)(b & 255u);
                 float4 rect = _C2D_Params[b + IDX_RECT];
-                float2 p = C2D_QuadCorner(vid, rect);
+                float2 p = C2D_QuadCorner(corner, rect);
                 o.pos = float4(C2D_PixelToNdc(p), 0, 1);
                 return o;
             }
 
             float4 frag(V2F i) : SV_Target
             {
-                uint b = (uint)(i.slot + 0.5);
+                uint b = ((uint)(i.slotHi + 0.5) << 8) | (uint)(i.slotLo + 0.5);
                 float2 pc = C2D_FragToCanvas(i.pos);
                 float4 fl = _C2D_Params[b + IDX_FLAGS];
                 float cov = saturate(0.5 - SdFast(pc, fl.x, _C2D_Params[b + IDX_GA], _C2D_Params[b + IDX_GB]));
