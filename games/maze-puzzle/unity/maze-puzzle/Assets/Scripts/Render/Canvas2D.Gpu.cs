@@ -179,6 +179,7 @@ namespace OrbitalSalvage.Render
             prmCount = 0;
             DrawCount = 0;
             fastN = 0;
+            fastFlushed = 0;
             clipUsed = 0;
             state = new State();
             stack.Clear();
@@ -246,6 +247,7 @@ namespace OrbitalSalvage.Render
             EnsureBuffer(ref paramBuffer, prmCount, 16);
             if (edgeCount > 0) edgeBuffer.SetData(edges, 0, 0, edgeCount);
             if (prmCount > 0) paramBuffer.SetData(prm, 0, 0, prmCount);
+            UploadFastIndices();
             RenderStats.Edges += edgeCount;
             Shader.SetGlobalBuffer(IdEdges, edgeBuffer);
             Shader.SetGlobalBuffer(IdParams, paramBuffer);
@@ -255,6 +257,8 @@ namespace OrbitalSalvage.Render
             Shader.SetGlobalTexture(IdAccum, accum);
             UploadText();
             ExecuteRecorded();
+            fastN = 0;
+            fastFlushed = 0;
             PaintProfile.End(PaintProfile.Submit);
             if (!keepDrawing) return;
             cmd.Clear();
@@ -393,6 +397,7 @@ namespace OrbitalSalvage.Render
                 return;
             bool holdScissor = ScissorOn;
             if (holdScissor) cmd.DisableScissorRect();
+            FlushFastBatch();
             BlurPair pair = BlurPairFor(cw, ch);
             cmd.CopyTexture(target, 0, 0, cx0, cy0, cw, ch, pair.a, 0, 0, 0, 0);
             for (int pass = 0; pass < radii.Length; pass++)
@@ -671,7 +676,9 @@ namespace OrbitalSalvage.Render
 
         void Draw(Material m, int pass, int verts, int pb)
         {
-            if (fastN > 0 && !fastFlushing) FlushFastBatch();
+            // Flush binds the canvas. A caller that already bound accum or a mask
+            // must FlushFastBatch before that switch, or this draw lands on the canvas.
+            if (fastN > fastFlushed && !fastFlushing) FlushFastBatch();
             cmd.SetGlobalFloat(IdParamBase, pb);
             EmitDraw(m, pass, verts, 1);
         }
@@ -852,6 +859,7 @@ namespace OrbitalSalvage.Render
 
         void AccumulateTo(int pb, PixelRect rect, int ebase, int ecount)
         {
+            FlushFastBatch();
             SetRect(pb, rect.x0, rect.y0, rect.x1, rect.y1);
             prm[pb + IdxEdge] = new Vector4(ebase, rect.x1, 0, 0);
             cmd.SetRenderTarget(accum);
@@ -990,6 +998,7 @@ namespace OrbitalSalvage.Render
                 cmd.DisableScissorRect();
                 scissorLive = false;
             }
+            FlushFastBatch();
             var next = NextClipRT();
             int pb = NewParams();
             SetRect(pb, 0, 0, Width, Height);

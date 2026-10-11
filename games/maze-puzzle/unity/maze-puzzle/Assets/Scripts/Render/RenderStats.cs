@@ -36,6 +36,8 @@ namespace OrbitalSalvage.Render
         public static int GameEdgeRect, GameEdgeCirc, GameEdgeEll, GameEdgeRr, GameEdgeStroke, GameEdgeOther;
         public static int FastRect, FastCirc, FastEll, FastRr, FastLine, FastArc;
         public static int FastBatch, FastBatchInst;
+        /// <summary>Sum of per-batch index offsets. Not on the perf line. Zero means every batch started at index 0.</summary>
+        public static int FastBatchOffsetSum;
         public static int GpuAlloc, ReadPx;
         /// <summary>Playfield section draws. sky, hole, ring, flappers, bumpers, gates, debris, vfx.</summary>
         public static readonly int[] SecDraw = new int[8];
