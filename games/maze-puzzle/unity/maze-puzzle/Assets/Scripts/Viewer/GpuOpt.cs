@@ -19,7 +19,7 @@ namespace OrbitalSalvage.Viewer
         public static string Defaults = "";
 
         /// <summary>iOS and Android player default. A non-empty <see cref="PrefKey"/> replaces this entirely.</summary>
-        public const string MobileDefaults = "rrshadow,rrplus,backdroplow,playhalf,fastshape,fastarc,playbatch";
+        public const string MobileDefaults = "rrshadow,rrplus,backdroplow,playhalf,fastshape,fastarc";
 
         /// <summary>True on an iOS or Android player. Tests replace this; the editor stays false.</summary>
         public static Func<bool> IsMobilePlayer = DetectMobilePlayer;
