@@ -97,13 +97,14 @@ namespace OrbitalSalvage.Viewer.Tests
             Assert.IsTrue(RenderOpts.PlayHalf);
             Assert.IsTrue(RenderOpts.FastShape);
             Assert.IsTrue(RenderOpts.FastArc);
-            Assert.IsTrue(RenderOpts.PlayBatch);
+            Assert.IsFalse(RenderOpts.PlayBatch);
             Assert.IsFalse(RenderOpts.Dirty);
             Assert.IsFalse(RenderOpts.DirtyClip);
             Assert.IsFalse(RenderOpts.BackdropHold);
             Assert.IsFalse(RenderOpts.NoPrewarm);
             Assert.That(GpuOpt.Active, Does.Contain("rrshadow"));
-            Assert.That(GpuOpt.Active, Does.Contain("playbatch"));
+            Assert.That(GpuOpt.Active, Does.Contain("fastarc"));
+            Assert.That(GpuOpt.Active, Does.Not.Contain("playbatch"));
             Assert.That(GpuOpt.Active, Does.Not.Contain("dirty"));
 
             bool previous = GpuOpt.IsMobilePlayer();

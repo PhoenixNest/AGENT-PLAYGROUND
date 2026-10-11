@@ -13,6 +13,11 @@ Paths written as `tools/parity/...` in entries dated before 2026-10-08 are the l
 
 ### Added
 
+#### Unity GPU cost, playbatch off the phone default (2026-10-11, `agent/perf/gpu-cost`)
+
+- iPhone X on `79400e9` (defaults on, footprint 461 MB, avail 1388 MB): home 42 ms / 29 fps, game 41.5 ms / 25 fps. `playbatch` corrupts that A11 frame. The mission card goes solid black, settings and sound buttons go dark with crescents, pills and taglines pick up crescent glyphs, debris becomes white or pink squares, the HUD pill and black-hole face garble, and rotated quads gain dark boxes. The same screens are correct with `rrshadow,rrplus,backdroplow,playhalf,fastshape,fastarc`. The Mac editor still matched, so the suite did not catch it.
+- The iOS and Android default is now that set. `playbatch` remains a pref token. The first `[Perf] boot` line's `defaults=` follows the new string.
+
 #### Unity GPU cost, phone defaults (2026-10-11, `agent/perf/gpu-cost`)
 
 - iPhone X after `9a21a48` (scale 2): game with `rrshadow,rrplus,backdroplow,playhalf,fastshape` was 55 ms. Adding `fastarc` was 48 ms. Adding `playbatch` was 39–42 ms (25–27 fps, p95 50 ms). Home with `rrshadow,rrplus,backdroplow` stayed about 63 ms; `dirty`, `dirtyclip`, `bdhold`, and `noprewarm` still did not move it. One playbatch launch dropped the device connection with no crash report; the retry ran.
