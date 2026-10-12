@@ -511,6 +511,7 @@
   const MODAL_IDS = [
     "modal-pause",
     "modal-privacy",
+    "modal-language",
     "modal-reset-confirm",
     "modal-debrief",
     "modal-defeat",

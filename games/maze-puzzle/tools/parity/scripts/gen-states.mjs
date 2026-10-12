@@ -560,14 +560,19 @@ add("settings_sliders_profile", "Settings, sliders at 10 and 100 via profile", [
 ]);
 add("settings_modal_privacy", "Settings with the privacy policy modal open", [
   ...settingsOpen,
-  click("btn-open-privacy"),
+  call("openPrivacyModal"),
   adv(300),
   CAP,
 ]);
 add(
   "settings_modal_privacy_t0150",
   "Privacy modal 150 ms into its open transition",
-  [...settingsOpen, click("btn-open-privacy"), adv(150), CAP],
+  [...settingsOpen, call("openPrivacyModal"), adv(150), CAP],
+);
+add(
+  "settings_modal_language",
+  "Settings with the language picker modal open (17 endonyms, no scroll)",
+  [...settingsOpen, click("btn-open-language"), adv(300), CAP],
 );
 add(
   "settings_modal_reset_confirm",
