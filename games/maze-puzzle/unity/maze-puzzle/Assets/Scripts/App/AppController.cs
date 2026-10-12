@@ -28,13 +28,13 @@ namespace OrbitalSalvage.App
         public const double BackupProgress = 0.70;
         public const double QuotaTrackWidth = 162.328;
 
-        static readonly string[] Tips =
+        static readonly string[] TipKeys =
         {
-            "Calibrating cosmic centrifuges...",
-            "Polishing space soda cans...",
-            "Waking up Nibbles for breakfast...",
-            "Sprinkling candy on orbital rings...",
-            "Ready for cleanup launch! 🚀"
+            "loading.tip.0",
+            "loading.tip.1",
+            "loading.tip.2",
+            "loading.tip.3",
+            "loading.tip.4",
         };
 
         static readonly string[] ModalOrder =
@@ -93,9 +93,9 @@ namespace OrbitalSalvage.App
             CurrentPage = "loading";
             StoreTab = "rings";
             WorldIndex = 1;
-            _loadingTip = Tips[0];
+            _loadingTip = Loc.Tr(TipKeys[0]);
             Model = new PageModel();
-            SoundIcon = "🔊";
+            SoundIcon = Loc.Tr("hud.sound.on");
             RefreshCredits();
             RefreshHome();
             Rebuild();
@@ -106,7 +106,9 @@ namespace OrbitalSalvage.App
         /// </summary>
         public bool SetLanguage(string code)
         {
-            return Economy.SetLanguage(code);
+            bool ok = Economy.SetLanguage(code);
+            if (ok) Rebuild();
+            return ok;
         }
 
         /// <summary>
@@ -181,6 +183,19 @@ namespace OrbitalSalvage.App
         public string WorldProgress { get; private set; }
         public string FirstLevelCode { get; private set; }
         public readonly List<string> ShopFooters = new List<string>();
+        readonly LocNumCache _oneNum = new LocNumCache(8);
+        readonly LocNameCache _names = new LocNameCache(8);
+        LocMemo _missionTitle;
+        LocMemo _pauseTitle;
+        LocMemo _missionGoal;
+        LocMemo _missionWorld;
+        LocMemo _dailyBounty;
+        LocMemo _quotaText;
+        LocMemo _pauseQuota;
+        LocMemo _sectorCode;
+        LocMemo _dailyNew;
+        LocMemo _defeatMass;
+        LocMemo _defeatSpill;
         public readonly List<bool> DailyDone = new List<bool>();
         public IAppAudio Audio { get { return _audio; } }
         public readonly List<int> Haptics = new List<int>();
@@ -243,7 +258,7 @@ namespace OrbitalSalvage.App
                 SectorIndex = 0;
                 LoadSector(Sectors[0], false);
             }
-            ShowToast("Progress Reset to Day 1! 🧹");
+            ShowToast(Loc.Tr("toast.progress.reset"));
             ShowPage("home");
         }
 
@@ -272,7 +287,7 @@ namespace OrbitalSalvage.App
             _progress = 12;
             _tipIdx = 0;
             _barWritten = false;
-            _loadingTip = Tips[0];
+            _loadingTip = Loc.Tr(TipKeys[0]);
             _loadingBar = "";
             _bootTimer = Every(BootIntervalMs, BootTick);
             Rebuild();
@@ -536,9 +551,9 @@ namespace OrbitalSalvage.App
                     Economy.EquipItem(StoreTab, slot.Id);
                     RefreshCredits();
                     RefreshHome();
-                    ShowToast("Item Unlocked & Equipped! 🎉");
+                    ShowToast(Loc.Tr("toast.shop.unlocked"));
                 }
-                else ShowToast("Need more gold coins! 🪙");
+                else ShowToast(Loc.Tr("toast.shop.need_coins"));
                 Rebuild();
             }
             else if (token == "btn-equip-item")
@@ -547,7 +562,7 @@ namespace OrbitalSalvage.App
                 if (slot == null) return;
                 Economy.EquipItem(StoreTab, slot.Id);
                 RefreshHome();
-                ShowToast("Item Equipped! ✨");
+                ShowToast(Loc.Tr("toast.shop.equipped"));
                 Rebuild();
             }
             else if (token == "world-tab-btn")
@@ -644,7 +659,7 @@ namespace OrbitalSalvage.App
         {
             if (unlocked == null) return;
             for (int i = 0; i < unlocked.Count; i++)
-                ShowToast("🏆 Trophy: " + unlocked[i].Title + " (+" + Num(unlocked[i].Reward) + " 🪙)");
+                ShowToast(Loc.Tr("toast.trophy", Loc.TrName(unlocked[i].Title), unlocked[i].Reward));
             Rebuild();
         }
 
@@ -670,8 +685,8 @@ namespace OrbitalSalvage.App
         {
             CollectedMass = collectedMass;
             IsLevelCleared = true;
-            DebriefMass = Num(collectedMass) + " kg";
-            DebriefCredits = "+" + Num(payout) + " 🪙";
+            DebriefMass = Loc.Tr("unit.kg", collectedMass);
+            DebriefCredits = Loc.Tr("unit.plus_coins", payout);
             ShowToastsFor(unlocked);
             if (ActiveSector != null && ActiveSector.IsDaily == true)
             {
@@ -679,7 +694,7 @@ namespace OrbitalSalvage.App
                 int done = 0;
                 for (int i = 0; i < shifts.Count; i++) if (shifts[i].IsCompleted) done++;
                 if (done == 3 && Economy.CanClaimDailyMasterBonus())
-                    After(MasterToastDelayMs, () => ShowToast("🎉 All 3 Daily Shifts Cleared! Claim Master Bonus in Daily Tab! 🏆"));
+                    After(MasterToastDelayMs, () => ShowToast(Loc.Tr("toast.daily.all_clear")));
             }
             After(DebriefDelayMs, () => { _modals.Add("modal-debrief"); Rebuild(); });
             _audio.PlayVictoryFanfare();
@@ -726,7 +741,7 @@ namespace OrbitalSalvage.App
             AlignSectorIndex(sector);
             SectorEpoch++;
             RefreshCredits();
-            if (toast && sector != null) ShowToast("Clean up " + sector.Name + "! 🚀");
+            if (toast && sector != null) ShowToast(Loc.Tr("toast.sector.cleanup", Loc.TrName(sector.Name)));
             Rebuild();
         }
 
@@ -798,8 +813,8 @@ namespace OrbitalSalvage.App
             if (_progress > 100) _progress = 100;
             _barWritten = true;
             _loadingBar = Num(_progress) + "%";
-            _tipIdx = (_tipIdx + 1) % Tips.Length;
-            _loadingTip = Tips[_tipIdx];
+            _tipIdx = (_tipIdx + 1) % TipKeys.Length;
+            _loadingTip = Loc.Tr(TipKeys[_tipIdx]);
             if (_progress >= 100)
             {
                 Cancel(_bootTimer);
@@ -829,10 +844,10 @@ namespace OrbitalSalvage.App
                 int done = 0;
                 for (int i = 0; i < shifts.Count; i++) if (shifts[i].IsCompleted) done++;
                 if (done == 3 && Economy.CanClaimDailyMasterBonus())
-                    After(MasterToastDelayMs, () => ShowToast("🎉 All 3 Daily Shifts Cleared! Claim Master Bonus in Daily Tab! 🏆"));
+                    After(MasterToastDelayMs, () => ShowToast(Loc.Tr("toast.daily.all_clear")));
             }
-            DebriefMass = Num(CollectedMass) + " kg";
-            DebriefCredits = "+" + Num(payout) + " 🪙";
+            DebriefMass = Loc.Tr("unit.kg", CollectedMass);
+            DebriefCredits = Loc.Tr("unit.plus_coins", payout);
             After(DebriefDelayMs, () => { _modals.Add("modal-debrief"); Rebuild(); });
             Rebuild();
         }
@@ -850,8 +865,8 @@ namespace OrbitalSalvage.App
         void FillDefeat()
         {
             double quota = ActiveSector != null ? ActiveSector.Quota : 30;
-            DefeatMass = Num(CollectedMass) + " / " + Num(quota) + " kg";
-            DefeatSpilled = Num(SpilledMass) + " kg";
+            DefeatMass = _defeatMass.Num("unit.quota", CollectedMass, quota);
+            DefeatSpilled = _defeatSpill.Num("unit.kg", SpilledMass);
             double ratio = CollectedMass / Math.Max(1, quota);
             BackupVisible = ratio >= BackupProgress && !UsedBackupPod;
         }
@@ -867,11 +882,14 @@ namespace OrbitalSalvage.App
             _audio.PlayBackupPodSound();
             Haptic(50);
             if (BackupDeployed != null) BackupDeployed();
-            ShowToast("🚀 Auxiliary Scrap Pod Deployed! (+8 Scrap)");
+            ShowToast(Loc.Tr("toast.backup.deployed"));
             Rebuild();
         }
 
-        public const string AlreadyClaimedToast = "🎁 Claimed today. Come back tomorrow!";
+        public static string AlreadyClaimedToast
+        {
+            get { return Loc.Tr("toast.gift.already"); }
+        }
 
         void ClaimDailyGift()
         {
@@ -893,7 +911,7 @@ namespace OrbitalSalvage.App
             try { TouchAudio(); _audio.PlayBoosterPass(); } catch (Exception) { }
             Haptic(40);
             RefreshCredits();
-            ShowToast("🎁 Claimed +100 🪙 Janitor Stipend!");
+            ShowToast(Loc.Tr("toast.gift.claimed"));
             Rebuild();
         }
 
@@ -903,7 +921,7 @@ namespace OrbitalSalvage.App
             try { TouchAudio(); _audio.PlayBoosterPass(); } catch (Exception) { }
             Haptic(50);
             RefreshCredits();
-            ShowToast("🏆 Claimed +300 🪙 Daily Master Bonus!");
+            ShowToast(Loc.Tr("toast.daily.master_claimed"));
             Rebuild();
         }
 
@@ -951,8 +969,8 @@ namespace OrbitalSalvage.App
             PublishMute();
             Economy.Profile.Settings.SoundEnabled = !muted;
             Economy.SaveProfile();
-            SoundIcon = muted ? "🔇" : "🔊";
-            ShowToast(muted ? "Sound Off 🔇" : "Sound On 🔊");
+            SoundIcon = muted ? Loc.Tr("hud.sound.muted") : Loc.Tr("hud.sound.on");
+            ShowToast(muted ? Loc.Tr("toast.sound.off") : Loc.Tr("toast.sound.on"));
             Rebuild();
         }
 
@@ -963,7 +981,7 @@ namespace OrbitalSalvage.App
             PublishMute();
             Economy.Profile.Settings.SoundEnabled = !muted;
             Economy.SaveProfile();
-            SoundIcon = muted ? "🔇" : "🔊";
+            SoundIcon = muted ? Loc.Tr("hud.sound.muted") : Loc.Tr("hud.sound.on");
             Rebuild();
         }
 
@@ -971,7 +989,7 @@ namespace OrbitalSalvage.App
         {
             try { TouchAudio(); _audio.PlayBoosterPass(); } catch (Exception) { }
             Haptic(30);
-            _faceHold = "🥰";
+            _faceHold = Loc.Tr("home.face.poke");
             _faceHoldUntil = NowMs + 600;
             After(600, () => { _faceHold = null; Rebuild(); });
             Rebuild();
@@ -1028,12 +1046,12 @@ namespace OrbitalSalvage.App
         {
             CreditText = Num(Economy.Profile.Credits);
             _dockGift = Economy.CanClaimDailyGift();
-            ShopBadge = "FREE";
+            ShopBadge = Loc.Tr("dock.shop.free");
             var shifts = Economy.GetDailyShifts();
             int done = 0;
             for (int i = 0; i < shifts.Count; i++) if (shifts[i].IsCompleted) done++;
-            if (done == 3) DailyBadge = Economy.CanClaimDailyMasterBonus() ? "GIFT" : "✓";
-            else DailyBadge = (3 - done) + " NEW";
+            if (done == 3) DailyBadge = Economy.CanClaimDailyMasterBonus() ? Loc.Tr("dock.daily.gift") : Loc.Tr("dock.daily.check");
+            else DailyBadge = _dailyNew.Int("dock.daily.new", 3 - done);
         }
 
         void RefreshHome()
@@ -1041,20 +1059,20 @@ namespace OrbitalSalvage.App
             var sec = ActiveSector ?? (Sectors.Count > 0 ? Sectors[0] : null);
             if (sec != null)
             {
-                MissionName = sec.Code + " • " + sec.Name;
-                MissionGoal = "Goal: " + Num(sec.Quota) + " kg";
+                MissionName = _missionTitle.Text("home.level.title", _names.Get(sec.Code), _names.Get(sec.Name));
+                MissionGoal = _missionGoal.Num("home.mission.goal", sec.Quota);
                 var world = FindWorld(sec.WorldIndex.HasValue ? (int)sec.WorldIndex.Value : 1);
-                MissionWorld = world != null ? world.Title : "World " + Num(sec.WorldIndex ?? 1);
+                MissionWorld = world != null ? _names.Get(world.Title) : _missionWorld.Num("home.mission.world_fallback", sec.WorldIndex ?? 1);
             }
             var silver = Economy.GetDailyShiftInfo();
-            DailyBounty = "+" + Num(silver.RewardCredits ?? 0) + " 🪙 Bounty";
+            DailyBounty = _dailyBounty.Num("home.daily.bounty", silver.RewardCredits ?? 0);
         }
 
         void Rebuild()
         {
             _epoch.NowEpochMs = EpochMs;
             double quota = ActiveSector != null ? ActiveSector.Quota : 30;
-            QuotaText = Num(CollectedMass) + " / " + Num(quota) + " kg";
+            QuotaText = _quotaText.Num("unit.quota", CollectedMass, quota);
 
             bool gift = Economy.CanClaimDailyGift();
             var shifts = Economy.GetDailyShifts();
@@ -1063,19 +1081,19 @@ namespace OrbitalSalvage.App
 
             if (gift)
             {
-                GiftButton = "Claim +100 🪙";
-                GiftTitle = "Janitor Care Package!";
+                GiftButton = Loc.Tr("gift.button.claim");
+                GiftTitle = Loc.Tr("gift.title.ready");
             }
             else
             {
-                GiftButton = "Claimed Today ✨";
-                GiftTitle = "Allowance Claimed! ✨";
+                GiftButton = Loc.Tr("gift.button.claimed");
+                GiftTitle = Loc.Tr("gift.title.claimed");
             }
 
             if (ActiveSector != null)
             {
-                PauseName = ActiveSector.Code + " • " + ActiveSector.Name;
-                PauseQuota = "Goal: Feed Nibbles " + Num(ActiveSector.Quota) + " kg (" + Num(CollectedMass) + "/" + Num(ActiveSector.Quota) + " kg eaten)";
+                PauseName = _pauseTitle.Text("home.level.title", _names.Get(ActiveSector.Code), _names.Get(ActiveSector.Name));
+                PauseQuota = _pauseQuota.Num("pause.quota", ActiveSector.Quota, CollectedMass);
             }
 
             bool canMaster = Economy.CanClaimDailyMasterBonus();
@@ -1108,10 +1126,10 @@ namespace OrbitalSalvage.App
                 {
                     bool own = Economy.IsUnlocked(StoreTab, catalog[i].Id);
                     bool on = equippedId == catalog[i].Id;
-                    if (on) ShopFooters.Add("EQUIPPED ✨");
-                    else if (own) ShopFooters.Add("Wear");
-                    else if (catalog[i].Cost == 0) ShopFooters.Add("Free Starter");
-                    else ShopFooters.Add("Unlock (" + Num(catalog[i].Cost) + " 🪙)");
+                    if (on) ShopFooters.Add(Loc.Tr("shop.footer.equipped"));
+                    else if (own) ShopFooters.Add(Loc.Tr("shop.footer.wear"));
+                    else if (catalog[i].Cost == 0) ShopFooters.Add(Loc.Tr("shop.footer.free"));
+                    else ShopFooters.Add(_oneNum.Get("shop.footer.unlock", catalog[i].Cost));
                 }
             }
 
@@ -1129,15 +1147,15 @@ namespace OrbitalSalvage.App
             Text("home-mission-world", MissionWorld);
             Text("home-daily-bounty", DailyBounty);
             Text("hud-quota-text", QuotaText);
-            if (ActiveSector != null) Text("hud-sector-code", "⭐ " + ActiveSector.Code);
+            if (ActiveSector != null) Text("hud-sector-code", _sectorCode.Text("hud.sector_code", _names.Get(ActiveSector.Code)));
             double pct = quota > 0 ? Math.Min(100, (CollectedMass / quota) * 100) : 0;
             WidthPx("hud-quota-bar", QuotaTrackWidth * pct / 100.0);
             Text("dock-daily-badge", DailyBadge);
-            if (_dockGift) Text("shop-dock-badge", "FREE");
+            if (_dockGift) Text("shop-dock-badge", Loc.Tr("dock.shop.free"));
             else Hide("shop-dock-badge");
             Text("gift-banner-title", GiftTitle);
-            Text("gift-banner-desc", gift ? "Claim your free daily +100 🪙 allowance." : "Come back tomorrow for another +100 🪙 care package!");
-            Text("gift-banner-icon", gift ? "🎁" : "🎉");
+            Text("gift-banner-desc", gift ? Loc.Tr("gift.desc.ready") : Loc.Tr("gift.desc.claimed"));
+            Text("gift-banner-icon", gift ? Loc.Tr("gift.icon.ready") : Loc.Tr("gift.icon.claimed"));
             Text("btn-claim-daily-gift", GiftButton);
             Text("home-audio-icon", SoundIcon);
             Text("audio-icon", SoundIcon);
@@ -1145,7 +1163,7 @@ namespace OrbitalSalvage.App
             Text("home-diorama-face", _faceHold != null && NowMs < _faceHoldUntil ? _faceHold : SingularityFace(Equipped("singularity")));
             Text("pause-level-name", PauseName);
             Text("pause-level-quota", PauseQuota);
-            Text("pause-sound-icon", _audio.IsMuted ? "🔇" : "🔊");
+            Text("pause-sound-icon", _audio.IsMuted ? Loc.Tr("hud.sound.muted") : Loc.Tr("hud.sound.on"));
             Text("debrief-mass-val", DebriefMass);
             Text("debrief-credits-val", DebriefCredits);
             Text("defeat-mass-val", DefeatMass);
@@ -1300,18 +1318,18 @@ namespace OrbitalSalvage.App
 
         static string RingLabel(string id)
         {
-            if (id == "ring_duckie") return "🦆 DUCKIE FLOAT";
-            if (id == "ring_candyland") return "🍬 CANDY RING";
-            if (id == "ring_spacecat") return "🐱 KITTY SAUCER";
-            return "🍩 DONUT FLOAT";
+            if (id == "ring_duckie") return Loc.Tr("home.ring.duckie");
+            if (id == "ring_candyland") return Loc.Tr("home.ring.candy");
+            if (id == "ring_spacecat") return Loc.Tr("home.ring.kitty");
+            return Loc.Tr("home.ring.donut");
         }
 
         static string SingularityFace(string id)
         {
-            if (id == "singularity_strawberry") return "🍓";
-            if (id == "singularity_sleepy") return "💤";
-            if (id == "singularity_confetti") return "🎉";
-            return "😋";
+            if (id == "singularity_strawberry") return Loc.Tr("home.face.strawberry");
+            if (id == "singularity_sleepy") return Loc.Tr("home.face.sleepy");
+            if (id == "singularity_confetti") return Loc.Tr("home.face.confetti");
+            return Loc.Tr("home.face.nibbles");
         }
 
         /// <summary>

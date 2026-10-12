@@ -98,13 +98,9 @@ namespace OrbitalSalvage.Render
             ctx.Font = "bold 13px Fredoka, sans-serif";
             ctx.TextAlign = "center";
             ctx.TextBaseline = "middle";
-            string hubEmoji = "✨ ORBITAL ✨";
-            string hubSubtitle = "SORT RIG";
-            if (id == "ring_duckie") { hubEmoji = "🦆 DUCKIE 🦆"; hubSubtitle = "FLOAT RIG"; }
-            else if (id == "ring_candyland") { hubEmoji = "🍬 CANDY 🍬"; hubSubtitle = "MINT RIG"; }
-            else if (id == "ring_spacecat") { hubEmoji = "🐱 KITTY 🐱"; hubSubtitle = "COSMIC RIG"; }
-            else if (id == "ring_donut") { hubEmoji = "🍩 DONUT 🍩"; hubSubtitle = "SWEET RIG"; }
-            if (physics.ConcentricRings) { hubEmoji = "⚙️ GEAR RIG ⚙️"; hubSubtitle = "PLANETARY"; }
+            string hubEmoji;
+            string hubSubtitle;
+            _labels.Hub(id, physics.ConcentricRings, out hubEmoji, out hubSubtitle);
             ctx.FillText(hubEmoji, 0, -7);
             ctx.Font = "11px Nunito, sans-serif";
             ctx.FillStyle = "#64748b";

@@ -452,8 +452,8 @@ namespace OrbitalSalvage.Viewer
             for (int i = 0; i < app.ShopFooters.Count; i++)
             {
                 string footer = app.ShopFooters[i];
-                if (footer == "Wear") chrome.ClassTextOverrides["btn-equip-item#" + wear++] = footer;
-                else if (footer.StartsWith("EQUIPPED", StringComparison.Ordinal)) chrome.ClassTextOverrides["badge-equipped#" + equipped++] = footer;
+                if (footer == Loc.Tr("shop.footer.wear")) chrome.ClassTextOverrides["btn-equip-item#" + wear++] = footer;
+                else if (footer == Loc.Tr("shop.footer.equipped")) chrome.ClassTextOverrides["badge-equipped#" + equipped++] = footer;
                 else chrome.ClassTextOverrides["btn-buy-item#" + buy++] = footer;
             }
             chrome.Toasts.Clear();
