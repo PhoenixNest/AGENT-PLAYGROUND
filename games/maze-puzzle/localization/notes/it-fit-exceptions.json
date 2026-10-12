@@ -1,0 +1,382 @@
+[
+  {
+    "key": "spec:Choose Sector",
+    "reason": "Scegli settore is the verb plus the glossary word, sub-pixel over."
+  },
+  {
+    "key": "spec:Claim +100",
+    "reason": "Prendi is the claim verb, a couple of pixels over, under the shrink floor."
+  },
+  {
+    "key": "spec:Claim +300",
+    "reason": "Prendi is the claim verb, a couple of pixels over, under the shrink floor."
+  },
+  {
+    "key": "spec:Close",
+    "reason": "Chiudi is the verb and stays under the shrink floor."
+  },
+  {
+    "key": "spec:DAILY OPERATIONS",
+    "reason": "Operazioni giornaliere is the glossary phrase and stays under the shrink floor."
+  },
+  {
+    "key": "spec:FREE",
+    "reason": "Gratis is the word and stays under the shrink floor."
+  },
+  {
+    "key": "spec:Horizon Sector 1",
+    "reason": "Settore orizzonte keeps the glossary word and the place name, and stays under the shrink floor."
+  },
+  {
+    "key": "spec:Horizon Sector 2",
+    "reason": "Settore orizzonte keeps the glossary word and the place name, and stays under the shrink floor."
+  },
+  {
+    "key": "spec:Horizon Sector 3",
+    "reason": "Settore orizzonte keeps the glossary word and the place name, and stays under the shrink floor."
+  },
+  {
+    "key": "spec:Horizon Sector 4",
+    "reason": "Settore orizzonte keeps the glossary word and the place name, and stays under the shrink floor."
+  },
+  {
+    "key": "spec:Horizon Sector 5",
+    "reason": "Settore orizzonte keeps the glossary word and the place name, and stays under the shrink floor."
+  },
+  {
+    "key": "spec:Horizon Sector 6",
+    "reason": "Settore orizzonte keeps the glossary word and the place name, and stays under the shrink floor."
+  },
+  {
+    "key": "spec:Horizon Sector 7",
+    "reason": "Settore orizzonte keeps the glossary word and the place name, and stays under the shrink floor."
+  },
+  {
+    "key": "spec:Horizon Sector 8",
+    "reason": "Settore orizzonte keeps the glossary word and the place name, and stays under the shrink floor."
+  },
+  {
+    "key": "spec:Horizon Sector 9",
+    "reason": "Settore orizzonte keeps the glossary word and the place name, and stays under the shrink floor."
+  },
+  {
+    "key": "spec:LVL 10",
+    "reason": "Livello crosses the 72% shrink floor on this chip. Fase is the short stage word; the mission line still says Livello."
+  },
+  {
+    "key": "spec:LVL 11",
+    "reason": "Livello crosses the 72% shrink floor on this chip. Fase is the short stage word; the mission line still says Livello."
+  },
+  {
+    "key": "spec:LVL 12",
+    "reason": "Livello crosses the 72% shrink floor on this chip. Fase is the short stage word; the mission line still says Livello."
+  },
+  {
+    "key": "spec:LVL 13",
+    "reason": "Livello crosses the 72% shrink floor on this chip. Fase is the short stage word; the mission line still says Livello."
+  },
+  {
+    "key": "spec:LVL 14",
+    "reason": "Livello crosses the 72% shrink floor on this chip. Fase is the short stage word; the mission line still says Livello."
+  },
+  {
+    "key": "spec:LVL 15",
+    "reason": "Livello crosses the 72% shrink floor on this chip. Fase is the short stage word; the mission line still says Livello."
+  },
+  {
+    "key": "spec:LVL 16",
+    "reason": "Livello crosses the 72% shrink floor on this chip. Fase is the short stage word; the mission line still says Livello."
+  },
+  {
+    "key": "spec:LVL 17",
+    "reason": "Livello crosses the 72% shrink floor on this chip. Fase is the short stage word; the mission line still says Livello."
+  },
+  {
+    "key": "spec:LVL 18",
+    "reason": "Livello crosses the 72% shrink floor on this chip. Fase is the short stage word; the mission line still says Livello."
+  },
+  {
+    "key": "spec:LVL 19",
+    "reason": "Livello crosses the 72% shrink floor on this chip. Fase is the short stage word; the mission line still says Livello."
+  },
+  {
+    "key": "spec:LVL 2",
+    "reason": "Livello crosses the 72% shrink floor on this chip. Fase is the short stage word; the mission line still says Livello."
+  },
+  {
+    "key": "spec:LVL 20",
+    "reason": "Livello crosses the 72% shrink floor on this chip. Fase is the short stage word; the mission line still says Livello."
+  },
+  {
+    "key": "spec:LVL 22",
+    "reason": "Livello crosses the 72% shrink floor on this chip. Fase is the short stage word; the mission line still says Livello."
+  },
+  {
+    "key": "spec:LVL 23",
+    "reason": "Livello crosses the 72% shrink floor on this chip. Fase is the short stage word; the mission line still says Livello."
+  },
+  {
+    "key": "spec:LVL 24",
+    "reason": "Livello crosses the 72% shrink floor on this chip. Fase is the short stage word; the mission line still says Livello."
+  },
+  {
+    "key": "spec:LVL 25",
+    "reason": "Livello crosses the 72% shrink floor on this chip. Fase is the short stage word; the mission line still says Livello."
+  },
+  {
+    "key": "spec:LVL 26",
+    "reason": "Livello crosses the 72% shrink floor on this chip. Fase is the short stage word; the mission line still says Livello."
+  },
+  {
+    "key": "spec:LVL 27",
+    "reason": "Livello crosses the 72% shrink floor on this chip. Fase is the short stage word; the mission line still says Livello."
+  },
+  {
+    "key": "spec:LVL 28",
+    "reason": "Livello crosses the 72% shrink floor on this chip. Fase is the short stage word; the mission line still says Livello."
+  },
+  {
+    "key": "spec:LVL 29",
+    "reason": "Livello crosses the 72% shrink floor on this chip. Fase is the short stage word; the mission line still says Livello."
+  },
+  {
+    "key": "spec:LVL 3",
+    "reason": "Livello crosses the 72% shrink floor on this chip. Fase is the short stage word; the mission line still says Livello."
+  },
+  {
+    "key": "spec:LVL 30",
+    "reason": "Livello crosses the 72% shrink floor on this chip. Fase is the short stage word; the mission line still says Livello."
+  },
+  {
+    "key": "spec:LVL 31",
+    "reason": "Livello crosses the 72% shrink floor on this chip. Fase is the short stage word; the mission line still says Livello."
+  },
+  {
+    "key": "spec:LVL 32",
+    "reason": "Livello crosses the 72% shrink floor on this chip. Fase is the short stage word; the mission line still says Livello."
+  },
+  {
+    "key": "spec:LVL 33",
+    "reason": "Livello crosses the 72% shrink floor on this chip. Fase is the short stage word; the mission line still says Livello."
+  },
+  {
+    "key": "spec:LVL 34",
+    "reason": "Livello crosses the 72% shrink floor on this chip. Fase is the short stage word; the mission line still says Livello."
+  },
+  {
+    "key": "spec:LVL 35",
+    "reason": "Livello crosses the 72% shrink floor on this chip. Fase is the short stage word; the mission line still says Livello."
+  },
+  {
+    "key": "spec:LVL 36",
+    "reason": "Livello crosses the 72% shrink floor on this chip. Fase is the short stage word; the mission line still says Livello."
+  },
+  {
+    "key": "spec:LVL 37",
+    "reason": "Livello crosses the 72% shrink floor on this chip. Fase is the short stage word; the mission line still says Livello."
+  },
+  {
+    "key": "spec:LVL 38",
+    "reason": "Livello crosses the 72% shrink floor on this chip. Fase is the short stage word; the mission line still says Livello."
+  },
+  {
+    "key": "spec:LVL 39",
+    "reason": "Livello crosses the 72% shrink floor on this chip. Fase is the short stage word; the mission line still says Livello."
+  },
+  {
+    "key": "spec:LVL 4",
+    "reason": "Livello crosses the 72% shrink floor on this chip. Fase is the short stage word; the mission line still says Livello."
+  },
+  {
+    "key": "spec:LVL 40",
+    "reason": "Livello crosses the 72% shrink floor on this chip. Fase is the short stage word; the mission line still says Livello."
+  },
+  {
+    "key": "spec:LVL 42",
+    "reason": "Livello crosses the 72% shrink floor on this chip. Fase is the short stage word; the mission line still says Livello."
+  },
+  {
+    "key": "spec:LVL 43",
+    "reason": "Livello crosses the 72% shrink floor on this chip. Fase is the short stage word; the mission line still says Livello."
+  },
+  {
+    "key": "spec:LVL 44",
+    "reason": "Livello crosses the 72% shrink floor on this chip. Fase is the short stage word; the mission line still says Livello."
+  },
+  {
+    "key": "spec:LVL 45",
+    "reason": "Livello crosses the 72% shrink floor on this chip. Fase is the short stage word; the mission line still says Livello."
+  },
+  {
+    "key": "spec:LVL 46",
+    "reason": "Livello crosses the 72% shrink floor on this chip. Fase is the short stage word; the mission line still says Livello."
+  },
+  {
+    "key": "spec:LVL 47",
+    "reason": "Livello crosses the 72% shrink floor on this chip. Fase is the short stage word; the mission line still says Livello."
+  },
+  {
+    "key": "spec:LVL 48",
+    "reason": "Livello crosses the 72% shrink floor on this chip. Fase is the short stage word; the mission line still says Livello."
+  },
+  {
+    "key": "spec:LVL 49",
+    "reason": "Livello crosses the 72% shrink floor on this chip. Fase is the short stage word; the mission line still says Livello."
+  },
+  {
+    "key": "spec:LVL 5",
+    "reason": "Livello crosses the 72% shrink floor on this chip. Fase is the short stage word; the mission line still says Livello."
+  },
+  {
+    "key": "spec:LVL 50",
+    "reason": "Livello crosses the 72% shrink floor on this chip. Fase is the short stage word; the mission line still says Livello."
+  },
+  {
+    "key": "spec:LVL 6",
+    "reason": "Livello crosses the 72% shrink floor on this chip. Fase is the short stage word; the mission line still says Livello."
+  },
+  {
+    "key": "spec:LVL 7",
+    "reason": "Livello crosses the 72% shrink floor on this chip. Fase is the short stage word; the mission line still says Livello."
+  },
+  {
+    "key": "spec:LVL 8",
+    "reason": "Livello crosses the 72% shrink floor on this chip. Fase is the short stage word; the mission line still says Livello."
+  },
+  {
+    "key": "spec:LVL 9",
+    "reason": "Livello crosses the 72% shrink floor on this chip. Fase is the short stage word; the mission line still says Livello."
+  },
+  {
+    "key": "spec:Launch Backup Pod (+8 Scrap!)",
+    "reason": "Lancia capsula di riserva keeps the verb and both glossary words, under the shrink floor."
+  },
+  {
+    "key": "spec:Moon Chute 1",
+    "reason": "Scivolo luna keeps the chute word and stays under the shrink floor."
+  },
+  {
+    "key": "spec:Moon Chute 10",
+    "reason": "Scivolo luna keeps the chute word and stays under the shrink floor."
+  },
+  {
+    "key": "spec:Moon Chute 2",
+    "reason": "Scivolo luna keeps the chute word and stays under the shrink floor."
+  },
+  {
+    "key": "spec:Moon Chute 3",
+    "reason": "Scivolo luna keeps the chute word and stays under the shrink floor."
+  },
+  {
+    "key": "spec:Moon Chute 4",
+    "reason": "Scivolo luna keeps the chute word and stays under the shrink floor."
+  },
+  {
+    "key": "spec:Moon Chute 5",
+    "reason": "Scivolo luna keeps the chute word and stays under the shrink floor."
+  },
+  {
+    "key": "spec:Moon Chute 6",
+    "reason": "Scivolo luna keeps the chute word and stays under the shrink floor."
+  },
+  {
+    "key": "spec:Moon Chute 7",
+    "reason": "Scivolo luna keeps the chute word and stays under the shrink floor."
+  },
+  {
+    "key": "spec:Moon Chute 8",
+    "reason": "Scivolo luna keeps the chute word and stays under the shrink floor."
+  },
+  {
+    "key": "spec:Moon Chute 9",
+    "reason": "Scivolo luna keeps the chute word and stays under the shrink floor."
+  },
+  {
+    "key": "spec:Nebula Pinball",
+    "reason": "Flipper nebulosa is the Italian pinball name and stays under the shrink floor."
+  },
+  {
+    "key": "spec:Nebula Pinball 1",
+    "reason": "Flipper nebulosa is the Italian pinball name and stays under the shrink floor."
+  },
+  {
+    "key": "spec:Nebula Pinball 10",
+    "reason": "Flipper nebulosa is the Italian pinball name and stays under the shrink floor."
+  },
+  {
+    "key": "spec:Nebula Pinball 2",
+    "reason": "Flipper nebulosa is the Italian pinball name and stays under the shrink floor."
+  },
+  {
+    "key": "spec:Nebula Pinball 3",
+    "reason": "Flipper nebulosa is the Italian pinball name and stays under the shrink floor."
+  },
+  {
+    "key": "spec:Nebula Pinball 4",
+    "reason": "Flipper nebulosa is the Italian pinball name and stays under the shrink floor."
+  },
+  {
+    "key": "spec:Nebula Pinball 5",
+    "reason": "Flipper nebulosa is the Italian pinball name and stays under the shrink floor."
+  },
+  {
+    "key": "spec:Nebula Pinball 6",
+    "reason": "Flipper nebulosa is the Italian pinball name and stays under the shrink floor."
+  },
+  {
+    "key": "spec:Nebula Pinball 7",
+    "reason": "Flipper nebulosa is the Italian pinball name and stays under the shrink floor."
+  },
+  {
+    "key": "spec:Nebula Pinball 8",
+    "reason": "Flipper nebulosa is the Italian pinball name and stays under the shrink floor."
+  },
+  {
+    "key": "spec:Nebula Pinball 9",
+    "reason": "Flipper nebulosa is the Italian pinball name and stays under the shrink floor."
+  },
+  {
+    "key": "spec:Nibbles Hats",
+    "reason": "Cappelli Nibbles keeps the name. The full phrase cappelli di Nibbles crosses the shrink floor."
+  },
+  {
+    "key": "spec:Nibbles the Void",
+    "reason": "Nibbles del vuoto is the skin name, a few pixels over, under the shrink floor."
+  },
+  {
+    "key": "spec:Prize",
+    "reason": "Premio is the prize word and stays under the shrink floor."
+  },
+  {
+    "key": "spec:Reset",
+    "reason": "Azzera is the verb and stays under the shrink floor."
+  },
+  {
+    "key": "spec:SHOP",
+    "reason": "Negozio is the shop word on a narrow dock and stays under the shrink floor."
+  },
+  {
+    "key": "spec:Singularity Horizon",
+    "reason": "Orizzonte singolarità keeps both words and stays under the shrink floor."
+  },
+  {
+    "key": "spec:TOY SHOP",
+    "reason": "Giocattoli is one pixel over. Negozio di giocattoli crosses the shrink floor; the shop sentence keeps that phrase."
+  },
+  {
+    "key": "spec:Unlock (1200",
+    "reason": "Sblocca is the verb, about one pixel over, under the shrink floor."
+  },
+  {
+    "key": "spec:Unlock (1500",
+    "reason": "Sblocca is the verb, about one pixel over, under the shrink floor."
+  },
+  {
+    "key": "spec:Unlock (500",
+    "reason": "Sblocca is the verb, about one pixel over, under the shrink floor."
+  },
+  {
+    "key": "spec:Wear",
+    "reason": "Metti is the short form of indossa, one pixel over, under the shrink floor."
+  }
+]
