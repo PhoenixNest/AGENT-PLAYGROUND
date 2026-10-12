@@ -22,6 +22,10 @@ Paths written as `tools/parity/...` in entries dated before 2026-10-08 are the l
 
 ### Added
 
+#### German translation table (2026-10-12)
+
+- German translation table (de): 355 spec + 81 str keys, validator errors 0.
+
 #### Translated data names in C# overrides (2026-10-12)
 
 - `Loc.TrName` translates an English data name that a C# override inserts. English returns that string and does not open a table. Any other language checks a `data.*` registry row, then the normalised spec table. The home mission title, pause level name, world title, HUD sector code, cleanup toast, and trophy toast pass their names through it. The per-frame rebuild caches the lookup by text and language version.
