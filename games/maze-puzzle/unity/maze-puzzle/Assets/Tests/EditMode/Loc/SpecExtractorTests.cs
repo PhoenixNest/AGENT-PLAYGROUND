@@ -89,6 +89,52 @@ namespace OrbitalSalvage.Loc.Tests
         }
 
         [Test]
+        public void Extract_EndonymsAreNeverTranslated()
+        {
+            var languages = LanguageRegistry.All;
+            for (int i = 0; i < languages.Count; i++)
+            {
+                string endonym = LocText.Normalize(languages[i].Endonym);
+                Assert.IsTrue(SpecExtractor.IsNeverTranslate(endonym), languages[i].Code);
+                Assert.IsTrue(SpecExtractor.IsNeverTranslate(LocText.Normalize(LanguageMarker.Mark(languages[i].Endonym))), languages[i].Code);
+            }
+            Assert.IsFalse(SpecExtractor.IsNeverTranslate("Choose Language"));
+            Assert.IsFalse(SpecExtractor.IsNeverTranslate("Hello"));
+
+            string dir = Path.Combine(Path.GetTempPath(), "loc-endonym-" + System.Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(dir);
+            try
+            {
+                string marked = LanguageMarker.Mark("English");
+                File.WriteAllText(Path.Combine(dir, "lang__zero.json"),
+                    "{\"elements\":["
+                    + "{\"id\":\"settings-language-value\",\"runs\":[{\"s\":\"English\",\"r\":[0,0,40,11]}]},"
+                    + "{\"id\":\"btn-lang-zh-Hans\",\"runs\":[{\"s\":\"简体中文\",\"r\":[0,0,56,17]}]},"
+                    + "{\"id\":\"btn-lang-en\",\"runs\":[{\"s\":\"" + marked + "\",\"r\":[0,0,70,17]}]},"
+                    + "{\"id\":\"language-modal-title\",\"runs\":[{\"s\":\"Choose Language\",\"r\":[0,0,120,17]}]}"
+                    + "]}",
+                    new UTF8Encoding(false));
+                SpecScan scan = SpecExtractor.Scan(dir, "__zero.json");
+                CollectionAssert.Contains(scan.SkipKeys, "English");
+                CollectionAssert.Contains(scan.SkipKeys, "简体中文");
+                CollectionAssert.Contains(scan.SkipKeys, marked);
+                CollectionAssert.DoesNotContain(scan.SpecKeys, "English");
+                CollectionAssert.DoesNotContain(scan.SpecKeys, "简体中文");
+                CollectionAssert.DoesNotContain(scan.SpecKeys, marked);
+                CollectionAssert.Contains(scan.SpecKeys, "Choose Language");
+                StringAssert.Contains("\"doNotTranslate\"", scan.EnglishJson);
+                int specAt = scan.EnglishJson.IndexOf("\"spec\"", System.StringComparison.Ordinal);
+                int skipAt = scan.EnglishJson.IndexOf("\"doNotTranslate\"", System.StringComparison.Ordinal);
+                int englishInSpec = scan.EnglishJson.IndexOf("English", specAt, skipAt - specAt, System.StringComparison.Ordinal);
+                Assert.Less(englishInSpec, 0, "endonym must not be a spec value");
+            }
+            finally
+            {
+                if (Directory.Exists(dir)) Directory.Delete(dir, true);
+            }
+        }
+
+        [Test]
         public void Extract_IphoneMatchesZeroAndCommittedTableIsFresh()
         {
             string specDir = Path.Combine(Application.dataPath, "Resources", "Parity", "Spec");

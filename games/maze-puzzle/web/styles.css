@@ -403,6 +403,64 @@ html {
   transform: translateY(0);
 }
 
+/* Language picker: centered card, no scroll, two columns. The current language
+   is a leading check mark in the button text, not a yellow fill. */
+#modal-language.modal-overlay {
+  align-items: center;
+  padding: 24px 16px;
+}
+
+#modal-language .lang-modal-card {
+  width: 100%;
+  max-height: none;
+  border-radius: 28px;
+  transform: translateY(16px);
+}
+
+#modal-language.modal-overlay.active .lang-modal-card {
+  transform: translateY(0);
+}
+
+#modal-language .lang-modal-body {
+  overflow: hidden;
+  padding: 12px 12px 14px;
+  gap: 0;
+}
+
+.lang-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.lang-option {
+  font-family: var(--font-bubble);
+  font-weight: 800;
+  font-size: 14px;
+  line-height: 1.15;
+  padding: 8px 6px;
+  min-height: 36px;
+  border-radius: 14px;
+  border: 2.5px solid var(--cartoon-border);
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.lang-close {
+  background: #fff;
+  border: 2px solid var(--cartoon-border);
+  color: var(--text-dark);
+  font-family: var(--font-bubble);
+  font-size: 13px;
+  font-weight: 800;
+  height: 32px;
+  padding: 0 12px;
+  border-radius: 999px;
+  flex: 0 0 auto;
+}
+
 .modal-header {
   padding: 16px 20px;
   border-bottom: 2.5px solid rgba(255, 255, 255, 0.1);
@@ -1828,6 +1886,13 @@ html {
 .settings-sublabel {
   font-size: 11px;
   color: rgba(255, 255, 255, 0.65);
+}
+
+/* Settings gained a language card and a second legal row. The tighter gap and
+   the smaller version-line margin keep the iPhone footer above the home indicator.
+   Other pages keep the 14px scroll gap. */
+#page-settings .page-scroll-body {
+  gap: 12px;
 }
 
 /* Cartoon Toggle Switch */

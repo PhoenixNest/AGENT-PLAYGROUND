@@ -70,6 +70,7 @@ namespace OrbitalSalvage.Viewer.Tests
             Assert.IsTrue(ParityViewer.IsGamePageTemplate("game_daily_bronze_t1000"));
             Assert.IsFalse(ParityViewer.IsGamePageTemplate("settings_modal_privacy"));
             Assert.IsFalse(ParityViewer.IsGamePageTemplate("settings_modal_reset_confirm"));
+            Assert.IsFalse(ParityViewer.IsGamePageTemplate("settings_modal_language"));
             Assert.IsFalse(ParityViewer.IsGamePageTemplate("home_default"));
         }
 

@@ -27,6 +27,9 @@ namespace OrbitalSalvage.Viewer.Editor
         [MenuItem("Orbital Salvage/Preview/settings_default", false, Priority + 6)]
         static void Settings() { PagePreviewWindow.Open("settings_default"); }
 
+        [MenuItem("Orbital Salvage/Preview/settings_modal_language", false, Priority + 12)]
+        static void Language() { PagePreviewWindow.Open("settings_modal_language"); }
+
         [MenuItem("Orbital Salvage/Preview/loading_t0500", false, Priority + 7)]
         static void Loading() { PagePreviewWindow.Open("loading_t0500"); }
 

@@ -4,6 +4,7 @@
     "references": [
         "OrbitalSalvage.Viewer",
         "OrbitalSalvage.App",
+        "OrbitalSalvage.Loc",
         "OrbitalSalvage.Render"
     ],
     "includePlatforms": [

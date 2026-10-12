@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using NUnit.Framework;
+using OrbitalSalvage.Loc;
 using OrbitalSalvage.Render;
 using OrbitalSalvage.Viewer.Editor;
 using UnityEngine;
@@ -156,6 +157,56 @@ namespace OrbitalSalvage.Viewer.Tests
                     if (tex != null) UnityEngine.Object.DestroyImmediate(tex);
                 }
             }
+        }
+
+        [Test]
+        public void LanguagePicker_ListsEveryLanguageInsideTheSafeArea()
+        {
+            string dir = Path.Combine(Application.dataPath, "Resources", "Parity", "Spec");
+            string path = Path.Combine(dir, "settings_modal_language__iphone.json");
+            Assert.IsTrue(File.Exists(path), path);
+            var root = (Dictionary<string, object>)MiniJson.Parse(File.ReadAllText(path));
+            var raw = (List<object>)root["elements"];
+            var found = new HashSet<string>();
+            double cardTop = -1;
+            double cardBottom = -1;
+            foreach (object item in raw)
+            {
+                var e = (Dictionary<string, object>)item;
+                string classes = Str(e, "c");
+                if (HasToken(classes, "lang-modal-card") && e.TryGetValue("r", out var card) && card is List<object> cr && cr.Count >= 4)
+                {
+                    cardTop = (double)cr[1];
+                    cardBottom = cardTop + (double)cr[3];
+                }
+                string id = Str(e, "id");
+                if (string.IsNullOrEmpty(id) || !id.StartsWith(LanguageMarker.ButtonPrefix, StringComparison.Ordinal)) continue;
+                found.Add(id);
+                Assert.IsTrue(e.TryGetValue("runs", out var runs) && runs is List<object> list && list.Count > 0, id);
+                foreach (object runItem in (List<object>)runs)
+                {
+                    var run = (Dictionary<string, object>)runItem;
+                    var box = (List<object>)run["r"];
+                    double y = (double)box[1];
+                    double bottom = y + (double)box[3];
+                    Assert.GreaterOrEqual(y, Top - 0.25, id);
+                    Assert.LessOrEqual(bottom, Bottom + 0.25, id);
+                }
+            }
+            Assert.AreEqual(LanguageRegistry.All.Count, found.Count);
+            for (int i = 0; i < LanguageRegistry.All.Count; i++)
+            {
+                string id = LanguageMarker.ButtonId(LanguageRegistry.All[i].Code);
+                Assert.IsTrue(found.Contains(id), id);
+            }
+            Assert.GreaterOrEqual(cardTop, Top - 0.25);
+            Assert.LessOrEqual(cardBottom, Bottom + 0.25);
+
+            string settings = File.ReadAllText(Path.Combine(dir, "settings_default__zero.json"));
+            StringAssert.Contains("\"id\":\"btn-open-user-agreement\"", settings);
+            StringAssert.Contains("User Agreement", settings);
+            StringAssert.Contains("\"id\":\"btn-open-language\"", settings);
+            StringAssert.Contains("\"id\":\"settings-language-value\"", settings);
         }
 
         static int LightPixelsInTopBand(Texture2D tex, int bandRows)
