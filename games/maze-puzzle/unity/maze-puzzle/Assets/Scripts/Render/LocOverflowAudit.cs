@@ -32,13 +32,13 @@ namespace OrbitalSalvage.Render
             public int Files;
             public int Runs;
             public int FragmentElements;
-            public int HardOutside, HardOverlap, HardBand, HardWider, HardWrapped, HardMissing;
+            public int HardOutside, HardOverlap, HardBand, HardWider, HardWrapped, HardMissing, HardIconOverlap;
             public int SoftShrink, SoftEllipsis, SoftWrap, SoftControlEllipsis;
             public string Text = "";
 
             public int Hard
             {
-                get { return HardOutside + HardOverlap + HardBand + HardWider + HardWrapped + HardMissing; }
+                get { return HardOutside + HardOverlap + HardBand + HardWider + HardWrapped + HardMissing + HardIconOverlap; }
             }
 
             public int Soft
@@ -132,14 +132,15 @@ namespace OrbitalSalvage.Render
                     ceiling -= reserved;
                     if (ceiling < rr[1] + 1) ceiling = rr[1] + 1;
                     var icons = IconsOf(els, e, rr);
+                    AddRowIcons(els, e, rr, ref icons);
                     double parentX, parentW;
                     ParentBox(els, e, out parentX, out parentW);
-                    extra += AuditRun(name, e, er, rr, shown, icons, iphone, rr[1] + extra, ceiling, parentX, parentW, canvas, report);
+                    extra += AuditRun(name, e, er, rr, Str(run, "s"), shown, icons, iphone, rr[1] + extra, ceiling, parentX, parentW, canvas, report);
                 }
             }
         }
 
-        static double AuditRun(string file, Dictionary<string, object> e, double[] er, double[] rr, string shown,
+        static double AuditRun(string file, Dictionary<string, object> e, double[] er, double[] rr, string raw, string shown,
             List<TextFit.Icon> icons, bool iphone, double drawY, double ceiling, double parentX, double parentW, Canvas2D canvas, Report report)
         {
             string font = Str(e, "fw") + " " + Str(e, "fz") + " " + Family(Str(e, "ff"));
@@ -165,6 +166,10 @@ namespace OrbitalSalvage.Render
                 ParentX = parentX,
                 ParentW = parentW
             };
+            string leadSpaces = TextFit.EdgeSpaces(raw, true);
+            string trailSpaces = TextFit.EdgeSpaces(raw, false);
+            if (leadSpaces.Length > 0) input.LeadPad = Measure(canvas, font, leadSpaces, fontPx, ls);
+            if (trailSpaces.Length > 0) input.TrailPad = Measure(canvas, font, trailSpaces, fontPx, ls);
             NoteMissingGlyphs(file, id, shown, font, report);
             TextFit.Layout plan = TextFit.Plan(input, (px, spacing) => Measure(canvas, font, shown, px, spacing));
             var lines = new List<string>();
@@ -223,6 +228,7 @@ namespace OrbitalSalvage.Render
             }
 
             double pitch = plan.LinePitch > 0 ? plan.LinePitch : Math.Max(1, fontPx);
+            double inkH = fontPx > 0 ? Math.Min(pitch, fontPx * 1.2) : pitch;
             for (int i = 0; i < lines.Count; i++)
             {
                 double tw = Measure(canvas, font, lines[i], plan.FontPx, plan.LetterSpacing);
@@ -245,13 +251,20 @@ namespace OrbitalSalvage.Render
                     report.HardBand++;
                     Add(report, file, id, "hard-band", "bottom=" + bottom.ToString("0.0", CultureInfo.InvariantCulture));
                 }
-                if (icons != null && !plan.KeepX)
+                if (icons != null)
                 {
                     for (int n = 0; n < icons.Count; n++)
                     {
                         var icon = icons[n];
                         double ix = icon.X + (plan.IconIndex == icon.Index ? plan.IconShift : 0);
-                        if (Overlaps(x, top, tw, pitch, ix, icon.Y, icon.W, icon.H))
+                        if (!Overlaps(x, top, tw, inkH, ix, icon.Y, icon.W, icon.H)) continue;
+                        // A dock badge is captured on top of its icon. That overlap is the layout.
+                        // Flag it only when the translation starts further left than the English run.
+                        if (icon.RowSibling && x >= rr[0] - 0.5 && Overlaps(rr[0], rr[1], rr[2], Math.Min(rr[3], inkH), icon.X, icon.Y, icon.W, icon.H))
+                            continue;
+                        report.HardIconOverlap++;
+                        Add(report, file, id, "icon-overlap", "icon=" + icon.Index.ToString(CultureInfo.InvariantCulture));
+                        if (!plan.KeepX)
                         {
                             report.HardOverlap++;
                             Add(report, file, id, "hard-overlap", "icon=" + icon.Index.ToString(CultureInfo.InvariantCulture));
@@ -349,6 +362,7 @@ namespace OrbitalSalvage.Render
             sb.Append(" hard_band=").Append(report.HardBand.ToString(CultureInfo.InvariantCulture));
             sb.Append(" hard_wider=").Append(report.HardWider.ToString(CultureInfo.InvariantCulture));
             sb.Append(" hard_wrapped=").Append(report.HardWrapped.ToString(CultureInfo.InvariantCulture));
+            sb.Append(" icon_overlap=").Append(report.HardIconOverlap.ToString(CultureInfo.InvariantCulture));
             sb.Append(" hard_missing=").Append(report.HardMissing.ToString(CultureInfo.InvariantCulture));
             sb.Append(" soft_shrink=").Append(report.SoftShrink.ToString(CultureInfo.InvariantCulture));
             sb.Append(" soft_ellipsis=").Append(report.SoftEllipsis.ToString(CultureInfo.InvariantCulture));
@@ -395,6 +409,37 @@ namespace OrbitalSalvage.Render
                 if (box[1] < bottom) bottom = box[1];
             }
             return bottom;
+        }
+
+        static void AddRowIcons(List<Dictionary<string, object>> els, Dictionary<string, object> self, double[] rr, ref List<TextFit.Icon> list)
+        {
+            if (rr == null) return;
+            int parent = (int)Num(self, "p", -1);
+            int selfId = (int)Num(self, "i", -1);
+            if (parent < 0) return;
+            for (int i = 0; i < els.Count; i++)
+            {
+                if ((int)Num(els[i], "i", -2) == selfId) continue;
+                if ((int)Num(els[i], "p", -2) != parent) continue;
+                int iconAt = i;
+                double[] box = Box(els[i]);
+                if (box == null || box[2] <= 0 || box[3] <= 0) continue;
+                bool emoji = Str(els[i], "emoji").Length > 0;
+                if (!emoji)
+                {
+                    if (!NestedEmoji(els, els[i], out iconAt, out box)) continue;
+                }
+                if (box[1] + box[3] < rr[1] - 2 || box[1] > rr[1] + rr[3] + 2) continue;
+                if (list != null)
+                {
+                    bool seen = false;
+                    for (int n = 0; n < list.Count; n++)
+                        if (list[n].Index == iconAt) { seen = true; break; }
+                    if (seen) continue;
+                }
+                else list = new List<TextFit.Icon>();
+                list.Add(new TextFit.Icon { Index = iconAt, X = box[0], Y = box[1], W = box[2], H = box[3], RowSibling = true });
+            }
         }
 
         static List<TextFit.Icon> IconsOf(List<Dictionary<string, object>> els, Dictionary<string, object> parent, double[] rr)

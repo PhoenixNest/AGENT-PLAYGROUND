@@ -2850,6 +2850,11 @@ namespace OrbitalSalvage.Render
             }
             // IsCenteredBlock needs blockCenter, which foreign reflow leaves at 0. Compute the same gaps.
             input.CenteredBlock = CenteredGaps(runX, runW, er);
+            string rawRun = S(run, "s");
+            string leadSpaces = TextFit.EdgeSpaces(rawRun, true);
+            string trailSpaces = TextFit.EdgeSpaces(rawRun, false);
+            if (leadSpaces.Length > 0) input.LeadPad = fitMeasure(leadSpaces, fontPx, ls);
+            if (trailSpaces.Length > 0) input.TrailPad = fitMeasure(trailSpaces, fontPx, ls);
             TextFit.Layout plan = TextFit.Plan(input, (px, spacing) =>
             {
                 fitFontBase = font;
@@ -3049,6 +3054,30 @@ namespace OrbitalSalvage.Render
                 bool overlap = x < runRight - 0.5 && iconRight > runX + 0.5;
                 if (!lead && !trail && !overlap) continue;
                 iconScratch.Add(new TextFit.Icon { Index = iconIndex, X = x, Y = y, W = w, H = h });
+            }
+            int parent = (int)N(elements[k], "p", -2);
+            if (parent < 0) return;
+            for (int i = 0; i < elements.Count; i++)
+            {
+                if ((int)N(elements[i], "i", -2) == id) continue;
+                if ((int)N(elements[i], "p", -2) != parent) continue;
+                var sib = elements[i];
+                double x, y, w, h;
+                int iconIndex = i;
+                if (!IconBox(sib, out x, out y, out w, out h)
+                    && !NestedEmoji(sib, out iconIndex, out x, out y, out w, out h)) continue;
+                if (y + h < runY - 2 || y > runY + runH + 2) continue;
+                bool seen = false;
+                for (int n = 0; n < iconScratch.Count; n++)
+                    if (iconScratch[n].Index == iconIndex) { seen = true; break; }
+                if (seen) continue;
+                double iconRight = x + w;
+                double runRight = runX + runW;
+                bool lead = iconRight <= runX + 2 && runX - iconRight <= TextFit.IconGapSlop;
+                bool trail = x >= runRight - 2 && x - runRight <= TextFit.IconGapSlop;
+                bool overlap = x < runRight - 0.5 && iconRight > runX + 0.5;
+                if (!lead && !trail && !overlap) continue;
+                iconScratch.Add(new TextFit.Icon { Index = iconIndex, X = x, Y = y, W = w, H = h, RowSibling = true });
             }
         }
 
