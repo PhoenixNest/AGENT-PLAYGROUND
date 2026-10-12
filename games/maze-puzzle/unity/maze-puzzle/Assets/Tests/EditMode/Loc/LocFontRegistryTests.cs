@@ -49,7 +49,7 @@ namespace OrbitalSalvage.Loc.Tests
         [Test]
         public void LatinLanguages_InsertNunitoAfterFredoka()
         {
-            string[] codes = { "de", "fr", "es", "it", "pt-PT", "fil", "id", "uz", "vi", "qps" };
+            string[] codes = { "de", "fr", "es", "it", "pt-PT", "fil", "id", "vi", "qps" };
             for (int i = 0; i < codes.Length; i++)
             {
                 string[] display = LocFonts.GetChain(codes[i], "Fredoka", 800);
@@ -63,6 +63,39 @@ namespace OrbitalSalvage.Loc.Tests
                     "Nunito-700", "NotoSansSymbols2-Regular", "NotoSansSymbols-Regular"
                 }, body, codes[i] + " body");
             }
+        }
+
+        [Test]
+        public void Uzbek_PutsTheModifierPatchFirst_AndKeepsOtherLatinFaces()
+        {
+            CollectionAssert.AreEqual(new[]
+            {
+                "Nunito-uz-patch-700", "Fredoka-700", "Nunito-700",
+                "NotoSansSymbols2-Regular", "NotoSansSymbols-Regular"
+            }, LocFonts.GetChain("uz", "Fredoka", 800));
+            CollectionAssert.AreEqual(new[]
+            {
+                "Nunito-uz-patch-600", "Fredoka-600", "Nunito-700",
+                "NotoSansSymbols2-Regular", "NotoSansSymbols-Regular"
+            }, LocFonts.GetChain("uz", "Fredoka", 600));
+            CollectionAssert.AreEqual(new[]
+            {
+                "Nunito-uz-patch-700", "Nunito-700",
+                "NotoSansSymbols2-Regular", "NotoSansSymbols-Regular"
+            }, LocFonts.GetChain("uz", "Nunito", 400));
+            CollectionAssert.AreEqual(new[]
+            {
+                "Nunito-uz-patch-800", "Nunito-800",
+                "NotoSansSymbols2-Regular", "NotoSansSymbols-Regular"
+            }, LocFonts.GetChain("uz", "Nunito", 800));
+            CollectionAssert.AreEqual(new[]
+            {
+                "Nunito-uz-patch-900", "Nunito-900",
+                "NotoSansSymbols2-Regular", "NotoSansSymbols-Regular"
+            }, LocFonts.GetChain("uz", "Nunito", 900));
+            CollectionAssert.AreEqual(
+                LocFonts.GetChain("de", "Fredoka", 800),
+                LocFonts.GetChain("fr", "Fredoka", 800));
         }
 
         [Test]

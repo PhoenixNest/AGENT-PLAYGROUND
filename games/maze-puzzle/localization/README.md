@@ -122,7 +122,8 @@ A face lists the CSS weights it serves. One weight is used for every other CSS w
 | Group | Display / body | Chain |
 | --- | --- | --- |
 | en | Fredoka 400/600/700, Nunito 700/800/900 | primary, NotoSansSymbols2, NotoSansSymbols |
-| de, fr, es, it, pt-PT, fil, id, uz, vi, qps | same faces | primary, Nunito at the same CSS weight when the family is Fredoka, then the two symbol fonts |
+| de, fr, es, it, pt-PT, fil, id, vi, qps | same faces | primary, Nunito at the same CSS weight when the family is Fredoka, then the two symbol fonts |
+| uz (`latin-uz`) | same faces, plus `Nunito-uz-patch` first | patch at the Fredoka face weight for display (600 or 700) and at the Nunito face weight for body (700, 800, 900), then the Latin chain. Other Latin languages do not load the patch |
 | cjk-sc | ZCOOL KuaiLe, one weight, all CSS weights | ZCOOL, Nunito, symbols |
 | cjk-tc | Huninn, one weight | Huninn, Nunito, symbols |
 | cjk-jp | M PLUS Rounded 1c Bold (700) | M PLUS, Nunito, symbols |
@@ -147,3 +148,12 @@ The four CJK files are temporary endonym subsets (the endonym plus printable ASC
 | `Jua-endonym.ttf` / `.bytes` | 22868 | OFL 1.1, Copyright 2018 The Jua Project Authors. `Jua-OFL.txt` (4342) |
 
 Fredoka, Nunito, and the two Noto symbol fonts are unchanged. Their OFL files were already in `Assets/Fonts`.
+
+Uzbek `oʻ` / `gʻ` is U+02BB. Fredoka does not contain it, and Nunito's glyph has advance 500 with side bearings near 180 and no GPOS pair. The renderer only kerns glyphs from the same font, so the mark was a detached apostrophe. `latin-uz` puts a one-character patch first. `localization/tools/patch_uz_modifier.py`, called from `make_fonts.sh`, instances `Nunito[wght].ttf` at 600, 700, 800, and 900, subsets to U+02BB, shifts the outline to a left side bearing of 24, and sets the advance to the ink plus a short right bearing (under 40% of the neighbouring `o`). Rebuild with `make_fonts.sh`.
+
+| File | Bytes | Licence |
+| --- | ---: | --- |
+| `Nunito-uz-patch-600.ttf` / `.bytes` | 880 | OFL 1.1, same as Nunito. `Nunito-uz-patch-OFL.txt` (4385) |
+| `Nunito-uz-patch-700.ttf` / `.bytes` | 880 | same |
+| `Nunito-uz-patch-800.ttf` / `.bytes` | 880 | same |
+| `Nunito-uz-patch-900.ttf` / `.bytes` | 876 | same |

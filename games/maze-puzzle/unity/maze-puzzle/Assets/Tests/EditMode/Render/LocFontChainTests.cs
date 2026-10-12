@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.IO;
+using System.Security.Cryptography;
 using NUnit.Framework;
 using OrbitalSalvage.Loc;
 using UnityEngine;
@@ -77,10 +78,98 @@ namespace OrbitalSalvage.Render.Tests
             {
                 string code = LatinCodes[i];
                 TrueTypeFont[] chain = OutlineFonts.ChainFor(code, "Fredoka", 800);
-                Assert.AreEqual("Fredoka-700", chain[0].name, code);
-                Assert.AreEqual("Nunito-800", chain[1].name, code);
+                if (code == "uz")
+                {
+                    Assert.AreEqual("Nunito-uz-patch-700", chain[0].name, code);
+                    Assert.AreEqual("Fredoka-700", chain[1].name, code);
+                    Assert.AreEqual("Nunito-700", chain[2].name, code);
+                }
+                else
+                {
+                    Assert.AreEqual("Fredoka-700", chain[0].name, code);
+                    Assert.AreEqual("Nunito-800", chain[1].name, code);
+                }
                 string holes = Uncovered(chain, Alphabets[code]);
                 Assert.AreEqual("", holes, code + " " + holes);
+            }
+        }
+
+        [Test]
+        public void UzbekPatch_IsNarrowerThanTheLetter_AndOtherLanguagesStayOnNunito()
+        {
+            AssertAdvance("Nunito-uz-patch-600.ttf", "Fredoka-600.ttf");
+            AssertAdvance("Nunito-uz-patch-700.ttf", "Fredoka-700.ttf");
+            AssertAdvance("Nunito-uz-patch-700.ttf", "Nunito-700.ttf");
+            AssertAdvance("Nunito-uz-patch-800.ttf", "Nunito-800.ttf");
+            AssertAdvance("Nunito-uz-patch-900.ttf", "Nunito-900.ttf");
+
+            const string phrase = "O\u02BBYNA g\u02BBa";
+            TrueTypeFont[] de = OutlineFonts.ChainFor("de", "Fredoka", 800);
+            TrueTypeFont[] fr = OutlineFonts.ChainFor("fr", "Fredoka", 800);
+            TrueTypeFont[] en = OutlineFonts.ChainFor("en", "Fredoka", 800);
+            TrueTypeFont[] uz = OutlineFonts.ChainFor("uz", "Fredoka", 800);
+            Assert.AreEqual("Fredoka-700", de[0].name);
+            Assert.AreEqual("Nunito-800", de[1].name);
+            Assert.AreEqual("Fredoka-700", fr[0].name);
+            Assert.AreSame(OutlineFonts.Chain(OutlineFonts.Primary("Fredoka", 800)), en);
+            string deHash = HashPhrase(de, phrase);
+            string frHash = HashPhrase(fr, phrase);
+            string enHash = HashPhrase(en, phrase);
+            string uzHash = HashPhrase(uz, phrase);
+            Assert.AreEqual(deHash, frHash, "de and fr both use the unpatched Nunito mark");
+            Assert.AreEqual(deHash, HashPhrase(de, phrase), "de phrase is stable");
+            Assert.AreNotEqual(deHash, uzHash, "uz phrase still uses the wide Nunito mark");
+            Assert.AreNotEqual(enHash, deHash);
+            Assert.Less(Measure(uz, phrase), Measure(de, phrase));
+        }
+
+        static void AssertAdvance(string patchFile, string letterFile)
+        {
+            TrueTypeFont patch = LoadDisk(patchFile);
+            TrueTypeFont letter = LoadDisk(letterFile);
+            int mark = patch.GlyphIndex(0x02BB);
+            int oh = letter.GlyphIndex((int)'o');
+            Assert.AreNotEqual(0, mark, patchFile);
+            Assert.AreNotEqual(0, oh, letterFile);
+            Assert.Less(patch.Advance(mark), letter.Advance(oh) * 0.4, patchFile + " vs " + letterFile);
+        }
+
+        static double Measure(TrueTypeFont[] chain, string text)
+        {
+            using (var canvas = new Canvas2D(32, 32))
+            {
+                canvas.Font = "800 32px Fredoka";
+                canvas.TextChain = chain;
+                canvas.TextChainStamp = chain[0].GlyphIndex(0x02BB) + chain.Length * 17;
+                return canvas.MeasureText(text);
+            }
+        }
+
+        static string HashPhrase(TrueTypeFont[] chain, string text)
+        {
+            const int w = 420;
+            const int h = 96;
+            using (var canvas = new Canvas2D(w, h))
+            {
+                canvas.BeginFrame();
+                canvas.Font = "800 48px Fredoka";
+                canvas.FillStyle = "#ffffff";
+                canvas.TextChain = chain;
+                canvas.TextChainStamp = 9;
+                canvas.FillText(text, 4, 72);
+                canvas.EndFrame();
+                var prev = RenderTexture.active;
+                RenderTexture.active = canvas.Target;
+                var tex = new Texture2D(w, h, TextureFormat.RGBA32, false, true);
+                tex.ReadPixels(new Rect(0, 0, w, h), 0, 0, false);
+                RenderTexture.active = prev;
+                byte[] raw = tex.GetRawTextureData();
+                Object.DestroyImmediate(tex);
+                using (SHA256 sha = SHA256.Create())
+                {
+                    byte[] hash = sha.ComputeHash(raw);
+                    return System.BitConverter.ToString(hash);
+                }
             }
         }
 
