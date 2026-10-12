@@ -1,7 +1,9 @@
 using System;
+using OrbitalSalvage.Loc;
 
 namespace OrbitalSalvage.Logic
 {
+    using Loc = OrbitalSalvage.Loc.Loc;
     public static class DailyReset
     {
         public static TimeZoneInfo FindLosAngeles()
@@ -28,7 +30,7 @@ namespace OrbitalSalvage.Logic
             double diff = (tomorrowUtc - nowUtc).TotalMilliseconds;
             double hours = Math.Floor(diff / (1000.0 * 60 * 60));
             double mins = Math.Floor((diff % (1000.0 * 60 * 60)) / (1000.0 * 60));
-            return "Resets in " + JsCompat.JsNumber.ToString(hours) + "h " + JsCompat.JsNumber.ToString(mins) + "m";
+            return Loc.Tr("daily.countdown", hours, mins);
         }
     }
 }

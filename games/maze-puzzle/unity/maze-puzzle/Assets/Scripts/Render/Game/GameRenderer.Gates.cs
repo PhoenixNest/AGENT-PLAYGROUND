@@ -63,7 +63,7 @@ namespace OrbitalSalvage.Render
             ctx.Font = "bold 10px Fredoka, sans-serif";
             ctx.TextAlign = "center";
             ctx.TextBaseline = "middle";
-            ctx.FillText("⚡ ×" + JsNumber.ToString(gate.Value), 0, 0.5);
+            ctx.FillText(_labels.Zap(gate.Value), 0, 0.5);
             ctx.Restore();
         }
 
@@ -150,7 +150,7 @@ namespace OrbitalSalvage.Render
             ctx.Font = "900 10.5px Fredoka, sans-serif";
             ctx.TextAlign = "center";
             ctx.TextBaseline = "middle";
-            ctx.FillText("💥 ×" + JsNumber.ToString(gate.Value) + "!", 0, 0.5);
+            ctx.FillText(_labels.Shred(gate.Value), 0, 0.5);
             ctx.Restore();
         }
 
@@ -224,7 +224,7 @@ namespace OrbitalSalvage.Render
             ctx.Font = "bold 10px Fredoka, sans-serif";
             ctx.TextAlign = "center";
             ctx.TextBaseline = "middle";
-            ctx.FillText("🧲 +" + JsNumber.ToString(gate.Value), 0, 0.5);
+            ctx.FillText(_labels.Magnet(gate.Value), 0, 0.5);
             ctx.Restore();
         }
 
@@ -284,7 +284,7 @@ namespace OrbitalSalvage.Render
             ctx.Font = "bold 9.5px Fredoka, sans-serif";
             ctx.TextAlign = "center";
             ctx.TextBaseline = "middle";
-            ctx.FillText("⏩ BOOST", 0, 0.5);
+            ctx.FillText(_labels.Boost(), 0, 0.5);
             ctx.Restore();
         }
 

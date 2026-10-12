@@ -36,6 +36,7 @@ namespace OrbitalSalvage.Render
         public readonly List<FloatingText> FloatingTexts = new List<FloatingText>();
         public readonly List<PopRing> PopRings = new List<PopRing>();
         public readonly List<ThrusterPuff> ThrusterPuffs = new List<ThrusterPuff>();
+        readonly GameplayLabels _labels = new GameplayLabels();
 
         public double Width;
         public double Height;

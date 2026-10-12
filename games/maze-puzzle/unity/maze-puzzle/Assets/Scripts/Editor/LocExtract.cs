@@ -54,7 +54,7 @@ namespace OrbitalSalvage.Editor
             string csvPath = SpecExtractor.HandoffCsvPath(Application.dataPath);
             Directory.CreateDirectory(Path.GetDirectoryName(csvPath));
             File.WriteAllText(csvPath, scan.Csv, utf8);
-            Debug.Log("[LocExtract] spec=" + scan.SpecKeys.Count + " skip=" + scan.SkipKeys.Count + " files=" + scan.FileCount);
+            Debug.Log("[LocExtract] spec=" + scan.SpecKeys.Count + " str=" + scan.StrKeys.Count + " skip=" + scan.SkipKeys.Count + " files=" + scan.FileCount);
             return true;
         }
     }

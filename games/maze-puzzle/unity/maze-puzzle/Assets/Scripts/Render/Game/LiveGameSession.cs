@@ -2,10 +2,12 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using OrbitalSalvage.JsCompat;
+using OrbitalSalvage.Loc;
 using OrbitalSalvage.Logic;
 
 namespace OrbitalSalvage.Render
 {
+    using Loc = OrbitalSalvage.Loc.Loc;
     public sealed class GameStats
     {
         public double CollectedMass;
@@ -29,7 +31,7 @@ namespace OrbitalSalvage.Render
         public const double DoubleTapMs = 280;
         public const double DoubleTapPx = 45;
 
-        static readonly string[] NomWords = { "NOM! 😋", "YUM! ✨", "GULP! 🍩", "TASTY! ⭐" };
+        static readonly string[] NomKeys = { "fx.swallow.nom", "fx.swallow.yum", "fx.swallow.gulp", "fx.swallow.tasty" };
 
         /// <summary>When true, the physics step and <see cref="Present"/> record Stopwatch ticks. Default false, so play and stills are unchanged.</summary>
         public static bool PhaseTiming;
@@ -97,12 +99,13 @@ namespace OrbitalSalvage.Render
         double _lastPointerX;
         double _lastTapTime;
         double _lastTapX;
+        LocMemo _quotaLabel;
 
         public double Quota => ActiveSector != null ? ActiveSector.Quota : 30;
 
         public string QuotaLabel()
         {
-            return JsNumber.ToString(CollectedMass) + " / " + JsNumber.ToString(Quota) + " kg";
+            return _quotaLabel.Num("unit.quota", CollectedMass, Quota);
         }
 
         public double QuotaBarWidth(double trackWidth)
@@ -407,9 +410,9 @@ namespace OrbitalSalvage.Render
             Renderer.TriggerNibblesChew();
             string[] texts =
             {
-                "NOM! 😋", "YUM! ✨", "GULP! 🍩", "TASTY! ⭐",
-                "×5! SHRED ⚡", "+7! COMPACT ✨", "BOOST! ⏩",
-                "POOF! 💨", "TURBO! ⏩", "⏪ TURBO!"
+                Loc.Tr("fx.swallow.nom"), Loc.Tr("fx.swallow.yum"), Loc.Tr("fx.swallow.gulp"), Loc.Tr("fx.swallow.tasty"),
+                Loc.Tr("fx.shred", 5d), Loc.Tr("fx.compact", 7d), Loc.Tr("fx.boost"),
+                Loc.Tr("fx.poof"), Loc.Tr("fx.turbo.cw"), Loc.Tr("fx.turbo.ccw")
             };
             string[] colors =
             {
@@ -433,8 +436,8 @@ namespace OrbitalSalvage.Render
             CollectedMass += d.Weight * 2;
             if (OnQuotaChanged != null) OnQuotaChanged(CollectedMass, Quota);
             Renderer.TriggerNibblesChew();
-            int word = (int)JsMath.Floor(JsRandom.Global.NextDouble() * NomWords.Length);
-            Renderer.AddFloatingText(Physics.BlackHole.X, Physics.BlackHole.Y - 32, NomWords[word], "#fde047");
+            int word = (int)JsMath.Floor(JsRandom.Global.NextDouble() * NomKeys.Length);
+            Renderer.AddFloatingText(Physics.BlackHole.X, Physics.BlackHole.Y - 32, Loc.Tr(NomKeys[word]), "#fde047");
             Renderer.AddPopRing(Physics.BlackHole.X, Physics.BlackHole.Y, 46, "#facc15");
             RecentUnlocks = Economy.RecordDebrisSwallowed(1);
             if (OnSwallow != null) OnSwallow(d);
@@ -452,10 +455,10 @@ namespace OrbitalSalvage.Render
             double gx = Physics.Center.X + JsMath.Cos(ang) * rMid;
             double gy = Physics.Center.Y + JsMath.Sin(ang) * rMid;
             string label = gate.Type == "MULTIPLY"
-                ? "×" + JsNumber.ToString(gate.Value) + "! SHRED ⚡"
+                ? Loc.Tr("fx.shred", gate.Value)
                 : gate.Type == "ADD"
-                    ? "+" + JsNumber.ToString(gate.Value) + "! COMPACT ✨"
-                    : "BOOST! ⏩";
+                    ? Loc.Tr("fx.compact", gate.Value)
+                    : Loc.Tr("fx.boost");
             Renderer.AddFloatingText(gx, gy - 16, label, "#fde047");
             Renderer.AddConfetti(gx, gy, 8);
         }
@@ -463,7 +466,7 @@ namespace OrbitalSalvage.Render
         void OnExploded(Debris d)
         {
             Renderer.AddConfetti(d.X, d.Y, 22);
-            Renderer.AddFloatingText(d.X, d.Y - 20, "POOF! 💨", "#f472b6");
+            Renderer.AddFloatingText(d.X, d.Y - 20, Loc.Tr("fx.poof"), "#f472b6");
         }
 
         void OnBoost(double dir)
@@ -472,7 +475,7 @@ namespace OrbitalSalvage.Render
             double cy = Physics.Center.Y;
             double rOut = Physics.RingRadius;
             Renderer.AddBoostShockwave(cx, cy, rOut, "#38bdf8");
-            string label = dir > 0 ? "TURBO! ⏩" : "⏪ TURBO!";
+            string label = dir > 0 ? Loc.Tr("fx.turbo.cw") : Loc.Tr("fx.turbo.ccw");
             Renderer.AddFloatingText(cx, cy - rOut * 0.4, label, "#38bdf8");
             if (OnBoostCue != null) OnBoostCue(dir);
         }

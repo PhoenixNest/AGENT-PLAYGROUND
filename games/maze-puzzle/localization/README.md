@@ -41,7 +41,7 @@ Runtime code is `OrbitalSalvage.Loc` (no UnityEngine, so Logic and App can refer
 }
 ```
 
-`name` is the endonym. `spec` keys are normalised English run text from the parity specs. `str` keys are dot keys for C# literals (empty until those are wired). `{0}` placeholders are filled with invariant formatting. Numbers go through `JsNumber.ToString`, so a German device still sees `1.5`, not `1,5`. The loader ignores `doNotTranslate`.
+`name` is the endonym. `spec` keys are normalised English run text from the parity specs. `str` keys are dot keys for C# literals (`toast.shop.unlocked`, `loading.tip.3`). `{0}` placeholders are filled with invariant formatting. The English text for those keys lives in `LocStrings` and is copied into this file by the extractor. Numbers go through `JsNumber.ToString`, so a German device still sees `1.5`, not `1,5`. The loader ignores `doNotTranslate`.
 
 ## Key rules
 
@@ -55,11 +55,19 @@ An endonym from `LanguageRegistry`, and that same endonym with the current-langu
 
 ## CSV
 
-`localization/key-index.csv` is the translator handoff, one row per spec key, ordinal order.
+`localization/key-index.csv` is the translator handoff, one row per spec key and then one row per `str` key. Spec keys stay in ordinal order. `str` keys follow, also ordinal.
 
-`key`, `kind` (`spec` or, later, `str`), `files` (`count: first; second; third` zero-spec names), `element_ids` (up to 5), `element_classes` (up to 3), `fz` (first non-empty), `uppercase` (`uppercase` if any occurrence uses that text-transform, otherwise the first `tt`), `max_width` (largest `run.r[2]` in CSS px, else the element width, else blank), `chars` (Unicode code points), `hasEmoji`, `hasPlaceholderLike`, `group` (element id, or `file#index` when there is no id, up to 8), `run_index`, `notes`.
+`key`, `kind` (`spec` or `str`), `files` (`count: first; second; third` zero-spec names), `element_ids` (up to 5), `element_classes` (up to 3), `fz` (first non-empty), `uppercase` (`uppercase` if any occurrence uses that text-transform, otherwise the first `tt`), `max_width` (largest `run.r[2]` in CSS px, else the element width, else blank), `chars` (Unicode code points of a spec key, or of the English text for a `str` row), `hasEmoji`, `hasPlaceholderLike`, `group` (element id, or `file#index` when there is no id, up to 8), `run_index`, `notes`, `placeholder_count` (distinct `{n}` indexes; blank on spec rows), `max_chars` (chip or button budget; blank when there is no tight budget, and blank on spec rows).
 
-`notes` contains `fragment` when the run sits in an element with two or more text runs, and `no-terminal-punct` when the key does not end with sentence punctuation.
+`notes` contains `fragment` when the run sits in an element with two or more text runs, and `no-terminal-punct` when the key does not end with sentence punctuation. On a `str` row, `notes` is the translator context from `LocStrings`.
+
+## C# strings
+
+Player copy that C# builds itself (toasts, quota lines, shop footers, loading tips, floating words) is a `LocStrings` row, not a spec key. Add a row: key in `area.screen.element` form, English with `{0}` placeholders so a translation can reorder, and a short context note (where it shows, a character budget when the control is a chip or button, and which emoji must stay). Call `Loc.Tr(key)` or `Loc.Tr(key, args)`. English reads the registry and does not need `en.json`. Units such as `kg` and the coin emoji belong in the English text.
+
+Do not put catalog, level, world, achievement, or daily-shift sentences into `LocStrings`. Those stay English in the Logic tables. Captured spec runs translate them. A C# `Text()` override is the exception: that override replaces the spec run, so the override itself goes through `Loc.Tr`.
+
+Per-frame playfield words use `LocMemo` or `LocNumCache` so a repeated English label does not allocate. Run the extractor after adding a row. `LocHardcodedStringTests` fails if a new English literal in the UI sources is not `Loc.Tr` or listed in `localization/hardcoded-allowlist.txt`. `LocStringTests` fails if a `Loc.Tr("...")` key is missing from the registry, or a registry key is unused (unless the row is marked dynamic).
 
 ## Workflow
 
