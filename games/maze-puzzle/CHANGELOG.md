@@ -45,6 +45,12 @@ Paths written as `tools/parity/...` in entries dated before 2026-10-08 are the l
 - The 17 `btn-lang-<code>` runs use that language's display chain while the settings page or the language modal is open. A `missing-glyph` audit finding is hard. Rebuild with `localization/tools/make_fonts.sh`.
 - Focused EditMode (`LocFontRegistryTests|LocFontChainTests|LocFontPickerTests`): 10 passed, 0 failed. Results `/tmp/maze-i18n/loc-fonts/focused.xml`, log `/tmp/maze-i18n/loc-fonts/focused.log`. Full EditMode: 511 passed, 83 failed, 3 skipped, 597 total, exit 2. Results `/tmp/maze-i18n/loc-fonts/full.xml`, log `/tmp/maze-i18n/loc-fonts/full.log`. The 83 are the known set (`ReferenceComparisonTests` 73, `ReferenceGateTests` 9, `QuotaAndModalTests.GameAndPauseStills_MatchKnownHashes`). The skips are `FrameRateHarness.Measure`, `FrameRateHarness.MeasureAccumulated`, and `PagePreviewTests.Stills_MatchTheParityPlayer_IncludingShopRingsDefault`.
 
+#### Translation kit for the 16 target languages (2026-10-12)
+
+- `localization/glossary.md` is the controlled glossary (49 terms) with a recommended draft for each target language, do-not-translate flags, and the per-language style rules.
+- `localization/translator-brief.md` is the prompt for a per-language translation agent. `localization/process.md` is the path from extract and string freeze through validation, a 30-key sample, the pseudo-locale audit, and a Translation Verification Report.
+- `localization/tools/validate_table.py` checks a table against `en.json` using the `LocValidator` rules plus empty strings, untranslated copies, script, placeholders, emoji, digits, glossary warnings, expansion, line-box fit, stale source hashes, and missing glyphs. `fonts-chains.json` names the shipped Latin faces and the pending faces. Stubs go to a scratch directory. `merge_table.py` folds a partial table back in and writes `meta.sourceHashes`.
+
 #### Settings language picker and legal rows (2026-10-12)
 
 - Settings gains a Language row and a User Agreement row. Change opens `settings_modal_language`, a two-column grid of the 17 endonyms with no scroll. The current language is a leading `✓ ` (`U+2713`) on that button. The English capture marks English. Unity overrides `settings-language-value` and the two marker buttons from the saved code. `HomeChrome.PaintRuns` is unchanged, so a non-English marker stays at the captured run origin.
