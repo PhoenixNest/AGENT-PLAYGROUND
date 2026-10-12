@@ -6,7 +6,9 @@
         "UnityEditor.TestRunner",
         "OrbitalSalvage.Render",
         "OrbitalSalvage.Logic",
-        "OrbitalSalvage.JsCompat"
+        "OrbitalSalvage.JsCompat",
+        "OrbitalSalvage.Loc",
+        "OrbitalSalvage.Loc.Unity"
     ],
     "includePlatforms": [
         "Editor"

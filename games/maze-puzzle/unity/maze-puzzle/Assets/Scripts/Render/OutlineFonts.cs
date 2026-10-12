@@ -62,6 +62,22 @@ namespace OrbitalSalvage.Render
             return c;
         }
 
+        /// <summary>
+        /// Same faces as <see cref="Chain(TrueTypeFont)"/> today. A later task prepends language faces
+        /// for <paramref name="fontGroup"/> (<c>cjk-sc</c>, <c>arabic</c>, …). The cache key is
+        /// (primary, group). An empty group uses the Latin chain unchanged.
+        /// </summary>
+        public static TrueTypeFont[] Chain(TrueTypeFont primary, string fontGroup)
+        {
+            if (string.IsNullOrEmpty(fontGroup)) return Chain(primary);
+            string key = primary.name + "\n" + fontGroup;
+            if (Chains.TryGetValue(key, out var c)) return c;
+            // TODO: prepend the faces registered for fontGroup. None are shipped yet.
+            c = new[] { primary, Load(SymbolChain[0]), Load(SymbolChain[1]) };
+            Chains[key] = c;
+            return c;
+        }
+
         public static void Clear()
         {
             Fonts.Clear(); Ids.Clear(); Chains.Clear(); Cache.Clear(); Raw.Clear();

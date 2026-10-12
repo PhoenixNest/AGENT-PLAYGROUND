@@ -13,6 +13,14 @@ Paths written as `tools/parity/...` in entries dated before 2026-10-08 are the l
 
 ### Added
 
+#### Unity localisation render hook (2026-10-12)
+
+- Non-English paint looks up each spec run and lays it out with `TextFit` inside the captured element box. English `PaintRuns` still takes the captured path after one `Loc.EnglishActive` check per run. A language change bumps `Loc.Version`. The next frame drops chrome bakes and rebuilds one resident page per frame.
+- Line breaking is Latin (same splits as `WrapWords`), CJK with kinsoku, or Korean. `km`, `hi`, and `ar` still use the Latin breaker. Non-English `text-transform: uppercase` goes through `LocCase.Upper`. German `ß` becomes `SS`. Caseless scripts are not uppercased.
+- `qps` is a hidden pseudo-locale built in memory from `en.json`. It is not in the language list and is not saved. Boot reads PlayerPrefs `os.parity.lang` only when that key is set.
+- The overflow audit is `Orbital Salvage/Tools/Localization Overflow Audit` (priority 401) and batch `OrbitalSalvage.Editor.LocOverflowMenu.RunBatch`. On `qps`: 88 spec files, 1886 runs, 86 fragment elements, hard 0 (outside 0, overlap 0, band 0, wider 0), soft 1454 (shrink 618, ellipsis 723, wrap 113).
+- Full EditMode: 495 passed, 83 failed, 3 skipped, 581 total, exit 2. The 83 are the known set (`ReferenceComparisonTests` 73, `ReferenceGateTests` 9, `QuotaAndModalTests.GameAndPauseStills_MatchKnownHashes`). `PagePreviewTests.Stills_MatchTheParityPlayer_IncludingShopRingsDefault` stayed skipped. Results: `/tmp/maze-i18n/loc-render/full.xml`.
+
 #### Unity localisation runtime (2026-10-12)
 
 - The localisation runtime is `OrbitalSalvage.Loc` (no Unity engine reference, so Logic and App can call it). The Resources loader and the device-locale provider are `OrbitalSalvage.Loc.Unity`. Nothing in the paint path reads a table. English spec lookup returns false, and `settings.language` is omitted while empty, so an unset profile matches the economy golden byte for byte.

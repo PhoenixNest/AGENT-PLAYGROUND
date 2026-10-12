@@ -7,7 +7,9 @@
         "OrbitalSalvage.Viewer",
         "OrbitalSalvage.Viewer.Editor",
         "OrbitalSalvage.App",
-        "OrbitalSalvage.Render"
+        "OrbitalSalvage.Render",
+        "OrbitalSalvage.Loc",
+        "OrbitalSalvage.Loc.Unity"
     ],
     "includePlatforms": [
         "Editor"

@@ -259,6 +259,7 @@ namespace OrbitalSalvage.Viewer
             if (!selfTesting) GovernQuality();
             PerfSuspendUpdate();
             long prewarmStamp = PerfStamp();
+            PollLanguageFrame();
             PumpTabPrewarm();
             PerfAdd(DevicePerf.Phase.Prewarm, prewarmStamp);
             PerfResumeUpdate();
