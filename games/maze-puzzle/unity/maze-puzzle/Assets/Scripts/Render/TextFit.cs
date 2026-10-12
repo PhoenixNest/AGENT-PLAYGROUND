@@ -26,6 +26,11 @@ namespace OrbitalSalvage.Render
         public const double RightMinLeft = 8;
         public const double OutsideSlop = 0.5;
         public const double TwoLineFactor = 1.9;
+        /// <summary>A captured run at most this tall is one line: <c>1.5 * fontPx + 2</c>.</summary>
+        public const double SingleLineFactor = 1.5;
+        public const double SingleLineSlack = 2;
+        /// <summary>An element shorter than this cannot grow a second line.</summary>
+        public const double ControlHeightFactor = 2.2;
         public const double IconGapSlop = 8;
         /// <summary>iPhone home-indicator band. Text whose bottom passes this is a hard audit finding.</summary>
         public const double HomeIndicatorY = 898.25;
@@ -58,6 +63,8 @@ namespace OrbitalSalvage.Render
             public double ElX, ElY, ElW, ElH;
             public bool CenteredBlock;
             public bool IsButton;
+            /// <summary>Id or class looks like a button, even when the tag is not <c>button</c>.</summary>
+            public bool ButtonLike;
             public double FontPx;
             public double LetterSpacing;
             public bool OriginalMultiLine;
@@ -65,6 +72,8 @@ namespace OrbitalSalvage.Render
             public Icon[] Icons;
             /// <summary>When &gt; 0, wrapped lines may not extend below this y. 0 disables the band.</summary>
             public double BandY;
+            /// <summary>Bottom y this run may use. 0 means the element bottom. Following runs reserve their captured height below this.</summary>
+            public double CeilingY;
         }
 
         public struct Layout
@@ -83,6 +92,7 @@ namespace OrbitalSalvage.Render
             public double IconShift;
             public int IconIndex;
             public bool SoftShrink;
+            public bool KeepX;
         }
 
         public delegate double MeasureAt(double fontPx, double letterSpacing);
@@ -99,22 +109,37 @@ namespace OrbitalSalvage.Render
                 IconIndex = -1,
                 LinePitch = input.RunH > 1 ? input.RunH : Math.Max(1, input.FontPx)
             };
+            double width = measure != null ? measure(input.FontPx, input.LetterSpacing) : input.RunW;
+            // An icon that already sits on the English run is left alone unless the translation is wider.
+            if (HasRunOverlap(input) && width <= input.RunW + 0.5)
+            {
+                plan.Action = Action.Single;
+                plan.KeepX = true;
+                plan.X = input.RunX;
+                plan.Left = input.RunX;
+                plan.Right = input.RunX + Math.Max(1, input.RunW);
+                plan.Available = Math.Max(1, input.RunW);
+                return plan;
+            }
             Limits(input, out double left, out double right, out bool leading, out int leadIndex, out double leadX, out double leadW);
             plan.Left = left;
             plan.Right = right;
             plan.Available = Math.Max(1, right - left);
-            double width = measure != null ? measure(input.FontPx, input.LetterSpacing) : input.RunW;
             if (width <= plan.Available + 0.5)
             {
                 plan.Action = Action.Single;
                 PlaceSingle(input, ref plan, width, leading, leadIndex, leadX, leadW);
                 return plan;
             }
-            if (PreferWrap(input))
+            if (AllowsWrap(input))
             {
-                plan.Action = Action.Wrap;
-                plan.MaxLines = MaxLines(input, plan.LinePitch);
-                return plan;
+                int room = MaxLines(input, plan.LinePitch);
+                if (room >= 2)
+                {
+                    plan.Action = Action.Wrap;
+                    plan.MaxLines = room;
+                    return plan;
+                }
             }
             int steps = (int)Math.Round((1 - FloorRatio) / ShrinkStep);
             for (int step = 1; step <= steps; step++)
@@ -134,7 +159,7 @@ namespace OrbitalSalvage.Render
                     return plan;
                 }
             }
-            if (input.FontPx > 0 && input.ElH >= TwoLineFactor * input.FontPx)
+            if (AllowsWrap(input))
             {
                 int room = MaxLines(input, plan.LinePitch);
                 if (room >= 2)
@@ -242,26 +267,72 @@ namespace OrbitalSalvage.Render
             plan.X = PlaceX(plan.Anchor, input.ElX, input.ElW, textW, plan.Left, plan.Right);
         }
 
-        static bool PreferWrap(Input input)
+        /// <summary>Tag, id, or class marks a control that cannot grow a second line.</summary>
+        public static bool LooksLikeControl(string tag, string id, string classes)
         {
+            if (tag == "button") return true;
+            string blob = (id ?? "") + " " + (classes ?? "");
+            return blob.IndexOf("btn", StringComparison.OrdinalIgnoreCase) >= 0
+                || blob.IndexOf("button", StringComparison.OrdinalIgnoreCase) >= 0;
+        }
+
+        public static bool RunIsSingleLine(Input input)
+        {
+            if (input.FontPx <= 0) return true;
+            return input.RunH <= SingleLineFactor * input.FontPx + SingleLineSlack;
+        }
+
+        /// <summary>Single-line buttons and short controls shrink and ellipsize. They do not wrap.</summary>
+        public static bool LocksToOneLine(Input input)
+        {
+            if (!RunIsSingleLine(input)) return false;
+            if (input.IsButton || input.ButtonLike) return true;
+            if (input.FontPx <= 0) return false;
+            return input.ElH < ControlHeightFactor * input.FontPx;
+        }
+
+        /// <summary>Wrap only a run that was already multi-line, or a text block taller than two lines.</summary>
+        public static bool AllowsWrap(Input input)
+        {
+            if (LocksToOneLine(input)) return false;
             if (input.OriginalMultiLine) return true;
             if (input.FontPx <= 0) return false;
-            if (input.RunH >= TwoLineFactor * input.FontPx) return true;
-            return input.IsButton && input.ElH >= TwoLineFactor * input.FontPx;
+            if (!RunIsSingleLine(input)) return true;
+            return !input.IsButton && !input.ButtonLike && input.ElH > 2.0 * input.FontPx;
+        }
+
+        public static bool OverlapsRun(Icon icon, Input input)
+        {
+            double x0 = Math.Max(icon.X, input.RunX);
+            double x1 = Math.Min(icon.X + icon.W, input.RunX + input.RunW);
+            double y0 = Math.Max(icon.Y, input.RunY);
+            double y1 = Math.Min(icon.Y + icon.H, input.RunY + input.RunH);
+            return x1 - x0 > 0.5 && y1 - y0 > 0.5;
+        }
+
+        static bool HasRunOverlap(Input input)
+        {
+            if (input.Icons == null) return false;
+            for (int i = 0; i < input.Icons.Length; i++)
+                if (OverlapsRun(input.Icons[i], input)) return true;
+            return false;
         }
 
         static int MaxLines(Input input, double pitch)
         {
+            if (LocksToOneLine(input)) return 1;
             if (pitch < 1) pitch = 1;
-            int max = (int)Math.Floor((input.ElH + 0.5) / pitch);
+            double bottom = input.ElY + input.ElH;
+            if (input.CeilingY > 0) bottom = Math.Min(bottom, input.CeilingY);
+            int max = (int)Math.Floor((bottom - input.RunY + 0.5) / pitch);
             if (max < 1) max = 1;
             if (input.BandY > 0)
             {
                 int fit = 0;
                 for (int i = 0; i < max; i++)
                 {
-                    double bottom = input.RunY + (i + 1) * pitch;
-                    if (bottom > input.BandY + 0.01 && i > 0) break;
+                    double lineBottom = input.RunY + (i + 1) * pitch;
+                    if (lineBottom > input.BandY + 0.01 && i > 0) break;
                     fit++;
                 }
                 if (fit < 1) fit = 1;
@@ -308,13 +379,24 @@ namespace OrbitalSalvage.Render
                         double edge = icon.X - Math.Max(0, icon.X - runRight);
                         if (edge < right) right = edge;
                     }
+                    else if (OverlapsRun(icon, input))
+                    {
+                        double iconMid = icon.X + icon.W * 0.5;
+                        double runMid = input.RunX + input.RunW * 0.5;
+                        if (iconMid <= runMid)
+                        {
+                            if (iconRight > left) left = iconRight;
+                        }
+                        else if (icon.X < right) right = icon.X;
+                    }
                 }
             }
             if (right - left < input.RunW && input.RunW <= input.ElW + 0.5)
             {
                 double relaxedLeft = input.ElX;
                 double relaxedRight = input.ElX + input.ElW;
-                if (leading) relaxedLeft = Math.Max(relaxedLeft, left);
+                if (leading || left > input.ElX + pad + 0.01) relaxedLeft = Math.Max(relaxedLeft, left);
+                if (right < input.ElX + input.ElW - pad - 0.01) relaxedRight = Math.Min(relaxedRight, right);
                 if (icons != null)
                 {
                     for (int i = 0; i < icons.Length; i++)

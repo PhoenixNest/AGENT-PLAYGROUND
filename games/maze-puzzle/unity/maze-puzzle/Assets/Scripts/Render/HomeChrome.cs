@@ -167,7 +167,8 @@ namespace OrbitalSalvage.Render
             public int IconIndex;
             public double SpecElX;
             public double SingleX;
-            public bool Ellipsis, ExtraWrap, SoftShrink;
+            public double YShift, Incoming, Ceiling;
+            public bool Ellipsis, ExtraWrap, SoftShrink, KeepX;
         }
         FitLay[] fitLay;
         double[] locIconShift;
@@ -2536,12 +2537,18 @@ namespace OrbitalSalvage.Render
             }
             // EnglishActive is one bool. When it is set, the run loop does not allocate or take another branch.
             bool english = Loc.EnglishActive;
+            if (!english && runs.Count > 1)
+            {
+                int[] order = RunOrderByY(runs);
+                for (int n = 0; n < order.Length; n++)
+                    PaintLocalisedRun(e, k, order[n], runs[order[n]] as Dictionary<string, object>, runs, runs.Count, replaceText, textReplacement, upper, font, ls, color, shadows, alpha, textId, textReach, false);
+            }
             for (int ri = 0; ri < runs.Count; ri++)
             {
                 var run = (Dictionary<string, object>)runs[ri];
                 if (!english)
                 {
-                    PaintLocalisedRun(e, k, ri, run, runs.Count, replaceText, textReplacement, upper, font, ls, color, shadows, alpha, textId, textReach);
+                    PaintLocalisedRun(e, k, ri, run, runs, runs.Count, replaceText, textReplacement, upper, font, ls, color, shadows, alpha, textId, textReach, true);
                     continue;
                 }
                 PaintCapturedRun(e, k, ri, run, replaceText, textReplacement, upper, font, ls, color, shadows, alpha, textId, textReach, 0);
@@ -2641,10 +2648,11 @@ namespace OrbitalSalvage.Render
         /// Non-English run. A miss falls through to <see cref="PaintCapturedRun"/> so untranslated
         /// symbols keep the English boxes. Hits use <see cref="TextFit"/> and never the baked-box trim.
         /// </summary>
-        void PaintLocalisedRun(Dictionary<string, object> e, int k, int ri, Dictionary<string, object> run, int runCount,
+        void PaintLocalisedRun(Dictionary<string, object> e, int k, int ri, Dictionary<string, object> run, List<object> runs, int runCount,
             bool replaceText, string textReplacement, bool upper, string font, double ls, Rgba color, List<CssShadow> shadows,
-            double alpha, string textId, double textReach)
+            double alpha, string textId, double textReach, bool draw)
         {
+            if (run == null) return;
             double shift = IconShiftOf(k);
             if (replaceText && ri != 0) return;
             string display = null;
@@ -2656,32 +2664,37 @@ namespace OrbitalSalvage.Render
             }
             else if (TryLocRun(k, ri, run, out string translated))
             {
-                // TODO: elements with 2+ runs are translated per fragment. Join them before wrapping.
-                if (runCount >= 2) LocFragmentRuns++;
+                // Per-run translation. A group key is not in the table yet. Extra lines push the next run down.
+                if (draw && runCount >= 2) LocFragmentRuns++;
                 display = upper ? LocCase.Upper(translated, Loc.CurrentLanguage) : translated;
                 fitted = true;
             }
             if (!fitted)
             {
-                PaintCapturedRun(e, k, ri, run, false, null, upper, font, ls, color, shadows, alpha, textId, textReach, shift);
+                if (draw) PaintCapturedRun(e, k, ri, run, false, null, upper, font, ls, color, shadows, alpha, textId, textReach, shift);
                 return;
             }
             if (Blank(display)) return;
             double[] src = Rect(run);
             var er = Rect(e);
             if (src == null || er == null) return;
-            double runX = src[0], runY = src[1], runW = src[2], runH = src[3];
-            if (frame != null && Math.Abs(frame.ExtraY[k]) > 1e-6) runY += frame.ExtraY[k];
-            if (reflowY != null && k < reflowY.Length) runY += reflowY[k];
+            double runX = src[0], specY = src[1], runW = src[2], runH = src[3];
+            if (frame != null && Math.Abs(frame.ExtraY[k]) > 1e-6) specY += frame.ExtraY[k];
+            if (reflowY != null && k < reflowY.Length) specY += reflowY[k];
+            double incoming = runCount > 1 ? StackShift(runs, k, ri) : 0;
+            double ceiling = RunCeiling(e, k, runs, specY, er);
+            double runY = specY + incoming;
             int slot = k * 16 + ri;
             int version = Loc.Version;
             FitLay lay = fitLay != null && slot < fitLay.Length ? fitLay[slot] : null;
-            if (lay == null || lay.Version != version || lay.Source != display || lay.Font != font || Math.Abs(lay.ElW - er[2]) > 0.05 || Math.Abs(lay.RunW - runW) > 0.05)
+            if (lay == null || lay.Version != version || lay.Source != display || lay.Font != font || Math.Abs(lay.ElW - er[2]) > 0.05 || Math.Abs(lay.RunW - runW) > 0.05
+                || Math.Abs(lay.Incoming - incoming) > 0.05 || Math.Abs(lay.Ceiling - ceiling) > 0.05)
             {
-                lay = BuildFit(e, k, run, display, font, ls, er, runX, runY, runW, runH, version);
+                lay = BuildFit(e, k, run, display, font, ls, er, runX, runY, runW, runH, version, incoming, ceiling);
                 if (fitLay == null || slot >= fitLay.Length) fitLay = new FitLay[Math.Max(slot + 16, elements.Count * 16)];
                 fitLay[slot] = lay;
             }
+            if (!draw) return;
             if (lay.IconIndex >= 0) SetIconShift(lay.IconIndex, lay.IconShift);
             if (lay.Lines == null || lay.Lines.Length == 0) return;
             canvas.Save();
@@ -2693,7 +2706,7 @@ namespace OrbitalSalvage.Render
             for (int i = 0; i < lay.Lines.Length; i++)
             {
                 double tw = lay.Widths != null && i < lay.Widths.Length ? lay.Widths[i] : 0;
-                double x = lay.Lines.Length == 1 && lay.IconIndex >= 0
+                double x = lay.Lines.Length == 1 && (lay.IconIndex >= 0 || lay.KeepX)
                     ? lay.SingleX + moveX
                     : TextFit.PlaceX(lay.Anchor, er[0], er[2], tw, left, right);
                 double top = runY + i * lay.LinePitch;
@@ -2706,33 +2719,28 @@ namespace OrbitalSalvage.Render
         }
 
         FitLay BuildFit(Dictionary<string, object> e, int k, Dictionary<string, object> run, string display, string font, double ls,
-            double[] er, double runX, double runY, double runW, double runH, int version)
+            double[] er, double runX, double runY, double runW, double runH, int version, double incoming, double ceiling)
         {
             EnsureFitMeasure();
             fitFontBase = font;
-            CollectIcons(k, runY, runH, runX, runW);
+            CollectIcons(k, runY - incoming, runH, runX, runW);
             var icons = iconScratch.Count == 0 ? null : iconScratch.ToArray();
-            bool stacked = false;
-            if (e.TryGetValue("runs", out var rv) && rv is List<object> runs && runs.Count > 1
-                && runs[0] is Dictionary<string, object> first && runs[1] is Dictionary<string, object> second)
-            {
-                var a = Rect(first);
-                var b = Rect(second);
-                if (a != null && b != null && b[1] > a[1] + 1) stacked = true;
-            }
             double fontPx = CssBox.ParseLength(S(e, "fz"));
+            bool buttonLike = TextFit.LooksLikeControl(S(e, "t"), S(e, "id"), S(e, "c"));
             var input = new TextFit.Input
             {
                 RunX = runX, RunY = runY, RunW = runW, RunH = runH,
                 ElX = er[0], ElY = er[1], ElW = er[2], ElH = er[3],
                 CenteredBlock = false,
                 IsButton = S(e, "t") == "button",
+                ButtonLike = buttonLike,
                 FontPx = fontPx,
                 LetterSpacing = ls,
-                OriginalMultiLine = stacked || (fontPx > 0 && runH >= TextFit.TwoLineFactor * fontPx),
+                OriginalMultiLine = fontPx > 0 && runH > TextFit.SingleLineFactor * fontPx + TextFit.SingleLineSlack,
                 SidePad = TextFit.SidePadding,
                 Icons = icons,
-                BandY = Profile == "iphone" ? TextFit.HomeIndicatorY : 0
+                BandY = Profile == "iphone" ? TextFit.HomeIndicatorY : 0,
+                CeilingY = ceiling
             };
             // IsCenteredBlock needs blockCenter, which foreign reflow leaves at 0. Compute the same gaps.
             input.CenteredBlock = CenteredGaps(runX, runW, er);
@@ -2760,7 +2768,11 @@ namespace OrbitalSalvage.Render
                 IconIndex = plan.IconIndex,
                 SpecElX = er[0],
                 SingleX = plan.X,
-                SoftShrink = plan.SoftShrink
+                YShift = incoming,
+                Incoming = incoming,
+                Ceiling = ceiling,
+                SoftShrink = plan.SoftShrink,
+                KeepX = plan.KeepX
             };
             canvas.Font = lay.DrawFont;
             canvas.LetterSpacing = lay.Letter;
@@ -2804,7 +2816,7 @@ namespace OrbitalSalvage.Render
                 canvas.LetterSpacing = lay.Letter;
                 lay.Widths[i] = canvas.MeasureText(lay.Lines[i]);
             }
-            if (lay.Lines.Length == 1 && plan.IconIndex < 0)
+            if (lay.Lines.Length == 1 && plan.IconIndex < 0 && !plan.KeepX)
                 lay.SingleX = TextFit.PlaceX(plan.Anchor, er[0], er[2], lay.Widths[0], plan.Left, plan.Right);
             return lay;
         }
@@ -2839,6 +2851,77 @@ namespace OrbitalSalvage.Render
             return font.Substring(0, start) + num + font.Substring(pxAt);
         }
 
+        int[] RunOrderByY(List<object> runs)
+        {
+            var order = new int[runs.Count];
+            for (int i = 0; i < order.Length; i++) order[i] = i;
+            Array.Sort(order, (a, b) => RunTop(runs, a).CompareTo(RunTop(runs, b)));
+            return order;
+        }
+
+        double RunTop(List<object> runs, int index)
+        {
+            if (runs == null || index < 0 || index >= runs.Count || !(runs[index] is Dictionary<string, object> run)) return 0;
+            var r = Rect(run);
+            return r == null ? 0 : r[1];
+        }
+
+        double StackShift(List<object> runs, int k, int ri)
+        {
+            if (runs == null || ri < 0 || ri >= runs.Count) return 0;
+            double mine = RunTop(runs, ri);
+            double extra = 0;
+            for (int i = 0; i < runs.Count; i++)
+            {
+                if (i == ri) continue;
+                double top = RunTop(runs, i);
+                if (top >= mine - 0.5) continue;
+                if (!(runs[i] is Dictionary<string, object> run)) continue;
+                var r = Rect(run);
+                if (r == null) continue;
+                int slot = k * 16 + i;
+                FitLay lay = fitLay != null && slot < fitLay.Length ? fitLay[slot] : null;
+                if (lay == null || lay.Lines == null || lay.Lines.Length == 0) continue;
+                double pitch = lay.LinePitch > 0 ? lay.LinePitch : r[3];
+                double used = lay.Lines.Length * pitch;
+                if (used > r[3]) extra += used - r[3];
+            }
+            return extra;
+        }
+
+        double RunCeiling(Dictionary<string, object> e, int k, List<object> runs, double specY, double[] er)
+        {
+            double bottom = er[1] + er[3];
+            if (Profile == "iphone") bottom = Math.Min(bottom, TextFit.HomeIndicatorY);
+            EnsureParents();
+            if (parentOf != null && k >= 0 && k < parentOf.Length && parentOf[k] >= 0)
+            {
+                int parent = parentOf[k];
+                for (int i = 0; i < elements.Count; i++)
+                {
+                    if (i == k || parentOf[i] != parent) continue;
+                    var sib = Rect(elements[i]);
+                    if (sib == null || sib[2] <= 0 || sib[3] <= 0 || sib[1] >= 932) continue;
+                    if (sib[1] <= er[1] + 1) continue;
+                    if (sib[1] < bottom) bottom = sib[1];
+                }
+            }
+            double reserved = 0;
+            if (runs != null)
+            {
+                for (int i = 0; i < runs.Count; i++)
+                {
+                    if (!(runs[i] is Dictionary<string, object> run)) continue;
+                    var r = Rect(run);
+                    if (r == null || r[3] <= 0) continue;
+                    if (r[1] > specY + 0.5) reserved += r[3];
+                }
+            }
+            double ceiling = bottom - reserved;
+            if (ceiling < specY + 1) ceiling = specY + 1;
+            return ceiling;
+        }
+
         void CollectIcons(int k, double runY, double runH, double runX, double runW)
         {
             iconScratch.Clear();
@@ -2849,14 +2932,17 @@ namespace OrbitalSalvage.Render
                 if ((int)N(elements[i], "p", -2) != id) continue;
                 var child = elements[i];
                 double x, y, w, h;
-                if (!IconBox(child, out x, out y, out w, out h)) continue;
+                int iconIndex = i;
+                if (!IconBox(child, out x, out y, out w, out h)
+                    && !NestedEmoji(child, out iconIndex, out x, out y, out w, out h)) continue;
                 if (y + h < runY - 2 || y > runY + runH + 2) continue;
                 double iconRight = x + w;
                 double runRight = runX + runW;
                 bool lead = iconRight <= runX + 2 && runX - iconRight <= TextFit.IconGapSlop;
                 bool trail = x >= runRight - 2 && x - runRight <= TextFit.IconGapSlop;
-                if (!lead && !trail) continue;
-                iconScratch.Add(new TextFit.Icon { Index = i, X = x, Y = y, W = w, H = h });
+                bool overlap = x < runRight - 0.5 && iconRight > runX + 0.5;
+                if (!lead && !trail && !overlap) continue;
+                iconScratch.Add(new TextFit.Icon { Index = iconIndex, X = x, Y = y, W = w, H = h });
             }
         }
 
@@ -2875,6 +2961,37 @@ namespace OrbitalSalvage.Render
             if (!emoji && !symbol) return false;
             x = r[0]; y = r[1]; w = r[2]; h = r[3];
             return true;
+        }
+
+        /// <summary>
+        /// A wrapper span whose only job is to hold an emoji image. The image overlaps the
+        /// parent's run (the settings title gear). The box reserved is the image, not the wrapper.
+        /// </summary>
+        bool NestedEmoji(Dictionary<string, object> child, out int index, out double x, out double y, out double w, out double h)
+        {
+            index = -1;
+            x = y = w = h = 0;
+            if (child.TryGetValue("runs", out var rv) && rv is List<object> runs)
+            {
+                for (int n = 0; n < runs.Count; n++)
+                {
+                    if (runs[n] is Dictionary<string, object> run && LocText.HasLetter(LocText.Normalize(Collapse(run))))
+                        return false;
+                }
+            }
+            int id = (int)N(child, "i", -1);
+            if (id < 0) return false;
+            for (int i = 0; i < elements.Count; i++)
+            {
+                if ((int)N(elements[i], "p", -2) != id) continue;
+                if (S(elements[i], "emoji").Length == 0) continue;
+                var r = Rect(elements[i]);
+                if (r == null || r[2] <= 0 || r[3] <= 0) continue;
+                index = i;
+                x = r[0]; y = r[1]; w = r[2]; h = r[3];
+                return true;
+            }
+            return false;
         }
 
         bool TryLocRun(int k, int ri, Dictionary<string, object> run, out string text)
