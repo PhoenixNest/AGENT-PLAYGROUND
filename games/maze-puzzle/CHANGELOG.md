@@ -13,6 +13,10 @@ Paths written as `tools/parity/...` in entries dated before 2026-10-08 are the l
 
 ### Fixed
 
+#### Identical English copies per language (2026-10-12)
+
+- `notes/<code>-identical-ok.json` lets a key stay equal to English without an `untranslated` error. German `Hangar` and `Reset` use that file. `merge_table.py` recopies `doNotTranslate` from English and no longer keeps language-specific entries.
+
 #### German wording after the layout audit (2026-10-12)
 
 - Refine German wording after the layout audit: daily pill FERTIG, Nochmal, FREI, Hangar, Reset, Weltraum-Melodie, Spielladen, Putz-Paket. Validator errors 0.

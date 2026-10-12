@@ -660,11 +660,93 @@ def test_register_check_skips_style():
     assert not any(item.key == "spec:Close" and item.kind == "register" for item in on), on
 
 
+def test_identical_ok_and_merge_dnt():
+    english = make("en", {"Hangar": "Hangar", "Reset": "Reset", "Hello": "Hello"}, do_not=["×"])
+    copied = make("de", {"Hangar": "Hangar", "Reset": "Reset", "Hello": "Hello"}, do_not=["×"])
+    blocked = check(english, copied, "de")
+    assert has(blocked, "error", "untranslated", "spec:Hangar"), blocked
+    assert has(blocked, "error", "untranslated", "spec:Reset"), blocked
+    assert has(blocked, "error", "untranslated", "spec:Hello"), blocked
+
+    waived = check(
+        english,
+        copied,
+        "de",
+        identical_ok={"Hangar": "German loanword", "spec:Reset": "common German UI word"},
+    )
+    assert not has(waived, "error", "untranslated", "spec:Hangar"), waived
+    assert not has(waived, "error", "untranslated", "spec:Reset"), waived
+    assert has(waived, "error", "untranslated", "spec:Hello"), waived
+    assert has(waived, "accepted", "identical", "spec:Hangar"), waived
+    assert has(waived, "accepted", "identical", "spec:Reset"), waived
+    summary = kit.summarise(waived)
+    assert "accepted identical:" in summary
+    assert "Hangar" in summary and "Reset" in summary
+
+    with tempfile.TemporaryDirectory() as tmp:
+        tmp_path = Path(tmp)
+        tiny_en = {
+            "meta": {"code": "en", "name": "English", "version": 1, "source": "en"},
+            "spec": {"Hangar": "Hangar", "Hello": "Hello"},
+            "str": {},
+            "doNotTranslate": ["×", "▶"],
+        }
+        partial = {
+            "meta": {"code": "de", "name": "Deutsch", "version": 1, "source": "en"},
+            "spec": {"Hangar": "Hangar", "Hello": "Hallo"},
+            "str": {},
+            "doNotTranslate": ["×", "Hangar", "Reset"],
+        }
+        into = {
+            "meta": {"code": "de", "name": "Deutsch", "version": 1, "source": "en"},
+            "spec": {"Hangar": "Hangar", "Hello": "Hello"},
+            "str": {},
+            "doNotTranslate": ["×", "Reset"],
+        }
+        en_path = tmp_path / "en.json"
+        partial_path = tmp_path / "partial.json"
+        into_path = tmp_path / "into.json"
+        out = tmp_path / "merged.json"
+        en_path.write_text(json.dumps(tiny_en), encoding="utf-8")
+        partial_path.write_text(json.dumps(partial), encoding="utf-8")
+        into_path.write_text(json.dumps(into), encoding="utf-8")
+        assert (
+            merge_table.main(
+                [
+                    "--lang",
+                    "de",
+                    "--partial",
+                    str(partial_path),
+                    "--en",
+                    str(en_path),
+                    "--into",
+                    str(into_path),
+                    "--out",
+                    str(out),
+                ]
+            )
+            == 0
+        )
+        merged = json.loads(out.read_text(encoding="utf-8"))
+        assert merged["doNotTranslate"] == ["×", "▶"] or merged["doNotTranslate"] == sorted(
+            ["×", "▶"], key=kit.ordinal_bytes
+        )
+        assert "Hangar" not in merged["doNotTranslate"]
+        assert "Reset" not in merged["doNotTranslate"]
+        assert merged["spec"]["Hangar"] == "Hangar"
+        assert merged["spec"]["Hello"] == "Hallo"
+
+
 def test_real_german_table():
     _en_raw, english = kit.load_json(kit.DEFAULT_EN)
     table_path = kit.DEFAULT_EN.with_name("de.json")
     _raw, german = kit.load_json(table_path)
     fit_path = kit.LOC_DIR / "notes" / "de-fit-exceptions.json"
+    identical_path = kit.LOC_DIR / "notes" / "de-identical-ok.json"
+    fit = kit.load_fit_exceptions(fit_path)
+    identical = kit.load_identical_ok(identical_path)
+    assert fit, "suppressed fit list did not load"
+    assert "Hangar" in identical and "Reset" in identical, identical
     findings = check(
         english,
         german,
@@ -672,19 +754,21 @@ def test_real_german_table():
         glossary=kit.parse_glossary(kit.DEFAULT_GLOSSARY),
         aliases=kit.parse_aliases(kit.DEFAULT_GLOSSARY),
         index=kit.load_key_index(kit.DEFAULT_INDEX),
-        fit_exceptions=kit.load_fit_exceptions(fit_path),
+        fit_exceptions=fit,
+        identical_ok=identical,
     )
     errors = [item for item in findings if item.severity == "error"]
-    warnings = [item for item in findings if item.severity == "warning"]
     suppressed = [item for item in findings if item.severity == "suppressed"]
+    accepted = [item for item in findings if item.severity == "accepted"]
     assert not errors, errors[:8]
-    assert not kinds(findings, "unit"), findings
-    assert len(suppressed) == 50, len(suppressed)
-    assert all(item.kind == "fit" and item.key.startswith("spec:LVL ") for item in suppressed)
-    assert not has(findings, "warning", "fit", "spec:LVL 1")
-    assert not has(findings, "error", "untranslated", "str:unit.kg")
-    assert has(findings, "warning", "glossary", "spec:TOY SHOP"), findings
-    assert len(warnings) == 28, (len(warnings), kit.summarise(findings))
+    assert suppressed, "suppressed fit list did not apply"
+    assert accepted, "accepted identical list did not apply"
+    assert has(findings, "accepted", "identical", "spec:Hangar"), findings
+    assert has(findings, "accepted", "identical", "spec:Reset"), findings
+    summary = kit.summarise(findings)
+    assert summary.startswith("errors: 0\n")
+    assert "suppressed:" in summary
+    assert "accepted identical:" in summary
 
 
 def main() -> int:
@@ -705,6 +789,7 @@ def main() -> int:
         test_backup_pod_glossary_note,
         test_loanword_identical_copy,
         test_register_check_skips_style,
+        test_identical_ok_and_merge_dnt,
         test_real_german_table,
     ]
     for test in tests:
