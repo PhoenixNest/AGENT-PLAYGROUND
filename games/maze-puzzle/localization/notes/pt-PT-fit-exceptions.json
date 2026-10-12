@@ -50,6 +50,10 @@
     "spec:LVL 47",
     "spec:LVL 48",
     "spec:LVL 49",
-    "spec:LVL 50"
+    "spec:LVL 50",
+    {
+      "key": "spec:TOY SHOP",
+      "reason": "BRINQUEDOS is the natural plural. It painted in full at 0.76. The kit is about 1px over, and the singular read as one toy."
+    }
   ]
 }
