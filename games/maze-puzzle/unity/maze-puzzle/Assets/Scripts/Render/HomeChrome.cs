@@ -2838,6 +2838,16 @@ namespace OrbitalSalvage.Render
                 BandY = Profile == "iphone" ? TextFit.HomeIndicatorY : 0,
                 CeilingY = ceiling
             };
+            EnsureParents();
+            if (parentOf != null && k >= 0 && k < parentOf.Length && parentOf[k] >= 0 && parentOf[k] < elements.Count)
+            {
+                var pr = Rect(elements[parentOf[k]]);
+                if (pr != null && pr[2] > 1)
+                {
+                    input.ParentX = pr[0];
+                    input.ParentW = pr[2];
+                }
+            }
             // IsCenteredBlock needs blockCenter, which foreign reflow leaves at 0. Compute the same gaps.
             input.CenteredBlock = CenteredGaps(runX, runW, er);
             TextFit.Layout plan = TextFit.Plan(input, (px, spacing) =>

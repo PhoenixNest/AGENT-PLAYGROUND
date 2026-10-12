@@ -132,13 +132,15 @@ namespace OrbitalSalvage.Render
                     ceiling -= reserved;
                     if (ceiling < rr[1] + 1) ceiling = rr[1] + 1;
                     var icons = IconsOf(els, e, rr);
-                    extra += AuditRun(name, e, er, rr, shown, icons, iphone, rr[1] + extra, ceiling, canvas, report);
+                    double parentX, parentW;
+                    ParentBox(els, e, out parentX, out parentW);
+                    extra += AuditRun(name, e, er, rr, shown, icons, iphone, rr[1] + extra, ceiling, parentX, parentW, canvas, report);
                 }
             }
         }
 
         static double AuditRun(string file, Dictionary<string, object> e, double[] er, double[] rr, string shown,
-            List<TextFit.Icon> icons, bool iphone, double drawY, double ceiling, Canvas2D canvas, Report report)
+            List<TextFit.Icon> icons, bool iphone, double drawY, double ceiling, double parentX, double parentW, Canvas2D canvas, Report report)
         {
             string font = Str(e, "fw") + " " + Str(e, "fz") + " " + Family(Str(e, "ff"));
             double ls = CssLength(Str(e, "ls"));
@@ -159,7 +161,9 @@ namespace OrbitalSalvage.Render
                 SidePad = TextFit.SidePadding,
                 Icons = icons == null || icons.Count == 0 ? null : icons.ToArray(),
                 BandY = iphone ? HomeIndicatorY : 0,
-                CeilingY = ceiling
+                CeilingY = ceiling,
+                ParentX = parentX,
+                ParentW = parentW
             };
             NoteMissingGlyphs(file, id, shown, font, report);
             TextFit.Layout plan = TextFit.Plan(input, (px, spacing) => Measure(canvas, font, shown, px, spacing));
@@ -454,6 +458,23 @@ namespace OrbitalSalvage.Render
                 return true;
             }
             return false;
+        }
+
+        static void ParentBox(List<Dictionary<string, object>> els, Dictionary<string, object> e, out double x, out double w)
+        {
+            x = 0;
+            w = 0;
+            int parent = (int)Num(e, "p", -1);
+            if (parent < 0) return;
+            for (int i = 0; i < els.Count; i++)
+            {
+                if ((int)Num(els[i], "i", -2) != parent) continue;
+                double[] box = Box(els[i]);
+                if (box == null || box[2] <= 1) return;
+                x = box[0];
+                w = box[2];
+                return;
+            }
         }
 
         static bool Centered(double[] rr, double[] er)
