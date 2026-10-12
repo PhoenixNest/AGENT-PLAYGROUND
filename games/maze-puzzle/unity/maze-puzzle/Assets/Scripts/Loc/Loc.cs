@@ -12,8 +12,9 @@ namespace OrbitalSalvage.Loc
     /// String tables. <see cref="CurrentLanguage"/> is <c>en</c> unless that other code's table
     /// parsed successfully. English spec lookup always returns false so painted English runs,
     /// including their layout whitespace, stay untouched. A missing non-English key falls back
-    /// to English (spec: return false; str: the English value, or the key) and is recorded in
-    /// <see cref="MissingKeys"/> up to <see cref="MissingKeyLimit"/>.
+    /// to English (spec: return false; str: the loaded English table, then <see cref="LocStrings"/>,
+    /// then the key) and is recorded in <see cref="MissingKeys"/> up to <see cref="MissingKeyLimit"/>.
+    /// English <see cref="Tr(string)"/> reads <see cref="LocStrings"/> and does not load <c>en.json</c>.
     /// </summary>
     public static class Loc
     {
@@ -169,6 +170,24 @@ namespace OrbitalSalvage.Loc
         }
 
         /// <summary>
+        /// Translates an English data name (a level name, world title, achievement title, or
+        /// level code) that a C# override inserts. English returns <paramref name="englishDataText"/>
+        /// and does not touch a table. Any other language checks a <c>data.*</c> registry row whose
+        /// English equals the text, then the same normalised spec lookup as
+        /// <see cref="TryTranslateSpecText"/>. A miss returns the input unchanged.
+        /// </summary>
+        public static string TrName(string englishDataText)
+        {
+            if (englishDataText == null) englishDataText = "";
+            if (_english) return englishDataText;
+            string dataKey;
+            if (LocStrings.TryGetDataKey(englishDataText, out dataKey)) return TranslateStr(dataKey);
+            string translated;
+            if (TryTranslateSpecText(englishDataText, out translated)) return translated;
+            return englishDataText;
+        }
+
+        /// <summary>
         /// Chooses the active language from a stored profile code and a device provider.
         /// <paramref name="storedLanguage"/> is the raw <c>settings.language</c> value.
         /// This method does not write the profile. <see cref="LocInitResult.PersistLanguage"/>
@@ -249,13 +268,15 @@ namespace OrbitalSalvage.Loc
                     if (current.Str.TryGetValue(key, out value)) return value ?? "";
                 }
                 RecordMiss(key);
+                LocTable english;
+                if (TryGetTable(LanguageRegistry.DefaultCode, out english))
+                {
+                    string value;
+                    if (english.Str.TryGetValue(key, out value)) return value ?? "";
+                }
             }
-            LocTable english;
-            if (TryGetTable(LanguageRegistry.DefaultCode, out english))
-            {
-                string value;
-                if (english.Str.TryGetValue(key, out value)) return value ?? "";
-            }
+            string fromRegistry;
+            if (LocStrings.TryGet(key, out fromRegistry)) return fromRegistry;
             return key;
         }
 

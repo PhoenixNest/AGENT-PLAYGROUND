@@ -1,0 +1,23 @@
+# Hardcoded C# string gate.
+# Rows: literal<TAB>path relative to Assets<TAB>reason
+# A literal of * skips every string in that file.
+# LocHardcodedStringTests scans the UI-facing sources it lists.
+# A literal is user-visible when it has a letter plus a space, sentence punctuation, or emoji,
+# and it is not a dot-key, font stack, color, path, or URL.
+# A literal that equals a LocStrings English value is also user-visible.
+# Keep this list small.
+
+*	Scripts/Render/Game/LiveConformance.cs	Debug export text for the live renderer harness, not player UI.
+ReplayPlay without a playfield	Scripts/App/AppController.cs	Exception when replay runs without a playfield.
+Claim +300 🪙	Scripts/App/AppController.cs	Daily master button copy. MasterAction is not passed to Text(); the captured button is spec text. AppFlowTests compares this English property.
+CLAIMED ✓	Scripts/App/AppController.cs	Daily master button after the bonus is claimed. Not a Text() override; the captured button is spec text.
+Pacific Standard Time	Scripts/Logic/DailyReset.cs	Windows time-zone id for TimeZoneInfo, not player UI.
+Item Equipped! ✨	Scripts/Viewer/ParityViewer.App.cs	viewer proof harness
+🎉 All 3 Daily Shifts Cleared! Claim Master Bonus in Daily Tab! 🏆	Scripts/Viewer/ParityViewer.App.cs	viewer proof harness
+Sound On 🔊	Scripts/Viewer/ParityViewer.App.cs	viewer proof harness
+🏆 Trophy: First Nom Nom! (+100 🪙)	Scripts/Viewer/ParityViewer.App.cs	viewer proof harness
+Item Unlocked & Equipped! 🎉	Scripts/Viewer/ParityViewer.App.cs	viewer proof harness
+🎁 Claimed +100 🪙 Janitor Stipend!	Scripts/Viewer/ParityViewer.App.cs	viewer proof harness
+Need more gold coins! 🪙	Scripts/Viewer/ParityViewer.App.cs	viewer proof harness
+🏆 Claimed +300 🪙 Daily Master Bonus!	Scripts/Viewer/ParityViewer.App.cs	viewer proof harness
+Progress Reset to Day 1! 🧹	Scripts/Viewer/ParityViewer.App.cs	viewer proof harness
