@@ -1,14 +1,26 @@
 [
   {
+    "key": "BRONZE",
+    "reason": "bronze is the European Portuguese word for the metal; the glossary keeps it"
+  },
+  {
+    "key": "BRONZE ✓",
+    "reason": "same Portuguese word, with the cleared mark"
+  },
+  {
     "key": "Hangar",
-    "reason": "hangar is the European Portuguese word for an aircraft shed"
+    "reason": "hangar is the European Portuguese word for an aircraft shed; accepted loanword"
+  },
+  {
+    "key": "fx.hub.donut",
+    "reason": "donut is the glossary loanword for the candy shape; the emoji stay around it"
   },
   {
     "key": "fx.turbo.ccw",
-    "reason": "turbo is the everyday European Portuguese word"
+    "reason": "turbo is an accepted European Portuguese loanword"
   },
   {
     "key": "fx.turbo.cw",
-    "reason": "turbo is the everyday European Portuguese word"
+    "reason": "turbo is an accepted European Portuguese loanword"
   }
 ]
