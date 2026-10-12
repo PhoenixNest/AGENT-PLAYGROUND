@@ -26,8 +26,8 @@ Visible warnings by kind: `fit` 21, `glossary` 3, `length` 1. The 50 suppressed 
 | English | Before | After | Measured fit |
 | --- | --- | --- | --- |
 | `TOY SHOP` | `TOKO MAINAN` | `MAINAN` | 51px vs 84px, scale 1.00. Was 90px and painted `TOKO MAIN…`. |
-| `BRONZE` | `PERUNGGU` | `GANGSA` | 33px vs 47px, same width as `BRONZE`. Was 44px and painted `PERUNG…`. |
-| `BRONZE ✓` | `PERUNGGU ✓` | `GANGSA ✓` | 43px vs 58px, same width as `BRONZE ✓`. |
+| `BRONZE` | `PERUNGGU` | `BRONS` | 28px vs 47px, scale 1.00. Shorter than `BRONZE` (33px). `PERUNGGU` painted `PERUNG…`. |
+| `BRONZE ✓` | `PERUNGGU ✓` | `BRONS ✓` | 38px vs 58px, scale 1.00. Shorter than `BRONZE ✓`. |
 | `DAILY` | `Harian` | `Tugas` | 28px vs 32px, same width as `DAILY`. Dock was scale 0.76. |
 | `Reset` | `Reset` | `Hapus` | 30px vs 30px, same width as `Reset`. |
 | `Yes, Reset` | `Ya, reset` | `Ya, hapus` | 49px vs 55px, scale 1.00. |
@@ -38,7 +38,7 @@ Visible warnings by kind: `fit` 21, `glossary` 3, `length` 1. The 50 suppressed 
 | `Resets in 14h 59m` | `Ulang 14 jam 59m` | `Ulang 14j 59mnt` | 74px vs 82px, scale 1.00. The old line sat in the 0.72 daily bundle. |
 | `Hangar` | `Beranda` | `Pulang` | 36px vs 43px, same width as `Hangar`. Pause already says `Pulang`. |
 
-`GANGSA` is the KBBI word for perunggu, six letters like `BRONZE`. `PERAK` and `EMAS` were already short enough to paint. Shift titles use `gangsa` too. A child may not know `gangsa`; `perunggu` is the everyday word and it clips the medal.
+`BRONS` is the short loan children and parents use for the bronze medal. `PERUNGGU` clips the chip. `GANGSA` is the same length as `BRONZE` but in modern Indonesian it is an obscure gamelan-alloy word, so it was dropped. Shift titles use `brons` too. `PERAK` and `EMAS` were already short enough to paint.
 
 The shop sentence in the privacy modal still says `toko mainan`. That modal was not edited. The header cannot hold the full glossary phrase.
 
@@ -92,7 +92,7 @@ Every fit warning is under the 72% shrink floor. The stills that were read show 
 | toy shop | toko mainan | mainan on the header | Header only. See the glossary warning. |
 | backup pod | pod cadangan | kapsul cadangan | Button and toast. |
 | master bounty | hadiah master | hadiah juara | Title and both daily toasts. |
-| bronze | perunggu | gangsa | Medal, badge, and the bronze shift. |
+| bronze | perunggu | brons | Medal, badge, and the bronze shift. `Gangsa` is the gamelan alloy, not the word families use. |
 | cosmic janitor | petugas kebersihan kosmik | same, without `lucu` | Tagline only. |
 
 `space junk` and `space trash` both use `sampah luar angkasa`. Recycling coins and gameplay coins use `koin emas`. Gold shift metal is `emas`, not `koin emas`. The settings name for the wipe is `Atur ulang` (row and `ATUR ULANG SEMUA?`). The short red button is `Hapus`, because `Atur ulang` does not fit that 30px control and `Ulang` means play again.
@@ -101,7 +101,7 @@ Every fit warning is under the 72% shrink floor. The stills that were read show 
 
 | Key | Choice | Alternative |
 | --- | --- | --- |
-| `BRONZE` | `GANGSA` | `Perunggu` is the word a child knows, and it clips the medal. |
+| `BRONZE` | `BRONS` | `Perunggu` clips the medal. `Gangsa` is obscure. |
 | `Reset` | `Hapus` | The row stays `Atur ulang`. Two surfaces, one wipe. |
 | `Lost In Void` | `Hilang` | `Hilang di hampa` names the void and does not fit the run. |
 | `Sound: ON` | `Ada suara` | `Suara nyala` is clearer and wider than the pause run. |
@@ -117,7 +117,7 @@ Every fit warning is under the 72% shrink floor. The stills that were read show 
 
 ## Twelve least-sure keys
 
-1. `BRONZE` → `GANGSA` (correct metal, uncommon word)
+1. `BRONZE` → `BRONS` (short loan; `perunggu` clips, `gangsa` is obscure)
 2. `Reset` → `Hapus` (row is still `Atur ulang`)
 3. `Lost In Void` → `Hilang`
 4. `Sound: ON` → `Ada suara`
@@ -132,7 +132,7 @@ Every fit warning is under the 72% shrink floor. The stills that were read show 
 
 ## Glossary additions requested
 
-- Bronze medal: `gangsa` when `perunggu` clips. One word for the medal, the badge, and the bronze shift.
+- Bronze medal: `brons` when `perunggu` clips. `Gangsa` is a gamelan-alloy word, not the everyday metal. One word for the medal, the badge, and the bronze shift.
 - Toy-shop header: `mainan` when `toko mainan` clips. The long phrase does not fit that title.
 - Backup pod: `kapsul cadangan` instead of `pod cadangan`, so the English word is gone.
 - Master bounty: `hadiah juara` instead of `hadiah master`.
