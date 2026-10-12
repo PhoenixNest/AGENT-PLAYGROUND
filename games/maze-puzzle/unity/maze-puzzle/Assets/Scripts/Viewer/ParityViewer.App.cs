@@ -7,12 +7,15 @@ using System.Text;
 using OrbitalSalvage.App;
 using OrbitalSalvage.AudioDsp;
 using OrbitalSalvage.JsCompat;
+using OrbitalSalvage.Loc;
 using OrbitalSalvage.Logic;
 using OrbitalSalvage.Render;
 using UnityEngine;
 
 namespace OrbitalSalvage.Viewer
 {
+    using Loc = OrbitalSalvage.Loc.Loc;
+
     public sealed partial class ParityViewer
     {
         ParityPages.PrewarmEntry[] tabPlan = Array.Empty<ParityPages.PrewarmEntry>();
@@ -74,6 +77,10 @@ namespace OrbitalSalvage.Viewer
                 ? (IProfileStore)new MemoryProfileStore()
                 : new FileProfileStore(Application.persistentDataPath);
             app = new AppController(store, clock, new PlayerAudio(gameObject));
+            // Earliest point after the profile load. With only the English table present this
+            // does not persist a language and does not change any painted string.
+            Loc.SetLoader(new ResourcesLocTableLoader());
+            app.InitializeLanguage(new UnityDeviceLocaleProvider());
             if (session != null) session.Renderer.Dispose();
             session = LiveGameSession.CreateBound(app.Economy, ParityPages.CssWidth, ParityPages.CssHeight);
             session.NowMs = () => app.NowMs;

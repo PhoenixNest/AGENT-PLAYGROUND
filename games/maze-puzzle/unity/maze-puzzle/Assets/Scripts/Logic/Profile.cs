@@ -9,6 +9,12 @@ namespace OrbitalSalvage.Logic
         public double SfxVolume = 80;
         public double AmbientVolume = 70;
         public bool HapticsEnabled = true;
+        /// <summary>
+        /// Registry language code, or "" when the player has not chosen one.
+        /// Empty is omitted from JSON so an unset profile stays byte-identical.
+        /// Unsupported codes are kept as stored; callers resolve them through the registry.
+        /// </summary>
+        public string Language = "";
     }
 
     public sealed class Profile
@@ -69,6 +75,7 @@ namespace OrbitalSalvage.Logic
             st.Set("sfxVolume", Settings.SfxVolume);
             st.Set("ambientVolume", Settings.AmbientVolume);
             st.Set("hapticsEnabled", Settings.HapticsEnabled);
+            if (!string.IsNullOrEmpty(Settings.Language)) st.Set("language", Settings.Language);
             o.Set("settings", st);
 
             o.Set("achievements", StringList(Achievements));
@@ -158,6 +165,7 @@ namespace OrbitalSalvage.Logic
                     if ((x = s.Get("sfxVolume")) != null && x.Kind == JsonKind.Number) p.Settings.SfxVolume = x.Number;
                     if ((x = s.Get("ambientVolume")) != null && x.Kind == JsonKind.Number) p.Settings.AmbientVolume = x.Number;
                     if ((x = s.Get("hapticsEnabled")) != null && x.Kind == JsonKind.Bool) p.Settings.HapticsEnabled = x.Bool;
+                    if ((x = s.Get("language")) != null && x.Kind == JsonKind.String) p.Settings.Language = x.String;
                 }
             }
             p.Achievements = ReadStrings(parsed.Get("achievements"));

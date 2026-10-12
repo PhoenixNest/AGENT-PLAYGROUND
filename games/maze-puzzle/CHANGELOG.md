@@ -13,6 +13,13 @@ Paths written as `tools/parity/...` in entries dated before 2026-10-08 are the l
 
 ### Added
 
+#### Unity localisation runtime (2026-10-12)
+
+- The localisation runtime is `OrbitalSalvage.Loc` (no Unity engine reference, so Logic and App can call it). The Resources loader and the device-locale provider are `OrbitalSalvage.Loc.Unity`. Nothing in the paint path reads a table. English spec lookup returns false, and `settings.language` is omitted while empty, so an unset profile matches the economy golden byte for byte.
+- Seventeen languages are registered. `en` is the fallback. A language other than English is active only when its table loads. Boot stores a detected non-English code only in that case, and that stored value is then authoritative. A progress reset keeps the language.
+- The spec extractor writes `Assets/Resources/Localization/en.json` (348 identity spec keys, 32 do-not-translate runs) and `localization/key-index.csv`. The menu is `Orbital Salvage/Localization/Extract Spec Strings` at priority 320, between Play and Tools. `MenuPathTests` now expects Localization as a fifth menu group.
+- Focused EditMode `OrbitalSalvage.Loc.Tests`: 15 passed, 0 failed. Full EditMode: 480 passed, 83 failed, 3 skipped, 566 total, exit 2. The 83 are the known set (`ReferenceComparisonTests` 73, `ReferenceGateTests` 9, `QuotaAndModalTests.GameAndPauseStills_MatchKnownHashes`). `PagePreviewTests.Stills_MatchTheParityPlayer_IncludingShopRingsDefault` stayed skipped because the parity stills are not in this checkout. The other PagePreview tests passed.
+
 #### Unity app icon (2026-10-12)
 
 - The default app icon is now the Orbital Salvage icon: a cute black-hole mascot inside a pink and cyan vortex, pulling in a cheese wedge, a spiky gold star and a donut. The source is `Assets/Icons/AppIcon.png` (1024x1024, opaque RGB, no pre-rounded corners). The three concepts Gemini 3.8 Flash produced, and the chosen one (`orbital-salvage-icon-alt1-1024.png`), are under `resources/app-icon/`.

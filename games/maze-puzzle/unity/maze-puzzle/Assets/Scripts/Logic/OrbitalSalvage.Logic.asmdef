@@ -2,7 +2,8 @@
     "name": "OrbitalSalvage.Logic",
     "rootNamespace": "OrbitalSalvage.Logic",
     "references": [
-        "OrbitalSalvage.JsCompat"
+        "OrbitalSalvage.JsCompat",
+        "OrbitalSalvage.Loc"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

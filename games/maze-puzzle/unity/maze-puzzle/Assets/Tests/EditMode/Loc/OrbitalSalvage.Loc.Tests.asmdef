@@ -1,0 +1,28 @@
+{
+    "name": "OrbitalSalvage.Loc.Tests",
+    "rootNamespace": "OrbitalSalvage.Loc.Tests",
+    "references": [
+        "UnityEngine.TestRunner",
+        "UnityEditor.TestRunner",
+        "OrbitalSalvage.Loc",
+        "OrbitalSalvage.Loc.Unity",
+        "OrbitalSalvage.JsCompat",
+        "OrbitalSalvage.Logic",
+        "OrbitalSalvage.App"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": true,
+    "precompiledReferences": [
+        "nunit.framework.dll"
+    ],
+    "autoReferenced": false,
+    "defineConstraints": [
+        "UNITY_INCLUDE_TESTS"
+    ],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
