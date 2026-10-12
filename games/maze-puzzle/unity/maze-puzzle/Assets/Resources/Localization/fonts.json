@@ -1,0 +1,67 @@
+{
+  "version": 1,
+  "symbols": ["NotoSansSymbols2-Regular", "NotoSansSymbols-Regular"],
+  "roles": {
+    "fredoka": [
+      { "weight": 400, "file": "Fredoka-400" },
+      { "weight": 600, "file": "Fredoka-600" },
+      { "weight": 700, "file": "Fredoka-700" }
+    ],
+    "nunito": [
+      { "weight": 700, "file": "Nunito-700" },
+      { "weight": 800, "file": "Nunito-800" },
+      { "weight": 900, "file": "Nunito-900" }
+    ]
+  },
+  "groups": {
+    "latin": {
+      "display": "fredoka",
+      "body": "nunito",
+      "fallback": ["@symbols"]
+    },
+    "latin-vi": {
+      "display": "fredoka",
+      "body": "nunito",
+      "fallback": ["@symbols"]
+    },
+    "cjk-sc": {
+      "temporary": "ZCOOLKuaiLe-endonym is the picker subset (简体中文 plus printable ASCII). A later wave replaces this file under group cjk-sc.",
+      "display": [{ "weight": 400, "file": "ZCOOLKuaiLe-endonym" }],
+      "body": [{ "weight": 400, "file": "ZCOOLKuaiLe-endonym" }],
+      "fallback": ["@nunito", "@symbols"]
+    },
+    "cjk-tc": {
+      "temporary": "Huninn-endonym is the picker subset (繁體中文 plus printable ASCII). A later wave replaces this file under group cjk-tc.",
+      "display": [{ "weight": 400, "file": "Huninn-endonym" }],
+      "body": [{ "weight": 400, "file": "Huninn-endonym" }],
+      "fallback": ["@nunito", "@symbols"]
+    },
+    "cjk-jp": {
+      "temporary": "MPLUSRounded1c-endonym is the picker subset (日本語 plus printable ASCII). A later wave replaces this file under group cjk-jp.",
+      "display": [{ "weight": 700, "file": "MPLUSRounded1c-endonym" }],
+      "body": [{ "weight": 700, "file": "MPLUSRounded1c-endonym" }],
+      "fallback": ["@nunito", "@symbols"]
+    },
+    "cjk-kr": {
+      "temporary": "Jua-endonym is the picker subset (한국어 plus printable ASCII). A later wave replaces this file under group cjk-kr. The source Jua file has no U+0060.",
+      "display": [{ "weight": 400, "file": "Jua-endonym" }],
+      "body": [{ "weight": 400, "file": "Jua-endonym" }],
+      "fallback": ["@nunito", "@symbols"]
+    },
+    "devanagari": {
+      "display": [{ "weight": 700, "file": "Baloo2-700" }],
+      "body": [{ "weight": 700, "file": "Baloo2-700" }],
+      "fallback": ["@nunito", "@symbols"]
+    },
+    "khmer": {
+      "display": [{ "weight": 700, "file": "KantumruyPro-700" }],
+      "body": [{ "weight": 700, "file": "KantumruyPro-700" }],
+      "fallback": ["@nunito", "@symbols"]
+    },
+    "arabic": {
+      "display": [{ "weight": 700, "file": "Cairo-700" }],
+      "body": [{ "weight": 700, "file": "Cairo-700" }],
+      "fallback": ["@nunito", "@symbols"]
+    }
+  }
+}
