@@ -13,6 +13,11 @@ Paths written as `tools/parity/...` in entries dated before 2026-10-08 are the l
 
 ### Fixed
 
+#### Translation kit validator (2026-10-12)
+
+- `validate_table.py` counts `kg`, `/`, and `+` as tokens, so a word such as Background is not a unit. `{0} kg` may be copied. Parenthesis counts follow English, including fragments cut off mid-token. Glossary aliases cover `LVL`, `space junk`, and Auxiliary Scrap Pod, and a term inside the logo is not a hit. Accepted fit warnings live in `localization/notes/<code>-fit-exceptions.json`. The German table stays at 0 errors; fit warnings on `LVL 1`–`LVL 50` are suppressed (78 warnings before, 28 after).
+- The translator brief now names `Assets/Resources/Localization/<code>.json` as the deliverable. Close-type buttons are verbs. The glossary notes that Backup Pod and Auxiliary Scrap Pod are one thing.
+
 #### Unity localisation run stacking and single-line controls (2026-10-12)
 
 - A translated run that grows shifts the next run in the same element down by the extra line height. The ceiling is the element bottom, the next same-parent sibling, and the iPhone home-indicator band, minus the captured height of the runs below. The settings footer lines no longer draw on top of each other.

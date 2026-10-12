@@ -9,6 +9,8 @@ missing glyphs.
 
     python3 validate_table.py --lang de [--table path] [--en path]
         [--fonts-dir path] [--max-ratio 2.5] [--json out.json]
+        [--fit-exceptions path] [--ignore-fit-keys KEY ...]
+        [--show-suppressed] [--register-check]
 
 Exit 1 when any finding is an error. Warnings stay in the report and do not
 change the exit code. Exit 2 when the invocation itself is wrong.
@@ -137,14 +139,18 @@ SHRINK_FLOOR = 0.72
 
 
 class Finding:
-    def __init__(self, severity: str, kind: str, key: str, message: str):
+    def __init__(self, severity: str, kind: str, key: str, message: str, reason: str = ""):
         self.severity = severity
         self.kind = kind
         self.key = key
         self.message = message
+        self.reason = reason
 
     def line(self) -> str:
-        return f"{self.severity}\t{self.kind}\t{self.key}\t{self.message}"
+        base = f"{self.severity}\t{self.kind}\t{self.key}\t{self.message}"
+        if self.reason:
+            return base + "\t" + self.reason
+        return base
 
 
 class PairObj(dict):
@@ -281,28 +287,101 @@ def has_letter(text: str) -> bool:
     return any(ch.isalpha() for ch in text)
 
 
+def _boundary_token_spans(text: str, token: str) -> list:
+    """Spans of token that are not glued to a letter.
+
+    `kg` counts after a digit (`105kg`), after a placeholder (`{0} kg`,
+    `{0}kg`, `{0}` + U+00A0 + `kg`), or on its own at a boundary. It does
+    not count inside a word (`Background`). `/` and `+` follow the same
+    rule so a slash or plus inside a word is not a unit.
+    """
+    spans = []
+    size = len(token)
+    start = 0
+    while True:
+        index = text.find(token, start)
+        if index < 0:
+            return spans
+        before = text[index - 1] if index else ""
+        after_at = index + size
+        after = text[after_at] if after_at < len(text) else ""
+        if not (before.isalpha() or after.isalpha()):
+            spans.append((index, after_at))
+        start = after_at
+
+
+def count_unit_token(text: str, token: str) -> int:
+    if token in ("kg", "/", "+"):
+        return len(_boundary_token_spans(text, token))
+    return text.count(token)
+
+
+def strip_boundary_token(text: str, token: str) -> str:
+    spans = _boundary_token_spans(text, token)
+    if not spans:
+        return text
+    parts = []
+    cursor = 0
+    for start, end in spans:
+        parts.append(text[cursor:start])
+        cursor = end
+    parts.append(text[cursor:])
+    return "".join(parts)
+
+
 def brand_only(text: str) -> bool:
     rest = text
     for phrase in BRAND_PHRASES:
         rest = rest.replace(phrase, " ")
     rest = re.sub(r"v?\d+(?:\.\d+)*", " ", rest)
-    for token in ("•", "×", "▶", "←", "✓", "/", "+", "%", "kg"):
+    rest = strip_boundary_token(rest, "kg")
+    for token in ("•", "×", "▶", "←", "✓", "/", "+", "%"):
         rest = rest.replace(token, " ")
     return not has_letter(rest)
 
 
 def is_unit_like(text: str) -> bool:
-    rest = text
-    for token in ("kg", "×", "▶", "←", "✓", "•"):
+    """True when the only letters are the unit token kg.
+
+    `{0}`, a normal space, and U+00A0 may sit next to kg. Braces do not
+    block the exception: `{0} kg`, `{0}kg`, and `{0}\\u00a0kg` are unit strings.
+    """
+    rest = re.sub(r"\{[0-9]+\}", "", text)
+    rest = strip_boundary_token(rest, "kg")
+    for token in ("×", "▶", "←", "✓", "•"):
         rest = rest.replace(token, "")
     for ch in rest:
-        if ch.isdigit() or ch.isspace() or ch in ".,:;()[]/+-%":
+        if ch.isdigit() or ch.isspace() or ch in ".,:;()[]/+-%{}":
             continue
         return False
     return True
 
 
-def allowed_identical(value: str, do_not: set) -> bool:
+def _letters_only(text: str) -> str:
+    return "".join(ch for ch in text if ch.isalpha())
+
+
+def loanword_identical(value: str, lang: str, glossary: list) -> bool:
+    """Allow a copy whose letters are exactly a glossary loanword.
+
+    `Donut`, `Bronze`, and `Pause` are the right German words. `🍩 DONUT 🍩`
+    is the same loanword with the emoji left in place. A longer sentence
+    that merely contains the word is still untranslated.
+    """
+    letters = _letters_only(value).casefold()
+    if len(letters) < 2 or not glossary or not lang:
+        return False
+    for term in glossary:
+        recommended = (term.get(lang) or "").strip()
+        if not recommended or _letters_only(recommended).casefold() != letters:
+            continue
+        for alternate in term.get("alternates") or []:
+            if _letters_only(alternate).casefold() == letters:
+                return True
+    return False
+
+
+def allowed_identical(value: str, do_not: set, lang: str | None = None, glossary: list | None = None) -> bool:
     if not has_letter(value):
         return True
     if value in do_not:
@@ -314,9 +393,15 @@ def allowed_identical(value: str, do_not: set) -> bool:
         return True
     if is_unit_like(value):
         return True
+    if loanword_identical(value, lang or "", glossary or []):
+        return True
     if brand_only(value):
         return True
     return False
+
+
+def bracket_counts(text: str) -> tuple:
+    return (text.count("("), text.count(")"), text.count("["), text.count("]"))
 
 
 def digit_run(text: str) -> str:
@@ -453,13 +538,63 @@ def parse_glossary(path: Path) -> list:
     return terms
 
 
-def english_has_term(text: str, term: str, case_sensitive: bool) -> bool:
+def parse_aliases(path: Path) -> list:
+    """Read the alias block in glossary.md. Each row maps a surface onto a term id."""
+    if path is None or not path.is_file():
+        return []
+    aliases = []
+    header = None
+    for line in path.read_text(encoding="utf-8").splitlines():
+        if header is None:
+            if line.startswith("alias\t"):
+                header = line.split("\t")
+            continue
+        if not line.strip() or line.startswith("```"):
+            if aliases:
+                break
+            continue
+        cells = line.split("\t")
+        if len(cells) < 2 or not cells[0].strip() or not cells[1].strip():
+            continue
+        aliases.append({"alias": cells[0].strip(), "term": cells[1].strip()})
+    return aliases
+
+
+def protected_spans(text: str, do_not) -> list:
+    """Brand phrases and do-not-translate strings. Glossary hits inside them do not count."""
+    phrases = [phrase for phrase in list(BRAND_PHRASES) + list(do_not or []) if phrase]
+    spans = []
+    for phrase in phrases:
+        start = 0
+        while True:
+            index = text.find(phrase, start)
+            if index < 0:
+                break
+            spans.append((index, index + len(phrase)))
+            start = index + len(phrase)
+    return spans
+
+
+def _inside_longer(span: tuple, spans: list) -> bool:
+    start, end = span
+    width = end - start
+    for left, right in spans:
+        if left <= start and end <= right and (right - left) > width:
+            return True
+    return False
+
+
+def english_has_term(text: str, term: str, case_sensitive: bool, protected=None, exact: bool = False) -> bool:
     flags = 0 if case_sensitive else re.IGNORECASE
-    if " " in term or term.endswith("s"):
+    if exact or " " in term or term.endswith("s"):
         pattern = r"(?<![A-Za-z0-9])" + re.escape(term) + r"(?![A-Za-z0-9])"
     else:
         pattern = r"(?<![A-Za-z0-9])" + re.escape(term) + r"s?(?![A-Za-z0-9])"
-    return re.search(pattern, text, flags) is not None
+    for match in re.finditer(pattern, text, flags):
+        if protected and _inside_longer(match.span(), protected):
+            continue
+        return True
+    return False
 
 
 def translation_has_recommendation(text: str, recommended: str, dnt: bool) -> bool:
@@ -596,7 +731,7 @@ def check_pair(
 
     if target == "":
         add(findings, "error", "empty", ident, "empty translation")
-    elif target == source and not allowed_identical(source, do_not):
+    elif target == source and not allowed_identical(source, do_not, lang, glossary):
         add(findings, "error", "untranslated", ident, "translation is a copy of the English string")
 
     if placeholder_indexes(source) != placeholder_indexes(target):
@@ -641,9 +776,17 @@ def check_pair(
         add(findings, "error", "number", ident, "digit sequence differs from English")
     if isinstance(target, str):
         for token in ("kg", "×", "/", "▶", "←", "%", "+"):
-            if source.count(token) != target.count(token):
+            if count_unit_token(source, token) != count_unit_token(target, token):
                 add(findings, "error", "unit", ident, f"count of {token!r} differs from English")
                 break
+        if bracket_counts(source) != bracket_counts(target):
+            add(
+                findings,
+                "warning",
+                "balance",
+                ident,
+                "parenthesis or bracket counts differ from English; match the source, including a fragment that ends mid-token",
+            )
         digit_kind = bad_digits(target)
         if digit_kind:
             add(findings, "warning", "digits", ident, f"use Western digits 0-9, found {digit_kind}")
@@ -690,7 +833,16 @@ def check_pair(
                 )
 
     if isinstance(target, str) and target not in ("", source):
-        check_glossary(glossary, lang, source, target, ident, findings)
+        check_glossary(
+            glossary,
+            lang,
+            source,
+            target,
+            ident,
+            findings,
+            aliases=table_flags.get("aliases") or [],
+            do_not=do_not,
+        )
 
     if hashes is not None and isinstance(target, str):
         section_hashes = {}
@@ -804,16 +956,25 @@ def check_fit(index_row, source, target, ident, findings):
         )
 
 
-def check_glossary(glossary, lang, source, target, ident, findings):
+def check_glossary(glossary, lang, source, target, ident, findings, aliases=None, do_not=None):
+    protected = protected_spans(source, do_not)
+    by_term = {}
+    for row in aliases or []:
+        by_term.setdefault(row.get("term") or "", []).append(row.get("alias") or "")
     for term in glossary:
         if not term.get("check"):
             continue
         dnt = term.get("dnt", False)
         matched = False
         for alternate in term.get("alternates") or []:
-            if english_has_term(source, alternate, case_sensitive=dnt):
+            if english_has_term(source, alternate, case_sensitive=dnt, protected=protected):
                 matched = True
                 break
+        if not matched:
+            for alias in by_term.get(term.get("term") or "", []):
+                if alias and english_has_term(source, alias, case_sensitive=dnt, protected=protected, exact=True):
+                    matched = True
+                    break
         if not matched:
             continue
         recommended = (term.get(lang) or "").strip()
@@ -912,7 +1073,7 @@ def validate(english, translation, lang, options) -> list:
         hashes = meta.get("sourceHashes")
 
     covered = options.get("covered")
-    table_flags = {"kana": False}
+    table_flags = {"kana": False, "aliases": options.get("aliases") or []}
     keys = set(spec_en) | set(spec_tr)
     for key in sorted(keys, key=ordinal_bytes):
         check_pair(
@@ -973,8 +1134,82 @@ def validate(english, translation, lang, options) -> list:
                     f"key bytes differ from English key {canonical!r}",
                 )
 
+    if options.get("register_check"):
+        add(
+            findings,
+            "warning",
+            "register",
+            "table",
+            "imperative and telegraphic style is not checked; those strings are skipped",
+        )
+
     findings.sort(key=lambda item: (ordinal_bytes(item.key), item.kind))
+    suppress_known_fit(findings, options.get("fit_exceptions") or {})
     return findings
+
+
+def lookup_fit_exception(ident: str, exceptions: dict):
+    if not exceptions:
+        return None
+    if ident in exceptions:
+        return exceptions[ident]
+    bare = ident.split(":", 1)[-1]
+    if bare in exceptions:
+        return exceptions[bare]
+    return None
+
+
+def suppress_known_fit(findings: list, exceptions: dict) -> None:
+    """Accepted fit warnings stay in the list with severity suppressed.
+
+    Fit errors (past the shrink floor) are never suppressed. Imperative
+    style is not involved here.
+    """
+    if not exceptions:
+        return
+    for item in findings:
+        if item.severity != "warning" or item.kind != "fit":
+            continue
+        reason = lookup_fit_exception(item.key, exceptions)
+        if reason is None:
+            continue
+        item.severity = "suppressed"
+        item.reason = reason or "accepted fit exception"
+
+
+def load_fit_exceptions(path: Path) -> dict:
+    """Map a key (`spec:LVL 1` or `LVL 1`) to a reason.
+
+    The file is a list, or an object with `keys` and an optional shared
+    `reason`. Each key may be a string or `{"key", "reason"}`.
+    """
+    data = json.loads(path.read_text(encoding="utf-8"))
+    shared = ""
+    if isinstance(data, dict):
+        shared = (data.get("reason") or "").strip()
+        items = data.get("keys")
+        if items is None:
+            raise ValueError("fit exceptions object needs a keys list")
+    elif isinstance(data, list):
+        items = data
+    else:
+        raise ValueError("fit exceptions must be a list or an object")
+    if not isinstance(items, list):
+        raise ValueError("fit exceptions keys must be a list")
+    found = {}
+    for item in items:
+        if isinstance(item, str):
+            key = item.strip()
+            reason = shared
+        elif isinstance(item, dict):
+            key = (item.get("key") or "").strip()
+            reason = (item.get("reason") or shared).strip()
+        else:
+            raise ValueError("fit exception entry must be a string or an object")
+        if not key:
+            raise ValueError("fit exception entry is missing a key")
+        found[key] = reason
+    return found
 
 
 def _key_sig(key: str) -> str:
@@ -1066,21 +1301,34 @@ def skeleton(lang: str, english: dict, hashes: bool = True) -> dict:
 
 
 def summarise(findings: list) -> str:
-    errors = sum(1 for item in findings if item.severity == "error")
-    warnings = sum(1 for item in findings if item.severity == "warning")
+    visible = [item for item in findings if item.severity != "suppressed"]
+    suppressed = [item for item in findings if item.severity == "suppressed"]
+    errors = sum(1 for item in visible if item.severity == "error")
+    warnings = sum(1 for item in visible if item.severity == "warning")
     counts = {}
-    for item in findings:
+    for item in visible:
         counts[item.kind] = counts.get(item.kind, 0) + 1
     kinds = ", ".join(f"{kind}={counts[kind]}" for kind in sorted(counts))
     lines = [f"errors: {errors}", f"warnings: {warnings}", f"by-kind: {kinds or '(none)'}"]
+    if suppressed:
+        lines.append(f"suppressed: {len(suppressed)}")
+        grouped = {}
+        for item in suppressed:
+            grouped.setdefault(item.reason or "(no reason)", []).append(item.key)
+        for reason in sorted(grouped):
+            keys = sorted(grouped[reason], key=ordinal_bytes)
+            lines.append("suppressed-list: " + ", ".join(keys) + " — " + reason)
     return "\n".join(lines)
 
 
 def findings_json(lang: str, findings: list) -> dict:
+    visible = [item for item in findings if item.severity != "suppressed"]
+    suppressed = [item for item in findings if item.severity == "suppressed"]
     return {
         "lang": lang,
-        "errors": sum(1 for item in findings if item.severity == "error"),
-        "warnings": sum(1 for item in findings if item.severity == "warning"),
+        "errors": sum(1 for item in visible if item.severity == "error"),
+        "warnings": sum(1 for item in visible if item.severity == "warning"),
+        "suppressed": len(suppressed),
         "findings": [
             {
                 "severity": item.severity,
@@ -1088,7 +1336,17 @@ def findings_json(lang: str, findings: list) -> dict:
                 "key": item.key,
                 "message": item.message,
             }
-            for item in findings
+            for item in visible
+        ],
+        "suppressedFindings": [
+            {
+                "severity": "suppressed",
+                "kind": item.kind,
+                "key": item.key,
+                "message": item.message,
+                "reason": item.reason,
+            }
+            for item in suppressed
         ],
     }
 
@@ -1121,17 +1379,37 @@ def run_validate(args) -> int:
     chains_path = Path(args.fonts_chains) if args.fonts_chains else DEFAULT_CHAINS
     fonts_dir = Path(args.fonts_dir) if args.fonts_dir else DEFAULT_FONTS
 
+    fit_path = None
+    if args.fit_exceptions:
+        fit_path = Path(args.fit_exceptions)
+        if not fit_path.is_file():
+            print(f"fit exceptions not found: {fit_path}", file=sys.stderr)
+            return 2
+    else:
+        default_fit = LOC_DIR / "notes" / f"{lang}-fit-exceptions.json"
+        if default_fit.is_file():
+            fit_path = default_fit
+    try:
+        fit_exceptions = load_fit_exceptions(fit_path) if fit_path is not None else {}
+    except (json.JSONDecodeError, ValueError, OSError) as exc:
+        print(f"invalid fit exceptions: {exc}", file=sys.stderr)
+        return 2
+    for group in args.ignore_fit_keys or []:
+        for key in group:
+            fit_exceptions.setdefault(key, "ignored with --ignore-fit-keys")
+
     options = {
         "fail_ratio": args.max_ratio if args.max_ratio is not None else FAIL_RATIO,
         "glossary": parse_glossary(glossary_path) if glossary_path.is_file() else [],
+        "aliases": parse_aliases(glossary_path) if glossary_path.is_file() else [],
         "index": load_key_index(index_path) if index_path.is_file() else {},
         "chains": load_chains(chains_path),
         "fonts_dir": fonts_dir,
         "raw": raw,
         "skip_glyphs": args.no_glyph,
+        "fit_exceptions": fit_exceptions,
+        "register_check": args.register_check,
     }
-    if not glossary_path.is_file():
-        pass
     pre = []
     if not glossary_path.is_file():
         add(pre, "warning", "glossary", "table", f"glossary not found: {glossary_path}")
@@ -1143,6 +1421,8 @@ def run_validate(args) -> int:
     print(f"table: {table_path}")
     print(summarise(findings))
     for item in findings:
+        if item.severity == "suppressed" and not args.show_suppressed:
+            continue
         print(item.line())
     if args.json:
         out = Path(args.json)
@@ -1164,6 +1444,28 @@ def main(argv=None) -> int:
     parser.add_argument("--max-ratio", type=float, help="Latin length error ratio (default 2.5)")
     parser.add_argument("--json", help="also write a JSON report to this path")
     parser.add_argument("--no-glyph", action="store_true", help="skip the cmap check")
+    parser.add_argument(
+        "--fit-exceptions",
+        help="JSON allowlist of accepted fit warnings (default: localization/notes/<code>-fit-exceptions.json when present)",
+    )
+    parser.add_argument(
+        "--ignore-fit-keys",
+        action="append",
+        nargs="+",
+        default=[],
+        metavar="KEY",
+        help="suppress fit warnings for these keys (spec:Key or the English key)",
+    )
+    parser.add_argument(
+        "--show-suppressed",
+        action="store_true",
+        help="print fit warnings that an allowlist suppressed",
+    )
+    parser.add_argument(
+        "--register-check",
+        action="store_true",
+        help="warn that imperative and telegraphic style is not checked",
+    )
     args = parser.parse_args(argv)
     return run_validate(args)
 

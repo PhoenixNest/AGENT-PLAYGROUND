@@ -59,7 +59,8 @@ Return one JSON object, UTF-8, no BOM, LF newlines, 2-space indent, keys in the 
 
 - `{0}`, `{1}`, … stay character for character. You may reorder them. `{{` is an escape, not a placeholder. The set of indexes must match.
 - Keep the Western digits in the same order. `1,000` may keep its comma; do not spell the number out and do not switch to Eastern or Devanagari digits.
-- `kg` stays `kg`. Keep the same count of `×`, `/`, `%`, `+`, `▶`, and `←`.
+- `kg` stays `kg` when it is the unit: after a number (`105 kg`, `105kg`), after `{0}` (`{0} kg`, `{0}kg`, or `{0}` plus U+00A0 plus `kg`), or standing alone. A word that only contains those letters (Background) is not a unit. `{0} kg` may be copied. Do not delete `kg`.
+- Keep `×`, `/`, `%`, `+`, `▶`, and `←`. A slash or plus inside a word is not one of those tokens.
 - Keep every emoji and `✓` in the same relative position. A trailing check stays trailing. Do not add emoji.
 - Do not add leading or trailing spaces. No control characters, including newlines.
 
@@ -90,7 +91,20 @@ The character budget is the English UTF-16 length times your expansion factor. T
 
 `ru` is not a target language.
 
-There is a second check against `max_width` and `fz`. It estimates width with an average advance (Latin letter 0.50 em, space 0.28, digit 0.50, CJK/kana/Hangul 1.00, Arabic 0.48, Devanagari 0.40, Khmer 0.45). The budget is the wider of the CSV box and the English estimate, so the English string itself is not flagged. It warns when the translation is wider than that line, and it errors when the width passes the renderer's 72% shrink floor (`TextFit.FloorRatio`). The 16px button inset is already outside a captured run width, so it is not subtracted again. Single-line controls never wrap. Treat a fit warning as a request to shorten the line.
+There is a second check against `max_width` and `fz`. It estimates width with an average advance (Latin letter 0.50 em, space 0.28, digit 0.50, CJK/kana/Hangul 1.00, Arabic 0.48, Devanagari 0.40, Khmer 0.45). The budget is the wider of the CSV box and the English estimate, so the English string itself is not flagged. It warns when the translation is wider than that line, and it errors when the width passes the renderer's 72% shrink floor (`TextFit.FloorRatio`). The 16px button inset is already outside a captured run width, so it is not subtracted again. Single-line controls never wrap. Treat a fit warning on a single-line control as a request to shorten the line.
+
+The fit check compares the whole string with one line box. A paragraph that wraps can warn even when the wrapped lines fit. That warning is a budget, not proof of a single-line overflow. `str` rows often have no `fz` or `max_width`, so they are not fit-checked. Use `max_chars` and the context note (a dock badge is about 6 characters).
+
+The 50 spec keys `LVL 1` through `LVL 50` are narrower than the glossary word (`Level` in German). A fit warning on those chips is expected. Ignore it, or list the keys in `localization/notes/<code>-fit-exceptions.json` so the summary suppresses them. They stay visible with `--show-suppressed`. `--ignore-fit-keys` suppresses extra keys for one run and does not write the file. A fit error past the 72% shrink floor is never suppressed.
+
+```json
+{
+  "reason": "Glossary keeps Level. The LVL chip is narrower than the word.",
+  "keys": ["spec:LVL 1", "spec:LVL 2"]
+}
+```
+
+A key may instead be `{"key": "spec:LVL 1", "reason": "..."}`. `spec:` or `str:` may be omitted when the English key is unique.
 
 ## Uppercase
 
@@ -101,6 +115,10 @@ If the English key is already all caps and `uppercase` is `none` (BRONZE, PLAY),
 ## Fragments
 
 A `fragment` note means this key is one run inside a larger element. Translate each run so that reading them in `run_index` order, in the same `group`, sounds natural. Do not add a full stop when `no-terminal-punct` is set. Do not repeat a word that the neighbouring run already carries.
+
+Some fragments end mid-sentence. The English key is cut off on purpose: `Unlock (1200`, `Unlock (500`, `Trophy: Daily Duty Star (+500`. Do not add the missing `)`. The next run continues the sentence. The validator compares `(` `)` `[` `]` counts with English and warns when they differ. Match the English counts, even when English itself is unbalanced.
+
+`groups-truncated` means the CSV does not list every sibling run. Read the neighbouring keys in `en.json` before you split a sentence.
 
 ## Do not translate
 
@@ -132,27 +150,37 @@ Follow the address row in `glossary.md`. Short version:
 - zh-Hant: 你. Taiwan words (軟體, 螢幕, 影片, 首頁), not mainland words. Full-width punctuation.
 - km: polite kid tone, not the royal register.
 
-Checked glossary terms must appear as recommended. If a term cannot work grammatically, translate it so the sentence is correct, keep the rest of the glossary, and list the exception in the notes. That exception is a warning, not a free pass to rename Nibbles.
+Checked glossary terms must appear as recommended. If a term cannot work grammatically, translate it so the sentence is correct, keep the rest of the glossary, and list the exception in the notes. That exception is a warning, not a free pass to rename Nibbles. A headword that does not fit a header still belongs in the sentence that has room (`Toy Shop` in a sentence, a shorter word on the header). Terms with `check: no` (Freischalten, Anziehen, Abholen, and the rest of that set) are still the preferred word when the line can hold them.
+
+`LVL` is an alias of `level`. `space junk` is an alias of `space trash`. The logo `SPACE TRASH CLEAN` is not a `space trash` hit. Backup Pod and Auxiliary Scrap Pod are one thing: use the backup-pod row for both.
+
+## Buttons
+
+Close, Cancel, Back, Play, Claim, Wear, and Unlock are verbs. Translate them as verbs. The German pilot's `Close` → `Zu` was too short of a word: `Close` needs `Schließen`, not a particle. If the verb does not fit, choose a shorter verb and record it in the notes. Do not drop the verb only to clear a fit warning.
 
 ## Self-check
 
 From `games/maze-puzzle/localization/tools`, with the scratch virtualenv if you want the glyph check (`/tmp/maze-i18n/kit-venv`):
 
 ```bash
-python3 validate_table.py --lang <code> --table /path/to/<code>.json
+python3 validate_table.py --lang <code> \
+  --table games/maze-puzzle/unity/maze-puzzle/Assets/Resources/Localization/<code>.json
 ```
+
+`--show-suppressed` prints fit warnings hidden by the allowlist. `--ignore-fit-keys` adds keys for that run. `--register-check` adds one warning that imperative and telegraphic style is not scored. It does not judge buttons.
 
 Fix every error. Read every warning. Glyph errors mean a character is not in the shipped font chain. Languages whose chain is `pending` in `tools/fonts-chains.json` (zh, ja, ko, hi, km, ar) warn `font-pending` and do not fail the glyph check yet. vi and uz are checked against Fredoka, Nunito, and the Noto symbol fonts; Baloo 2 is still pending.
 
-Do not write the file into `Assets/Resources/Localization/`. The lead merges it after it passes.
-
 ## What you return
 
-1. The table JSON, named `<code>.json`.
-2. A notes file `<code>.notes.md` with:
+Write the files into the repo. The table path is the deliverable. The lead does not copy it in afterwards.
+
+1. The table at `games/maze-puzzle/unity/maze-puzzle/Assets/Resources/Localization/<code>.json`. Add the Unity `.meta` beside it when you create the file. UTF-8, no BOM, LF, 2-space indent.
+2. Notes at `games/maze-puzzle/localization/notes/<code>-notes.md`, with:
    - doubtful lines (key, your choice, the alternative)
    - glossary terms you could not use, and the addition you want
    - any English source line that looks wrong
-   - the validator summary (error count, warning count)
+   - the validator summary (error count, warning count, suppressed count)
+3. `games/maze-puzzle/localization/notes/<code>-fit-exceptions.json` when you accept fit warnings, including the 50 `LVL` chips if you keep the glossary word.
 
-Do not translate `qps`. That pseudo-locale is built in memory from English.
+`merge_table.py` is only for folding a partial draft into that table. Do not translate `qps`. That pseudo-locale is built in memory from English.
