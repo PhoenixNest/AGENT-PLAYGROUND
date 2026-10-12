@@ -2,5 +2,9 @@
   {
     "key": "Hangar",
     "reason": "Hangar is the Italian word for an aircraft shelter and is spelled the same as English."
+  },
+  {
+    "key": "SHOP",
+    "reason": "Shop is a common Italian loanword for a shop and is spelled the same as English."
   }
 ]
