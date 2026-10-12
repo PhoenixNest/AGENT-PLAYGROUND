@@ -11,6 +11,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 Paths written as `tools/parity/...` in entries dated before 2026-10-08 are the location on that day. Those files now live under `games/maze-puzzle/tools/parity/...`. Entries that name `tools/parity/unity/*.ps1` or `canvas-conformance/run-unity.ps1` record the path used that day. Those Windows wrappers now live under `games/maze-puzzle/tools/parity/windows/`.
 
+### Fixed
+
+#### Unity localisation run stacking and single-line controls (2026-10-12)
+
+- A translated run that grows shifts the next run in the same element down by the extra line height. The ceiling is the element bottom, the next same-parent sibling, and the iPhone home-indicator band, minus the captured height of the runs below. The settings footer lines no longer draw on top of each other.
+- A single-line control (a button, or a run no taller than `1.5 * font + 2` inside an element shorter than `2.2 * font`) shrinks to 72% and ellipsizes on that one line. Wrapping is only for a run that was already multi-line, or a text block taller than two lines. The audit kind `wrapped-in-control` is hard. `soft-control-ellipsis` is the soft category for a control that ellipsized.
+- An icon that already overlaps the English run, including an emoji wrapped in a span, is reserved only when the translation is wider. A shorter translation stays on the captured x. The home play ▶ stays put.
+- `qps` audit: 90 spec files, 2006 runs, 88 fragment elements, hard 0 (outside 0, overlap 0, band 0, wider 0, wrapped 0), soft 1914 (shrink 998, ellipsis 118, wrap 0, control ellipsis 798). Focused EditMode (`TextFitTests|LocRenderHookTests|LocPseudoStillTests`): 10 passed, 0 failed. Results `/tmp/maze-i18n/loc-render/focused.xml`, log `/tmp/maze-i18n/loc-render/focused.log`. Full EditMode: 501 passed, 83 failed, 3 skipped, 587 total, exit 2. Results `/tmp/maze-i18n/loc-render/full.xml`, log `/tmp/maze-i18n/loc-render/full.log`. The 83 are the known set (`ReferenceComparisonTests` 73, `ReferenceGateTests` 9, `QuotaAndModalTests.GameAndPauseStills_MatchKnownHashes`). The skips are `FrameRateHarness.Measure`, `FrameRateHarness.MeasureAccumulated`, and `PagePreviewTests.Stills_MatchTheParityPlayer_IncludingShopRingsDefault`.
+
 ### Added
 
 #### Settings language picker and legal rows (2026-10-12)
