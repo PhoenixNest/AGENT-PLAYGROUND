@@ -13,6 +13,13 @@ Paths written as `tools/parity/...` in entries dated before 2026-10-08 are the l
 
 ### Added
 
+#### Translated data names in C# overrides (2026-10-12)
+
+- `Loc.TrName` translates an English data name that a C# override inserts. English returns that string and does not open a table. Any other language checks a `data.*` registry row, then the normalised spec table. The home mission title, pause level name, world title, HUD sector code, cleanup toast, and trophy toast pass their names through it. The per-frame rebuild caches the lookup by text and language version.
+- Every `LVL n` code, level name, world title, and achievement title that those overrides insert is already a spec key, so no `data.*` rows and no `home.level.code` format were added. The str table stays 81 keys. Context notes on the four format strings were regenerated into `key-index.csv`. The spec section of `en.json` is unchanged.
+- Viewer toast-proof literals stay English and are listed in `localization/hardcoded-allowlist.txt`. `MasterAction` stays allowlisted.
+- Verified with Unity 6000.4.0f1 EditMode. Extract wrote spec=355, str=81, skip=50, files=45. Focused filter (LocStringTests, LocHardcodedStringTests, SpecExtractorTests, AppFlowTests, GameplayLabelTests): 24 passed, 0 failed. Full suite: 510 passed, 83 failed, 3 skipped, 596 total, exit 2. The 83 failures are the known set (73 ReferenceComparisonTests, 9 ReferenceGateTests, 1 QuotaAndModalTests.GameAndPauseStills_MatchKnownHashes).
+
 #### C# string registry (2026-10-12)
 
 - User-visible C# literals (toasts, loading tips, mission and pause lines, shop footers, gift copy, HUD quota, daily countdown, ring hub words, gate badges, and floating words) now go through `Loc.Tr`. English is the `LocStrings` registry, so it does not read `en.json`. A missing translation falls back to that English. Placeholder formatting stays invariant, and numbers still use `JsNumber.ToString`.

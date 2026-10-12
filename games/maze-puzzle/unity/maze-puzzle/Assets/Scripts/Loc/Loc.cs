@@ -170,6 +170,24 @@ namespace OrbitalSalvage.Loc
         }
 
         /// <summary>
+        /// Translates an English data name (a level name, world title, achievement title, or
+        /// level code) that a C# override inserts. English returns <paramref name="englishDataText"/>
+        /// and does not touch a table. Any other language checks a <c>data.*</c> registry row whose
+        /// English equals the text, then the same normalised spec lookup as
+        /// <see cref="TryTranslateSpecText"/>. A miss returns the input unchanged.
+        /// </summary>
+        public static string TrName(string englishDataText)
+        {
+            if (englishDataText == null) englishDataText = "";
+            if (_english) return englishDataText;
+            string dataKey;
+            if (LocStrings.TryGetDataKey(englishDataText, out dataKey)) return TranslateStr(dataKey);
+            string translated;
+            if (TryTranslateSpecText(englishDataText, out translated)) return translated;
+            return englishDataText;
+        }
+
+        /// <summary>
         /// Chooses the active language from a stored profile code and a device provider.
         /// <paramref name="storedLanguage"/> is the raw <c>settings.language</c> value.
         /// This method does not write the profile. <see cref="LocInitResult.PersistLanguage"/>
