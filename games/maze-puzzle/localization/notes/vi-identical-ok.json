@@ -1,0 +1,6 @@
+[
+  {
+    "key": "Reset",
+    "reason": "Loanword on the 30px data button. Đặt lại is 39px against a 42px shrink floor, so the label would shrink to the edge of ellipsis."
+  }
+]
