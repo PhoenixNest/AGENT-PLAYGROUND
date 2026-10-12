@@ -61,7 +61,7 @@ A normalised run is not translated when it has no Unicode letter. That skips dig
 
 ## Workflow
 
-1. Extract. Menu `Orbital Salvage/Localization/Extract Spec Strings`, or batch `OrbitalSalvage.Editor.LocExtract.RunBatch`. It reads `Assets/Resources/Parity/Spec/*__zero.json` and writes `en.json` plus this CSV. `*__iphone.json` must yield the same key set. Spec JSON is not modified.
+1. Extract. Menu `Orbital Salvage/Tools/Extract Localization Spec Strings`, or batch `OrbitalSalvage.Editor.LocExtract.RunBatch`. It reads `Assets/Resources/Parity/Spec/*__zero.json` and writes `en.json` plus this CSV. `*__iphone.json` must yield the same key set. Spec JSON is not modified.
 2. Translate. Copy `en.json` to `<code>.json` and replace `spec` and `str` values. Keep placeholder indexes identical. Do not add edge whitespace or control characters.
 3. Validate. `LocValidator.Validate(english, translation)` returns a flat list of findings (`error` or `warning`): missing keys, extra keys, placeholder mismatches, edge whitespace, control characters, and — for latin and latin-vi only — length at or above 1.6× English (warning) or 2.5× (error).
 
@@ -69,6 +69,6 @@ A normalised run is not translated when it has no Unicode letter. That skips dig
 
 `Loc.SetLanguage` accepts a registry code only (`de`, not `DE` or `pt-BR`). The language is active only when its table loads. `en` is always active. `Loc.Version` increments when the active language changes so later paint caches can drop.
 
-`settings.language` is omitted while empty, so an unset profile stays byte-identical to today's save. On boot, a stored code is used when it resolves and its table loads (a tag such as `zh-HK` is rewritten to the canonical code). A stored code whose table is missing stays stored and the active language is English. Otherwise the device provider is asked. A non-English result is persisted only when that table loaded, and from then on the stored value is authoritative. English detection is not persisted. A progress reset keeps the language.
+`settings.language` is omitted while empty, so an unset profile stays byte-identical to today's save. `SetLanguage` is what writes a registry code. Boot does not rewrite a stored value: a hand-edited tag is resolved only to choose the active language. A stored code whose table is missing, or that does not resolve, stays stored and the active language is English. Device detection runs only when the setting is empty. A non-English result is persisted only when that table loaded, and from then on the stored value is authoritative. English detection is not persisted. A progress reset keeps the language.
 
 The default provider reads `Application.systemLanguage` and `CultureInfo.CurrentUICulture.Name`. Tests inject `IDeviceLocaleProvider`. Native `NSLocale` / Android `Locale` lookup is later.

@@ -134,18 +134,20 @@ namespace OrbitalSalvage.Loc.Tests
             var canonical = new CountingStore();
             var canonicalApp = new AppController(canonical, new ManualAppClock(0, 0));
             canonicalApp.Economy.Profile.Settings.Language = "zh-HK";
+            int canonicalWrites = canonical.Writes;
             canonicalApp.InitializeLanguage(new FixedDeviceLocale("English", "en-US"));
             Assert.AreEqual("zh-Hant", Loc.CurrentLanguage);
-            Assert.AreEqual("zh-Hant", canonicalApp.Economy.Profile.Settings.Language);
+            Assert.AreEqual("zh-HK", canonicalApp.Economy.Profile.Settings.Language);
+            Assert.AreEqual(canonicalWrites, canonical.Writes);
 
             var unsupported = new CountingStore();
             var unsupportedApp = new AppController(unsupported, new ManualAppClock(0, 0));
             unsupportedApp.Economy.Profile.Settings.Language = "nb";
             int unsupportedWrites = unsupported.Writes;
             unsupportedApp.InitializeLanguage(new FixedDeviceLocale("German", "de-DE"));
-            Assert.AreEqual("de", Loc.CurrentLanguage);
-            Assert.AreEqual("de", unsupportedApp.Economy.Profile.Settings.Language);
-            Assert.Greater(unsupported.Writes, unsupportedWrites);
+            Assert.AreEqual("en", Loc.CurrentLanguage);
+            Assert.AreEqual("nb", unsupportedApp.Economy.Profile.Settings.Language);
+            Assert.AreEqual(unsupportedWrites, unsupported.Writes);
 
             LocInitResult empty = Loc.InitializeFromProfile("", null);
             Assert.AreEqual("en", empty.ActiveLanguage);
