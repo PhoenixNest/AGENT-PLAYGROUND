@@ -13,6 +13,12 @@ Paths written as `tools/parity/...` in entries dated before 2026-10-08 are the l
 
 ### Fixed
 
+#### Unity text anchoring for shrink-wrapped runs (2026-10-12)
+
+- The distilled spec has no `text-align`. A shrink-wrapped element is no longer treated as centered just because its centre matches the run. It keeps the captured left edge, unless the box is centered in a wider parent (titles) or flush to that parent's right (a pill such as HEUTE). A button run that sits in from both edges stays centered. A run already on the element's left edge is drawn at that x, so a label and its sub-line share one edge.
+- English paint does not call `TextFit`: with `Loc.EnglishActive` and no per-run font override, `PaintRuns` calls `PaintCapturedRun` and returns.
+- `qps` audit stays hard 0 (outside 0, overlap 0, band 0, wider 0, wrapped 0, missing-glyph 0) across 90 files and 2006 runs. Focused EditMode (`TextFitTests|LocRenderHookTests|LocGermanStillTests`): 11 passed, 0 failed. Results `/tmp/maze-i18n/loc-render/anchor.xml`, log `/tmp/maze-i18n/loc-render/anchor.log`. German stills: `/tmp/maze-i18n/de-audit/stills/`. Full EditMode: 525 passed, 83 failed, 3 skipped, 611 total, exit 2. Results `/tmp/maze-i18n/loc-render/full.xml`, log `/tmp/maze-i18n/loc-render/full.log`. The 83 are the known set (`ReferenceComparisonTests` 73, `ReferenceGateTests` 9, `QuotaAndModalTests.GameAndPauseStills_MatchKnownHashes`).
+
 #### Translation kit validator (2026-10-12)
 
 - `validate_table.py` counts `kg`, `/`, and `+` as tokens, so a word such as Background is not a unit. `{0} kg` may be copied. Parenthesis counts follow English, including fragments cut off mid-token. Glossary aliases cover `LVL`, `space junk`, and Auxiliary Scrap Pod, and a term inside the logo is not a hit. Accepted fit warnings live in `localization/notes/<code>-fit-exceptions.json`. The German table stays at 0 errors; fit warnings on `LVL 1`–`LVL 50` are suppressed (78 warnings before, 28 after).
