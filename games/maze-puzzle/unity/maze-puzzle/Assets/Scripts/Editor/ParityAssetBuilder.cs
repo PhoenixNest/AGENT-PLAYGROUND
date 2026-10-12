@@ -38,6 +38,10 @@ namespace OrbitalSalvage.Editor
             "Huninn-endonym",
             "MPLUSRounded1c-endonym",
             "Jua-endonym",
+            "Nunito-uz-patch-600",
+            "Nunito-uz-patch-700",
+            "Nunito-uz-patch-800",
+            "Nunito-uz-patch-900",
         };
 
         // Exactly the faces ParityFonts.FaceWeights lists: Fredoka 400/600/700 and Nunito 700/800/900.
