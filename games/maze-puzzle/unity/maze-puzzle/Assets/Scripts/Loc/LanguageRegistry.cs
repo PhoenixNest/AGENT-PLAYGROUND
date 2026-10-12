@@ -17,6 +17,18 @@ namespace OrbitalSalvage.Loc
         Arabic
     }
 
+    /// <summary>
+    /// How <see cref="LineBreaker"/> wraps a line. <see cref="LineBreakKind.Complex"/> is Khmer, Arabic,
+    /// and Hindi: those scripts still use the Latin breaker until shaping lands.
+    /// </summary>
+    public enum LineBreakKind
+    {
+        Latin,
+        Cjk,
+        Korean,
+        Complex
+    }
+
     public sealed class LanguageInfo
     {
         public string Code;
@@ -25,6 +37,7 @@ namespace OrbitalSalvage.Loc
         public string Script;
         public bool IsRtl;
         public FontGroup FontGroup;
+        public LineBreakKind LineBreak;
 
         public string FontGroupId()
         {
@@ -39,23 +52,23 @@ namespace OrbitalSalvage.Loc
 
         static readonly LanguageInfo[] Languages =
         {
-            Lang("en", "English", "English", "Latn", false, FontGroup.Latin),
-            Lang("zh-Hans", "Chinese (Simplified)", "简体中文", "Hans", false, FontGroup.CjkSc),
-            Lang("zh-Hant", "Chinese (Traditional)", "繁體中文", "Hant", false, FontGroup.CjkTc),
-            Lang("ja", "Japanese", "日本語", "Jpan", false, FontGroup.CjkJp),
-            Lang("ko", "Korean", "한국어", "Kore", false, FontGroup.CjkKr),
-            Lang("de", "German", "Deutsch", "Latn", false, FontGroup.Latin),
-            Lang("fr", "French", "Français", "Latn", false, FontGroup.Latin),
-            Lang("es", "Spanish", "Español", "Latn", false, FontGroup.Latin),
-            Lang("it", "Italian", "Italiano", "Latn", false, FontGroup.Latin),
-            Lang("pt-PT", "Portuguese", "Português", "Latn", false, FontGroup.Latin),
-            Lang("vi", "Vietnamese", "Tiếng Việt", "Latn", false, FontGroup.LatinVi),
-            Lang("fil", "Filipino", "Filipino", "Latn", false, FontGroup.Latin),
-            Lang("id", "Indonesian", "Bahasa Indonesia", "Latn", false, FontGroup.Latin),
-            Lang("uz", "Uzbek", "O\u02BBzbekcha", "Latn", false, FontGroup.Latin),
-            Lang("km", "Khmer", "ភាសាខ្មែរ", "Khmr", false, FontGroup.Khmer),
-            Lang("hi", "Hindi", "हिन्दी", "Deva", false, FontGroup.Devanagari),
-            Lang("ar", "Arabic", "العربية", "Arab", true, FontGroup.Arabic),
+            Lang("en", "English", "English", "Latn", false, FontGroup.Latin, LineBreakKind.Latin),
+            Lang("zh-Hans", "Chinese (Simplified)", "简体中文", "Hans", false, FontGroup.CjkSc, LineBreakKind.Cjk),
+            Lang("zh-Hant", "Chinese (Traditional)", "繁體中文", "Hant", false, FontGroup.CjkTc, LineBreakKind.Cjk),
+            Lang("ja", "Japanese", "日本語", "Jpan", false, FontGroup.CjkJp, LineBreakKind.Cjk),
+            Lang("ko", "Korean", "한국어", "Kore", false, FontGroup.CjkKr, LineBreakKind.Korean),
+            Lang("de", "German", "Deutsch", "Latn", false, FontGroup.Latin, LineBreakKind.Latin),
+            Lang("fr", "French", "Français", "Latn", false, FontGroup.Latin, LineBreakKind.Latin),
+            Lang("es", "Spanish", "Español", "Latn", false, FontGroup.Latin, LineBreakKind.Latin),
+            Lang("it", "Italian", "Italiano", "Latn", false, FontGroup.Latin, LineBreakKind.Latin),
+            Lang("pt-PT", "Portuguese", "Português", "Latn", false, FontGroup.Latin, LineBreakKind.Latin),
+            Lang("vi", "Vietnamese", "Tiếng Việt", "Latn", false, FontGroup.LatinVi, LineBreakKind.Latin),
+            Lang("fil", "Filipino", "Filipino", "Latn", false, FontGroup.Latin, LineBreakKind.Latin),
+            Lang("id", "Indonesian", "Bahasa Indonesia", "Latn", false, FontGroup.Latin, LineBreakKind.Latin),
+            Lang("uz", "Uzbek", "O\u02BBzbekcha", "Latn", false, FontGroup.Latin, LineBreakKind.Latin),
+            Lang("km", "Khmer", "ភាសាខ្មែរ", "Khmr", false, FontGroup.Khmer, LineBreakKind.Complex),
+            Lang("hi", "Hindi", "हिन्दी", "Deva", false, FontGroup.Devanagari, LineBreakKind.Complex),
+            Lang("ar", "Arabic", "العربية", "Arab", true, FontGroup.Arabic, LineBreakKind.Complex),
         };
 
         static readonly Dictionary<string, LanguageInfo> ByCode = Build();
@@ -109,7 +122,7 @@ namespace OrbitalSalvage.Loc
             return map;
         }
 
-        static LanguageInfo Lang(string code, string englishName, string endonym, string script, bool rtl, FontGroup font)
+        static LanguageInfo Lang(string code, string englishName, string endonym, string script, bool rtl, FontGroup font, LineBreakKind lineBreak)
         {
             return new LanguageInfo
             {
@@ -119,6 +132,7 @@ namespace OrbitalSalvage.Loc
                 Script = script,
                 IsRtl = rtl,
                 FontGroup = font,
+                LineBreak = lineBreak,
             };
         }
     }

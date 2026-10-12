@@ -40,6 +40,12 @@ namespace OrbitalSalvage.Render
 
         readonly Dictionary<LayoutKey, LayoutHit> layoutCache = new Dictionary<LayoutKey, LayoutHit>();
 
+        /// <summary>Drops measured runs after a language change. Glyph outlines stay cached.</summary>
+        public void ClearTextLayoutCache()
+        {
+            layoutCache.Clear();
+        }
+
         readonly List<LaidGlyph> laid = new List<LaidGlyph>(128);
         readonly List<int> segOut = new List<int>(64);
         readonly List<TrueTypeFont> cpFonts = new List<TrueTypeFont>(64);

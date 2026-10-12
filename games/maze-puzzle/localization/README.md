@@ -1,6 +1,6 @@
 # Localization
 
-English is the source language. Missing keys fall back to English. This folder is the string-table handoff. Painting translations is a later task, so an English build does not read these tables when it draws.
+English is the source language. Missing keys fall back to English. This folder is the string-table handoff. English paint does not read these tables. Any other active language does.
 
 Runtime code is `OrbitalSalvage.Loc` (no UnityEngine, so Logic and App can reference it). `OrbitalSalvage.Loc.Unity` holds the Resources loader and the device-locale provider.
 
@@ -72,3 +72,21 @@ A normalised run is not translated when it has no Unicode letter. That skips dig
 `settings.language` is omitted while empty, so an unset profile stays byte-identical to today's save. On boot, a stored code is used when it resolves and its table loads (a tag such as `zh-HK` is rewritten to the canonical code). A stored code whose table is missing stays stored and the active language is English. Otherwise the device provider is asked. A non-English result is persisted only when that table loaded, and from then on the stored value is authoritative. English detection is not persisted. A progress reset keeps the language.
 
 The default provider reads `Application.systemLanguage` and `CultureInfo.CurrentUICulture.Name`. Tests inject `IDeviceLocaleProvider`. Native `NSLocale` / Android `Locale` lookup is later.
+
+## Rendering rules
+
+`HomeChrome.PaintRuns` reads `Loc.EnglishActive` once per run. When that bool is set, the run stays on the captured English path (cached `ToUpperInvariant`, baked boxes, `WrapWords`). A language change bumps `Loc.Version`. The next frame drops chrome bakes, layout caches, and the text-layout cache, then rebuilds one resident page per frame.
+
+Anchoring keeps the center when the captured run is within 2px of the element center, or a centered button's icon+text pair is. It keeps the right edge when the run ends within 1.5px of the element and starts at least 8px in. Otherwise it keeps the left edge. Available width is the element width minus 16px (`.btn-cartoon-primary`). A shrink-wrapped run that is already wider than that inset relaxes the pad to the element edge.
+
+Fit order for a translated or overridden string: one line if it fits; else wrap when the run is already multi-line, the run is at least 1.9× the font, or the element is a button that tall; else shrink in 2% steps to 72% with letter-spacing scaled the same way; else wrap at that floor if the element has room for two lines; else clip with `…`. The result stays inside the element box within 0.5px.
+
+A child emoji or one-glyph symbol beside the run reserves its box. A centered button shifts that leading icon with the text when the pair still fits. The home play label is a shrink-wrapped span and its ▶ is a sibling, so the label stays in its own box and the icon is not moved.
+
+`LineBreaker.For` is Latin for `en`, `de`, `fr`, `es`, `it`, `pt-PT`, `vi`, `fil`, `id`, `uz`, and for `qps`. Latin splits on spaces and matches `WrapWords`. CJK (`zh-Hans`, `zh-Hant`, `ja`) breaks between characters, keeps Latin words and number+unit tokens together, and applies kinsoku. Korean breaks on spaces, then per syllable when one word is too wide. `km`, `hi`, and `ar` still use the Latin breaker.
+
+Non-English `text-transform: uppercase` goes through `LocCase.Upper`. German `ß` becomes `SS`. `zh-Hans`, `zh-Hant`, `ja`, `ko`, `km`, `hi`, and `ar` are not uppercased, so a Latin token such as `kg` stays as written.
+
+`qps` is not in the language list and is never written to the profile. Set PlayerPrefs `os.parity.lang` to `qps` or a registry code before launch. Boot reads it once, and only when the key is set. The `qps` table is built in memory from `en.json`: Latin-1 look-alikes, padded to +40% with `~`, wrapped in `[` `]`. Digits, `{n}`, emoji, `/`, `×`, and `▶` stay as they are.
+
+Overflow audit: menu `Orbital Salvage/Tools/Localization Overflow Audit`, or batch `OrbitalSalvage.Editor.LocOverflowMenu.RunBatch` with `-loc-audit-lang` (default `qps`) and `-loc-audit-out`. It walks `*__zero.json` and `*__iphone.json` without painting. Hard findings are text outside the element, overlap with a sibling icon, and text past y 898.25 on iPhone. Shrink, ellipsis, extra wrap, and a line that is still wider than the available width are listed and are not hard. Elements with two or more runs are counted and still translated one run at a time.

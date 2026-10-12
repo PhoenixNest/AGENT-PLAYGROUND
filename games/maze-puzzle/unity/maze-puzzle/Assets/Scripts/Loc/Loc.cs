@@ -25,11 +25,21 @@ namespace OrbitalSalvage.Loc
 
         static ILocTableLoader _loader;
         static string _current = LanguageRegistry.DefaultCode;
+        static bool _english = true;
         static int _version;
 
         public static string CurrentLanguage
         {
             get { return _current; }
+        }
+
+        /// <summary>
+        /// True when the active language is English. Paint reads this once per run.
+        /// It is a field, not a string compare.
+        /// </summary>
+        public static bool EnglishActive
+        {
+            get { return _english; }
         }
 
         public static int Version
@@ -64,6 +74,7 @@ namespace OrbitalSalvage.Loc
             MissingSet.Clear();
             MissingList.Clear();
             _current = LanguageRegistry.DefaultCode;
+            _english = true;
             _version = 0;
         }
 
@@ -84,12 +95,44 @@ namespace OrbitalSalvage.Loc
             }
             if (active == _current) return true;
             _current = active;
+            _english = active == LanguageRegistry.DefaultCode;
             MissingSet.Clear();
             MissingList.Clear();
             _version++;
+            RaiseChanged();
+            return true;
+        }
+
+        /// <summary>
+        /// Forces a language without writing the profile. <paramref name="code"/> may be a registry
+        /// code or the hidden pseudo-locale <see cref="PseudoLocale.Code"/>. <c>qps</c> builds its
+        /// table from the loaded English table and is not in <see cref="LanguageRegistry.All"/>.
+        /// </summary>
+        public static bool SetDiagnostic(string code)
+        {
+            if (code == PseudoLocale.Code) return ActivatePseudo();
+            return SetLanguage(code);
+        }
+
+        static bool ActivatePseudo()
+        {
+            LocTable english;
+            if (!TryGetTable(LanguageRegistry.DefaultCode, out english)) return false;
+            Tables[PseudoLocale.Code] = PseudoLocale.BuildTable(english);
+            if (_current == PseudoLocale.Code) return true;
+            _current = PseudoLocale.Code;
+            _english = false;
+            MissingSet.Clear();
+            MissingList.Clear();
+            _version++;
+            RaiseChanged();
+            return true;
+        }
+
+        static void RaiseChanged()
+        {
             Action handler = LanguageChanged;
             if (handler != null) handler();
-            return true;
         }
 
         public static string Tr(string key)

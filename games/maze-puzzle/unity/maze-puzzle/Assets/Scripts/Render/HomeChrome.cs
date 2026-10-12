@@ -3,11 +3,14 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Security.Cryptography;
 using System.Text.RegularExpressions;
+using OrbitalSalvage.Loc;
 using OrbitalSalvage.Logic;
 using UnityEngine;
 
 namespace OrbitalSalvage.Render
 {
+    using Loc = OrbitalSalvage.Loc.Loc;
+
     /// <summary>
     /// Draws a painted page from the web's measured layout (<c>Resources/Parity/Spec/&lt;state&gt;__&lt;profile&gt;.json</c>)
     /// with <see cref="Canvas2D"/>: visible elements are <see cref="CssBox"/>es, outline glyph text, and emoji images at the
@@ -139,6 +142,39 @@ namespace OrbitalSalvage.Render
         readonly Dictionary<int, Laid> laid = new Dictionary<int, Laid>();
         readonly Dictionary<Dictionary<string, object>, string> collapsed = new Dictionary<Dictionary<string, object>, string>();
         readonly Dictionary<Dictionary<string, object>, string> collapsedUpper = new Dictionary<Dictionary<string, object>, string>();
+        int locSeen;
+        struct LocMem
+        {
+            public int Version;
+            public byte State;
+            public string Text;
+        }
+        LocMem[] locMem;
+        sealed class FitLay
+        {
+            public int Version;
+            public string Source;
+            public string Font;
+            public double ElW, RunW;
+            public string[] Lines;
+            public double[] Widths;
+            public double FontPx, Letter, LinePitch;
+            public string DrawFont;
+            public TextFit.Anchor Anchor;
+            public TextFit.Action Action;
+            public double LeftOff, RightOff;
+            public double IconShift;
+            public int IconIndex;
+            public double SpecElX;
+            public double SingleX;
+            public bool Ellipsis, ExtraWrap, SoftShrink;
+        }
+        FitLay[] fitLay;
+        double[] locIconShift;
+        readonly List<TextFit.Icon> iconScratch = new List<TextFit.Icon>(4);
+        readonly List<string> fitLineScratch = new List<string>(4);
+        Func<string, double, double, double> fitMeasure;
+        string fitFontBase;
         bool[] specHidden;
         bool[] isShine;
         string[] fontOf;
@@ -418,8 +454,12 @@ namespace OrbitalSalvage.Render
         public struct PaintedRun
         {
             public string Id;
+            public string Text;
             public double X, Y, W, H;
         }
+
+        /// <summary>Runs translated inside an element that already had two or more runs. Per-run until a later task joins them.</summary>
+        public int LocFragmentRuns;
 
         /// <summary>Test hook. Records each drawn run. Leave false on the product path.</summary>
         public static bool RecordRuns;
@@ -1241,6 +1281,7 @@ namespace OrbitalSalvage.Render
 
         public void Draw(double timeMs, int pressed, string pressCss, bool modalIntro, bool pinPageEnter)
         {
+            if (locSeen != Loc.Version) InvalidateForLanguage();
             int caller = RenderStats.Caller;
             RenderStats.Caller = 0;
             long prof = PaintProfile.Stamp();
@@ -1794,6 +1835,7 @@ namespace OrbitalSalvage.Render
 
         void PaintAll()
         {
+            if (locIconShift != null) Array.Clear(locIconShift, 0, locIconShift.Length);
             EnsurePaintFlags();
             int n = elements.Count;
             if (effBuf == null || effBuf.Length < n)
@@ -2216,9 +2258,9 @@ namespace OrbitalSalvage.Render
             return true;
         }
 
-        void NoteRun(string id, double x, double y, double w, double h)
+        void NoteRun(string id, string text, double x, double y, double w, double h)
         {
-            RecordedRuns.Add(new PaintedRun { Id = id, X = x, Y = y, W = w, H = h });
+            RecordedRuns.Add(new PaintedRun { Id = id, Text = text, X = x, Y = y, W = w, H = h });
         }
 
         void EnsureReflowBuffers(int n)
@@ -2335,6 +2377,19 @@ namespace OrbitalSalvage.Render
 
         void ApplyBlockReflow()
         {
+            // Foreign copy fits the captured boxes. The card-grow path stays English-only.
+            if (!Loc.EnglishActive)
+            {
+                if (reflowSig != 0)
+                {
+                    reflowSig = 0;
+                    wrapN = 0;
+                    if (reflowLines != null) Array.Clear(reflowLines, 0, reflowLines.Length);
+                    if (reflowY != null) Array.Clear(reflowY, 0, reflowY.Length);
+                    if (reflowH != null) Array.Clear(reflowH, 0, reflowH.Length);
+                }
+                return;
+            }
             int n = elements.Count;
             EnsureReflowBuffers(n);
             Array.Clear(reflowY, 0, n);
@@ -2431,7 +2486,7 @@ namespace OrbitalSalvage.Render
                 double x = left ? el[0] : el[0] + (el[2] - tw) * 0.5;
                 double baseline = top + i * lineH + canvas.FontAscent();
                 CssBox.DrawText(canvas, lines[i], x, baseline, colorOf[k], shadowOf[k], alpha);
-                if (RecordRuns) NoteRun(id, x, top + i * lineH, tw, lineH);
+                if (RecordRuns) NoteRun(id, lines[i], x, top + i * lineH, tw, lineH);
                 DrawnRuns++;
             }
             canvas.Restore();
@@ -2479,92 +2534,412 @@ namespace OrbitalSalvage.Render
                     textReplacement = cut;
                 }
             }
+            // EnglishActive is one bool. When it is set, the run loop does not allocate or take another branch.
+            bool english = Loc.EnglishActive;
             for (int ri = 0; ri < runs.Count; ri++)
             {
                 var run = (Dictionary<string, object>)runs[ri];
-                string text;
-                if (replaceText && ri == 0) text = upper ? CachedUpper(textReplacement) : textReplacement;
-                else if (replaceText) continue;
-                else if (upper)
+                if (!english)
                 {
-                    if (!collapsedUpper.TryGetValue(run, out text))
-                    {
-                        text = Collapse(run).ToUpperInvariant();
-                        collapsedUpper[run] = text;
-                    }
+                    PaintLocalisedRun(e, k, ri, run, runs.Count, replaceText, textReplacement, upper, font, ls, color, shadows, alpha, textId, textReach);
+                    continue;
                 }
-                else text = Collapse(run);
-                double[] src;
-                if (frame != null && frame.Tree[k] && frame.Runs[k] != null && ri < frame.Runs[k].Length && frame.Runs[k][ri] != null)
-                    src = frame.Runs[k][ri];
-                else src = Rect(run);
-                runScratch[0] = src[0];
-                runScratch[1] = src[1];
-                runScratch[2] = src[2];
-                runScratch[3] = src[3];
-                var r = runScratch;
-                if (frame != null && Math.Abs(frame.ExtraY[k]) > 1e-6) r[1] += frame.ExtraY[k];
-                if (reflowY != null && k < reflowY.Length) r[1] += reflowY[k];
-                if (Blank(text)) continue;
-                bool movingText = frame != null && (frame.PageTransform || frame.Tree[k]);
-                if (!movingText && Outside(r, textReach)) continue;
-                PaintProfile.Runs++;
-
-                canvas.Save();
-                canvas.Font = font;
-                canvas.LetterSpacing = ls;
-                int slot = k * 16 + ri;
-                string[] lines;
-                if (!replaceText && laid.TryGetValue(slot, out var lay) && lay.font == font && lay.text == text && Math.Abs(lay.width - r[2]) < 0.05)
-                    lines = lay.lines;
-                else
-                {
-                    string best = text;
-                    double bestErr = double.MaxValue;
-                    textCandidates[0] = text;
-                    textCandidates[1] = text.TrimStart();
-                    textCandidates[2] = text.TrimEnd();
-                    textCandidates[3] = text.Trim();
-                    foreach (var cand in textCandidates)
-                    {
-                        double err = Math.Abs(canvas.MeasureText(cand) - r[2]);
-                        if (err < bestErr - 0.01) { bestErr = err; best = cand; }
-                    }
-                    // A captured run is already one line box. Reflowing it against a slightly
-                    // narrower pre-transform width stacks the second word on top of the first.
-                    double fontPx = CssBox.ParseLength(S(e, "fz"));
-                    bool singleLine = fontPx > 0 && r[3] <= fontPx * 1.5 + 2;
-                    if (singleLine && replaceText)
-                    {
-                        oneLine[0] = best;
-                        lines = oneLine;
-                        double tw = canvas.MeasureText(best);
-                        if (tw > r[2] + 0.5)
-                        {
-                            var er = Rect(e);
-                            double rightGap = (er[0] + er[2]) - (r[0] + r[2]);
-                            double leftGap = r[0] - er[0];
-                            if (er != null && rightGap <= 1.5 && leftGap >= 8)
-                                r[0] = er[0] + er[2] - tw;
-                        }
-                    }
-                    else if (singleLine) lines = new[] { best };
-                    else lines = WrapToWidth(canvas, best, r[2]).ToArray();
-                    if (!replaceText)
-                        laid[slot] = new Laid { font = font, text = text, width = r[2], lines = lines };
-                }
-                double lineH = lines.Length > 1 ? r[3] / lines.Length : 0;
-                for (int i = 0; i < lines.Length; i++)
-                {
-                    // The run rect's top is the first em box, the same origin a single line uses.
-                    double baseline = r[1] + (lines.Length > 1 ? i * lineH : 0) + canvas.FontAscent();
-                    CssBox.DrawText(canvas, lines[i], r[0], baseline, color, shadows, alpha);
-                    if (RecordRuns) NoteRun(textId, r[0], r[1] + (lines.Length > 1 ? i * lineH : 0), canvas.MeasureText(lines[i]), lines.Length > 1 ? lineH : r[3]);
-                    DrawnRuns++;
-                }
-                canvas.Restore();
+                PaintCapturedRun(e, k, ri, run, replaceText, textReplacement, upper, font, ls, color, shadows, alpha, textId, textReach, 0);
             }
             PaintProfile.End(PaintProfile.PaintRuns);
+        }
+
+        void PaintCapturedRun(Dictionary<string, object> e, int k, int ri, Dictionary<string, object> run,
+            bool replaceText, string textReplacement, bool upper, string font, double ls, Rgba color, List<CssShadow> shadows,
+            double alpha, string textId, double textReach, double shiftX)
+        {
+            string text;
+            if (replaceText && ri == 0) text = upper ? CachedUpper(textReplacement) : textReplacement;
+            else if (replaceText) return;
+            else if (upper)
+            {
+                if (!collapsedUpper.TryGetValue(run, out text))
+                {
+                    text = Collapse(run).ToUpperInvariant();
+                    collapsedUpper[run] = text;
+                }
+            }
+            else text = Collapse(run);
+            double[] src;
+            if (frame != null && frame.Tree[k] && frame.Runs[k] != null && ri < frame.Runs[k].Length && frame.Runs[k][ri] != null)
+                src = frame.Runs[k][ri];
+            else src = Rect(run);
+            runScratch[0] = src[0];
+            runScratch[1] = src[1];
+            runScratch[2] = src[2];
+            runScratch[3] = src[3];
+            var r = runScratch;
+            if (frame != null && Math.Abs(frame.ExtraY[k]) > 1e-6) r[1] += frame.ExtraY[k];
+            if (reflowY != null && k < reflowY.Length) r[1] += reflowY[k];
+            r[0] += shiftX;
+            if (Blank(text)) return;
+            bool movingText = frame != null && (frame.PageTransform || frame.Tree[k]);
+            if (!movingText && Outside(r, textReach)) return;
+            PaintProfile.Runs++;
+
+            canvas.Save();
+            canvas.Font = font;
+            canvas.LetterSpacing = ls;
+            int slot = k * 16 + ri;
+            string[] lines;
+            if (!replaceText && laid.TryGetValue(slot, out var lay) && lay.font == font && lay.text == text && Math.Abs(lay.width - r[2]) < 0.05)
+                lines = lay.lines;
+            else
+            {
+                string best = text;
+                double bestErr = double.MaxValue;
+                textCandidates[0] = text;
+                textCandidates[1] = text.TrimStart();
+                textCandidates[2] = text.TrimEnd();
+                textCandidates[3] = text.Trim();
+                foreach (var cand in textCandidates)
+                {
+                    double err = Math.Abs(canvas.MeasureText(cand) - r[2]);
+                    if (err < bestErr - 0.01) { bestErr = err; best = cand; }
+                }
+                // A captured run is already one line box. Reflowing it against a slightly
+                // narrower pre-transform width stacks the second word on top of the first.
+                double fontPx = CssBox.ParseLength(S(e, "fz"));
+                bool singleLine = fontPx > 0 && r[3] <= fontPx * 1.5 + 2;
+                if (singleLine && replaceText)
+                {
+                    oneLine[0] = best;
+                    lines = oneLine;
+                    double tw = canvas.MeasureText(best);
+                    if (tw > r[2] + 0.5)
+                    {
+                        var er = Rect(e);
+                        double rightGap = (er[0] + er[2]) - (r[0] + r[2]);
+                        double leftGap = r[0] - er[0];
+                        if (er != null && rightGap <= 1.5 && leftGap >= 8)
+                            r[0] = er[0] + er[2] - tw;
+                    }
+                }
+                else if (singleLine) lines = new[] { best };
+                else lines = WrapToWidth(canvas, best, r[2]).ToArray();
+                if (!replaceText)
+                    laid[slot] = new Laid { font = font, text = text, width = r[2], lines = lines };
+            }
+            double lineH = lines.Length > 1 ? r[3] / lines.Length : 0;
+            for (int i = 0; i < lines.Length; i++)
+            {
+                // The run rect's top is the first em box, the same origin a single line uses.
+                double baseline = r[1] + (lines.Length > 1 ? i * lineH : 0) + canvas.FontAscent();
+                CssBox.DrawText(canvas, lines[i], r[0], baseline, color, shadows, alpha);
+                if (RecordRuns) NoteRun(textId, lines[i], r[0], r[1] + (lines.Length > 1 ? i * lineH : 0), canvas.MeasureText(lines[i]), lines.Length > 1 ? lineH : r[3]);
+                DrawnRuns++;
+            }
+            canvas.Restore();
+        }
+
+        /// <summary>
+        /// Non-English run. A miss falls through to <see cref="PaintCapturedRun"/> so untranslated
+        /// symbols keep the English boxes. Hits use <see cref="TextFit"/> and never the baked-box trim.
+        /// </summary>
+        void PaintLocalisedRun(Dictionary<string, object> e, int k, int ri, Dictionary<string, object> run, int runCount,
+            bool replaceText, string textReplacement, bool upper, string font, double ls, Rgba color, List<CssShadow> shadows,
+            double alpha, string textId, double textReach)
+        {
+            double shift = IconShiftOf(k);
+            if (replaceText && ri != 0) return;
+            string display = null;
+            bool fitted = false;
+            if (replaceText)
+            {
+                display = upper ? LocCase.Upper(textReplacement, Loc.CurrentLanguage) : textReplacement;
+                fitted = true;
+            }
+            else if (TryLocRun(k, ri, run, out string translated))
+            {
+                // TODO: elements with 2+ runs are translated per fragment. Join them before wrapping.
+                if (runCount >= 2) LocFragmentRuns++;
+                display = upper ? LocCase.Upper(translated, Loc.CurrentLanguage) : translated;
+                fitted = true;
+            }
+            if (!fitted)
+            {
+                PaintCapturedRun(e, k, ri, run, false, null, upper, font, ls, color, shadows, alpha, textId, textReach, shift);
+                return;
+            }
+            if (Blank(display)) return;
+            double[] src = Rect(run);
+            var er = Rect(e);
+            if (src == null || er == null) return;
+            double runX = src[0], runY = src[1], runW = src[2], runH = src[3];
+            if (frame != null && Math.Abs(frame.ExtraY[k]) > 1e-6) runY += frame.ExtraY[k];
+            if (reflowY != null && k < reflowY.Length) runY += reflowY[k];
+            int slot = k * 16 + ri;
+            int version = Loc.Version;
+            FitLay lay = fitLay != null && slot < fitLay.Length ? fitLay[slot] : null;
+            if (lay == null || lay.Version != version || lay.Source != display || lay.Font != font || Math.Abs(lay.ElW - er[2]) > 0.05 || Math.Abs(lay.RunW - runW) > 0.05)
+            {
+                lay = BuildFit(e, k, run, display, font, ls, er, runX, runY, runW, runH, version);
+                if (fitLay == null || slot >= fitLay.Length) fitLay = new FitLay[Math.Max(slot + 16, elements.Count * 16)];
+                fitLay[slot] = lay;
+            }
+            if (lay.IconIndex >= 0) SetIconShift(lay.IconIndex, lay.IconShift);
+            if (lay.Lines == null || lay.Lines.Length == 0) return;
+            canvas.Save();
+            canvas.Font = lay.DrawFont;
+            canvas.LetterSpacing = lay.Letter;
+            double left = er[0] + lay.LeftOff;
+            double right = er[0] + lay.RightOff;
+            double moveX = er[0] - lay.SpecElX;
+            for (int i = 0; i < lay.Lines.Length; i++)
+            {
+                double tw = lay.Widths != null && i < lay.Widths.Length ? lay.Widths[i] : 0;
+                double x = lay.Lines.Length == 1 && lay.IconIndex >= 0
+                    ? lay.SingleX + moveX
+                    : TextFit.PlaceX(lay.Anchor, er[0], er[2], tw, left, right);
+                double top = runY + i * lay.LinePitch;
+                double baseline = top + canvas.FontAscent();
+                CssBox.DrawText(canvas, lay.Lines[i], x, baseline, color, shadows, alpha);
+                if (RecordRuns) NoteRun(textId, lay.Lines[i], x, top, tw, lay.Lines.Length > 1 ? lay.LinePitch : runH);
+                DrawnRuns++;
+            }
+            canvas.Restore();
+        }
+
+        FitLay BuildFit(Dictionary<string, object> e, int k, Dictionary<string, object> run, string display, string font, double ls,
+            double[] er, double runX, double runY, double runW, double runH, int version)
+        {
+            EnsureFitMeasure();
+            fitFontBase = font;
+            CollectIcons(k, runY, runH, runX, runW);
+            var icons = iconScratch.Count == 0 ? null : iconScratch.ToArray();
+            bool stacked = false;
+            if (e.TryGetValue("runs", out var rv) && rv is List<object> runs && runs.Count > 1
+                && runs[0] is Dictionary<string, object> first && runs[1] is Dictionary<string, object> second)
+            {
+                var a = Rect(first);
+                var b = Rect(second);
+                if (a != null && b != null && b[1] > a[1] + 1) stacked = true;
+            }
+            double fontPx = CssBox.ParseLength(S(e, "fz"));
+            var input = new TextFit.Input
+            {
+                RunX = runX, RunY = runY, RunW = runW, RunH = runH,
+                ElX = er[0], ElY = er[1], ElW = er[2], ElH = er[3],
+                CenteredBlock = false,
+                IsButton = S(e, "t") == "button",
+                FontPx = fontPx,
+                LetterSpacing = ls,
+                OriginalMultiLine = stacked || (fontPx > 0 && runH >= TextFit.TwoLineFactor * fontPx),
+                SidePad = TextFit.SidePadding,
+                Icons = icons,
+                BandY = Profile == "iphone" ? TextFit.HomeIndicatorY : 0
+            };
+            // IsCenteredBlock needs blockCenter, which foreign reflow leaves at 0. Compute the same gaps.
+            input.CenteredBlock = CenteredGaps(runX, runW, er);
+            TextFit.Layout plan = TextFit.Plan(input, (px, spacing) =>
+            {
+                fitFontBase = font;
+                return fitMeasure(display, px, spacing);
+            });
+            var lay = new FitLay
+            {
+                Version = version,
+                Source = display,
+                Font = font,
+                ElW = er[2],
+                RunW = runW,
+                FontPx = plan.FontPx,
+                Letter = plan.LetterSpacing,
+                LinePitch = plan.LinePitch > 0 ? plan.LinePitch : Math.Max(1, fontPx),
+                DrawFont = FontSized(font, plan.FontPx),
+                Anchor = plan.Anchor,
+                Action = plan.Action,
+                LeftOff = plan.Left - er[0],
+                RightOff = plan.Right - er[0],
+                IconShift = plan.IconShift,
+                IconIndex = plan.IconIndex,
+                SpecElX = er[0],
+                SingleX = plan.X,
+                SoftShrink = plan.SoftShrink
+            };
+            canvas.Font = lay.DrawFont;
+            canvas.LetterSpacing = lay.Letter;
+            Func<string, double> measureLine = s =>
+            {
+                canvas.Font = lay.DrawFont;
+                canvas.LetterSpacing = lay.Letter;
+                return canvas.MeasureText(s);
+            };
+            if (plan.Action == TextFit.Action.Wrap)
+            {
+                fitLineScratch.Clear();
+                LineBreaker.For(Loc.CurrentLanguage).Wrap(display, plan.Available, 0.5, measureLine, fitLineScratch);
+                int max = plan.MaxLines < 1 ? 1 : plan.MaxLines;
+                if (fitLineScratch.Count > max)
+                {
+                    lay.ExtraWrap = true;
+                    lay.Ellipsis = true;
+                    while (fitLineScratch.Count > max) fitLineScratch.RemoveAt(fitLineScratch.Count - 1);
+                    if (fitLineScratch.Count > 0)
+                        fitLineScratch[fitLineScratch.Count - 1] = TextFit.Ellipsize(fitLineScratch[fitLineScratch.Count - 1], plan.Available, measureLine);
+                }
+                for (int i = 0; i < fitLineScratch.Count; i++)
+                {
+                    if (measureLine(fitLineScratch[i]) <= plan.Available + 0.5) continue;
+                    fitLineScratch[i] = TextFit.Ellipsize(fitLineScratch[i], plan.Available, measureLine);
+                    lay.Ellipsis = true;
+                }
+                lay.Lines = fitLineScratch.ToArray();
+            }
+            else if (plan.Action == TextFit.Action.Ellipsis)
+            {
+                lay.Ellipsis = true;
+                lay.Lines = new[] { TextFit.Ellipsize(display, plan.Available, measureLine) };
+            }
+            else lay.Lines = new[] { display };
+            lay.Widths = new double[lay.Lines.Length];
+            for (int i = 0; i < lay.Lines.Length; i++)
+            {
+                canvas.Font = lay.DrawFont;
+                canvas.LetterSpacing = lay.Letter;
+                lay.Widths[i] = canvas.MeasureText(lay.Lines[i]);
+            }
+            if (lay.Lines.Length == 1 && plan.IconIndex < 0)
+                lay.SingleX = TextFit.PlaceX(plan.Anchor, er[0], er[2], lay.Widths[0], plan.Left, plan.Right);
+            return lay;
+        }
+
+        static bool CenteredGaps(double runX, double runW, double[] er)
+        {
+            if (er == null || er[2] <= 0 || runW <= 0) return false;
+            double left = runX - er[0];
+            double right = (er[0] + er[2]) - (runX + runW);
+            return left >= 1 && right >= 1 && Math.Abs(left - right) <= 1.5;
+        }
+
+        void EnsureFitMeasure()
+        {
+            if (fitMeasure != null) return;
+            fitMeasure = (text, px, spacing) =>
+            {
+                canvas.Font = FontSized(fitFontBase, px);
+                canvas.LetterSpacing = spacing;
+                return canvas.MeasureText(text);
+            };
+        }
+
+        static string FontSized(string font, double px)
+        {
+            if (string.IsNullOrEmpty(font)) return font;
+            int pxAt = font.IndexOf("px", StringComparison.Ordinal);
+            if (pxAt < 0) return font;
+            int start = pxAt;
+            while (start > 0 && (char.IsDigit(font[start - 1]) || font[start - 1] == '.')) start--;
+            string num = px.ToString("0.##", CultureInfo.InvariantCulture);
+            return font.Substring(0, start) + num + font.Substring(pxAt);
+        }
+
+        void CollectIcons(int k, double runY, double runH, double runX, double runW)
+        {
+            iconScratch.Clear();
+            int id = (int)N(elements[k], "i", -1);
+            if (id < 0) return;
+            for (int i = 0; i < elements.Count; i++)
+            {
+                if ((int)N(elements[i], "p", -2) != id) continue;
+                var child = elements[i];
+                double x, y, w, h;
+                if (!IconBox(child, out x, out y, out w, out h)) continue;
+                if (y + h < runY - 2 || y > runY + runH + 2) continue;
+                double iconRight = x + w;
+                double runRight = runX + runW;
+                bool lead = iconRight <= runX + 2 && runX - iconRight <= TextFit.IconGapSlop;
+                bool trail = x >= runRight - 2 && x - runRight <= TextFit.IconGapSlop;
+                if (!lead && !trail) continue;
+                iconScratch.Add(new TextFit.Icon { Index = i, X = x, Y = y, W = w, H = h });
+            }
+        }
+
+        bool IconBox(Dictionary<string, object> child, out double x, out double y, out double w, out double h)
+        {
+            x = y = w = h = 0;
+            var r = Rect(child);
+            if (r == null || r[2] <= 0 || r[3] <= 0) return false;
+            bool emoji = S(child, "emoji").Length > 0;
+            bool symbol = false;
+            if (!emoji && child.TryGetValue("runs", out var rv) && rv is List<object> runs && runs.Count == 1 && runs[0] is Dictionary<string, object> run)
+            {
+                string s = Collapse(run).Trim();
+                symbol = s.Length > 0 && s.Length <= 2 && !LocText.HasLetter(s) && r[2] <= 28;
+            }
+            if (!emoji && !symbol) return false;
+            x = r[0]; y = r[1]; w = r[2]; h = r[3];
+            return true;
+        }
+
+        bool TryLocRun(int k, int ri, Dictionary<string, object> run, out string text)
+        {
+            text = null;
+            if (ri >= 16) return Loc.TryTranslateSpecText(Collapse(run), out text);
+            int slot = k * 16 + ri;
+            int version = Loc.Version;
+            if (locMem == null || slot >= locMem.Length)
+            {
+                var grown = new LocMem[Math.Max(slot + 16, elements.Count * 16)];
+                if (locMem != null) Array.Copy(locMem, grown, locMem.Length);
+                locMem = grown;
+            }
+            if (locMem[slot].Version == version && locMem[slot].State != 0)
+            {
+                text = locMem[slot].Text;
+                return locMem[slot].State == 1;
+            }
+            string source = Collapse(run);
+            bool hit = LocText.HasLetter(LocText.Normalize(source)) && Loc.TryTranslateSpecText(source, out text);
+            locMem[slot].Version = version;
+            locMem[slot].State = (byte)(hit ? 1 : 2);
+            locMem[slot].Text = hit ? text : null;
+            return hit;
+        }
+
+        double IconShiftOf(int k)
+        {
+            if (locIconShift == null || k < 0 || k >= locIconShift.Length) return 0;
+            return locIconShift[k];
+        }
+
+        void SetIconShift(int index, double shift)
+        {
+            if (index < 0 || Math.Abs(shift) < 0.01) return;
+            if (locIconShift == null || index >= locIconShift.Length)
+            {
+                var grown = new double[Math.Max(index + 1, elements.Count)];
+                if (locIconShift != null) Array.Copy(locIconShift, grown, locIconShift.Length);
+                locIconShift = grown;
+            }
+            locIconShift[index] = shift;
+        }
+
+        public void InvalidateForLanguage()
+        {
+            locSeen = Loc.Version;
+            laid.Clear();
+            collapsedUpper.Clear();
+            trimmedText.Clear();
+            upperText.Clear();
+            locMem = null;
+            fitLay = null;
+            locIconShift = null;
+            LocFragmentRuns = 0;
+            reflowSig = 0;
+            wrapN = 0;
+            if (reflowLines != null) Array.Clear(reflowLines, 0, reflowLines.Length);
+            if (reflowY != null) Array.Clear(reflowY, 0, reflowY.Length);
+            if (reflowH != null) Array.Clear(reflowH, 0, reflowH.Length);
+            if (reflowSource != null)
+                for (int i = 0; i < reflowSource.Length; i++) reflowSource[i] = null;
+            if (canvas != null) canvas.ClearTextLayoutCache();
+            DropLayerCache();
         }
 
         static List<string> WrapToWidth(Canvas2D canvas, string text, double width)
@@ -2979,6 +3354,7 @@ namespace OrbitalSalvage.Render
         void DrawEmoji(Dictionary<string, object> e, int k, double alpha)
         {
             var r = ElementRect(e, k, true);
+            if (locIconShift != null && k < locIconShift.Length) r[0] += locIconShift[k];
             if (r[2] <= 0 || r[3] <= 0) return;
             var img = CanvasEmoji.Get(S(e, "emoji"));
             if (img == null) return;
