@@ -12,3 +12,12 @@ ReplayPlay without a playfield	Scripts/App/AppController.cs	Exception when repla
 Claim +300 🪙	Scripts/App/AppController.cs	Daily master button copy. MasterAction is not passed to Text(); the captured button is spec text. AppFlowTests compares this English property.
 CLAIMED ✓	Scripts/App/AppController.cs	Daily master button after the bonus is claimed. Not a Text() override; the captured button is spec text.
 Pacific Standard Time	Scripts/Logic/DailyReset.cs	Windows time-zone id for TimeZoneInfo, not player UI.
+Item Equipped! ✨	Scripts/Viewer/ParityViewer.App.cs	viewer proof harness
+🎉 All 3 Daily Shifts Cleared! Claim Master Bonus in Daily Tab! 🏆	Scripts/Viewer/ParityViewer.App.cs	viewer proof harness
+Sound On 🔊	Scripts/Viewer/ParityViewer.App.cs	viewer proof harness
+🏆 Trophy: First Nom Nom! (+100 🪙)	Scripts/Viewer/ParityViewer.App.cs	viewer proof harness
+Item Unlocked & Equipped! 🎉	Scripts/Viewer/ParityViewer.App.cs	viewer proof harness
+🎁 Claimed +100 🪙 Janitor Stipend!	Scripts/Viewer/ParityViewer.App.cs	viewer proof harness
+Need more gold coins! 🪙	Scripts/Viewer/ParityViewer.App.cs	viewer proof harness
+🏆 Claimed +300 🪙 Daily Master Bonus!	Scripts/Viewer/ParityViewer.App.cs	viewer proof harness
+Progress Reset to Day 1! 🧹	Scripts/Viewer/ParityViewer.App.cs	viewer proof harness

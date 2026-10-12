@@ -26,6 +26,9 @@ namespace OrbitalSalvage.Loc.Tests
             }
             Assert.AreEqual(0, loads);
             Assert.AreEqual("missing-key", Loc.Tr("missing-key"));
+            string name = "Bubblegum Chute 1";
+            Assert.AreSame(name, Loc.TrName(name));
+            Assert.AreEqual(0, loads);
         }
 
         [Test]
@@ -69,6 +72,45 @@ namespace OrbitalSalvage.Loc.Tests
             Eq("\u23EA TURBO!", Loc.Tr("fx.turbo.ccw"));
             Eq("Progress Reset to Day 1! \U0001F9F9", Loc.Tr("toast.progress.reset"));
             Eq("\U0001F381 Claimed today. Come back tomorrow!", Loc.Tr("toast.gift.already"));
+        }
+
+        [Test]
+        public void English_DataNamesMatchTheOldLiterals()
+        {
+            int loads = 0;
+            Loc.SetLoader(new CountingLoader(delegate { loads++; return false; }));
+            var app = new AppController(new MemoryProfileStore(), new ManualAppClock(0, 1790870401000.0), new SilentAudio(), () => 0);
+            Assert.AreEqual("LVL 1 \u2022 Bubblegum Chute 1", app.Model.Elements["home-mission-name"].Text);
+            Assert.AreEqual("Bubblegum Belt", app.Model.Elements["home-mission-world"].Text);
+            app.LoadSector(app.Sectors[0], true);
+            app.ShowPage("game");
+            app.Click("btn-game-pause");
+            Assert.AreEqual("LVL 1 \u2022 Bubblegum Chute 1", app.Model.Elements["pause-level-name"].Text);
+            Assert.AreEqual("\u2B50 LVL 1", app.Model.Elements["hud-sector-code"].Text);
+            IReadOnlyList<string> toasts = app.ToastTexts();
+            Assert.AreEqual("Clean up Bubblegum Chute 1! \U0001F680", toasts[toasts.Count - 1]);
+            var unlocked = new List<Achievement>();
+            unlocked.Add(EconomyCatalog.Achievements[0]);
+            app.ShowToastsFor(unlocked);
+            toasts = app.ToastTexts();
+            Assert.AreEqual("\U0001F3C6 Trophy: First Nom Nom! (+" + JsNumber.ToString(100d) + " \U0001FA99)", toasts[toasts.Count - 1]);
+            Assert.AreEqual(0, loads);
+        }
+
+        [Test]
+        public void TrName_UsesTheSpecTableWhenNoDataRowMatches()
+        {
+            var tables = new MemoryTables();
+            tables.Add("de", "\"Wear\":\"SPECWEAR\",\"Bubblegum Chute 1\":\"Mond\"", "\"shop.footer.wear\":\"Tragen\"");
+            Loc.SetLoader(tables);
+            Assert.IsTrue(Loc.SetLanguage("de"));
+            Assert.AreEqual("Tragen", Loc.Tr("shop.footer.wear"));
+            Assert.AreEqual("SPECWEAR", Loc.TrName("Wear"));
+            Assert.AreEqual("Mond", Loc.TrName("Bubblegum Chute 1"));
+            Assert.AreEqual("Missing Name", Loc.TrName("Missing Name"));
+            CollectionAssert.Contains(Loc.MissingKeys, "spec:Missing Name");
+            string key;
+            Assert.IsFalse(LocStrings.TryGetDataKey("Bubblegum Chute 1", out key));
         }
 
         [Test]
@@ -187,6 +229,65 @@ namespace OrbitalSalvage.Loc.Tests
             Assert.AreNotEqual("Resets in 14h 59m", countdown, countdown);
             Assert.IsTrue(countdown.Contains("14"), countdown);
             Assert.IsTrue(countdown.Contains("59"), countdown);
+        }
+
+        [Test]
+        public void PseudoLocale_TranslatesDataNames()
+        {
+            var tables = new MemoryTables();
+            tables.Files["en"] = LocJson.WriteTable(
+                "en",
+                "English",
+                new string[] { "LVL 1", "Bubblegum Chute 1", "Bubblegum Belt", "First Nom Nom!" },
+                delegate (string key) { return key; },
+                LocStrings.SortedPairs(),
+                new string[0]);
+            Loc.SetLoader(tables);
+            Assert.IsTrue(Loc.SetDiagnostic(PseudoLocale.Code));
+
+            string code = PseudoLocale.Expand("LVL 1");
+            string level = PseudoLocale.Expand("Bubblegum Chute 1");
+            string worldName = PseudoLocale.Expand("Bubblegum Belt");
+            string trophyName = PseudoLocale.Expand("First Nom Nom!");
+            Assert.AreNotEqual("LVL 1", code);
+            Assert.IsTrue(code.Contains("1"), code);
+            Assert.IsTrue(level.Contains("1"), level);
+
+            var app = new AppController(new MemoryProfileStore(), new ManualAppClock(0, 1790870401000.0), new SilentAudio(), () => 0);
+            string mission = app.Model.Elements["home-mission-name"].Text;
+            Assert.AreNotEqual("LVL 1 \u2022 Bubblegum Chute 1", mission, mission);
+            Assert.IsTrue(mission.Contains(code), mission);
+            Assert.IsTrue(mission.Contains(level), mission);
+
+            string world = app.Model.Elements["home-mission-world"].Text;
+            Assert.AreNotEqual("Bubblegum Belt", world, world);
+            Assert.IsTrue(world.Contains(worldName), world);
+
+            app.LoadSector(app.Sectors[0], true);
+            app.ShowPage("game");
+            app.Click("btn-game-pause");
+            string pause = app.Model.Elements["pause-level-name"].Text;
+            Assert.AreNotEqual("LVL 1 \u2022 Bubblegum Chute 1", pause, pause);
+            Assert.IsTrue(pause.Contains(code), pause);
+            Assert.IsTrue(pause.Contains(level), pause);
+            string hud = app.Model.Elements["hud-sector-code"].Text;
+            Assert.IsTrue(hud.Contains(code), hud);
+            Assert.IsTrue(hud.Contains("1"), hud);
+
+            IReadOnlyList<string> toasts = app.ToastTexts();
+            string cleanup = toasts[toasts.Count - 1];
+            Assert.AreNotEqual("Clean up Bubblegum Chute 1! \U0001F680", cleanup, cleanup);
+            Assert.IsTrue(cleanup.Contains(level), cleanup);
+            Assert.IsTrue(cleanup.Contains("1"), cleanup);
+
+            var unlocked = new List<Achievement>();
+            unlocked.Add(EconomyCatalog.Achievements[0]);
+            app.ShowToastsFor(unlocked);
+            toasts = app.ToastTexts();
+            string trophy = toasts[toasts.Count - 1];
+            Assert.AreNotEqual("\U0001F3C6 Trophy: First Nom Nom! (+100 \U0001FA99)", trophy, trophy);
+            Assert.IsTrue(trophy.Contains(trophyName), trophy);
+            Assert.IsTrue(trophy.Contains("100"), trophy);
         }
 
         static void Eq(string oldLiteral, string actual)

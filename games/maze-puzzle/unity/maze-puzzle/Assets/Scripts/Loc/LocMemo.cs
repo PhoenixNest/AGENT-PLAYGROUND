@@ -139,4 +139,53 @@ namespace OrbitalSalvage.Loc
             return text;
         }
     }
+
+    /// <summary>
+    /// Last <see cref="Loc.TrName"/> results for one screen, keyed by the English text and
+    /// <see cref="Loc.Version"/>. English returns the input and does not store a slot.
+    /// </summary>
+    public sealed class LocNameCache
+    {
+        struct Slot
+        {
+            public string Source;
+            public int Version;
+            public string Text;
+        }
+
+        readonly Slot[] _slots;
+        int _clock;
+
+        public LocNameCache(int capacity)
+        {
+            if (capacity < 1) capacity = 1;
+            _slots = new Slot[capacity];
+        }
+
+        public string Get(string english)
+        {
+            if (english == null) english = "";
+            if (Loc.EnglishActive) return english;
+            int version = Loc.Version;
+            int empty = -1;
+            int same = -1;
+            for (int i = 0; i < _slots.Length; i++)
+            {
+                if (_slots[i].Text == null)
+                {
+                    if (empty < 0) empty = i;
+                    continue;
+                }
+                if (_slots[i].Source != english) continue;
+                if (_slots[i].Version == version) return _slots[i].Text;
+                same = i;
+            }
+            string text = Loc.TrName(english);
+            int dest = same >= 0 ? same : (empty >= 0 ? empty : (_clock++ % _slots.Length));
+            _slots[dest].Source = english;
+            _slots[dest].Version = version;
+            _slots[dest].Text = text;
+            return text;
+        }
+    }
 }

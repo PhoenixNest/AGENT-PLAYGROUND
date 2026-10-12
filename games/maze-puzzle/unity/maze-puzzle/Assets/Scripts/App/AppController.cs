@@ -184,6 +184,7 @@ namespace OrbitalSalvage.App
         public string FirstLevelCode { get; private set; }
         public readonly List<string> ShopFooters = new List<string>();
         readonly LocNumCache _oneNum = new LocNumCache(8);
+        readonly LocNameCache _names = new LocNameCache(8);
         LocMemo _missionTitle;
         LocMemo _pauseTitle;
         LocMemo _missionGoal;
@@ -658,7 +659,7 @@ namespace OrbitalSalvage.App
         {
             if (unlocked == null) return;
             for (int i = 0; i < unlocked.Count; i++)
-                ShowToast(Loc.Tr("toast.trophy", unlocked[i].Title, unlocked[i].Reward));
+                ShowToast(Loc.Tr("toast.trophy", Loc.TrName(unlocked[i].Title), unlocked[i].Reward));
             Rebuild();
         }
 
@@ -740,7 +741,7 @@ namespace OrbitalSalvage.App
             AlignSectorIndex(sector);
             SectorEpoch++;
             RefreshCredits();
-            if (toast && sector != null) ShowToast(Loc.Tr("toast.sector.cleanup", sector.Name));
+            if (toast && sector != null) ShowToast(Loc.Tr("toast.sector.cleanup", Loc.TrName(sector.Name)));
             Rebuild();
         }
 
@@ -1058,10 +1059,10 @@ namespace OrbitalSalvage.App
             var sec = ActiveSector ?? (Sectors.Count > 0 ? Sectors[0] : null);
             if (sec != null)
             {
-                MissionName = _missionTitle.Text("home.level.title", sec.Code, sec.Name);
+                MissionName = _missionTitle.Text("home.level.title", _names.Get(sec.Code), _names.Get(sec.Name));
                 MissionGoal = _missionGoal.Num("home.mission.goal", sec.Quota);
                 var world = FindWorld(sec.WorldIndex.HasValue ? (int)sec.WorldIndex.Value : 1);
-                MissionWorld = world != null ? world.Title : _missionWorld.Num("home.mission.world_fallback", sec.WorldIndex ?? 1);
+                MissionWorld = world != null ? _names.Get(world.Title) : _missionWorld.Num("home.mission.world_fallback", sec.WorldIndex ?? 1);
             }
             var silver = Economy.GetDailyShiftInfo();
             DailyBounty = _dailyBounty.Num("home.daily.bounty", silver.RewardCredits ?? 0);
@@ -1091,7 +1092,7 @@ namespace OrbitalSalvage.App
 
             if (ActiveSector != null)
             {
-                PauseName = _pauseTitle.Text("home.level.title", ActiveSector.Code, ActiveSector.Name);
+                PauseName = _pauseTitle.Text("home.level.title", _names.Get(ActiveSector.Code), _names.Get(ActiveSector.Name));
                 PauseQuota = _pauseQuota.Num("pause.quota", ActiveSector.Quota, CollectedMass);
             }
 
@@ -1146,7 +1147,7 @@ namespace OrbitalSalvage.App
             Text("home-mission-world", MissionWorld);
             Text("home-daily-bounty", DailyBounty);
             Text("hud-quota-text", QuotaText);
-            if (ActiveSector != null) Text("hud-sector-code", _sectorCode.Text("hud.sector_code", ActiveSector.Code));
+            if (ActiveSector != null) Text("hud-sector-code", _sectorCode.Text("hud.sector_code", _names.Get(ActiveSector.Code)));
             double pct = quota > 0 ? Math.Min(100, (CollectedMass / quota) * 100) : 0;
             WidthPx("hud-quota-bar", QuotaTrackWidth * pct / 100.0);
             Text("dock-daily-badge", DailyBadge);

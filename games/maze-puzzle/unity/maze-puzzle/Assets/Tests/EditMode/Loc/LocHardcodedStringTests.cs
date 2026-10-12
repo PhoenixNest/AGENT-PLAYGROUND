@@ -13,6 +13,8 @@ namespace OrbitalSalvage.Loc.Tests
     /// (literal, path relative to Assets, reason). Dot-keys, font stacks, colors, paths,
     /// and URLs are not player copy. Editor, Tests, and Parity are not scanned.
     /// <c>Scripts/Render/Game/LiveConformance.cs</c> is a file-level skip in the allowlist.
+    /// Viewer proof toasts are not scanned for new literals. Each allowlist row for that file
+    /// must still occur as a string literal there.
     /// </summary>
     public class LocHardcodedStringTests
     {
@@ -61,12 +63,45 @@ namespace OrbitalSalvage.Loc.Tests
                         used.Add(row);
                 }
             }
+            MarkExternalRows(assets, allow, used, failures);
             for (int i = 0; i < allow.Count; i++)
             {
                 if (!used.Contains(i))
                     failures.Add("unused allowlist row: " + allow[i].Literal + " @ " + allow[i].Path);
             }
             if (failures.Count > 0) Assert.Fail(string.Join("\n", failures.ToArray()));
+        }
+
+        static void MarkExternalRows(string assets, List<Row> allow, HashSet<int> used, List<string> failures)
+        {
+            var textsByPath = new Dictionary<string, HashSet<string>>(StringComparer.Ordinal);
+            for (int i = 0; i < allow.Count; i++)
+            {
+                if (used.Contains(i) || allow[i].Literal == "*") continue;
+                bool scanned = false;
+                for (int f = 0; f < Files.Length; f++)
+                {
+                    if (Files[f] == allow[i].Path) scanned = true;
+                }
+                if (scanned) continue;
+                HashSet<string> texts;
+                if (!textsByPath.TryGetValue(allow[i].Path, out texts))
+                {
+                    string path = Path.Combine(assets, allow[i].Path);
+                    if (!File.Exists(path))
+                    {
+                        failures.Add("allowlist file missing: " + allow[i].Path);
+                        textsByPath[allow[i].Path] = new HashSet<string>(StringComparer.Ordinal);
+                        continue;
+                    }
+                    texts = new HashSet<string>(StringComparer.Ordinal);
+                    List<Lit> lits = Scan(File.ReadAllText(path));
+                    for (int n = 0; n < lits.Count; n++) texts.Add(lits[n].Text);
+                    textsByPath[allow[i].Path] = texts;
+                }
+                if (texts.Contains(allow[i].Literal)) used.Add(i);
+                else failures.Add("allowlist literal not in " + allow[i].Path + ": " + allow[i].Literal);
+            }
         }
 
         static bool FileSkipped(List<Row> allow, string rel, HashSet<int> used)

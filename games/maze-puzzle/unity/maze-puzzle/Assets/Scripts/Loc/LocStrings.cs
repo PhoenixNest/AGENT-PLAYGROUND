@@ -23,9 +23,9 @@ namespace OrbitalSalvage.Loc
             Def("toast.shop.unlocked", "Item Unlocked & Equipped! \U0001F389", "Toast after buying a shop item. Keep the party emoji."),
             Def("toast.shop.need_coins", "Need more gold coins! \U0001FA99", "Toast when a purchase costs more than the balance. Keep the coin emoji."),
             Def("toast.shop.equipped", "Item Equipped! \u2728", "Toast after equipping an owned item. Keep the sparkles."),
-            Def("toast.trophy", "\U0001F3C6 Trophy: {0} (+{1} \U0001FA99)", "Toast when an achievement unlocks. {0} is the English achievement title, {1} is the coin reward. Keep the trophy and coin emoji."),
+            Def("toast.trophy", "\U0001F3C6 Trophy: {0} (+{1} \U0001FA99)", "Toast when an achievement unlocks. {0} is the achievement title passed through Loc.TrName, {1} is the coin reward. Keep the trophy and coin emoji."),
             Def("toast.daily.all_clear", "\U0001F389 All 3 Daily Shifts Cleared! Claim Master Bonus in Daily Tab! \U0001F3C6", "Toast when all three daily shifts are done and the master bonus is unclaimed. Keep both emoji."),
-            Def("toast.sector.cleanup", "Clean up {0}! \U0001F680", "Toast when a level loads. {0} is the level name (may be long). Keep the rocket."),
+            Def("toast.sector.cleanup", "Clean up {0}! \U0001F680", "Toast when a level loads. {0} is the level or daily-shift name passed through Loc.TrName (may be long). Keep the rocket."),
             Def("toast.backup.deployed", "\U0001F680 Auxiliary Scrap Pod Deployed! (+8 Scrap)", "Toast when the backup pod fires. The 8 is fixed. Keep the rocket."),
             Def("toast.gift.already", "\U0001F381 Claimed today. Come back tomorrow!", "Toast when the daily gift button is pressed again. Keep the gift emoji."),
             Def("toast.gift.claimed", "\U0001F381 Claimed +100 \U0001FA99 Janitor Stipend!", "Toast after the daily gift pays 100 coins. Keep the gift and coin emoji."),
@@ -33,7 +33,7 @@ namespace OrbitalSalvage.Loc
             Def("toast.sound.off", "Sound Off \U0001F507", "Toast when the HUD mute control turns sound off. Keep the muted speaker."),
             Def("toast.sound.on", "Sound On \U0001F50A", "Toast when the HUD mute control turns sound on. Keep the speaker."),
 
-            Def("home.level.title", "{0} \u2022 {1}", "Home mission name and pause level name. {0} is the level code (LVL n or a daily tier), {1} is the level name."),
+            Def("home.level.title", "{0} \u2022 {1}", "Home mission name and pause level name. {0} is the level code and {1} is the level name, both passed through Loc.TrName."),
             Def("home.mission.goal", "Goal: {0} kg", "Home mission card goal. {0} is the quota. Keep kg in the string. About 18 characters at small quotas."),
             Def("home.mission.world_fallback", "World {0}", "Home mission world line only when the world table has no match. {0} is the world number."),
             Def("home.daily.bounty", "+{0} \U0001FA99 Bounty", "Home card bounty for the silver daily shift. {0} is the coin amount. Keep the coin emoji."),
@@ -49,7 +49,7 @@ namespace OrbitalSalvage.Loc
             Def("home.face.nibbles", "\U0001F60B", "Home diorama black-hole face, default Nibbles. Keep the yum face."),
             Def("home.face.poke", "\U0001F970", "Home diorama face held for a moment after a poke. Keep the heart-eyes face."),
 
-            Def("hud.sector_code", "\u2B50 {0}", "In-game HUD sector chip. {0} is the level code. Keep the star."),
+            Def("hud.sector_code", "\u2B50 {0}", "In-game HUD sector chip. {0} is the level code passed through Loc.TrName. Keep the star."),
             Def("hud.sound.muted", "\U0001F507", "Muted speaker on the HUD and the pause sound button. Keep this emoji."),
             Def("hud.sound.on", "\U0001F50A", "Speaker on the HUD and the pause sound button. Keep this emoji."),
 
@@ -111,6 +111,7 @@ namespace OrbitalSalvage.Loc
         };
 
         static readonly Dictionary<string, LocStringDef> ByKey = Build();
+        static readonly Dictionary<string, string> DataByEnglish = BuildData();
 
         public static int Count
         {
@@ -132,6 +133,17 @@ namespace OrbitalSalvage.Loc
             def = null;
             if (key == null) return false;
             return ByKey.TryGetValue(key, out def) && def != null;
+        }
+
+        /// <summary>
+        /// Registry row whose key starts with <c>data.</c> and whose English equals
+        /// <paramref name="english"/>. Used by <see cref="Loc.TrName"/> before spec lookup.
+        /// </summary>
+        public static bool TryGetDataKey(string english, out string key)
+        {
+            key = null;
+            if (string.IsNullOrEmpty(english)) return false;
+            return DataByEnglish.TryGetValue(english, out key);
         }
 
         /// <summary>Key order is ordinal, for the extractor.</summary>
@@ -172,6 +184,22 @@ namespace OrbitalSalvage.Loc
                 if (map.ContainsKey(row.Key))
                     throw new InvalidOperationException("duplicate loc key " + row.Key);
                 map.Add(row.Key, row);
+            }
+            return map;
+        }
+
+        static Dictionary<string, string> BuildData()
+        {
+            var map = new Dictionary<string, string>(StringComparer.Ordinal);
+            for (int i = 0; i < All.Length; i++)
+            {
+                LocStringDef row = All[i];
+                if (row == null || row.Key == null || !row.Key.StartsWith("data.", StringComparison.Ordinal)) continue;
+                if (string.IsNullOrEmpty(row.English))
+                    throw new InvalidOperationException("data loc key missing english " + row.Key);
+                if (map.ContainsKey(row.English))
+                    throw new InvalidOperationException("duplicate data english " + row.English);
+                map.Add(row.English, row.Key);
             }
             return map;
         }
