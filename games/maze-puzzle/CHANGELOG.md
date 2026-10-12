@@ -20,6 +20,12 @@ Paths written as `tools/parity/...` in entries dated before 2026-10-08 are the l
 - Rebuilt with `localization/tools/make_fonts.sh` and `patch_uz_modifier.py`. Each patch file is 880 bytes except weight 900, which is 876. The OFL sidecar is `Nunito-uz-patch-OFL.txt`.
 - Focused EditMode (`LocFontRegistryTests|LocFontChainTests|LocFontPickerTests`): 12 passed, 0 failed. Results `/tmp/maze-i18n/loc-fonts/uz-focused.xml`, log `/tmp/maze-i18n/loc-fonts/uz-focused.log`. Full EditMode: 543 passed, 83 failed, 3 skipped, 629 total, exit 2. Results `/tmp/maze-i18n/loc-fonts/uz-full.xml`, log `/tmp/maze-i18n/loc-fonts/uz-full.log`. The 83 are the known set (`ReferenceComparisonTests` 73, `ReferenceGateTests` 9, `QuotaAndModalTests.GameAndPauseStills_MatchKnownHashes`).
 
+#### Unity preceding-icon clearance (2026-10-12)
+
+- A translated run no longer starts under an emoji that precedes it. The text starts after the icon's right edge plus the captured gap and the English leading whitespace, and it ends before a trailing icon. A shorter string is included: the daily countdown clock was covering the first letter of `Encore` and sitting on `Wieder`. The gift-banner coin and the donut-ring label use the same rule. An icon in the middle of the English glyphs still stays put unless the translation is wider. A same-row sibling the English run already overlaps, such as a dock badge, keeps the captured x. The home play ▶ is that kind of sibling.
+- The overflow audit records `icon-overlap` when translated ink crosses one of those icons. English paint does not call `TextFit`.
+- `icon-overlap` before the placement change, then after: de 6→0, fr 12→0, es 2→0, it 16→0, pt-PT 2→0, vi 16→0, fil 0→0, id 6→0, uz 2→0, qps 0→0. Hard stays 0 on qps and on all nine tables (90 files, 2006 runs). Focused EditMode (`TextFitTests|LocLanguageAuditTests|PseudoAudit_HasNoUnlistedHardViolations`): 17 passed, 0 failed. German and French stills re-rendered. Full EditMode: 542 passed, 83 failed, 3 skipped, 628 total, exit 2. Results `/tmp/maze-i18n/loc-render/full.xml`, log `/tmp/maze-i18n/loc-render/full.log`. The 83 are the known set (`ReferenceComparisonTests` 73, `ReferenceGateTests` 9, `QuotaAndModalTests.GameAndPauseStills_MatchKnownHashes`).
+
 #### Identical English copies per language (2026-10-12)
 
 - `notes/<code>-identical-ok.json` lets a key stay equal to English without an `untranslated` error. German `Hangar` and `Reset` use that file. `merge_table.py` recopies `doNotTranslate` from English and no longer keeps language-specific entries.
