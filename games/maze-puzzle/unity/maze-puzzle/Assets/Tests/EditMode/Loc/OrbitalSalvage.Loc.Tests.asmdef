@@ -8,7 +8,8 @@
         "OrbitalSalvage.Loc.Unity",
         "OrbitalSalvage.JsCompat",
         "OrbitalSalvage.Logic",
-        "OrbitalSalvage.App"
+        "OrbitalSalvage.App",
+        "OrbitalSalvage.Render"
     ],
     "includePlatforms": [
         "Editor"
