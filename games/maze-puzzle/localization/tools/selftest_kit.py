@@ -1,0 +1,408 @@
+#!/usr/bin/env python3
+"""Plain asserts for the translation kit. No pytest.
+
+Run: python3 games/maze-puzzle/localization/tools/selftest_kit.py
+"""
+
+from __future__ import annotations
+
+import json
+import subprocess
+import sys
+import tempfile
+from pathlib import Path
+
+import make_translation_stubs
+import merge_table
+import review_sample
+import validate_table as kit
+
+ROOT = Path(__file__).resolve().parent
+
+
+def has(findings, severity, kind, key):
+    return any(
+        item.severity == severity and item.kind == kind and item.key == key for item in findings
+    )
+
+
+def kinds(findings, kind):
+    return [item for item in findings if item.kind == kind]
+
+
+def table(lang, spec, strings=None, meta_extra=None, do_not=None):
+    info = kit.LANGUAGES[lang]
+    meta = {"code": lang, "name": info[1], "version": 1, "source": "en"}
+    if meta_extra:
+        meta.update(meta_extra)
+    body = {"meta": meta, "spec": spec, "str": strings or {}}
+    if do_not is not None:
+        body["doNotTranslate"] = do_not
+    return kit.PairObj(list(body.items()))
+
+
+def wrap_maps(spec, strings=None):
+    """Build PairObj sections so order checks see real order."""
+    spec_obj = kit.PairObj(list(spec.items()))
+    str_obj = kit.PairObj(list((strings or {}).items()))
+    return spec_obj, str_obj
+
+
+def make(lang, spec, strings=None, meta_extra=None, do_not=None):
+    spec_obj, str_obj = wrap_maps(spec, strings)
+    info = kit.LANGUAGES[lang]
+    meta = {"code": lang, "name": info[1], "version": 1, "source": "en"}
+    if meta_extra:
+        meta.update(meta_extra)
+    pairs = [("meta", meta), ("spec", spec_obj), ("str", str_obj)]
+    if do_not is not None:
+        pairs.append(("doNotTranslate", do_not))
+    return kit.PairObj(pairs)
+
+
+def options(**extra):
+    base = {
+        "fail_ratio": kit.FAIL_RATIO,
+        "glossary": [],
+        "index": {},
+        "chains": {},
+        "fonts_dir": None,
+        "raw": "",
+        "skip_glyphs": True,
+        "covered": None,
+    }
+    base.update(extra)
+    return base
+
+
+def check(english, translation, lang, **extra):
+    return kit.validate(english, translation, lang, options(**extra))
+
+
+def test_csharp_parity():
+    english = make(
+        "en",
+        {"Hello": "Hello", "lost": "Lost", "gone": "{0} {1}", "Boom": "Hello"},
+        {"ok": "OK", "bad": "ab"},
+    )
+    german = make(
+        "de",
+        {"Hello": "12345678", "gone": "{0}", "extra": "x", "Boom": "1234567890123"},
+        {"ok": " OK", "bad": "a\nb"},
+    )
+    findings = check(english, german, "de")
+    assert has(findings, "warning", "length", "spec:Hello"), findings
+    assert has(findings, "error", "length", "spec:Boom"), findings
+    assert has(findings, "error", "missing", "spec:lost"), findings
+    assert has(findings, "error", "placeholder", "spec:gone"), findings
+    assert has(findings, "error", "extra", "spec:extra"), findings
+    assert has(findings, "warning", "whitespace", "str:ok"), findings
+    assert has(findings, "error", "control", "str:bad"), findings
+    lost = next(item for item in findings if item.key == "spec:lost" and item.kind == "missing")
+    assert lost.line().startswith("error\tmissing\tspec:lost\t")
+
+    zh_en = make("en", {"Hi": "Hi"})
+    zh = make("zh-Hans", {"Hi": "字" * 40})
+    cjk = check(zh_en, zh, "zh-Hans")
+    assert not kinds(cjk, "length")
+    assert has(cjk, "error", "expansion", "spec:Hi"), cjk
+
+
+def test_untranslated_and_allowlist():
+    english = make(
+        "en",
+        {
+            "Hello": "Hello",
+            "105 kg": "105 kg",
+            "ORBITAL": "ORBITAL",
+            "PLAY": "PLAY",
+            "footer": "Orbital Salvage • Space Trash Clean v1.2.0",
+        },
+        do_not=["×"],
+    )
+    german = make(
+        "de",
+        {
+            "Hello": "Hello",
+            "105 kg": "105 kg",
+            "ORBITAL": "ORBITAL",
+            "PLAY": "PLAY",
+            "footer": "Orbital Salvage • Space Trash Clean v1.2.0",
+        },
+    )
+    findings = check(english, german, "de")
+    assert has(findings, "error", "untranslated", "spec:Hello")
+    assert has(findings, "error", "untranslated", "spec:PLAY")
+    assert not has(findings, "error", "untranslated", "spec:105 kg")
+    assert not has(findings, "error", "untranslated", "spec:ORBITAL")
+    assert not has(findings, "error", "untranslated", "spec:footer")
+
+
+def test_emoji_placeholder_empty_keybytes():
+    english = make("en", {"Go": "Go \u2713", "Swap": "{1} then {0}", "Blank": "Name"})
+    moved = make("de", {"Go": "\u2713 Los", "Swap": "{0} dann {1}", "Blank": ""})
+    findings = check(english, moved, "de")
+    assert has(findings, "error", "emoji", "spec:Go"), findings
+    assert not has(findings, "error", "placeholder", "spec:Swap")
+    assert has(findings, "error", "empty", "spec:Blank")
+
+    kept = make("de", {"Go": "Los \u2713", "Swap": "{0} dann {1}", "Blank": "Name"})
+    ok = check(english, kept, "de")
+    assert not has(ok, "error", "emoji", "spec:Go")
+    assert not has(ok, "error", "placeholder", "spec:Swap")
+
+    source = make("en", {"Hello": "Hello"})
+    funky = kit.PairObj(
+        [
+            ("meta", {"code": "de", "name": "Deutsch", "version": 1, "source": "en"}),
+            ("spec", kit.PairObj([("Hello ", "Hallo")])),
+            ("str", kit.PairObj([])),
+        ]
+    )
+    bad_key = check(source, funky, "de")
+    assert has(bad_key, "error", "key-bytes", "spec:Hello "), bad_key
+    assert has(bad_key, "error", "missing", "spec:Hello")
+
+
+def test_script_and_orthography():
+    english = make("en", {"Hello": "Hello"})
+    assert has(check(english, make("de", {"Hello": "汉字"}), "de"), "error", "script", "spec:Hello")
+    assert has(check(english, make("zh-Hans", {"Hello": "テスト"}), "zh-Hans"), "error", "script", "spec:Hello")
+    assert has(check(english, make("zh-Hant", {"Hello": "關閉"}), "zh-Hant"), "warning", "script", "spec:Hello") is False
+    han = check(english, make("zh-Hans", {"Hello": "关闭"}), "zh-Hans")
+    assert not has(han, "error", "script", "spec:Hello")
+    assert not has(han, "warning", "script", "spec:Hello")
+
+    ja = check(english, make("ja", {"Hello": "設定"}), "ja")
+    assert not has(ja, "error", "script", "spec:Hello")
+    assert has(ja, "warning", "script", "table")
+    ja_kana = check(english, make("ja", {"Hello": "とじる"}), "ja")
+    assert not kinds(ja_kana, "script") or not has(ja_kana, "error", "script", "spec:Hello")
+    assert not has(ja_kana, "warning", "script", "table")
+
+    assert has(check(english, make("ko", {"Hello": "안녕"}), "ko"), "error", "script", "spec:Hello") is False
+    assert has(check(english, make("ko", {"Hello": "Hello"}), "ko"), "error", "script", "spec:Hello")
+    assert has(check(english, make("hi", {"Hello": "नमस्ते"}), "hi"), "error", "script", "spec:Hello") is False
+    assert has(check(english, make("hi", {"Hello": "Hello"}), "hi"), "error", "script", "spec:Hello")
+    assert has(check(english, make("km", {"Hello": "សួស្តី"}), "km"), "error", "script", "spec:Hello") is False
+    assert has(check(english, make("ar", {"Hello": "مرحبا"}), "ar"), "error", "script", "spec:Hello") is False
+    assert has(check(english, make("ar", {"Hello": "Hello"}), "ar"), "error", "script", "spec:Hello")
+    latin_ar = check(english, make("ar", {"Hello": "مرحبا Shop"}), "ar")
+    assert has(latin_ar, "error", "script", "spec:Hello"), latin_ar
+    kept = check(english, make("ar", {"Hello": "مرحبا Nibbles"}), "ar")
+    assert not any(item.kind == "script" and item.severity == "error" for item in kept), kept
+
+    uz_bad = check(english, make("uz", {"Hello": "o'zbekcha salom"}), "uz")
+    assert has(uz_bad, "warning", "orthography", "spec:Hello"), uz_bad
+    uz_ok = check(english, make("uz", {"Hello": "o\u02bbzbekcha salom"}), "uz")
+    assert not has(uz_ok, "warning", "orthography", "spec:Hello")
+
+    fr_bad = check(english, make("fr", {"Hello": "Bonjour !"}), "fr")
+    assert has(fr_bad, "warning", "punctuation", "spec:Hello")
+    fr_ok = check(english, make("fr", {"Hello": "Bonjour\u00a0!"}), "fr")
+    assert not has(fr_ok, "warning", "punctuation", "spec:Hello")
+
+    vi_bad = check(english, make("vi", {"Hello": "汉字"}), "vi")
+    assert has(vi_bad, "error", "script", "spec:Hello")
+
+
+def test_numbers_glossary_uppercase_fit_stale():
+    english = make("en", {"Mass": "105 kg", "Sector": "Restart sector", "Title": "AUDIO"})
+    bad = make("de", {"Mass": "105", "Sector": "Neu starten", "Title": "AUDIO"})
+    glossary = [
+        {
+            "en": "sector",
+            "dnt": False,
+            "check": True,
+            "alternates": ["sector"],
+            "de": "Sektor",
+        }
+    ]
+    index = {
+        ("spec", "Title"): {"fz": "16px", "uppercase": "uppercase", "max_width": "400", "key": "Title"},
+        ("spec", "Mass"): {"fz": "20px", "uppercase": "none", "max_width": "80", "key": "Mass"},
+        ("spec", "Sector"): {"fz": "10px", "uppercase": "none", "max_width": "40", "key": "Sector"},
+    }
+    findings = check(english, bad, "de", glossary=glossary, index=index)
+    assert has(findings, "error", "unit", "spec:Mass"), findings
+    assert has(findings, "warning", "glossary", "spec:Sector"), findings
+    assert has(findings, "warning", "uppercase", "spec:Title"), findings
+
+    wide = make("de", {"Mass": "105 kg", "Sector": "Sektor neu starten bitte jetzt sofort extra", "Title": "Audio"})
+    fit = check(english, wide, "de", glossary=glossary, index=index)
+    assert has(fit, "error", "fit", "spec:Sector") or has(fit, "warning", "fit", "spec:Sector"), fit
+    assert not has(fit, "warning", "uppercase", "spec:Title")
+    assert not has(fit, "warning", "glossary", "spec:Sector")
+
+    stale_meta = {
+        "sourceHashes": {"spec": {"Mass": "deadbeef", "Sector": kit.source_hash("spec", "Sector", "Restart sector")}}
+    }
+    stale_table = make(
+        "de",
+        {"Mass": "105 kg", "Sector": "Sektor neu", "Title": "Audio"},
+        meta_extra=stale_meta,
+    )
+    stale = check(english, stale_table, "de", index=index)
+    assert has(stale, "warning", "stale", "spec:Mass"), stale
+    assert not has(stale, "warning", "stale", "spec:Sector")
+    assert has(stale, "warning", "stale", "spec:Title")
+
+    digits = check(english, make("hi", {"Mass": "१०५ kg", "Sector": "सेक्टर", "Title": "ऑडियो"}), "hi")
+    assert has(digits, "warning", "digits", "spec:Mass"), digits
+    assert has(digits, "error", "number", "spec:Mass")
+
+
+def test_glyphs_and_pending():
+    english = make("en", {"Hi": "Hi", "Wide": "Wide"})
+    good = make("vi", {"Hi": "Hãy mở cửa sổ", "Wide": "dọn rác vũ trụ"})
+    chains = kit.load_chains(kit.DEFAULT_CHAINS)
+    pre = []
+    covered = kit.prepare_fonts(
+        "vi",
+        {"chains": chains, "fonts_dir": kit.DEFAULT_FONTS, "skip_glyphs": False},
+        pre,
+    )
+    assert covered, "Vietnamese Latin cmap should load from the shipped fonts"
+    findings = check(english, good, "vi", covered=covered, chains=chains)
+    assert not kinds(findings, "glyph"), findings
+
+    bad = make("vi", {"Hi": "Hãy mở \u0370", "Wide": "dọn"})
+    glyph = check(english, bad, "vi", covered=covered)
+    assert has(glyph, "error", "glyph", "spec:Hi"), glyph
+
+    pending = []
+    none_covered = kit.prepare_fonts(
+        "ar",
+        {"chains": chains, "fonts_dir": kit.DEFAULT_FONTS, "skip_glyphs": False},
+        pending,
+    )
+    assert none_covered is None
+    assert any(item.kind == "font-pending" for item in pending), pending
+    arabic = check(english, make("ar", {"Hi": "مرحبا", "Wide": "عالم"}), "ar", covered=none_covered)
+    assert not kinds(arabic, "glyph")
+
+
+def test_stubs_merge_sample_glossary():
+    terms = kit.parse_glossary(kit.DEFAULT_GLOSSARY)
+    assert 40 <= len(terms) <= 60, len(terms)
+    for term in terms:
+        for lang in kit.TARGET_CODES:
+            assert (term.get(lang) or "").strip(), (term.get("term"), lang)
+        if term.get("dnt"):
+            for lang in kit.TARGET_CODES:
+                assert term[lang] == term["alternates"][0] or term[lang] in term["alternates"]
+    blob = kit.DEFAULT_GLOSSARY.read_text(encoding="utf-8")
+    assert "\u02bb" in blob
+    assert "\u202f" not in blob
+    chains = json.loads(kit.DEFAULT_CHAINS.read_text(encoding="utf-8"))["languages"]
+    for lang, factor in kit.EXPANSION.items():
+        assert abs(chains[lang]["expansion"] - factor) < 1e-9
+
+    with tempfile.TemporaryDirectory() as tmp:
+        tmp_path = Path(tmp)
+        code = make_translation_stubs.main(["--lang", "de", "--out", str(tmp_path)])
+        assert code == 0
+        stub = json.loads((tmp_path / "de.json").read_text(encoding="utf-8"))
+        assert stub["meta"]["code"] == "de"
+        assert stub["meta"]["name"] == "Deutsch"
+        assert stub["meta"]["sourceHashes"]["spec"]
+        refused = make_translation_stubs.main(["--lang", "de", "--out", str(ROOT)])
+        assert refused == 2
+
+        partial = {
+            "meta": {"code": "de", "name": "Deutsch", "version": 1, "source": "en"},
+            "spec": {"PLAY": "Spielen"},
+            "str": {},
+        }
+        partial_path = tmp_path / "partial.json"
+        partial_path.write_text(json.dumps(partial), encoding="utf-8")
+        # A tiny English file so merge does not need the whole game table.
+        tiny_en = {
+            "meta": {"code": "en", "name": "English", "version": 1, "source": "en"},
+            "spec": {"Zebra": "Zebra", "PLAY": "PLAY"},
+            "str": {"b": "Bee", "a": "Ant"},
+            "doNotTranslate": ["×", "▶"],
+        }
+        en_path = tmp_path / "en.json"
+        en_path.write_text(json.dumps(tiny_en), encoding="utf-8")
+        out = tmp_path / "merged.json"
+        assert merge_table.main(["--lang", "de", "--partial", str(partial_path), "--en", str(en_path), "--out", str(out)]) == 0
+        merged = json.loads(out.read_text(encoding="utf-8"))
+        assert list(merged["spec"]) == ["PLAY", "Zebra"]
+        assert merged["spec"]["PLAY"] == "Spielen"
+        assert merged["spec"]["Zebra"] == "Zebra"
+        assert list(merged["str"]) == ["a", "b"]
+        assert merged["meta"]["sourceHashes"]["spec"]["PLAY"] == kit.source_hash("spec", "PLAY", "PLAY")
+        assert merged["doNotTranslate"] == ["×", "▶"] or merged["doNotTranslate"] == sorted(["×", "▶"], key=kit.ordinal_bytes)
+
+        sample_out = tmp_path / "sample.md"
+        assert (
+            review_sample.main(
+                ["--lang", "de", "--table", str(out), "--en", str(en_path), "--key-index", str(tmp_path / "missing.csv"), "--out", str(sample_out), "--limit", "30"]
+            )
+            == 0
+        )
+        sample = sample_out.read_text(encoding="utf-8")
+        assert "Spielen" in sample
+        assert "Ratio" in sample
+
+
+def test_real_german_stub():
+    with tempfile.TemporaryDirectory() as tmp:
+        tmp_path = Path(tmp)
+        assert make_translation_stubs.main(["--lang", "de", "--out", str(tmp_path)]) == 0
+        proc = subprocess.run(
+            [
+                sys.executable,
+                str(ROOT / "validate_table.py"),
+                "--lang",
+                "de",
+                "--table",
+                str(tmp_path / "de.json"),
+                "--no-glyph",
+            ],
+            check=False,
+            capture_output=True,
+            text=True,
+        )
+        assert proc.returncode == 1, proc.stdout + proc.stderr
+        report = proc.stdout
+        untranslated_keys = [
+            line.split("\t")[2]
+            for line in report.splitlines()
+            if "\tuntranslated\t" in "\t" + line or line.startswith("error\tuntranslated\t")
+        ]
+        assert "spec:105 kg" not in untranslated_keys
+        assert "spec:ORBITAL" not in untranslated_keys
+        assert any(key.startswith("spec:") for key in untranslated_keys)
+        print("--- de stub (summary) ---")
+        for line in report.splitlines():
+            if line.startswith("lang:") or line.startswith("errors:") or line.startswith("warnings:") or line.startswith("by-kind:"):
+                print(line)
+        print(f"untranslated findings: {len(untranslated_keys)}")
+
+
+def main() -> int:
+    tests = [
+        test_csharp_parity,
+        test_untranslated_and_allowlist,
+        test_emoji_placeholder_empty_keybytes,
+        test_script_and_orthography,
+        test_numbers_glossary_uppercase_fit_stale,
+        test_glyphs_and_pending,
+        test_stubs_merge_sample_glossary,
+        test_real_german_stub,
+    ]
+    for test in tests:
+        test()
+        print(f"ok {test.__name__}")
+    print(f"ok {len(tests)} groups")
+    return 0
+
+
+if __name__ == "__main__":
+    try:
+        sys.exit(main())
+    except AssertionError as exc:
+        print("FAIL", exc, file=sys.stderr)
+        raise
