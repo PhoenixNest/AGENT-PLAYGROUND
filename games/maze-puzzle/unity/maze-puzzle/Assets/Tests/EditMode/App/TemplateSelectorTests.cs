@@ -76,6 +76,8 @@ namespace OrbitalSalvage.App.Tests
             Assert.AreEqual("settings_toggles_off", TemplateSelector.Select(settings, out _));
             settings.SlidersDefault = false;
             Assert.AreEqual("settings_sliders_moved", TemplateSelector.Select(settings, out _));
+            settings.Modal = "language";
+            Assert.AreEqual("settings_modal_language", TemplateSelector.Select(settings, out _));
             settings.Modal = "privacy";
             Assert.AreEqual("settings_modal_privacy", TemplateSelector.Select(settings, out _));
             settings.Modal = "reset";

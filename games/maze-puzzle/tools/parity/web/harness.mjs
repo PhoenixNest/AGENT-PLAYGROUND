@@ -45,6 +45,7 @@ export const CALL_ALLOWLIST = new Set([
   "dismissGestureHint",
   "initLayout",
   "triggerHaptic",
+  "openPrivacyModal",
 ]);
 export const CALL_TARGETS = {
   app: CALL_ALLOWLIST,
