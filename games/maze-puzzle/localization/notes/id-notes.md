@@ -2,6 +2,8 @@
 
 Draft, 2026-10-12. Informal-polite `kamu` (not Anda, not kau). Warm, short, child-safe. No native speaker has reviewed this table. The 30-key sample is at `/tmp/maze-i18n/tr-id/review-id.md` and is not marked done.
 
+Wording pass 2 (after the all-language audit) shortens the two controls that painted with an ellipsis, replaces leftover English where a short Indonesian word fits, and keeps one word per concept. Widths below are the kit estimate against `max(captured run, English estimate)`. The audit font is wider than that estimate: `PERUNGGU` and `TOKO MAINAN` were under the 72% floor in the kit and still painted as `PERUNG…` and `TOKO MAIN…`. A replacement that is the same width as the English control, or shorter, is the one that can sit at full size.
+
 ## Coverage
 
 | | Count |
@@ -9,111 +11,143 @@ Draft, 2026-10-12. Informal-polite `kamu` (not Anda, not kau). Warm, short, chil
 | spec keys | 355 |
 | str keys | 81 |
 | validator errors | 0 |
-| visible warnings | 24 |
+| visible warnings | 25 |
 | suppressed fit warnings | 50 |
-| accepted identical | 1 (`Reset`) |
+| accepted identical | 0 |
 
-Visible warnings by kind: `fit` 23, `length` 1. The 50 suppressed warnings are `LVL 1`–`LVL 50` in `id-fit-exceptions.json` (glossary word `level`). No `stale`, `glyph`, `glossary`, `expansion`, `placeholder`, `emoji`, or `number` warnings.
+Visible warnings by kind: `fit` 21, `glossary` 3, `length` 1. The 50 suppressed warnings are `LVL 1`–`LVL 50` in `id-fit-exceptions.json` (glossary word `level`). No `stale`, `glyph`, `expansion`, `placeholder`, `emoji`, or `number` warnings.
 
-`str:unit.kg` and `str:unit.quota` stay `{0} kg` and `{0} / {1} kg`. Brand lines stay English: `ORBITAL`, `SALVAGE`, `SPACE TRASH CLEAN`, `ORBITAL SALVAGE`, and `Orbital Salvage • Space Trash Clean v1.2.0`. `Nibbles` is never translated. `localStorage` stays in the privacy paragraph.
+`id-identical-ok.json` is an empty list. `Reset` was the only waiver, and the button is now `Hapus`.
 
-## Fit warnings left on purpose
+`str:unit.kg` and `str:unit.quota` stay `{0} kg` and `{0} / {1} kg`. Brand lines stay English: `ORBITAL`, `SALVAGE`, `SPACE TRASH CLEAN`, `ORBITAL SALVAGE`, and `Orbital Salvage • Space Trash Clean v1.2.0`. `Nibbles` is never translated. `localStorage` stays in the privacy paragraph. `Level` stays inside translated names (`Level 1`, `Level 1 • Luncur Permen 1`). That is the glossary loanword, not an identical copy of `LVL N`.
 
-Every one of these is under the 72% shrink floor. A shorter natural synonym either changes the meaning or drops a glossary word.
+## Pass 2 changes
+
+| English | Before | After | Measured fit |
+| --- | --- | --- | --- |
+| `TOY SHOP` | `TOKO MAINAN` | `MAINAN` | 51px vs 84px, scale 1.00. Was 90px and painted `TOKO MAIN…`. |
+| `BRONZE` | `PERUNGGU` | `GANGSA` | 33px vs 47px, same width as `BRONZE`. Was 44px and painted `PERUNG…`. |
+| `BRONZE ✓` | `PERUNGGU ✓` | `GANGSA ✓` | 43px vs 58px, same width as `BRONZE ✓`. |
+| `DAILY` | `Harian` | `Tugas` | 28px vs 32px, same width as `DAILY`. Dock was scale 0.76. |
+| `Reset` | `Reset` | `Hapus` | 30px vs 30px, same width as `Reset`. |
+| `Yes, Reset` | `Ya, reset` | `Ya, hapus` | 49px vs 55px, scale 1.00. |
+| reset warning | long `dikembalikan` line | `Kamu yakin? Hapus peta, kostum, dan koin emas. Tidak bisa kembali!` | 389px. The old line (507px) painted with an ellipsis. |
+| `Launch Backup Pod (+8 Scrap!)` | `Mulai pod cadangan (+8 rongsokan)!` | `Kapsul cadangan (+8 rongsokan)!` | 186px vs 182px, scale 0.98. The longer old line painted in full on the wide button. |
+| `Master All-Clear Bounty` | `Hadiah Master Tuntas` | `Hadiah juara` | 75px vs 145px, scale 1.00. |
+| `Lost In Void` | `Di hampa` | `Hilang` | 33px vs 67px, scale 1.00. `Hilang di hampa` is 78px, scale 0.86, and would shrink. |
+| `Resets in 14h 59m` | `Ulang 14 jam 59m` | `Ulang 14j 59mnt` | 74px vs 82px, scale 1.00. The old line sat in the 0.72 daily bundle. |
+| `Hangar` | `Beranda` | `Pulang` | 36px vs 43px, same width as `Hangar`. Pause already says `Pulang`. |
+
+`GANGSA` is the KBBI word for perunggu, six letters like `BRONZE`. `PERAK` and `EMAS` were already short enough to paint. Shift titles use `gangsa` too. A child may not know `gangsa`; `perunggu` is the everyday word and it clips the medal.
+
+The shop sentence in the privacy modal still says `toko mainan`. That modal was not edited. The header cannot hold the full glossary phrase.
+
+`Level` is kept on purpose. The countdown template is `Ulang {0}j {1}mnt`. `j` is jam and `mnt` is menit. `Menit` in the spec line crosses the shrink floor.
+
+## Left as they were
+
+| Key | Choice | Why |
+| --- | --- | --- |
+| `Sound: ON` | `Ada suara` | 51px vs 59px, scale 1.00. The pause still reads it. `Suara nyala` is 63px, scale 0.92, and near-budget strings ellipsized in this audit. |
+| `✓ UNLOCKED` | `✓ DIRAIH` | 51px vs 81px. The trophy still shows it in full next to `TERKUNCI`. It means achieved. `TERBUKA` can read as still open. |
+| `LVL N` / chute names | `Level N` | Glossary loanword. Recorded here, not in identical-ok. |
+| privacy modal | unchanged | Out of scope. Those bodies still ellipsize. |
+
+## Fit warnings left, with a reason
+
+Every fit warning is under the 72% shrink floor. The stills that were read show these strings in full except where the note says otherwise.
 
 | Keys | n | Choice | Why it stays |
 | --- | ---: | --- | --- |
 | `LVL 1`–`LVL 50` | 50 | `Level N` | Suppressed. Glossary word `level`. The chip is narrower than the word. |
-| `Moon Chute 1`–`10` | 10 | `Luncur Bulan N` | About 4–6px over. `Perosotan` (glossary chute) nearly hits the shrink floor. `Luncur` is the short slide word, used for every chute. |
-| `DAILY` | 1 | `Harian` | 33px vs 32px. Dock label. `Tugas` fits and is the other half of `tugas harian`. |
-| `FREE` | 1 | `GRATIS` | 27px vs 23px, floor 33px. No shorter word that means free-of-charge. |
-| `Start Shift ▶` | 1 | `Mulai giliran ▶` | Verb plus glossary `giliran`. `Giliran ▶` drops the verb. |
-| `TODAY` | 1 | `HARI INI` | Fit 42px vs 38px, and length 1.60× (the warn line). `Kini` means now, not today. |
-| `TOY SHOP` | 1 | `TOKO MAINAN` | 90px vs 84px, floor 116px. Glossary `toko mainan`. |
-| `Wear` | 1 | `Pakai` | 30px vs 29px. Glossary verb. No shorter verb. |
-| `Cute Cosmic Janitor` | 1 | `Petugas kebersihan kosmik` | 157px vs 148px, floor 205px. Glossary job title. `Lucu` did not fit with it. |
-| `Donut Rings` | 1 | `Cincin Donat` | 69px vs 65px. Glossary category. |
-| `Prize` | 1 | `Hadiah` | 39px vs 34px, floor 47px. The word itself. |
-| `Skies` | 1 | `Langit` | 36px vs 30px, floor 42px. Glossary backdrop word. |
-| `Launch Backup Pod (+8 Scrap!)` | 1 | `Mulai pod cadangan (+8 rongsokan)!` | 203px vs 182px, floor 253px. Needs the verb plus both glossary words. |
+| `Moon Chute 1`–`10` | 10 | `Luncur Bulan N` | About 4–6px over. `Perosotan` nearly hits the shrink floor. `Luncur` is the short slide word for every chute. The map still shows the candy chutes in full. |
+| `FREE` | 1 | `GRATIS` | 27px vs 23px, floor 33px. The dock badge paints `GRATIS` in full. No shorter word that means free-of-charge. |
+| `Start Shift ▶` | 1 | `Mulai giliran ▶` | 85px vs 73px. Verb plus glossary `giliran`. The daily button paints the whole label. |
+| `TODAY` | 1 | `HARI INI` | Fit 42px vs 38px, and length exactly 1.60×. The card badge paints it in full. `Kini` means now, not today. |
+| `Wear` | 1 | `Pakai` | 30px vs 29px. Glossary verb. |
+| `Cute Cosmic Janitor` | 1 | `Petugas kebersihan kosmik` | 157px vs 148px, floor 205px. Glossary job title. |
+| `Donut Rings` | 1 | `Cincin Donat` | 69px vs 65px. The shop tab paints it in full. |
+| `Prize` | 1 | `Hadiah` | 39px vs 34px, floor 47px. |
+| `Skies` | 1 | `Langit` | 36px vs 30px, floor 42px. The shop tab paints it in full. |
+| `Launch Backup Pod (+8 Scrap!)` | 1 | `Kapsul cadangan (+8 rongsokan)!` | 186px vs 182px. Shorter than the line the defeat still painted in full. Dropping `cadangan` or `rongsokan` would clear the warning and lose the concept. |
 | `allowance.` | 1 | `uang jajan.` | 56px vs 55px. Glossary fragment. |
-| `care package!` | 1 | `paket bingkisan!` | 84px vs 72px, floor 100px. Glossary fragment. |
+| `care package!` | 1 | `paket bingkisan!` | 84px vs 72px, floor 100px. The shop banner paints it in full. |
 
-`settings_modal_privacy` is out of the app flow. The bodies are still translated, and they are shorter than a word-for-word pass, because the German audit showed headings sitting on wrapped paragraphs.
+## Glossary warnings left, with a reason
+
+| Key | Expected | Used | Why |
+| --- | --- | --- | --- |
+| `TOY SHOP` | `toko mainan` | `MAINAN` | The full phrase paints as `TOKO MAIN…`. The privacy sentence still has `toko mainan` and was not edited. |
+| `Launch Backup Pod (+8 Scrap!)` | `pod cadangan` | `kapsul cadangan` | Drops the English word `pod`. The button is one word with the toast. |
+| `toast.backup.deployed` | `pod cadangan` | `kapsul cadangan` | Same object as the button. Toasts have no line box. |
 
 ## Glossary words that changed shape
 
-Checked terms are in the table. These preferred words (`check: no`, or a header that cannot hold the long form) changed:
-
 | Term | Glossary | Used | Where |
 | --- | --- | --- | --- |
-| chute | perosotan | luncur | Every chute name. `Perosotan` does not fit the moon chips. |
-| goal (no row) | — | misi | `Goal: 20 kg` and the pause quota. `Target` overflows the chip. |
-| hangar (no row) | — | beranda | `btn-defeat-home`. The place label, paired with `Pulang` on pause. |
+| chute | perosotan | luncur | Every chute name. |
+| goal (no row) | — | misi | `Goal: 20 kg` and the pause quota. |
+| hangar (no row) | — | pulang | Both home controls. Pause already said `Pulang`. |
 | pinball (no row) | — | pantul | `Nebula Pantul`. |
-| cosmic janitor | petugas kebersihan kosmik | same, without `lucu` | Tagline only. The phrase is the whole line. |
-| backup pod | pod cadangan | same | Button and the Auxiliary Scrap Pod toast. One word for both English names. |
-| master bounty | hadiah master | same | Includes the lead's `master`. |
+| toy shop | toko mainan | mainan on the header | Header only. See the glossary warning. |
+| backup pod | pod cadangan | kapsul cadangan | Button and toast. |
+| master bounty | hadiah master | hadiah juara | Title and both daily toasts. |
+| bronze | perunggu | gangsa | Medal, badge, and the bronze shift. |
+| cosmic janitor | petugas kebersihan kosmik | same, without `lucu` | Tagline only. |
 
-`space junk` and `space trash` both use `sampah luar angkasa`. Recycling coins and gameplay coins use `koin emas`. Gold shift metal is `emas`, not `koin emas`.
+`space junk` and `space trash` both use `sampah luar angkasa`. Recycling coins and gameplay coins use `koin emas`. Gold shift metal is `emas`, not `koin emas`. The settings name for the wipe is `Atur ulang` (row and `ATUR ULANG SEMUA?`). The short red button is `Hapus`, because `Atur ulang` does not fit that 30px control and `Ulang` means play again.
 
 ## Doubtful lines
 
 | Key | Choice | Alternative |
 | --- | --- | --- |
-| `Reset` | `Reset` | `Ulang` fits and reads as play-again. |
-| `Yes, Reset` | `Ya, reset` | Matches the short button. The dialog title is `ATUR ULANG SEMUA?`. |
-| `Reset Progress` | `Atur ulang` | `Atur ulang progres` overflows the row. |
-| `Hangar` | `Beranda` | Keep `Hangar` as the KBBI loanword for the building. |
-| `← Back` | `← Balik` | `← Kembali` is the standard UI verb and overflows (56px vs 44px). |
-| `Lost In Void` | `Di hampa` | `Tumpah` for the spilled mass, without the void. |
-| `✓ UNLOCKED` | `✓ DIRAIH` | `✓ TERBUKA` pairs with `TERKUNCI` and can read as still open. |
-| `Sound: ON` | `Ada suara` | `Suara: nyala` overflows the pause button. |
-| `Next Map ▶` | `Lanjut ▶` | `Peta lanjut ▶` overflows. |
+| `BRONZE` | `GANGSA` | `Perunggu` is the word a child knows, and it clips the medal. |
+| `Reset` | `Hapus` | The row stays `Atur ulang`. Two surfaces, one wipe. |
+| `Lost In Void` | `Hilang` | `Hilang di hampa` names the void and does not fit the run. |
+| `Sound: ON` | `Ada suara` | `Suara nyala` is clearer and wider than the pause run. |
+| `Resets in 14h 59m` | `Ulang 14j 59mnt` | `j` / `mnt` are the short clock marks. |
+| `✓ UNLOCKED` | `✓ DIRAIH` | Kept. The still reads it as achieved. |
+| `← Back` | `← Balik` | `← Kembali` overflows (56px vs 44px). |
 | `Snacks Eaten` | `Camilan habis` | `Camilan dimakan` is 1px over the line. |
-| `Coins Won` | `Koin dapat` | Telegraphic. `Koin emas` names the currency and drops "won". |
+| `Coins Won` | `Koin dapat` | `Koin emas` names the currency and drops "won". |
 | `Game Data` | `Data main` | `Data permainan` overflows. |
-| `Resets in 14h 59m` | `Ulang 14 jam 59m` | `Menit` crosses the shrink floor. `m` is the English minute mark. |
-| `Sleepy Star Cloud` | `Awan Mengantuk` | `Bintang Mengantuk` is 3px over. Star and sleepy do not fit together. |
-| `Cosmic Kitty Saucer` | `Piring Kucing` | `Piring Kucing Kosmik` is 7px over. |
-| `Cyber Donut Rings` | `Donat Siber` | `Cincin Donat Siber` is 3px over. The tab already says `Cincin Donat`. |
-| `Silver Shift • Sector Hazard` | `Giliran perak • sektor` | `Bahaya` does not fit with `giliran` and `sektor`. |
-| `Gold Shift • Vortex Apex` | `Giliran emas • pusaran` | `Puncak` does not fit. |
-| `Bronze Shift • Cadet Sweep` | `Giliran perunggu • kadet` | `Sapu` does not fit with both words. |
-| `Mint Soda Lagoon` / `Peppermint Candy Ring` | `mint` kept | Flavor loanword. `Segar` was the other option. |
-| Privacy `cookies` | `kuki` | Homonym of the snack. `Cookie` is plainer and more English. |
+| `Sleepy Star Cloud` | `Awan Mengantuk` | Star and sleepy do not fit together. |
+| `Silver Shift • Sector Hazard` | `Giliran perak • sektor` | `Bahaya` does not fit with both words. |
+| Privacy `cookies` | `kuki` | Homonym of the snack. Left from pass 1. The modal was not reworked. |
 
 ## Twelve least-sure keys
 
-1. `Reset` → `Reset`
-2. `Hangar` → `Beranda`
-3. `Goal: 20 kg` → `Misi: 20 kg`
-4. `Lost In Void` → `Di hampa`
-5. `✓ UNLOCKED` → `✓ DIRAIH`
-6. `Moon Chute 1` → `Luncur Bulan 1` (and 2–10)
-7. `Silver Shift • Sector Hazard` → `Giliran perak • sektor`
-8. `Sound: ON` → `Ada suara`
-9. `Resets in 14h 59m` → `Ulang 14 jam 59m`
-10. `Next Map ▶` → `Lanjut ▶`
+1. `BRONZE` → `GANGSA` (correct metal, uncommon word)
+2. `Reset` → `Hapus` (row is still `Atur ulang`)
+3. `Lost In Void` → `Hilang`
+4. `Sound: ON` → `Ada suara`
+5. `Resets in 14h 59m` → `Ulang 14j 59mnt`
+6. `LVL 1` → `Level 1` (loanword, kept)
+7. `Moon Chute 1` → `Luncur Bulan 1`
+8. `Goal: 20 kg` → `Misi: 20 kg`
+9. `✓ UNLOCKED` → `✓ DIRAIH`
+10. `Silver Shift • Sector Hazard` → `Giliran perak • sektor`
 11. `Nebula Pinball` → `Nebula Pantul`
 12. `Sleepy Star Cloud` → `Awan Mengantuk`
 
 ## Glossary additions requested
 
-- Chute chip: `luncur` as the short form when `perosotan` does not fit. One word is used for every chute.
-- Backup pod: `kapsul cadangan` if `pod` should not remain inside the glossary recommendation. This table follows `pod cadangan`.
-- Master bounty: `hadiah juara` if `master` should not remain. This table follows `hadiah master`.
-- No rows yet for goal, hangar, or pinball. This table uses `misi`, `beranda`, and `pantul`.
+- Bronze medal: `gangsa` when `perunggu` clips. One word for the medal, the badge, and the bronze shift.
+- Toy-shop header: `mainan` when `toko mainan` clips. The long phrase does not fit that title.
+- Backup pod: `kapsul cadangan` instead of `pod cadangan`, so the English word is gone.
+- Master bounty: `hadiah juara` instead of `hadiah master`.
+- Chute chip: `luncur` when `perosotan` does not fit.
+- No rows yet for goal, hangar, or pinball. This table uses `misi`, `pulang`, and `pantul`.
 
 ## English source
 
 - `Unlock (1200` (and the other prices) and `Trophy: Daily Duty Star (+500` are cut off before the closing `)`. Indonesian does not add it.
-- `Backup Pod` and `Auxiliary Scrap Pod` are one object. Both say `pod cadangan`.
-- `Hangar` is the defeat home button (`btn-defeat-home`), not a separate place in the copy.
-- Privacy headings and bodies still share a captured y. Shorter Indonesian does not move the next element. Left as a layout issue. The modal is out of the app flow.
+- `Backup Pod` and `Auxiliary Scrap Pod` are one object. Both say `kapsul cadangan`.
+- `Hangar` is the defeat home button. It now says `Pulang`, the same word as pause.
+- Privacy headings and bodies still share a captured y. Left as a layout issue. The modal is out of the app flow and was not edited in pass 2.
 
 ## Kit
 
-- `str` rows still have no line box, so toasts and floating words are not fit-checked. They were kept near the character notes in `key-index.csv`.
-- A length of exactly 1.60× warns. `HARI INI` is 8 UTF-16 units against `TODAY` at 5, so it sits on the line.
-- The fit estimate is a planning width. The German audit painted some warned compounds in full. These 23 warnings may do the same. None cross the shrink floor.
+- `str` rows still have no line box, so toasts are not fit-checked.
+- A length of exactly 1.60× warns. `HARI INI` is 8 UTF-16 units against `TODAY` at 5.
+- The fit estimate missed the two real control ellipses on pass 1. Pass 2 treats "same width as the English control, or shorter" as the bar for a clipped control.
