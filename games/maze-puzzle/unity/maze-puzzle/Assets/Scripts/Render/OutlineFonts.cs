@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using OrbitalSalvage.Loc;
 using UnityEngine;
 
 namespace OrbitalSalvage.Render
@@ -28,6 +29,9 @@ namespace OrbitalSalvage.Render
         static readonly Dictionary<string, TrueTypeFont> Fonts = new Dictionary<string, TrueTypeFont>();
         static readonly Dictionary<TrueTypeFont, int> Ids = new Dictionary<TrueTypeFont, int>();
         static readonly Dictionary<string, TrueTypeFont[]> Chains = new Dictionary<string, TrueTypeFont[]>();
+        static readonly Dictionary<string, int> ChainStamps = new Dictionary<string, int>();
+        static readonly HashSet<string> MissingFiles = new HashSet<string>();
+        static int nextStamp = 1;
         static readonly Dictionary<ulong, FlatGlyph> Cache = new Dictionary<ulong, FlatGlyph>();
         static readonly Dictionary<ulong, GlyphOutline> Raw = new Dictionary<ulong, GlyphOutline>();
         static readonly List<float> scratch = new List<float>(256);
@@ -63,16 +67,65 @@ namespace OrbitalSalvage.Render
         }
 
         /// <summary>
-        /// Same faces as <see cref="Chain(TrueTypeFont)"/> today. A later task prepends language faces
-        /// for <paramref name="fontGroup"/> (<c>cjk-sc</c>, <c>arabic</c>, …). The cache key is
-        /// (primary, group). An empty group uses the Latin chain unchanged.
+        /// Language face list from <see cref="LocFonts"/>. <paramref name="language"/> <c>en</c> returns
+        /// <see cref="Chain(TrueTypeFont)"/> unchanged (same font objects). A missing file is skipped.
+        /// A missing script face falls back to the German Latin chain. Never throws.
+        /// </summary>
+        public static TrueTypeFont[] ChainFor(string language, string family, int cssWeight)
+        {
+            EnsureManifestLoader();
+            string key = ChainKey(language, family, cssWeight);
+            if (Chains.TryGetValue(key, out var cached)) return cached;
+            TrueTypeFont[] chain;
+            if (string.IsNullOrEmpty(language) || language == LanguageRegistry.DefaultCode)
+                chain = Chain(Primary(family, cssWeight));
+            else
+            {
+                string[] names = LocFonts.GetChain(language, family, cssWeight);
+                chain = LoadNames(names);
+                if (LocFonts.NeedsLatinFallback(language, names, NamesOf(chain)))
+                    chain = LoadNames(LocFonts.GetChain("de", family, cssWeight));
+            }
+            Chains[key] = chain;
+            if (!ChainStamps.ContainsKey(key)) ChainStamps[key] = nextStamp++;
+            return chain;
+        }
+
+        public static int ChainStamp(string language, string family, int cssWeight)
+        {
+            string key = ChainKey(language, family, cssWeight);
+            if (!ChainStamps.ContainsKey(key)) ChainFor(language, family, cssWeight);
+            int stamp;
+            return ChainStamps.TryGetValue(key, out stamp) ? stamp : 1;
+        }
+
+        /// <summary>First integer and the family after <c>px</c> in a paint font string such as <c>800 14px Fredoka</c>.</summary>
+        public static void SplitCssFont(string font, out int weight, out string family)
+        {
+            weight = 400;
+            family = ParityFonts.Fredoka;
+            if (string.IsNullOrEmpty(font)) return;
+            int space = font.IndexOf(' ');
+            if (space > 0)
+            {
+                int parsed;
+                if (int.TryParse(font.Substring(0, space), out parsed)) weight = parsed;
+            }
+            int px = font.IndexOf("px", StringComparison.Ordinal);
+            if (px < 0 || px + 2 > font.Length) return;
+            string rest = font.Substring(px + 2).Trim();
+            if (rest.Length > 0) family = rest;
+        }
+
+        /// <summary>
+        /// Group hook kept for callers that only know a font group. Language selection goes through
+        /// <see cref="ChainFor"/>. An empty group is the Latin chain.
         /// </summary>
         public static TrueTypeFont[] Chain(TrueTypeFont primary, string fontGroup)
         {
             if (string.IsNullOrEmpty(fontGroup)) return Chain(primary);
             string key = primary.name + "\n" + fontGroup;
             if (Chains.TryGetValue(key, out var c)) return c;
-            // TODO: prepend the faces registered for fontGroup. None are shipped yet.
             c = new[] { primary, Load(SymbolChain[0]), Load(SymbolChain[1]) };
             Chains[key] = c;
             return c;
@@ -80,7 +133,67 @@ namespace OrbitalSalvage.Render
 
         public static void Clear()
         {
-            Fonts.Clear(); Ids.Clear(); Chains.Clear(); Cache.Clear(); Raw.Clear();
+            Fonts.Clear(); Ids.Clear(); Chains.Clear(); ChainStamps.Clear(); MissingFiles.Clear();
+            Cache.Clear(); Raw.Clear();
+            nextStamp = 1;
+        }
+
+        static void EnsureManifestLoader()
+        {
+            if (LocFonts.HasLoader) return;
+            LocFonts.SetLoader(new ResourcesFontManifestLoader());
+        }
+
+        static string ChainKey(string language, string family, int cssWeight)
+        {
+            return (language ?? "") + "\n" + (family ?? "") + "\n" + cssWeight;
+        }
+
+        static TrueTypeFont[] LoadNames(string[] names)
+        {
+            if (names == null || names.Length == 0) return Array.Empty<TrueTypeFont>();
+            var list = new List<TrueTypeFont>(names.Length);
+            for (int i = 0; i < names.Length; i++)
+            {
+                TrueTypeFont font;
+                if (TryLoad(names[i], out font)) list.Add(font);
+            }
+            return list.ToArray();
+        }
+
+        static string[] NamesOf(TrueTypeFont[] fonts)
+        {
+            if (fonts == null || fonts.Length == 0) return Array.Empty<string>();
+            var names = new string[fonts.Length];
+            for (int i = 0; i < fonts.Length; i++) names[i] = fonts[i].name;
+            return names;
+        }
+
+        static bool TryLoad(string file, out TrueTypeFont font)
+        {
+            font = null;
+            if (string.IsNullOrEmpty(file)) return false;
+            if (Fonts.TryGetValue(file, out font)) return true;
+            if (MissingFiles.Contains(file)) return false;
+            var asset = Resources.Load<TextAsset>(ResourcesDir + file);
+            if (asset == null || asset.bytes == null || asset.bytes.Length == 0)
+            {
+                MissingFiles.Add(file);
+                return false;
+            }
+            try
+            {
+                font = new TrueTypeFont(file, asset.bytes);
+            }
+            catch (Exception)
+            {
+                MissingFiles.Add(file);
+                font = null;
+                return false;
+            }
+            Fonts[file] = font;
+            Ids[font] = Ids.Count;
+            return true;
         }
 
         /// <summary>

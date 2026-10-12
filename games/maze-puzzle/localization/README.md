@@ -109,4 +109,39 @@ Non-English `text-transform: uppercase` goes through `LocCase.Upper`. German `ß
 
 `qps` is not in the language list and is never written to the profile. Set PlayerPrefs `os.parity.lang` to `qps` or a registry code before launch. Boot reads it once, and only when the key is set. The `qps` table is built in memory from `en.json`: Latin-1 look-alikes, padded to +40% with `~`, wrapped in `[` `]`. Digits, `{n}`, emoji, `/`, `×`, and `▶` stay as they are.
 
-Overflow audit: menu `Orbital Salvage/Tools/Localization Overflow Audit`, or batch `OrbitalSalvage.Editor.LocOverflowMenu.RunBatch` with `-loc-audit-lang` (default `qps`) and `-loc-audit-out`. It walks `*__zero.json` and `*__iphone.json` without painting. Hard findings are text outside the element, overlap with a sibling icon, and text past y 898.25 on iPhone. Shrink, ellipsis, extra wrap, and a line that is still wider than the available width are listed and are not hard. Elements with two or more runs are counted and still translated one run at a time.
+Overflow audit: menu `Orbital Salvage/Tools/Localization Overflow Audit`, or batch `OrbitalSalvage.Editor.LocOverflowMenu.RunBatch` with `-loc-audit-lang` (default `qps`) and `-loc-audit-out`. It walks `*__zero.json` and `*__iphone.json` without painting. Hard findings are text outside the element, overlap with a sibling icon, text past y 898.25 on iPhone, and `missing-glyph` (a translated character with no cmap hit in that language's chain). Shrink, ellipsis, extra wrap, and a line that is still wider than the available width are listed and are not hard. Elements with two or more runs are counted and still translated one run at a time. The glyph check ignores whitespace, controls, U+FE0F, U+200D, U+200B, and emoji graphemes drawn as sprites.
+
+## Fonts
+
+`Assets/Resources/Localization/fonts.json` is the face manifest. `LocFonts.GetChain(language, family, cssWeight)` reads it (the loader is injectable) and returns ordered face names. `OutlineFonts.ChainFor` loads those files from `Resources/Fonts/Ttf/<name>.bytes` and skips a missing file. It does not throw. A missing script face falls back to the German Latin chain.
+
+A face lists the CSS weights it serves. One weight is used for every other CSS weight. There is no synthetic bold. Fredoka still resolves 800 and 900 to 700. Nunito still resolves 400 to 700. An unknown family still resolves to Nunito 700, matching `OutlineFonts.Primary`.
+
+| Group | Display / body | Chain |
+| --- | --- | --- |
+| en | Fredoka 400/600/700, Nunito 700/800/900 | primary, NotoSansSymbols2, NotoSansSymbols |
+| de, fr, es, it, pt-PT, fil, id, uz, vi, qps | same faces | primary, Nunito at the same CSS weight when the family is Fredoka, then the two symbol fonts |
+| cjk-sc | ZCOOL KuaiLe, one weight, all CSS weights | ZCOOL, Nunito, symbols |
+| cjk-tc | Huninn, one weight | Huninn, Nunito, symbols |
+| cjk-jp | M PLUS Rounded 1c Bold (700) | M PLUS, Nunito, symbols |
+| cjk-kr | Jua, one weight | Jua, Nunito, symbols |
+| devanagari | Baloo 2 Bold (700), not shipped | Baloo 2, Nunito, symbols, or the Latin chain when the file is missing |
+| khmer | Kantumruy Pro Bold (700), not shipped | same shape |
+| arabic | Cairo Bold, slant 0 (700), not shipped | same shape |
+
+English paint does not call `LocFonts`. `HomeChrome.PaintRuns` takes the captured loop when `Loc.EnglishActive` is set and `TextLangOverrides` is empty.
+
+The 17 `btn-lang-<code>` runs use that language's display chain even when the active language is English. `ParityViewer.WriteDynamicOverrides` fills the map on the settings page and while the language modal is open. `km`, `hi`, and `ar` still draw `.notdef` boxes until those files and shaping land. Baloo 2 is not shipped in this task: Nunito already covers Vietnamese and Uzbek, and Hindi boxes are expected until shaping.
+
+To add or replace a face: put a static `glyf` `.ttf` in `Assets/Fonts`, add the name to `fonts.json` for that group, add it to `ParityAssetBuilder.OutlineExtraFonts`, and copy the bytes to `Resources/Fonts/Ttf`. Rebuild with `localization/tools/make_fonts.sh` (venv `/tmp/maze-i18n/fonts-venv`, downloads `/tmp/maze-i18n/fonts/dl`). Do not commit a variable font. `subset_fonts.py --variations wght=700` pins axes with `fontTools.varLib.instancer` before subsetting.
+
+The four CJK files are temporary endonym subsets (the endonym plus printable ASCII). A later wave replaces the file for the same group. Jua's source has no U+0060, so that one ASCII slot is absent. Ship the OFL text beside the font.
+
+| File | Bytes | Licence |
+| --- | ---: | --- |
+| `ZCOOLKuaiLe-endonym.ttf` / `.bytes` | 7004 | OFL 1.1, Copyright 2018 The ZCOOL KuaiLe Project Authors. `ZCOOLKuaiLe-OFL.txt` (4398) |
+| `Huninn-endonym.ttf` / `.bytes` | 13708 | OFL 1.1, Copyright 2025 The Huninn Project Authors. `Huninn-OFL.txt` (4382) |
+| `MPLUSRounded1c-endonym.ttf` / `.bytes` | 12208 | OFL 1.1, Copyright 2016 The Rounded M+ Project Authors. `MPLUSRounded1c-OFL.txt` (4350). Upstream has no `OFL.txt`; the sidecar is name IDs 0 and 13 plus the OFL 1.1 text |
+| `Jua-endonym.ttf` / `.bytes` | 22868 | OFL 1.1, Copyright 2018 The Jua Project Authors. `Jua-OFL.txt` (4342) |
+
+Fredoka, Nunito, and the two Noto symbol fonts are unchanged. Their OFL files were already in `Assets/Fonts`.

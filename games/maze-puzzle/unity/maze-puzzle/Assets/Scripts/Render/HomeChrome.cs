@@ -72,6 +72,8 @@ namespace OrbitalSalvage.Render
         /// </summary>
         public RenderTexture ExternalPlayfield;
         public readonly Dictionary<string, string> TextOverrides = new Dictionary<string, string>();
+        /// <summary>Element id to a language code. That run uses the code's own chain, including while English is active.</summary>
+        public readonly Dictionary<string, string> TextLangOverrides = new Dictionary<string, string>();
         public readonly Dictionary<string, double> WidthOverrides = new Dictionary<string, double>();
         /// <summary>Element id to a width as a percent of its parent. Applied only when the key is present.</summary>
         public readonly Dictionary<string, double> WidthPercentOverrides = new Dictionary<string, double>();
@@ -418,6 +420,7 @@ namespace OrbitalSalvage.Render
         bool cachedSkip;
         bool cachedExt;
         string[] snapText = Array.Empty<string>();
+        string[] snapLang = Array.Empty<string>();
         string[] snapWidth = Array.Empty<string>();
         string[] snapWidthPct = Array.Empty<string>();
         string[] snapOpacity = Array.Empty<string>();
@@ -853,6 +856,7 @@ namespace OrbitalSalvage.Render
                 && cachedExt == (ExternalPlayfield != null)
                 && cachedReflow == reflowSig
                 && SameKeys(TextOverrides, snapText)
+                && SameKeys(TextLangOverrides, snapLang)
                 && SameKeys(WidthOverrides, snapWidth)
                 && SameKeys(WidthPercentOverrides, snapWidthPct)
                 && SameKeys(OpacityOverrides, snapOpacity)
@@ -867,6 +871,7 @@ namespace OrbitalSalvage.Render
             cachedExt = ExternalPlayfield != null;
             cachedReflow = reflowSig;
             snapText = CopyKeys(TextOverrides);
+            snapLang = CopyKeys(TextLangOverrides);
             snapWidth = CopyKeys(WidthOverrides);
             snapWidthPct = CopyKeys(WidthPercentOverrides);
             snapOpacity = CopyKeys(OpacityOverrides);
@@ -956,7 +961,7 @@ namespace OrbitalSalvage.Render
                 // or the opaque full-viewport boxes that would cover it.
                 if (hole >= 0 && (k == hole || (k < hole && CoversViewport(e)))) dynamic[k] = true;
                 string id = S(e, "id");
-                if (id.Length > 0 && (TextOverrides.ContainsKey(id) || WidthOverrides.ContainsKey(id))) dynamic[k] = true;
+                if (id.Length > 0 && (TextOverrides.ContainsKey(id) || TextLangOverrides.ContainsKey(id) || WidthOverrides.ContainsKey(id))) dynamic[k] = true;
                 if (reflowSig != 0 && reflowY != null && (Math.Abs(reflowY[k]) > 0.1 || Math.Abs(reflowH[k]) > 0.1))
                     dynamic[k] = true;
             }
@@ -2224,6 +2229,7 @@ namespace OrbitalSalvage.Render
             }
             if (fontOf[k] != null) return;
             string family = FontFamily(S(e, "ff"));
+            // fontOf keeps the CSS weight and family. BindRunFont passes them to LocFonts.
             fontOf[k] = S(e, "fw") + " " + S(e, "fz") + " " + family;
             letterOf[k] = CssBox.ParseLength(S(e, "ls"));
             colorOf[k] = CssColor.Parse(S(e, "col"), Rgba.Black);
@@ -2535,25 +2541,115 @@ namespace OrbitalSalvage.Render
                     textReplacement = cut;
                 }
             }
-            // EnglishActive is one bool. When it is set, the run loop does not allocate or take another branch.
+            // EnglishActive is one bool. When it is set and no per-run font override is installed, the loop
+            // does not allocate or take another branch.
             bool english = Loc.EnglishActive;
+            if (english && TextLangOverrides.Count == 0)
+            {
+                for (int ri = 0; ri < runs.Count; ri++)
+                {
+                    var run = (Dictionary<string, object>)runs[ri];
+                    PaintCapturedRun(e, k, ri, run, replaceText, textReplacement, upper, font, ls, color, shadows, alpha, textId, textReach, 0);
+                }
+                PaintProfile.End(PaintProfile.PaintRuns);
+                return;
+            }
             if (!english && runs.Count > 1)
             {
                 int[] order = RunOrderByY(runs);
                 for (int n = 0; n < order.Length; n++)
-                    PaintLocalisedRun(e, k, order[n], runs[order[n]] as Dictionary<string, object>, runs, runs.Count, replaceText, textReplacement, upper, font, ls, color, shadows, alpha, textId, textReach, false);
+                {
+                    BindRunFont(textId, font);
+                    try
+                    {
+                        PaintLocalisedRun(e, k, order[n], runs[order[n]] as Dictionary<string, object>, runs, runs.Count, replaceText, textReplacement, upper, font, ls, color, shadows, alpha, textId, textReach, false);
+                    }
+                    finally
+                    {
+                        DisarmRunChain();
+                    }
+                }
             }
             for (int ri = 0; ri < runs.Count; ri++)
             {
                 var run = (Dictionary<string, object>)runs[ri];
-                if (!english)
+                BindRunFont(textId, font);
+                try
                 {
-                    PaintLocalisedRun(e, k, ri, run, runs, runs.Count, replaceText, textReplacement, upper, font, ls, color, shadows, alpha, textId, textReach, true);
-                    continue;
+                    if (!english)
+                    {
+                        PaintLocalisedRun(e, k, ri, run, runs, runs.Count, replaceText, textReplacement, upper, font, ls, color, shadows, alpha, textId, textReach, true);
+                        continue;
+                    }
+                    PaintCapturedRun(e, k, ri, run, replaceText, textReplacement, upper, font, ls, color, shadows, alpha, textId, textReach, 0);
                 }
-                PaintCapturedRun(e, k, ri, run, replaceText, textReplacement, upper, font, ls, color, shadows, alpha, textId, textReach, 0);
+                finally
+                {
+                    DisarmRunChain();
+                }
             }
             PaintProfile.End(PaintProfile.PaintRuns);
+        }
+
+        public void ApplyPickerFontOverrides()
+        {
+            LocFonts.FillPickerOverrides(TextLangOverrides);
+        }
+
+        /// <summary>Chain the next paint of <paramref name="elementId"/> will use. English with no override returns the shipped chain.</summary>
+        public TrueTypeFont[] ResolveRunChain(string elementId, string font)
+        {
+            bool overridden = elementId != null && TextLangOverrides.ContainsKey(elementId);
+            if (Loc.EnglishActive && !overridden)
+            {
+                int weight;
+                string family;
+                OutlineFonts.SplitCssFont(font, out weight, out family);
+                return OutlineFonts.Chain(OutlineFonts.Primary(family, weight));
+            }
+            BindRunFont(elementId, font);
+            TrueTypeFont[] chain = canvas.TextChain;
+            if (chain == null)
+            {
+                int weight;
+                string family;
+                OutlineFonts.SplitCssFont(font, out weight, out family);
+                chain = OutlineFonts.Chain(OutlineFonts.Primary(family, weight));
+            }
+            DisarmRunChain();
+            return chain;
+        }
+
+        void BindRunFont(string elementId, string font)
+        {
+            string lang = null;
+            if (TextLangOverrides.Count > 0 && elementId != null && elementId.Length > 0)
+                TextLangOverrides.TryGetValue(elementId, out lang);
+            if (string.IsNullOrEmpty(lang))
+            {
+                if (Loc.EnglishActive)
+                {
+                    DisarmRunChain();
+                    return;
+                }
+                lang = Loc.CurrentLanguage;
+            }
+            if (lang == LanguageRegistry.DefaultCode)
+            {
+                DisarmRunChain();
+                return;
+            }
+            int weight;
+            string family;
+            OutlineFonts.SplitCssFont(font, out weight, out family);
+            canvas.TextChain = OutlineFonts.ChainFor(lang, family, weight);
+            canvas.TextChainStamp = OutlineFonts.ChainStamp(lang, family, weight);
+        }
+
+        void DisarmRunChain()
+        {
+            canvas.TextChain = null;
+            canvas.TextChainStamp = 0;
         }
 
         void PaintCapturedRun(Dictionary<string, object> e, int k, int ri, Dictionary<string, object> run,

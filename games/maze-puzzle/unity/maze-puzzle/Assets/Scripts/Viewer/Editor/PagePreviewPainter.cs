@@ -34,8 +34,9 @@ namespace OrbitalSalvage.Viewer.Editor
             var previous = RenderTexture.active;
             try
             {
-                if (rasterScale >= 1) chrome.ResizeRaster(rasterScale);
-                if (prepare != null) prepare(chrome);
+            if (rasterScale >= 1) chrome.ResizeRaster(rasterScale);
+            if (specId == "settings_modal_language") chrome.ApplyPickerFontOverrides();
+            if (prepare != null) prepare(chrome);
                 if (capturePose) chrome.Draw();
                 else chrome.Draw(animationTimeMs);
 

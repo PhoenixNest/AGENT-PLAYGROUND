@@ -17,18 +17,27 @@ namespace OrbitalSalvage.Render
         {
             public readonly string text;
             public readonly TrueTypeFont font;
-            public readonly int px, ls;
-            public LayoutKey(string text, TrueTypeFont font, int px, int ls) { this.text = text; this.font = font; this.px = px; this.ls = ls; }
-            public bool Equals(LayoutKey o) => px == o.px && ls == o.ls && font == o.font && text == o.text;
+            public readonly int px, ls, chain;
+            public LayoutKey(string text, TrueTypeFont font, int px, int ls, int chain)
+            {
+                this.text = text; this.font = font; this.px = px; this.ls = ls; this.chain = chain;
+            }
+            public bool Equals(LayoutKey o) => px == o.px && ls == o.ls && chain == o.chain && font == o.font && text == o.text;
             public override bool Equals(object obj) => obj is LayoutKey o && Equals(o);
             public override int GetHashCode()
             {
                 int h = text == null ? 0 : text.GetHashCode();
                 h = (h * 397) ^ (font == null ? 0 : font.GetHashCode());
                 h = (h * 397) ^ px;
-                return (h * 397) ^ ls;
+                h = (h * 397) ^ ls;
+                if (chain != 0) h = (h * 397) ^ chain;
+                return h;
             }
         }
+
+        /// <summary>When set, outline layout uses this chain instead of <see cref="OutlineFonts.Chain(TrueTypeFont)"/>. Null keeps the English path.</summary>
+        public TrueTypeFont[] TextChain;
+        public int TextChainStamp;
 
         sealed class LayoutHit
         {
@@ -62,24 +71,29 @@ namespace OrbitalSalvage.Render
         {
             if (string.IsNullOrEmpty(text)) return 0;
             var spec = ParseFont(state.font);
-            var primary = OutlineFonts.Primary(spec.family, spec.weight);
-            return Layout(text, spec.px, primary, true);
+            if (TextChain == null || TextChain.Length == 0)
+            {
+                var primary = OutlineFonts.Primary(spec.family, spec.weight);
+                return Layout(text, spec.px, primary, null, true);
+            }
+            return Layout(text, spec.px, TextChain[0], TextChain, true);
         }
 
         /// <summary>
         /// Lays the string out into <see cref="laid"/> / <see cref="emojiPens"/> / <see cref="emojiImages"/> and returns the total advance.
         /// </summary>
-        double Layout(string text, double px, TrueTypeFont primary, bool measureOnly)
+        double Layout(string text, double px, TrueTypeFont primary, TrueTypeFont[] chainOverride, bool measureOnly)
         {
             PaintProfile.Begin(PaintProfile.Layout);
-            var key = new LayoutKey(text, primary, (int)Math.Round(px * 64.0), (int)Math.Round(state.letterSpacing * 64.0));
+            int stamp = chainOverride == null ? 0 : (TextChainStamp == 0 ? 1 : TextChainStamp);
+            var key = new LayoutKey(text, primary, (int)Math.Round(px * 64.0), (int)Math.Round(state.letterSpacing * 64.0), stamp);
             if (layoutCache.TryGetValue(key, out var hit))
             {
                 if (!measureOnly) ApplyLayoutHit(hit);
                 PaintProfile.End(PaintProfile.Layout);
                 return hit.width;
             }
-            var chain = OutlineFonts.Chain(primary);
+            var chain = chainOverride != null && chainOverride.Length > 0 ? chainOverride : OutlineFonts.Chain(primary);
             CanvasEmoji.SplitRuns(text, runs);
             laid.Clear(); emojiPens.Clear(); emojiImages.Clear();
             double pen = 0;
@@ -157,7 +171,7 @@ namespace OrbitalSalvage.Render
         public double FontAscent()
         {
             var spec = ParseFont(state.font);
-            var primary = OutlineFonts.Primary(spec.family, spec.weight);
+            var primary = TextChain != null && TextChain.Length > 0 ? TextChain[0] : OutlineFonts.Primary(spec.family, spec.weight);
             return RoundHalfUp(primary.ascender * spec.px / primary.unitsPerEm);
         }
 
@@ -170,9 +184,19 @@ namespace OrbitalSalvage.Render
             var st = state;
             if (st.globalAlpha <= 0 || !st.ctm.IsInvertible) { PaintProfile.End(PaintProfile.Layout); return; }
             var spec = ParseFont(st.font);
-            var primary = OutlineFonts.Primary(spec.family, spec.weight);
+            TrueTypeFont primary;
             double px = spec.px;
-            double total = Layout(text, px, primary, false);
+            double total;
+            if (TextChain == null || TextChain.Length == 0)
+            {
+                primary = OutlineFonts.Primary(spec.family, spec.weight);
+                total = Layout(text, px, primary, null, false);
+            }
+            else
+            {
+                primary = TextChain[0];
+                total = Layout(text, px, primary, TextChain, false);
+            }
 
             double startX = x;
             string align = st.textAlign;

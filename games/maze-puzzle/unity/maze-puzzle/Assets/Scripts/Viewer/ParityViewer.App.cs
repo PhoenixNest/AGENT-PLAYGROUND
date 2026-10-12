@@ -430,10 +430,20 @@ namespace OrbitalSalvage.Viewer
             SyncApp(false);
         }
 
+        bool ModalOpen(string id)
+        {
+            if (app == null || string.IsNullOrEmpty(id)) return false;
+            var open = app.OpenModals();
+            for (int i = 0; i < open.Count; i++)
+                if (open[i] == id) return true;
+            return false;
+        }
+
         /// <summary>Copy the controller's live text, shop footers, and maps stamp onto a chrome that may not be on screen.</summary>
         void WriteDynamicOverrides(HomeChrome chrome, string page, string templateId)
         {
             chrome.TextOverrides.Clear();
+            chrome.TextLangOverrides.Clear();
             chrome.WidthOverrides.Clear();
             chrome.WidthPercentOverrides.Clear();
             chrome.OpacityOverrides.Clear();
@@ -465,6 +475,18 @@ namespace OrbitalSalvage.Viewer
                     double age = app.NowMs - (toast.ExpiresAtMs - AppController.ToastMs);
                     if (age < 0) age = 0;
                     chrome.Toasts.Add(new HomeChrome.ToastPaint { Text = toast.Text, AgeMs = age });
+                }
+            }
+            if (page == "settings"
+                || (templateId != null && templateId.IndexOf("settings_modal_language", StringComparison.Ordinal) >= 0)
+                || ModalOpen("modal-language"))
+            {
+                LocFonts.FillPickerOverrides(chrome.TextLangOverrides);
+                string endonym;
+                if (chrome.TextOverrides.TryGetValue("settings-language-value", out endonym))
+                {
+                    string code = LocFonts.CodeForEndonym(endonym);
+                    if (!string.IsNullOrEmpty(code)) chrome.TextLangOverrides["settings-language-value"] = code;
                 }
             }
             if (page == "maps")
