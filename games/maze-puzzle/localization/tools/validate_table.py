@@ -692,8 +692,8 @@ def glyph_missing(text: str, covered: set) -> list:
     return missing
 
 
-def add(findings, severity, kind, key, message):
-    findings.append(Finding(severity, kind, key, message))
+def add(findings, severity, kind, key, message, reason=""):
+    findings.append(Finding(severity, kind, key, message, reason))
 
 
 def check_pair(
@@ -732,7 +732,18 @@ def check_pair(
     if target == "":
         add(findings, "error", "empty", ident, "empty translation")
     elif target == source and not allowed_identical(source, do_not, lang, glossary):
-        add(findings, "error", "untranslated", ident, "translation is a copy of the English string")
+        reason = lookup_fit_exception(ident, table_flags.get("identical_ok") or {})
+        if reason is None:
+            add(findings, "error", "untranslated", ident, "translation is a copy of the English string")
+        else:
+            add(
+                findings,
+                "accepted",
+                "identical",
+                ident,
+                "accepted identical copy of English",
+                reason or "accepted identical copy",
+            )
 
     if placeholder_indexes(source) != placeholder_indexes(target):
         add(findings, "error", "placeholder", ident, "placeholder indexes differ")
@@ -1073,7 +1084,11 @@ def validate(english, translation, lang, options) -> list:
         hashes = meta.get("sourceHashes")
 
     covered = options.get("covered")
-    table_flags = {"kana": False, "aliases": options.get("aliases") or []}
+    table_flags = {
+        "kana": False,
+        "aliases": options.get("aliases") or [],
+        "identical_ok": options.get("identical_ok") or {},
+    }
     keys = set(spec_en) | set(spec_tr)
     for key in sorted(keys, key=ordinal_bytes):
         check_pair(
@@ -1183,19 +1198,29 @@ def load_fit_exceptions(path: Path) -> dict:
     The file is a list, or an object with `keys` and an optional shared
     `reason`. Each key may be a string or `{"key", "reason"}`.
     """
+    return load_reason_map(path, "fit exceptions")
+
+
+def load_identical_ok(path: Path) -> dict:
+    """Map a key that may stay English (`Hangar` or `spec:Hangar`) to a reason."""
+    return load_reason_map(path, "identical-ok")
+
+
+def load_reason_map(path: Path, label: str) -> dict:
+    """Read a list of `{key, reason}`, or an object with `keys` and a shared reason."""
     data = json.loads(path.read_text(encoding="utf-8"))
     shared = ""
     if isinstance(data, dict):
         shared = (data.get("reason") or "").strip()
         items = data.get("keys")
         if items is None:
-            raise ValueError("fit exceptions object needs a keys list")
+            raise ValueError(f"{label} object needs a keys list")
     elif isinstance(data, list):
         items = data
     else:
-        raise ValueError("fit exceptions must be a list or an object")
+        raise ValueError(f"{label} must be a list or an object")
     if not isinstance(items, list):
-        raise ValueError("fit exceptions keys must be a list")
+        raise ValueError(f"{label} keys must be a list")
     found = {}
     for item in items:
         if isinstance(item, str):
@@ -1205,9 +1230,9 @@ def load_fit_exceptions(path: Path) -> dict:
             key = (item.get("key") or "").strip()
             reason = (item.get("reason") or shared).strip()
         else:
-            raise ValueError("fit exception entry must be a string or an object")
+            raise ValueError(f"{label} entry must be a string or an object")
         if not key:
-            raise ValueError("fit exception entry is missing a key")
+            raise ValueError(f"{label} entry is missing a key")
         found[key] = reason
     return found
 
@@ -1300,9 +1325,14 @@ def skeleton(lang: str, english: dict, hashes: bool = True) -> dict:
     return table
 
 
+def _quiet(item) -> bool:
+    return item.severity in ("suppressed", "accepted")
+
+
 def summarise(findings: list) -> str:
-    visible = [item for item in findings if item.severity != "suppressed"]
+    visible = [item for item in findings if not _quiet(item)]
     suppressed = [item for item in findings if item.severity == "suppressed"]
+    accepted = [item for item in findings if item.severity == "accepted"]
     errors = sum(1 for item in visible if item.severity == "error")
     warnings = sum(1 for item in visible if item.severity == "warning")
     counts = {}
@@ -1318,17 +1348,24 @@ def summarise(findings: list) -> str:
         for reason in sorted(grouped):
             keys = sorted(grouped[reason], key=ordinal_bytes)
             lines.append("suppressed-list: " + ", ".join(keys) + " — " + reason)
+    if accepted:
+        parts = []
+        for item in sorted(accepted, key=lambda row: ordinal_bytes(row.key)):
+            parts.append(f"{item.key} ({item.reason})" if item.reason else item.key)
+        lines.append("accepted identical: " + "; ".join(parts))
     return "\n".join(lines)
 
 
 def findings_json(lang: str, findings: list) -> dict:
-    visible = [item for item in findings if item.severity != "suppressed"]
+    visible = [item for item in findings if not _quiet(item)]
     suppressed = [item for item in findings if item.severity == "suppressed"]
+    accepted = [item for item in findings if item.severity == "accepted"]
     return {
         "lang": lang,
         "errors": sum(1 for item in visible if item.severity == "error"),
         "warnings": sum(1 for item in visible if item.severity == "warning"),
         "suppressed": len(suppressed),
+        "acceptedIdentical": len(accepted),
         "findings": [
             {
                 "severity": item.severity,
@@ -1347,6 +1384,16 @@ def findings_json(lang: str, findings: list) -> dict:
                 "reason": item.reason,
             }
             for item in suppressed
+        ],
+        "acceptedIdenticalFindings": [
+            {
+                "severity": "accepted",
+                "kind": item.kind,
+                "key": item.key,
+                "message": item.message,
+                "reason": item.reason,
+            }
+            for item in accepted
         ],
     }
 
@@ -1398,6 +1445,13 @@ def run_validate(args) -> int:
         for key in group:
             fit_exceptions.setdefault(key, "ignored with --ignore-fit-keys")
 
+    identical_path = LOC_DIR / "notes" / f"{lang}-identical-ok.json"
+    try:
+        identical_ok = load_identical_ok(identical_path) if identical_path.is_file() else {}
+    except (json.JSONDecodeError, ValueError, OSError) as exc:
+        print(f"invalid identical-ok file: {exc}", file=sys.stderr)
+        return 2
+
     options = {
         "fail_ratio": args.max_ratio if args.max_ratio is not None else FAIL_RATIO,
         "glossary": parse_glossary(glossary_path) if glossary_path.is_file() else [],
@@ -1408,6 +1462,7 @@ def run_validate(args) -> int:
         "raw": raw,
         "skip_glyphs": args.no_glyph,
         "fit_exceptions": fit_exceptions,
+        "identical_ok": identical_ok,
         "register_check": args.register_check,
     }
     pre = []
@@ -1421,7 +1476,7 @@ def run_validate(args) -> int:
     print(f"table: {table_path}")
     print(summarise(findings))
     for item in findings:
-        if item.severity == "suppressed" and not args.show_suppressed:
+        if item.severity in ("suppressed", "accepted") and not args.show_suppressed:
             continue
         print(item.line())
     if args.json:
@@ -1459,7 +1514,7 @@ def main(argv=None) -> int:
     parser.add_argument(
         "--show-suppressed",
         action="store_true",
-        help="print fit warnings that an allowlist suppressed",
+        help="print suppressed fit warnings and accepted identical copies",
     )
     parser.add_argument(
         "--register-check",
