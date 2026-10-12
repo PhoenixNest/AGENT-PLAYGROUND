@@ -186,12 +186,13 @@ namespace OrbitalSalvage.Render.Tests
         [Test]
         public void OverlappingIcon_StaysPutUntilTheTranslationIsWider()
         {
+            // The icon sits in the middle of the English run, not on its first letter.
             var input = new TextFit.Input
             {
                 RunX = 20, RunY = 10, RunW = 40, RunH = 16,
                 ElX = 0, ElY = 0, ElW = 120, ElH = 20,
                 FontPx = 14, SidePad = 4,
-                Icons = new[] { new TextFit.Icon { Index = 2, X = 12, Y = 10, W = 16, H = 16 } }
+                Icons = new[] { new TextFit.Icon { Index = 2, X = 30, Y = 10, W = 12, H = 16 } }
             };
             TextFit.Layout kept = TextFit.Plan(input, (px, ls) => 30);
             Assert.IsTrue(kept.KeepX);
@@ -199,7 +200,46 @@ namespace OrbitalSalvage.Render.Tests
 
             TextFit.Layout pushed = TextFit.Plan(input, (px, ls) => 80);
             Assert.IsFalse(pushed.KeepX);
-            Assert.GreaterOrEqual(pushed.X, 28 - 0.01);
+            Assert.GreaterOrEqual(pushed.X, 42 - 0.01);
+        }
+
+        [Test]
+        public void PrecedingIcon_ClearsEvenWhenTheTranslationIsShorter()
+        {
+            // Daily countdown: the alarm shares the run's left edge and the English string has a leading space.
+            var clock = new TextFit.Input
+            {
+                RunX = 188.969, RunY = 165, RunW = 79.313, RunH = 30,
+                ElX = 180.969, ElY = 163, ElW = 116.078, ElH = 34,
+                FontPx = 10.5, SidePad = 16, LeadPad = 3,
+                Icons = new[] { new TextFit.Icon { Index = 146, X = 188.969, Y = 166.813, W = 10.5, H = 10.5 } }
+            };
+            TextFit.Layout shortText = TextFit.Plan(clock, (px, ls) => 60);
+            Assert.IsFalse(shortText.KeepX);
+            Assert.GreaterOrEqual(shortText.X, 188.969 + 10.5 + 3 - 0.01);
+            Assert.Less(shortText.X, 188.969 + 10.5 + 3 + 1);
+
+            // Coin flush with the second line: the captured gap is the leading space.
+            var coin = new TextFit.Input
+            {
+                RunX = 132.391, RunY = 202.75, RunW = 72.328, RunH = 15,
+                ElX = 92, ElY = 190, ElW = 175.781, ElH = 27.5,
+                FontPx = 11, SidePad = 16, LeadPad = 4,
+                Icons = new[] { new TextFit.Icon { Index = 159, X = 121.391, Y = 204.125, W = 11, H = 11 } }
+            };
+            TextFit.Layout word = TextFit.Plan(coin, (px, ls) => 70);
+            Assert.GreaterOrEqual(word.X, 132.391 + 4 - 0.01);
+
+            // A dock badge already overlaps its icon. A shorter label does not slide further left.
+            var badge = new TextFit.Input
+            {
+                RunX = 160.041, RunY = 839.874, RunW = 29.855, RunH = 11.252,
+                ElX = 152.881, ElY = 837.828, ElW = 44.175, ElH = 15.343,
+                FontPx = 9, SidePad = 16,
+                Icons = new[] { new TextFit.Icon { Index = 73, X = 151.75, Y = 843, W = 24, H = 24, RowSibling = true } }
+            };
+            TextFit.Layout label = TextFit.Plan(badge, (px, ls) => 18);
+            Assert.GreaterOrEqual(label.X, 160.041 - 0.01);
         }
     }
 
@@ -298,13 +338,12 @@ namespace OrbitalSalvage.Render.Tests
             Debug.Log("[loc-audit] " + report.Text.Split('\n')[0]);
             Assert.AreEqual(0, report.HardWrapped, "a single-line control wrapped");
             // HARD is text outside the element, overlap with a sibling icon, past the home-indicator band,
-            // or a second line inside a single-line control. hard-wider stays reported and does not fail.
-            // An icon that already overlaps the English run is reserved only when the translation is wider.
+            // a second line inside a single-line control, or icon-overlap. hard-wider stays reported and does not fail.
             var whitelist = new HashSet<string>();
             for (int i = 0; i < report.Findings.Count; i++)
             {
                 LocOverflowAudit.Finding f = report.Findings[i];
-                if (f.Kind != "hard-outside" && f.Kind != "hard-overlap" && f.Kind != "hard-band" && f.Kind != "wrapped-in-control") continue;
+                if (f.Kind != "hard-outside" && f.Kind != "hard-overlap" && f.Kind != "hard-band" && f.Kind != "wrapped-in-control" && f.Kind != "icon-overlap") continue;
                 string key = f.File + "|" + f.ElementId + "|" + f.Kind;
                 Assert.IsTrue(whitelist.Contains(key), "hard " + key + " " + f.Detail);
             }

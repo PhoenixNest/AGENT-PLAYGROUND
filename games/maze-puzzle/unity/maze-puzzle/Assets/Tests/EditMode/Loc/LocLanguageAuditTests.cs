@@ -28,7 +28,8 @@ namespace OrbitalSalvage.Loc.Tests
             "hard-band",
             "hard-wider",
             "wrapped-in-control",
-            "missing-glyph"
+            "missing-glyph",
+            "icon-overlap"
         };
 
         static readonly string[] PlayfieldKeys =
