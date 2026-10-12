@@ -12,6 +12,7 @@ namespace OrbitalSalvage.Loc
         public int FileCount;
         public List<string> SpecKeys = new List<string>();
         public List<string> SkipKeys = new List<string>();
+        public List<string> StrKeys = new List<string>();
         public string EnglishJson = "";
         public string Csv = "";
     }
@@ -81,16 +82,21 @@ namespace OrbitalSalvage.Loc
             LanguageInfo english;
             if (LanguageRegistry.TryGet(LanguageRegistry.DefaultCode, out english)) endonym = english.Endonym;
 
+            List<KeyValuePair<string, string>> strPairs = LocStrings.SortedPairs();
+            var strKeys = new List<string>(strPairs.Count);
+            for (int i = 0; i < strPairs.Count; i++) strKeys.Add(strPairs[i].Key);
+
             var scan = new SpecScan();
             scan.FileCount = files.Length;
             scan.SpecKeys = specKeys;
             scan.SkipKeys = skipKeys;
+            scan.StrKeys = strKeys;
             scan.EnglishJson = LocJson.WriteTable(
                 LanguageRegistry.DefaultCode,
                 endonym,
                 specKeys,
                 delegate (string key) { return key; },
-                null,
+                strPairs,
                 skipKeys);
             scan.Csv = WriteCsv(specKeys, rows);
             return scan;
@@ -175,7 +181,7 @@ namespace OrbitalSalvage.Loc
         static string WriteCsv(List<string> specKeys, Dictionary<string, Row> rows)
         {
             var sb = new StringBuilder();
-            sb.Append("key,kind,files,element_ids,element_classes,fz,uppercase,max_width,chars,hasEmoji,hasPlaceholderLike,group,run_index,notes\n");
+            sb.Append("key,kind,files,element_ids,element_classes,fz,uppercase,max_width,chars,hasEmoji,hasPlaceholderLike,group,run_index,notes,placeholder_count,max_chars\n");
             for (int i = 0; i < specKeys.Count; i++)
             {
                 Row row = rows[specKeys[i]];
@@ -210,6 +216,47 @@ namespace OrbitalSalvage.Loc
                 Csv(sb, row.RunIndexField());
                 sb.Append(',');
                 Csv(sb, row.Notes());
+                sb.Append(',');
+                sb.Append(',');
+                sb.Append('\n');
+            }
+            LocStringDef[] strRows = LocStrings.SortedDefs();
+            for (int i = 0; i < strRows.Length; i++)
+            {
+                LocStringDef def = strRows[i];
+                string english = def.English ?? "";
+                int placeholders = LocText.PlaceholderIndexes(english).Count;
+                Csv(sb, def.Key);
+                sb.Append(',');
+                Csv(sb, "str");
+                sb.Append(',');
+                Csv(sb, "");
+                sb.Append(',');
+                Csv(sb, "");
+                sb.Append(',');
+                Csv(sb, "");
+                sb.Append(',');
+                Csv(sb, "");
+                sb.Append(',');
+                Csv(sb, "");
+                sb.Append(',');
+                Csv(sb, "");
+                sb.Append(',');
+                Csv(sb, CodePoints(english).ToString(CultureInfo.InvariantCulture));
+                sb.Append(',');
+                Csv(sb, LocText.ContainsEmoji(english) ? "true" : "false");
+                sb.Append(',');
+                Csv(sb, (placeholders > 0 || LocText.HasDigit(english)) ? "true" : "false");
+                sb.Append(',');
+                Csv(sb, "");
+                sb.Append(',');
+                Csv(sb, "");
+                sb.Append(',');
+                Csv(sb, def.Context);
+                sb.Append(',');
+                Csv(sb, placeholders.ToString(CultureInfo.InvariantCulture));
+                sb.Append(',');
+                Csv(sb, def.MaxChars > 0 ? def.MaxChars.ToString(CultureInfo.InvariantCulture) : "");
                 sb.Append('\n');
             }
             return sb.ToString();

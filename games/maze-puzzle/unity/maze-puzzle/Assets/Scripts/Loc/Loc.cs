@@ -12,8 +12,9 @@ namespace OrbitalSalvage.Loc
     /// String tables. <see cref="CurrentLanguage"/> is <c>en</c> unless that other code's table
     /// parsed successfully. English spec lookup always returns false so painted English runs,
     /// including their layout whitespace, stay untouched. A missing non-English key falls back
-    /// to English (spec: return false; str: the English value, or the key) and is recorded in
-    /// <see cref="MissingKeys"/> up to <see cref="MissingKeyLimit"/>.
+    /// to English (spec: return false; str: the loaded English table, then <see cref="LocStrings"/>,
+    /// then the key) and is recorded in <see cref="MissingKeys"/> up to <see cref="MissingKeyLimit"/>.
+    /// English <see cref="Tr(string)"/> reads <see cref="LocStrings"/> and does not load <c>en.json</c>.
     /// </summary>
     public static class Loc
     {
@@ -249,13 +250,15 @@ namespace OrbitalSalvage.Loc
                     if (current.Str.TryGetValue(key, out value)) return value ?? "";
                 }
                 RecordMiss(key);
+                LocTable english;
+                if (TryGetTable(LanguageRegistry.DefaultCode, out english))
+                {
+                    string value;
+                    if (english.Str.TryGetValue(key, out value)) return value ?? "";
+                }
             }
-            LocTable english;
-            if (TryGetTable(LanguageRegistry.DefaultCode, out english))
-            {
-                string value;
-                if (english.Str.TryGetValue(key, out value)) return value ?? "";
-            }
+            string fromRegistry;
+            if (LocStrings.TryGet(key, out fromRegistry)) return fromRegistry;
             return key;
         }
 

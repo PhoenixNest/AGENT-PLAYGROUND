@@ -161,6 +161,29 @@ namespace OrbitalSalvage.Loc.Tests
             Assert.AreEqual(zero.Csv, File.ReadAllText(csvPath));
             Assert.IsFalse(zero.EnglishJson.Contains("\r"));
 
+            Assert.AreEqual(LocStrings.Count, zero.StrKeys.Count);
+            Assert.Greater(zero.StrKeys.Count, 0);
+            var strOrder = new List<string>(zero.StrKeys);
+            strOrder.Sort(System.StringComparer.Ordinal);
+            CollectionAssert.AreEqual(strOrder, zero.StrKeys);
+            CollectionAssert.Contains(zero.StrKeys, "loading.tip.3");
+            CollectionAssert.Contains(zero.StrKeys, "fx.shred");
+            CollectionAssert.DoesNotContain(zero.SpecKeys, "loading.tip.3");
+            int specAt = zero.EnglishJson.IndexOf("\"spec\"", System.StringComparison.Ordinal);
+            int strAt = zero.EnglishJson.IndexOf("\"str\"", System.StringComparison.Ordinal);
+            Assert.Greater(specAt, 0);
+            Assert.Greater(strAt, specAt);
+            StringAssert.Contains("\"loading.tip.3\"", zero.EnglishJson);
+            var rows = Index(zero.Csv);
+            Assert.AreEqual("str", rows["loading.tip.3"]["kind"]);
+            Assert.AreEqual("0", rows["loading.tip.3"]["placeholder_count"]);
+            Assert.AreEqual("true", rows["fx.shred"]["hasPlaceholderLike"]);
+            Assert.AreEqual("1", rows["fx.shred"]["placeholder_count"]);
+            Assert.AreEqual("6", rows["dock.shop.free"]["max_chars"]);
+            StringAssert.Contains("Loading screen tip", rows["loading.tip.3"]["notes"]);
+            Assert.AreEqual("", rows["ORBITAL SALVAGE"]["placeholder_count"]);
+            Assert.AreEqual("", rows["ORBITAL SALVAGE"]["max_chars"]);
+
             string editor = File.ReadAllText(Path.Combine(Application.dataPath, "Scripts", "Editor", "LocExtract.cs"));
             StringAssert.Contains("Orbital Salvage/Tools/Extract Localization Spec Strings", editor);
             StringAssert.Contains("RunBatch", editor);

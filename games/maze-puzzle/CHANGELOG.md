@@ -13,6 +13,14 @@ Paths written as `tools/parity/...` in entries dated before 2026-10-08 are the l
 
 ### Added
 
+#### C# string registry (2026-10-12)
+
+- User-visible C# literals (toasts, loading tips, mission and pause lines, shop footers, gift copy, HUD quota, daily countdown, ring hub words, gate badges, and floating words) now go through `Loc.Tr`. English is the `LocStrings` registry, so it does not read `en.json`. A missing translation falls back to that English. Placeholder formatting stays invariant, and numbers still use `JsNumber.ToString`.
+- The extractor writes the `str` section of `en.json` from the registry in ordinal key order, and appends `kind=str` rows to `localization/key-index.csv` (context note, placeholder count, max-character hint, emoji flag). Spec keys are unchanged. Two CSV columns, `placeholder_count` and `max_chars`, are blank on spec rows.
+- `LocHardcodedStringTests` scans the UI sources and fails on a new English literal that is not `Loc.Tr` or in `localization/hardcoded-allowlist.txt`. `LocStringTests` checks registry use, byte-identical English, and that `qps` changes the app overrides while keeping numeric arguments. Gate badges and the HUD quota cache the resolved string per language version so a steady English frame does not allocate.
+- The registry is 81 keys (loading 5, toast 13, home 13, hud 3, unit 3, dock 4, gift 8, pause 1, shop 4, daily 1, fx 26). Logic catalog, level, world, achievement, and daily-shift tables are still English.
+- Verified with Unity 6000.4.0f1 EditMode. Extract wrote spec=355, str=81, skip=50, files=45. Focused filter (AppFlowTests, ShopGiftTests, StartLevelTests, EconomyGoldenTests, SpecExtractorTests, LocTableTests, LocStringTests, LocHardcodedStringTests, GameplayLabelTests): 45 passed, 0 failed. Full suite: 507 passed, 83 failed, 3 skipped, 593 total. The 83 failures are the known set (73 ReferenceComparisonTests, 9 ReferenceGateTests, 1 QuotaAndModalTests.GameAndPauseStills_MatchKnownHashes).
+
 #### Settings language picker and legal rows (2026-10-12)
 
 - Settings gains a Language row and a User Agreement row. Change opens `settings_modal_language`, a two-column grid of the 17 endonyms with no scroll. The current language is a leading `✓ ` (`U+2713`) on that button. The English capture marks English. Unity overrides `settings-language-value` and the two marker buttons from the saved code. `HomeChrome.PaintRuns` is unchanged, so a non-English marker stays at the captured run origin.
