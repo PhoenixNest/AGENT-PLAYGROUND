@@ -77,6 +77,8 @@ namespace OrbitalSalvage.Viewer
                 ? (IProfileStore)new MemoryProfileStore()
                 : new FileProfileStore(Application.persistentDataPath);
             app = new AppController(store, clock, new PlayerAudio(gameObject));
+            // Kids Category parental gate is not applied. See LegalLinks.
+            app.OpenUrl = Application.OpenURL;
             // Earliest point after the profile load. With only the English table present this
             // does not persist a language and does not change any painted string.
             Loc.SetLoader(new ResourcesLocTableLoader());

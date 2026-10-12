@@ -39,7 +39,7 @@ namespace OrbitalSalvage.App
 
         static readonly string[] ModalOrder =
         {
-            "modal-pause", "modal-privacy", "modal-reset-confirm", "modal-debrief", "modal-defeat"
+            "modal-pause", "modal-privacy", "modal-language", "modal-reset-confirm", "modal-debrief", "modal-defeat"
         };
 
         readonly IAppClock _clock;
@@ -50,6 +50,12 @@ namespace OrbitalSalvage.App
         readonly HashSet<string> _modals = new HashSet<string>();
         readonly List<ToastModel> _toasts = new List<ToastModel>();
         readonly Dictionary<string, ElementOverride> _elements = new Dictionary<string, ElementOverride>();
+
+        /// <summary>
+        /// Opens an external URL. The viewer sets this to <c>Application.OpenURL</c>. Tests record the string.
+        /// Null does nothing. A Kids Category parental gate is not applied here; see <see cref="LegalLinks"/>.
+        /// </summary>
+        public Action<string> OpenUrl;
 
         int _timerSeq;
         int _tipIdx;
@@ -447,12 +453,21 @@ namespace OrbitalSalvage.App
                     ClaimMasterBonus();
                     break;
                 case "btn-open-privacy":
-                    _modals.Add("modal-privacy");
-                    Rebuild();
+                    OpenLegal(LegalLinks.PrivacyPolicy);
+                    break;
+                case "btn-open-user-agreement":
+                    OpenLegal(LegalLinks.UserAgreement);
                     break;
                 case "btn-close-privacy":
                 case "btn-dismiss-privacy":
                     CloseModal("modal-privacy");
+                    break;
+                case "btn-open-language":
+                    _modals.Add("modal-language");
+                    Rebuild();
+                    break;
+                case "btn-close-language":
+                    CloseModal("modal-language");
                     break;
                 case "btn-reset-game-data":
                     _modals.Add("modal-reset-confirm");
@@ -475,8 +490,32 @@ namespace OrbitalSalvage.App
                     SetHaptics(!Economy.Profile.Settings.HapticsEnabled);
                     break;
                 default:
-                    return;
+                    if (!TryLanguageButton(id)) return;
+                    break;
             }
+        }
+
+        /// <summary>
+        /// A language button saves the registry code and closes the picker, including a tap on the
+        /// code that is already saved. A code whose table is missing is still saved;
+        /// <see cref="Loc.CurrentLanguage"/> stays English until that table loads, and the marker
+        /// follows the saved code.
+        /// </summary>
+        bool TryLanguageButton(string id)
+        {
+            if (string.IsNullOrEmpty(id) || !id.StartsWith(LanguageMarker.ButtonPrefix, StringComparison.Ordinal))
+                return false;
+            string code = id.Substring(LanguageMarker.ButtonPrefix.Length);
+            if (LanguageRegistry.IsSupported(code)) SetLanguage(code);
+            CloseModal("modal-language");
+            return true;
+        }
+
+        void OpenLegal(string url)
+        {
+            Action<string> open = OpenUrl;
+            if (open == null || string.IsNullOrEmpty(url)) return;
+            open(url);
         }
 
         public void ClickClass(string token, int index)
@@ -1120,6 +1159,7 @@ namespace OrbitalSalvage.App
             if (HintHidden && HintAgeMs >= HintMs + HintFadeMs) Hide("gesture-hint");
             Skin("home-diorama-ring", Equipped("ring"));
             Skin("home-diorama-nibbles", Equipped("singularity"));
+            ApplyLanguageOverrides();
 
             string stamp;
             TemplateId = ChooseTemplate(canMaster, out stamp);
@@ -1184,6 +1224,7 @@ namespace OrbitalSalvage.App
                 if (_modals.Contains("modal-debrief")) modal = "debrief";
                 else if (_modals.Contains("modal-defeat")) modal = "defeat";
                 else if (_modals.Contains("modal-pause")) modal = "pause";
+                else if (_modals.Contains("modal-language")) modal = "language";
                 else if (_modals.Contains("modal-privacy")) modal = "privacy";
                 else if (_modals.Contains("modal-reset-confirm")) modal = "reset";
             }
@@ -1271,6 +1312,29 @@ namespace OrbitalSalvage.App
             if (id == "singularity_sleepy") return "💤";
             if (id == "singularity_confetti") return "🎉";
             return "😋";
+        }
+
+        /// <summary>
+        /// The settings value is the saved endonym. The picker capture marks English; a different
+        /// saved code removes that mark and adds it on the current button. Other pages are left
+        /// alone so their override set stays empty. Run positions are the captured ones.
+        /// <c>HomeChrome.PaintRuns</c> is not changed here.
+        /// </summary>
+        void ApplyLanguageOverrides()
+        {
+            if (CurrentPage != "settings" && !_modals.Contains("modal-language")) return;
+            string saved = "";
+            if (Economy.Profile != null && Economy.Profile.Settings != null && Economy.Profile.Settings.Language != null)
+                saved = Economy.Profile.Settings.Language;
+            string code = LanguageRegistry.IsSupported(saved) ? saved : LanguageRegistry.DefaultCode;
+            LanguageInfo current;
+            if (!LanguageRegistry.TryGet(code, out current)) return;
+            Text("settings-language-value", current.Endonym);
+            Text(LanguageMarker.ButtonId(current.Code), LanguageMarker.Mark(current.Endonym));
+            if (current.Code == LanguageRegistry.DefaultCode) return;
+            LanguageInfo english;
+            if (!LanguageRegistry.TryGet(LanguageRegistry.DefaultCode, out english)) return;
+            Text(LanguageMarker.ButtonId(english.Code), english.Endonym);
         }
 
         void Text(string id, string value)
