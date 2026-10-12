@@ -53,6 +53,8 @@ A normalised run is not translated when it has no Unicode letter. That skips dig
 
 An endonym from `LanguageRegistry`, and that same endonym with the current-language marker (`✓ ` plus the endonym), is also `doNotTranslate`. Endonyms are never translated. The placeholder legal URLs are not spec strings. They live in `LegalLinks` (App) and `LEGAL_LINKS` in `web/main.js`.
 
+`doNotTranslate` is the English list. `merge_table.py` recopies it and drops anything a language added by hand. A key that should stay identical to English (German `Hangar` and `Reset`, French `Hangar`, Indonesian `level` and `orbit`) is listed in `localization/notes/<code>-identical-ok.json` as `{"key", "reason"}`. `validate_table.py` then accepts that copy and prints it on the `accepted identical` summary line. `--show-suppressed` lists the rows.
+
 ## CSV
 
 `localization/key-index.csv` is the translator handoff, one row per spec key and then one row per `str` key. Spec keys stay in ordinal order. `str` keys follow, also ordinal.
@@ -72,7 +74,7 @@ Per-frame playfield words use `LocMemo` or `LocNumCache` so a repeated English l
 ## Workflow
 
 1. Extract. Menu `Orbital Salvage/Tools/Extract Localization Spec Strings`, or batch `OrbitalSalvage.Editor.LocExtract.RunBatch`. It reads `Assets/Resources/Parity/Spec/*__zero.json` and writes `en.json` plus this CSV. `*__iphone.json` must yield the same key set. Spec JSON is not modified.
-2. Translate. Copy `en.json` to `<code>.json` and replace `spec` and `str` values. Keep placeholder indexes identical. Do not add edge whitespace or control characters.
+2. Translate. Copy `en.json` to `<code>.json` and replace `spec` and `str` values. Keep placeholder indexes identical. Do not add edge whitespace or control characters. Leave `doNotTranslate` as the English list. Keys that stay English on purpose go in `localization/notes/<code>-identical-ok.json`.
 3. Validate. `LocValidator.Validate(english, translation)` returns a flat list of findings (`error` or `warning`): missing keys, extra keys, placeholder mismatches, edge whitespace, control characters, and — for latin and latin-vi only — length at or above 1.6× English (warning) or 2.5× (error).
 
 ## Runtime

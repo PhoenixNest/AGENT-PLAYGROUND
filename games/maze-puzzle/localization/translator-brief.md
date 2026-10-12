@@ -54,6 +54,7 @@ Return one JSON object, UTF-8, no BOM, LF newlines, 2-space indent, keys in the 
 - `meta.code` is the registry code (`de`, not `DE`). `meta.name` is the endonym from the glossary's language list (Deutsch, Français, 简体中文, Oʻzbekcha with U+02BB, …).
 - Every `spec` and `str` key in `en.json` appears once. No extra keys. No missing keys. Keys are copied byte for byte, including spaces and punctuation.
 - Values are strings. Do not leave a value empty. Do not leave a translatable value identical to English.
+- If the English word is already the right word (`Hangar` in German or French, `Reset` in German, `level` or `orbit` in Indonesian), copy it and list the key in `localization/notes/<code>-identical-ok.json` as `{"key", "reason"}`. Do not add that key to `doNotTranslate`. Merge recopies `doNotTranslate` from English and drops language-specific entries.
 
 ## Placeholders, digits, emoji
 
@@ -182,5 +183,6 @@ Write the files into the repo. The table path is the deliverable. The lead does 
    - any English source line that looks wrong
    - the validator summary (error count, warning count, suppressed count)
 3. `games/maze-puzzle/localization/notes/<code>-fit-exceptions.json` when you accept fit warnings, including the 50 `LVL` chips if you keep the glossary word.
+4. `games/maze-puzzle/localization/notes/<code>-identical-ok.json` when a key stays identical to English on purpose. The summary line `accepted identical` lists those keys. `--show-suppressed` prints them.
 
 `merge_table.py` is only for folding a partial draft into that table. Do not translate `qps`. That pseudo-locale is built in memory from English.
