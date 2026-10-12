@@ -20,9 +20,13 @@ namespace OrbitalSalvage.Loc
     /// Reads parity spec JSON and builds the English string table plus the translator CSV.
     /// A normalised run is not translated when it contains no Unicode letter. That covers digits
     /// (<c>250</c>, <c>+100</c>, <c>0/10</c>), joiners (<c>/</c>), symbols (<c>×</c>, <c>▶</c>),
-    /// and emoji-only runs. Those strings are listed in <c>doNotTranslate</c>. Runs that contain
-    /// a letter stay in <c>spec</c> even when digits are baked in; the CSV flags
-    /// <c>hasPlaceholderLike</c>. Empty text after normalisation is dropped.
+    /// and emoji-only runs. Those strings are listed in <c>doNotTranslate</c>. A run is also
+    /// not translated when it is a <see cref="LanguageRegistry"/> endonym, or that endonym with
+    /// the current-language <see cref="LanguageMarker"/>. Endonyms stay in their own script in
+    /// every locale. Runs that contain a letter and are not in that set stay in <c>spec</c> even
+    /// when digits are baked in; the CSV flags <c>hasPlaceholderLike</c>. Empty text after
+    /// normalisation is dropped. The placeholder legal URLs are not spec runs; they live in
+    /// <c>LegalLinks</c>.
     /// <c>*__iphone.json</c> is not written; callers compare its key set with <c>*__zero.json</c>.
     /// </summary>
     public static class SpecExtractor
@@ -31,6 +35,14 @@ namespace OrbitalSalvage.Loc
         public const int MaxClasses = 3;
         public const int MaxGroups = 8;
         public const int MaxFilesListed = 3;
+
+        static readonly HashSet<string> NeverTranslateKeys = BuildNeverTranslate();
+
+        /// <summary>True for a normalised endonym, or the same endonym with the current-language marker.</summary>
+        public static bool IsNeverTranslate(string normalisedKey)
+        {
+            return normalisedKey != null && NeverTranslateKeys.Contains(normalisedKey);
+        }
 
         public static string HandoffCsvPath(string dataPath)
         {
@@ -117,7 +129,7 @@ namespace OrbitalSalvage.Loc
             {
                 string key = normalised[i];
                 if (key.Length == 0) continue;
-                if (!LocText.HasLetter(key))
+                if (!LocText.HasLetter(key) || IsNeverTranslate(key))
                 {
                     skips.Add(key);
                     continue;
@@ -144,6 +156,20 @@ namespace OrbitalSalvage.Loc
                 if (fragment) row.Fragment = true;
                 row.NoteGroup(group, i);
             }
+        }
+
+        static HashSet<string> BuildNeverTranslate()
+        {
+            var set = new HashSet<string>(StringComparer.Ordinal);
+            var languages = LanguageRegistry.All;
+            for (int i = 0; i < languages.Count; i++)
+            {
+                string endonym = LocText.Normalize(languages[i].Endonym);
+                if (endonym.Length > 0) set.Add(endonym);
+                string marked = LocText.Normalize(LanguageMarker.Mark(languages[i].Endonym));
+                if (marked.Length > 0) set.Add(marked);
+            }
+            return set;
         }
 
         static string WriteCsv(List<string> specKeys, Dictionary<string, Row> rows)

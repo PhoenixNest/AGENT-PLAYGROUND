@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using OrbitalSalvage.App;
+using OrbitalSalvage.Loc;
 using UnityEngine;
 
 namespace OrbitalSalvage.Viewer
@@ -303,6 +304,10 @@ namespace OrbitalSalvage.Viewer
             list.Add(ById("modal_defeat_12_of_20", "btn-defeat-retry", "game_lvl01_t1000ms"));
             list.Add(ById("modal_defeat_12_of_20", "btn-defeat-home", "maps_world_1_fresh"));
 
+            var languages = LanguageRegistry.All;
+            for (int i = 0; i < languages.Count; i++)
+                InteractiveIds.Add(LanguageMarker.ButtonId(languages[i].Code));
+
             Edges = list;
         }
 
@@ -444,6 +449,7 @@ namespace OrbitalSalvage.Viewer
             "btn-pause-maps", "btn-pause-home", "btn-debrief-replay", "btn-debrief-next",
             "btn-defeat-retry", "btn-defeat-home", "btn-defeat-backup", "btn-claim-daily-gift",
             "btn-claim-master-bonus", "btn-open-privacy", "btn-close-privacy", "btn-dismiss-privacy",
+            "btn-open-language", "btn-close-language", "btn-open-user-agreement",
             "btn-reset-game-data", "btn-cancel-reset", "btn-confirm-reset", "home-mascot-stage",
             "home-diorama-nibbles", "settings-sound-toggle", "settings-haptics-toggle",
             "settings-sfx-slider", "settings-ambience-slider"
