@@ -12,21 +12,42 @@ France usage, 2026-10-12. Informal `tu`. U+00A0 before `! ? : ;`. No U+202F. No 
 | visible warnings | 100 |
 | suppressed fit warnings | 50 |
 
-Visible warnings by kind: `fit` 43, `glossary` 53, `length` 4. No `stale`, `glyph`, `punctuation`, `expansion`, or `balance` warnings. Accepted identical: `Hangar`.
+Visible warnings by kind: `fit` 42, `glossary` 54, `length` 4. No `stale`, `glyph`, `punctuation`, `expansion`, or `balance` warnings. Accepted identical: `Hangar`, `Reset`. `BRONZE` and `BRONZE ✓` are recorded in `fr-identical-ok.json`; the validator already allows them as the glossary loanword `bronze`.
 
 `str:unit.kg` and `str:unit.quota` stay `{0} kg` and `{0} / {1} kg`.
+
+## Wording pass 2
+
+After the all-language audit. Unity was not re-run. Widths below are the kit estimator. No native speaker has reviewed this pass.
+
+| English | Before | After | Fit |
+| --- | --- | --- | --- |
+| `SHOP` | `Jouets` | `Jouet` | 28px in a 30px tab, scale 1.00. `Jouets` was 33px and painted `JOUE…`. |
+| `Reset` | `Vider` | `Reset` | 30px in a 30px button, scale 1.00. Loanword. |
+| `Yes, Reset` | `Oui, vider` | `Oui, reset` | 55px in a 55px button, scale 1.00. |
+| `Reset Progress` | `Tout vider` | `Remise à zéro` | 85px in a 95px label, scale 1.00. |
+| `RESET ALL PROGRESS?` | `TOUT VIDER ?` | `REMISE À ZÉRO ?` | 113px in a 196px title, scale 1.00. |
+| `SHIFT INCOMPLETE!` | `SERVICE PAS ENCORE !` | `SERVICE À FINIR !` | 153px in a 199px banner, scale 1.00. Still contains `service`. |
+| `DAILY OPERATIONS` | `OPÉRATIONS DU JOUR` | `OPÉRATIONS` | 85px in a 156px title, scale 1.00. The long title painted at 0.72. |
+| Reset confirm sentence | `…On ne peut pas revenir en arrière !` | `…Sans retour !` | 485px against a 688px English budget, scale 1.00. The old line was cut to `reve…` on `settings_modal_reset_confirm`. |
+
+Left as they were:
+
+- `← Back` stays `← Retour`. Estimator 49px in a 44px box (scale 0.90). The audit paints it at 0.78 and the word still reads. No shorter natural back word. `Dos` would mean a back (body).
+- The daily countdown clock covers the first letter of `Encore`. Pages `daily_default` and `daily_bronze_cleared` (same card on the other daily pages). Element is the countdown next to the alarm icon, keys `Resets in 14h 59m` and `daily.countdown`. `Encore 14h 59m` is 69px in an 82px box, shorter than English, and the icon still sits on the first letter. A shorter word would not move that letter. Render defect, not a wording fix.
+- The privacy modal was not edited.
 
 ## Wording that the boxes forced
 
 | Item | Choice | Why |
 | --- | --- | --- |
 | `LVL 1`–`LVL 50` | `Étape N` | `Niveau` crosses the 72% shrink floor on the tight chips (an error, which cannot be suppressed). `Étape` stays under that floor and still warns, so those 50 fit warnings are suppressed. The longer title uses `Étape` too, so the chip and the title are the same word. |
-| `Reset` | `Vider` | `Effacer` is 42px against a 42px shrink floor, so it would ellipsize. Confirm is `Oui, vider`. The dialog title is `TOUT VIDER ?`. |
+| `Reset` | `Reset` | `Vider` means empty. `Effacer` is 42px on a 42px floor. `Remise à zéro` does not fit this 30px button (30px, scale 1.00). The row is `Remise à zéro` (85px in a 95px label) and the dialog title is `REMISE À ZÉRO ?` (113px in a 196px title). Confirm is `Oui, reset` (55px in a 55px button). |
 | `Close` | `Fermer` | Standard button infinitive. 39px in a 32px box, under the 45px floor. `Ferme` fits and sounds like an order. |
 | `Claim +100` | `Prends +100` | `Récupérer +100` is past a comfortable button width. `Prends` is the tu imperative and sits 2px over the box. |
 | `Wear` | `Porte` | Tu imperative of `porter`. 30px in a 29px box. `Mets` fits and also means a dish, which is wrong next to the candy shop. |
 | `Unlock (1200` family | `Débloquer (N` | Glossary verb. Under the shrink floor. `Ouvrir` would read as open, the same miss as the German `OFFEN`. |
-| `TOY SHOP` | `BOUTIQUE` | `boutique de jouets` is a fit error at 17px in an 84px header. The shop sentence keeps the full glossary phrase. The dock tab is `Jouets` because `Boutique` crosses that tab's shrink floor. |
+| `TOY SHOP` | `BOUTIQUE` | `boutique de jouets` is a fit error at 17px in an 84px header. The shop sentence keeps the full glossary phrase. The dock tab is `Jouet` (28px in a 30px tab). `Jouets` painted as `JOUE…`. |
 | `Nibbles Hats` | `Chapeaux Nibbles` | `chapeaux de Nibbles` crosses the shrink floor. Dropping Nibbles fails the do-not-translate check. `de` is the word that went. |
 | `Hangar` | `Hangar` | French word, identical to English. See `fr-identical-ok.json`. |
 | `FREE` | `OFFERT` | `LIBRE` would mean available, not free of charge. Under the shrink floor. |
@@ -57,7 +78,6 @@ No shorter natural synonym exists, or the shorter synonym would mean something e
 | `Choose Sector` | 1 | `Choisir secteur`. Verb kept. |
 | `Claim +100`, `Claim +300` | 2 | `Prends`. About 1–2px over. |
 | `Wear` | 1 | `Porte`. About 1px over. |
-| `SHOP` | 1 | `Jouets`. `Boutique` is a fit error on this tab. |
 | `FREE` | 1 | `OFFERT`. |
 | `3 NEW` | 1 | `3 NOUVEAU`. |
 | `Kessler Hero` | 1 | `Héros Kessler`. About 7px over. |
@@ -70,6 +90,7 @@ No shorter natural synonym exists, or the shorter synonym would mean something e
 | `LVL 1`–`LVL 50` and `LVL 1 • Bubblegum Chute 1` | 51 | Checked word is `niveau`. It cannot be drawn on the chip. `Étape` is the stage word everywhere a number is shown. `niveaux` is still used in `Clear unlocked levels, skins & coins`. |
 | `TOY SHOP` | 1 | Header is `BOUTIQUE`. The sentence `All items in the Toy Shop…` says `boutique de jouets`. |
 | `Nibbles Hats` | 1 | `Chapeaux Nibbles`, not `chapeaux de Nibbles`. |
+| `DAILY OPERATIONS` | 1 | Header is `OPÉRATIONS`. `OPÉRATIONS DU JOUR` painted at 0.72 on the daily title. `OPÉRATIONS` is 85px in a 156px box. |
 
 ## Accepted length warnings
 
@@ -91,17 +112,17 @@ No shorter natural synonym exists, or the shorter synonym would mean something e
 
 ## Twelve least-sure keys
 
-1. `LVL 1` → `Étape 1` (glossary still wants `niveau`)
-2. `Reset` → `Vider` (confirm is `Oui, vider`)
-3. `TOY SHOP` → `BOUTIQUE` (sentence keeps `boutique de jouets`; dock tab is `Jouets`)
-4. `Nibbles Hats` → `Chapeaux Nibbles`
-5. `allowance.` → `poche.` (only correct when read after the previous run)
-6. `Nebula Pinball` → `Astroflipper`
-7. `Moon Chute 1` → `Glisse lune 1` (glossary chute word is `toboggan`)
-8. `Close` → `Fermer`
-9. `Unlock (1200` → `Débloquer (1200`
-10. `GOLD` → `OR`
-11. `Bronze Shift • Cadet Sweep` → `Service bronze • Cadet` (`service` is the glossary word for shift; the sweep word did not fit)
+1. `SHOP` → `Jouet` (singular; `Jouets` painted as `JOUE…`)
+2. `Reset` → `Reset` on the button, `Remise à zéro` on the row and the dialog title
+3. `DAILY OPERATIONS` → `OPÉRATIONS` (the full glossary phrase painted at 0.72)
+4. `LVL 1` → `Étape 1` (glossary still wants `niveau`)
+5. `TOY SHOP` → `BOUTIQUE` (sentence keeps `boutique de jouets`)
+6. `Nibbles Hats` → `Chapeaux Nibbles`
+7. `allowance.` → `poche.` (only correct when read after the previous run)
+8. `Nebula Pinball` → `Astroflipper`
+9. `Moon Chute 1` → `Glisse lune 1` (glossary chute word is `toboggan`)
+10. `Close` → `Fermer`
+11. `GOLD` → `OR`
 12. `Claim +100` → `Prends +100` (glossary button word is `récupérer`)
 
 ## Glossary additions requested
@@ -112,7 +133,7 @@ No shorter natural synonym exists, or the shorter synonym would mean something e
 - A short chute word. `toboggan` does not fit `Moon Chute`. `glisse` is used for every chute.
 - A short claim verb for `Claim +100`. `récupérer` does not fit. `Prends` is the tu imperative.
 
-Checked terms that did fit, and are used: `ferraille`, `pièces d'or`, `secteur`, `monde`, `concierge cosmique`, `trou noir`, `trophée`, `opérations du jour`, `service`, `capsule de secours`, `allocation du jour`, `déchets de l'espace`. `boutique de jouets` is in the shop sentence only.
+Checked terms that did fit, and are used: `ferraille`, `pièces d'or`, `secteur`, `monde`, `concierge cosmique`, `trou noir`, `trophée`, `service`, `capsule de secours`, `allocation du jour`, `déchets de l'espace`. `boutique de jouets` is in the shop sentence only. `opérations du jour` does not fit the daily title, which is `OPÉRATIONS`.
 
 ## English source lines that look wrong
 
@@ -122,7 +143,7 @@ Checked terms that did fit, and are used: `ferraille`, `pièces d'or`, `secteur`
 
 ## Kit notes
 
-- `fr-identical-ok.json` now waives `Hangar`. `merge_table.py` does not need a French-only `doNotTranslate` entry. The German pilot's open item for that waiver is fixed on this branch.
+- `fr-identical-ok.json` waives `Hangar` and `Reset`. `BRONZE` and `BRONZE ✓` are in that file as well. The validator allows those two through the glossary loanword check before it reads the file. `merge_table.py` does not need a French-only `doNotTranslate` entry.
 - A fit error past the 72% floor cannot be suppressed. That is why `Niveau` is not on the chips.
 - The glossary check wants the whole recommended phrase as a substring. `d'or` satisfies `or`. `Étape` cannot satisfy `niveau`. `Chapeaux Nibbles` cannot satisfy `chapeaux de Nibbles`.
 - `str` rows have no line box, so toast width is not fit-checked. `fx.hub.mint` is a length warning instead.

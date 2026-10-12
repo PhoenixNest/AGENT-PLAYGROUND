@@ -2,5 +2,17 @@
   {
     "key": "Hangar",
     "reason": "French word for the same building. The whole string is already correct."
+  },
+  {
+    "key": "Reset",
+    "reason": "Accepted UI loanword. Vider means empty. Effacer sits on the 72% shrink floor of this 30px button and would ellipsize. Remise à zéro does not fit the button; the row and the dialog title use that phrase."
+  },
+  {
+    "key": "BRONZE",
+    "reason": "French word for the medal metal. Identical spelling is correct. Not a leftover English label."
+  },
+  {
+    "key": "BRONZE ✓",
+    "reason": "Same French word as BRONZE, plus the cleared mark. Identical spelling is correct."
   }
 ]
