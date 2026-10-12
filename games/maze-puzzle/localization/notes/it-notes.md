@@ -11,9 +11,9 @@ Wording pass 2, 2026-10-12, after the all-language audit. Informal `tu`. Guillem
 | validator errors | 0 |
 | visible warnings | 99 |
 | suppressed fit warnings | 47 (file lists all 50 `LVL` chips) |
-| accepted identical | 1 (`Hangar`) |
+| accepted identical | 1 (`Hangar`; `SHOP` is listed too) |
 
-Visible warnings by kind: `glossary` 53, `fit` 46. No `stale`, `glyph`, `length`, `expansion`, `placeholder`, `number`, `emoji`, or `fit` errors. `it-fit-exceptions.json` lists only `spec:LVL 1` through `spec:LVL 50`. `LVL 1`, `LVL 21`, and `LVL 41` do not fit-warn, so the validator suppresses 47. `it-identical-ok.json` keeps `Hangar`.
+Visible warnings by kind: `glossary` 53, `fit` 46. No `stale`, `glyph`, `length`, `expansion`, `placeholder`, `number`, `emoji`, or `fit` errors. `it-fit-exceptions.json` lists only `spec:LVL 1` through `spec:LVL 50`. `LVL 1`, `LVL 21`, and `LVL 41` do not fit-warn, so the validator suppresses 47. `it-identical-ok.json` lists `Hangar` and `SHOP`. The table stores `Shop`, so the validator accepts only `Hangar` as an identical copy. The dock still draws `SHOP`.
 
 ## What this pass changed
 
@@ -24,7 +24,7 @@ Fredoka 700 widths, same size as the control. A scale is the index box, or the b
 | `DAILY OPERATIONS` | `OPERAZIONI GIORNALIERE` | `TURNI DI OGGI` | 112px at 17px. The old 208px title was clipped at the 72% floor on the header (`OPERAZIONI GIORNALIE…`) and the card (`OPERAZIONI GIORN…`). The new title is about half that width, so both sit at full size. Estimator 112 vs a 156px budget. |
 | `SILVER` / `SILVER ✓` | `ARGENTO` / `ARGENTO ✓` | `Argento` / `Argento ✓` | 37.8px at 10px. `BRONZO` at 39.2px paints in full on the same medal, and `BRONZO ✓` paints in full on the card. Title case is narrower than those, so the medal no longer ends at `ARGEN…`. Estimator 35 vs 39, and 48 vs 51. |
 | `BRONZE` / `GOLD` and the `✓` chips | `BRONZO` / `ORO` | `Bronzo` / `Oro` | Same words. Title case matches `Argento` on the medal row. Both were already inside the medal. |
-| `SHOP` | `Negozio` (drawn `NEGO…`) | `Gioco` (drawn `GIOCO`) | 33.3px at 11px. `NEGOZIO` is 47.0px and was clipped at the 72% floor. Against that dock, `GIOCO` is about 0.84. Estimator 28 vs a 30px budget. |
+| `SHOP` | `Gioco` | `Shop` | Fredoka 700 at 11px, the dock capitalizes it to `SHOP`, 27.6px in the 30px tab (8% spare). `STORE` is 34.2px, `BAZAR` 35.6px, `PREMI` 31.4px, so those three overflow once capitalized. `Gioco` means play and sat next to the home tab. |
 | `TROPHY ROOM` | `SALA DEL TROFEO` | `SALA TROFEO` | Was scale 0.78 (148px). Now 113px, about full size in the header that held the old line at 0.78. Still contains `trofeo`. |
 | `LOCKED` | `BLOCCATO` | `CHIUSO` | Was scale 0.76. `CHIUSO` is 42px at 12px against a box near 48px, so full size. Earned badges stay `✓ SBLOCCATO`, which already paints in full. |
 | `Master All-Clear Bounty` | `Taglia maestra` | `Premio finale` | A child hears `taglia` as size. 78px at 13px inside a 144px line. The two toasts use `premio finale` too. The short bounty chip stays `Premio`. |
@@ -72,7 +72,7 @@ Fredoka 700 widths, same size as the control. A scale is the index box, or the b
 | `✓ UNLOCKED` | `✓ SBLOCCATO` | Paints in full. Not a word that means "still open". |
 | `0 / 3 CLEARED` | `0 / 3 FATTI` | The pill paints in full. `CLEARED ✓` stays `SUPERATO ✓`. |
 | `Hangar` | `Hangar` | Accepted loanword. See `it-identical-ok.json`. |
-| `SHOP` | `Gioco` | Dock only. The page title stays `GIOCATTOLI`. The sentence stays `negozio di giocattoli`. |
+| `SHOP` | `Shop` | Dock only. Runtime draws `SHOP`. The page title stays `GIOCATTOLI`. The sentence stays `negozio di giocattoli`. |
 | `DAILY OPERATIONS` | `TURNI DI OGGI` | Header and card. The shift titles still say `turno`. |
 | `SILVER` | `Argento` | Same word as `Turno argento`. Title case is what fits the medal. |
 
@@ -86,7 +86,7 @@ The daily countdown `Tra {0}h {1}m` still loses its first letter under the alarm
 | --- | --- | --- |
 | `LVL 1`–`LVL 50` | `Fase N` | `Livello N` is a fit error on the chip. |
 | `DAILY OPERATIONS` | `TURNI DI OGGI` | `OPERAZIONI GIORNALIERE` is the glossary phrase and was clipped. |
-| `SHOP` | `Gioco` | `Negozio` was clipped to `NEGO…`. `Gioco` is the short form of `giocattoli`, not a second shop. |
+| `SHOP` | `Shop` | `Gioco` means play. `Negozio` clips. `Store`, `Bazar`, and `Premi` overflow the 30px dock once capitalized. |
 | `SILVER` | `Argento` | All-caps `ARGENTO` was clipped to `ARGEN…`. There is no shorter word for silver. |
 | `LOCKED` | `CHIUSO` | `BLOCCATO` matches `SBLOCCATO` and shrank to 0.76. |
 | `dock.daily.new` | `{0} novità` | `{0} nuovi` is wrong when the count is 1. |
@@ -99,7 +99,7 @@ The daily countdown `Tra {0}h {1}m` still loses its first letter under the alarm
 
 ## Twelve least-sure keys
 
-1. `SHOP` → `Gioco` (dock). The page title is still `GIOCATTOLI`.
+1. `SHOP` → `Shop` (dock, drawn `SHOP`). The page title is still `GIOCATTOLI`.
 2. `DAILY OPERATIONS` → `TURNI DI OGGI`
 3. `SILVER` → `Argento` (title case, same word as the shift)
 4. `LOCKED` → `CHIUSO` beside `✓ SBLOCCATO`
@@ -116,7 +116,7 @@ The daily countdown `Tra {0}h {1}m` still loses its first letter under the alarm
 
 - A chip-length form of `livello`. `Livello` plus the number is a fit error, so it cannot go in the fit allowlist.
 - A header-length form of `operazioni giornaliere`. The full phrase is what the daily header clips.
-- A dock-length form of the toy shop. `Negozio` clips. This table uses `Gioco` on the dock, `GIOCATTOLI` on the header, and `negozio di giocattoli` in the sentence.
+- A dock-length Italian word for the toy shop. `Negozio` clips. This table uses the loanword `Shop` on the dock, `GIOCATTOLI` on the header, and `negozio di giocattoli` in the sentence.
 - A tab-length form of `cappelli di Nibbles`.
 - Stem matching for plurals. `turni` does not contain `turno`, `livelli` does not contain `livello`, and `trofei` does not contain `trofeo`.
 - If the cyber theme must stay, add `cyber` as an allowed theme loanword. This table uses `neon` instead.
@@ -131,4 +131,4 @@ The daily countdown `Tra {0}h {1}m` still loses its first letter under the alarm
 
 ## Validator summary
 
-`validate_table.py --lang it`: errors 0, warnings 99 (`glossary` 53, `fit` 46), suppressed fit 47, accepted identical 1. The fit-exception file has 50 `LVL` keys and nothing else. Glyph check passed (Fredoka / Nunito). No native speaker has reviewed this table.
+`validate_table.py --lang it`: errors 0, warnings 99 (`glossary` 53, `fit` 46), suppressed fit 47, accepted identical 1 (`Hangar`). `it-identical-ok.json` also lists `SHOP`; the table stores `Shop` so the runtime can capitalize it, which keeps the uppercase warning off. The fit-exception file has 50 `LVL` keys and nothing else. Glyph check passed (Fredoka / Nunito). No native speaker has reviewed this table.
