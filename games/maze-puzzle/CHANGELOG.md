@@ -13,6 +13,16 @@ Paths written as `tools/parity/...` in entries dated before 2026-10-08 are the l
 
 ### Added
 
+#### Settings language picker and legal rows (2026-10-12)
+
+- Settings gains a Language row and a User Agreement row. Change opens `settings_modal_language`, a two-column grid of the 17 endonyms with no scroll. The current language is a leading `✓ ` (`U+2713`) on that button. The English capture marks English. Unity overrides `settings-language-value` and the two marker buttons from the saved code. `HomeChrome.PaintRuns` is unchanged, so a non-English marker stays at the captured run origin.
+- Privacy Policy and User Agreement both open `https://www.bing.com` from `LegalLinks` (App) and `LEGAL_LINKS` (`web/main.js`). The privacy modal markup and its specs stay. `btn-open-privacy` no longer opens the modal. Capture calls `openPrivacyModal`. A Kids Category parental gate is a TODO and is not built.
+- A tap saves the registry code and closes the picker, including a code whose table is missing. The painted chrome stays English until that table loads. The marker follows the saved code.
+- The settings page is tightened (`#page-settings .page-scroll-body` gap 12px, footer margin 2px) so the iPhone footer second line clears the home-indicator band.
+- Recaptured `settings_default`, `settings_toggles_off`, `settings_sliders_moved`, `settings_modal_privacy`, and `settings_modal_reset_confirm` for zero and iphone, and added `settings_modal_language` for both profiles. No other spec was regenerated. `screenshot-states.json` and `golden/app/settings_reset.json` are unchanged. `out/unity-before` is not in this checkout, so the settings player still was not repainted.
+- The extractor treats every `LanguageRegistry` endonym, and that endonym with the marker, as never-translate. `en.json` is 355 spec keys and 50 do-not-translate runs (was 348 and 32). `localization/key-index.csv` was regenerated from the same run.
+- Focused EditMode (`SettingsLanguageFlowTests|SpecExtractorTests|TemplateSelectorTests|IphoneSafeAreaTests|MenuPathTests|GamePageModals_AreLiveTemplates|CapturePose_MatchesTheEditModePaintPath|Catalog_GroupsSpecs`): 20 passed, 0 failed. Results `/tmp/maze-i18n/loc-settings/focused.xml`, log `/tmp/maze-i18n/loc-settings/focused.log`. Full EditMode: 484 passed, 83 failed, 3 skipped, 570 total, exit 2. Results `/tmp/maze-i18n/loc-settings/full.xml`, log `/tmp/maze-i18n/loc-settings/full.log`. The 83 are the known set (`ReferenceComparisonTests` 73, `ReferenceGateTests` 9, `QuotaAndModalTests.GameAndPauseStills_MatchKnownHashes`). The skips include `PagePreviewTests.Stills_MatchTheParityPlayer_IncludingShopRingsDefault`.
+
 #### Unity localisation runtime (2026-10-12)
 
 - The localisation runtime is `OrbitalSalvage.Loc` (no Unity engine reference, so Logic and App can call it). The Resources loader and the device-locale provider are `OrbitalSalvage.Loc.Unity`. Nothing in the paint path reads a table. English spec lookup returns false, and `settings.language` is omitted while empty, so an unset profile matches the economy golden byte for byte.
@@ -161,6 +171,10 @@ Paths written as `tools/parity/...` in entries dated before 2026-10-08 are the l
 - EditMode: 354 passed, 82 failed, 2 skipped, 438 total. The 6 new tests passed. The 82 failures are `ReferenceComparisonTests` (73) and `ReferenceGateTests` (9), the same missing-audio-reference set as before. The skips are `FrameRateHarness.Measure` and `MeasureAccumulated`. `PagePreviewTests.Stills_MatchTheParityPlayer_IncludingShopRingsDefault` ran and passed; it had been skipping because `tools/parity/out/unity-before` was absent.
 
 ### Changed
+
+#### Settings English baselines (2026-10-12)
+
+- The English settings specs listed under Added are the intended pixel baseline for those pages. Home, game, shop, maps, daily, achievements, loading, pause, debrief, and defeat specs were not rewritten. `settings_default` in `tools/parity/unity/screenshot-states.json` still names the old capture steps. The matching still PNG lives under `tools/parity/out/unity-before`, which this worktree does not have, so that PNG was not replaced.
 
 #### Unity on-device perf log (2026-10-10, `agent/perf/device-log`)
 
