@@ -13,6 +13,10 @@ Paths written as `tools/parity/...` in entries dated before 2026-10-08 are the l
 
 ### Fixed
 
+#### German wording after the layout audit (2026-10-12)
+
+- Refine German wording after the layout audit: daily pill FERTIG, Nochmal, FREI, Hangar, Reset, Weltraum-Melodie, Spielladen, Putz-Paket. Validator errors 0.
+
 #### Translation kit validator (2026-10-12)
 
 - `validate_table.py` counts `kg`, `/`, and `+` as tokens, so a word such as Background is not a unit. `{0} kg` may be copied. Parenthesis counts follow English, including fragments cut off mid-token. Glossary aliases cover `LVL`, `space junk`, and Auxiliary Scrap Pod, and a term inside the logo is not a hit. Accepted fit warnings live in `localization/notes/<code>-fit-exceptions.json`. The German table stays at 0 errors; fit warnings on `LVL 1`–`LVL 50` are suppressed (78 warnings before, 28 after).
