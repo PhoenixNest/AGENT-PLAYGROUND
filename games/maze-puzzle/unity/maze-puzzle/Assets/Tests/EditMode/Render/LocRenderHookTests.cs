@@ -50,6 +50,44 @@ namespace OrbitalSalvage.Render.Tests
         }
 
         [Test]
+        public void Anchor_ShrinkWrappedColumnStaysLeft_TitleAndButtonStayCentered_PillStaysRight()
+        {
+            var label = new TextFit.Input
+            {
+                RunX = 34, RunW = 87, ElX = 34, ElW = 156, FontPx = 14, RunH = 17, ElH = 17, SidePad = 16,
+                ParentX = 34, ParentW = 156
+            };
+            var sub = new TextFit.Input
+            {
+                RunX = 34, RunW = 156, ElX = 34, ElW = 156, FontPx = 12, RunH = 15, ElH = 15, SidePad = 16,
+                ParentX = 34, ParentW = 156
+            };
+            Assert.AreEqual(TextFit.Anchor.Left, TextFit.ChooseAnchor(label));
+            Assert.AreEqual(TextFit.Anchor.Left, TextFit.ChooseAnchor(sub));
+
+            var title = new TextFit.Input
+            {
+                RunX = 139, RunW = 132, ElX = 139, ElW = 132, FontPx = 28, RunH = 32, ElH = 32, SidePad = 16,
+                ParentX = 100, ParentW = 210
+            };
+            Assert.AreEqual(TextFit.Anchor.Center, TextFit.ChooseAnchor(title));
+
+            var claim = new TextFit.Input
+            {
+                RunX = 314.5, RunW = 58.3, ElX = 300.3, ElW = 98.2, FontPx = 14, RunH = 14, ElH = 34,
+                IsButton = true, SidePad = 16
+            };
+            Assert.AreEqual(TextFit.Anchor.Center, TextFit.ChooseAnchor(claim));
+
+            var pill = new TextFit.Input
+            {
+                RunX = 328, RunW = 38, ElX = 328, ElW = 38, FontPx = 12, RunH = 14, ElH = 14, SidePad = 16,
+                ParentX = 16, ParentW = 350
+            };
+            Assert.AreEqual(TextFit.Anchor.Right, TextFit.ChooseAnchor(pill));
+        }
+
+        [Test]
         public void Fit_SingleShrinkWrapEllipsis()
         {
             var box = new TextFit.Input
