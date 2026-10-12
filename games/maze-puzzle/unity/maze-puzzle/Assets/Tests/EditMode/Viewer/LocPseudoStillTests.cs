@@ -17,7 +17,8 @@ namespace OrbitalSalvage.Viewer.Tests
             "settings_default",
             "shop_rings_default",
             "maps_world_1_fresh",
-            "modal_debrief_exact"
+            "modal_debrief_exact",
+            "settings_modal_language"
         };
 
         [TearDown]

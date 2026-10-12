@@ -77,7 +77,17 @@ namespace OrbitalSalvage.Render.Tests
             tall.IsButton = true;
             tall.ElH = 59;
             tall.RunH = 20;
-            TextFit.Layout wrapped = TextFit.Plan(tall, (px, ls) => 200);
+            TextFit.Layout button = TextFit.Plan(tall, (px, ls) => 200);
+            Assert.AreEqual(TextFit.Action.Ellipsis, button.Action);
+            Assert.IsTrue(TextFit.LocksToOneLine(tall));
+
+            var block = new TextFit.Input
+            {
+                RunX = 10, RunY = 10, RunW = 40, RunH = 16,
+                ElX = 0, ElY = 0, ElW = 80, ElH = 80,
+                FontPx = 16, SidePad = 4
+            };
+            TextFit.Layout wrapped = TextFit.Plan(block, (px, ls) => 200);
             Assert.AreEqual(TextFit.Action.Wrap, wrapped.Action);
             Assert.GreaterOrEqual(wrapped.MaxLines, 2);
 
@@ -110,6 +120,48 @@ namespace OrbitalSalvage.Render.Tests
             Assert.GreaterOrEqual(pairLeft, input.ElX - 0.5);
             Assert.LessOrEqual(pairRight, input.ElX + input.ElW + 0.5);
             Assert.GreaterOrEqual(plan.X, pairLeft + 12.797 - 0.5);
+        }
+
+        [Test]
+        public void SingleLineControl_DoesNotWrap_AndFooterCeilingStaysOneLine()
+        {
+            var view = new TextFit.Input
+            {
+                RunX = 315.656, RunY = 638.5, RunW = 62.344, RunH = 15,
+                ElX = 297.656, ElY = 629.5, ElW = 98.344, ElH = 33,
+                IsButton = true, FontPx = 12, SidePad = 16
+            };
+            TextFit.Layout clipped = TextFit.Plan(view, (px, ls) => 180);
+            Assert.IsTrue(TextFit.LocksToOneLine(view));
+            Assert.AreNotEqual(TextFit.Action.Wrap, clipped.Action);
+
+            var footer = new TextFit.Input
+            {
+                RunX = 95, RunY = 856, RunW = 239, RunH = 16,
+                ElX = 16, ElY = 856, ElW = 398, ElH = 32,
+                FontPx = 12, SidePad = 16, CeilingY = 872
+            };
+            TextFit.Layout line = TextFit.Plan(footer, (px, ls) => 400);
+            Assert.AreNotEqual(TextFit.Action.Wrap, line.Action);
+        }
+
+        [Test]
+        public void OverlappingIcon_StaysPutUntilTheTranslationIsWider()
+        {
+            var input = new TextFit.Input
+            {
+                RunX = 20, RunY = 10, RunW = 40, RunH = 16,
+                ElX = 0, ElY = 0, ElW = 120, ElH = 20,
+                FontPx = 14, SidePad = 4,
+                Icons = new[] { new TextFit.Icon { Index = 2, X = 12, Y = 10, W = 16, H = 16 } }
+            };
+            TextFit.Layout kept = TextFit.Plan(input, (px, ls) => 30);
+            Assert.IsTrue(kept.KeepX);
+            Assert.AreEqual(20, kept.X, 0.01);
+
+            TextFit.Layout pushed = TextFit.Plan(input, (px, ls) => 80);
+            Assert.IsFalse(pushed.KeepX);
+            Assert.GreaterOrEqual(pushed.X, 28 - 0.01);
         }
     }
 
@@ -206,18 +258,15 @@ namespace OrbitalSalvage.Render.Tests
             Directory.CreateDirectory("/tmp/maze-i18n/loc-render");
             File.WriteAllText("/tmp/maze-i18n/loc-render/overflow-qps.txt", report.Text);
             Debug.Log("[loc-audit] " + report.Text.Split('\n')[0]);
-            // HARD is text outside the element, overlap with a sibling icon, or past the home-indicator band.
-            // hard-wider and the soft kinds are logged in the report and do not fail this test.
-            // qps produced none of those three, so the whitelist is empty.
-            // English baked boxes that already overlap an emoji are not in this list: the clock on the
-            // daily countdown ("Resets in …", no element id), the coin on gift-banner-desc, and a 0.6px
-            // touch on home-diorama-ring-label. Those icons sit on the run, so they are not a leading or
-            // trailing gap and the fit does not reserve them. Copies parked below y=932 are skipped.
+            Assert.AreEqual(0, report.HardWrapped, "a single-line control wrapped");
+            // HARD is text outside the element, overlap with a sibling icon, past the home-indicator band,
+            // or a second line inside a single-line control. hard-wider stays reported and does not fail.
+            // An icon that already overlaps the English run is reserved only when the translation is wider.
             var whitelist = new HashSet<string>();
             for (int i = 0; i < report.Findings.Count; i++)
             {
                 LocOverflowAudit.Finding f = report.Findings[i];
-                if (f.Kind != "hard-outside" && f.Kind != "hard-overlap" && f.Kind != "hard-band") continue;
+                if (f.Kind != "hard-outside" && f.Kind != "hard-overlap" && f.Kind != "hard-band" && f.Kind != "wrapped-in-control") continue;
                 string key = f.File + "|" + f.ElementId + "|" + f.Kind;
                 Assert.IsTrue(whitelist.Contains(key), "hard " + key + " " + f.Detail);
             }
