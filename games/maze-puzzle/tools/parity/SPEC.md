@@ -596,7 +596,7 @@ Defined sequences: `boot_to_home`, `play_sector_1`, `defeat_sector_1` (sector 1 
 }
 ```
 
-- `elements` lists, in document order, only elements that have an `id` or that have at least one class in `tracked-classes.json` (144 classes: every class used by `index.html` and `main.js` template strings that is defined in `styles.css`; regenerate with `node scripts/tracked-classes.mjs`).
+- `elements` lists, in document order, only elements that have an `id` or that have at least one class in `tracked-classes.json` (149 classes: every class used by `index.html` and `main.js` template strings that is defined in `styles.css`; regenerate with `node scripts/tracked-classes.mjs`).
 - `rect`: `getBoundingClientRect()` border box in CSS px in **viewport coordinates** (origin at the top-left of the 430 x 932 viewport; no scroll offset is added), unrounded numbers. Content scrolled inside `.page-scroll-body` (the scroller of the sub-pages, section 8 `scroll` op) therefore reports negative `y` or `y` beyond 932 when it is outside the viewport; matching still applies to elements with `visible: true`. Unity converts its RectTransforms to the same viewport-coordinate CSS px.
 - `visible`: true iff no ancestor-or-self has `display: none`, computed `visibility` is `visible`, and the box has `w > 0` and `h > 0`.
 - `opacity`: the element's own computed opacity (not cumulative).

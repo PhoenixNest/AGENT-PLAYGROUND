@@ -14,6 +14,19 @@ import { MazeLevelBuilder } from "./engine/maze.js";
 import { PhysicsEngine } from "./engine/physics.js";
 import { GameRenderer } from "./engine/renderer.js";
 
+// The only web place that names the legal pages. Both are placeholders.
+// TODO: replace these with the real Privacy Policy and User Agreement URLs.
+// TODO: Kids Category — opening an external link from a kids app may require a
+// parental gate before App Store Kids Category review. This file does not build one.
+const LEGAL_LINKS = {
+  privacyPolicy: "https://www.bing.com",
+  userAgreement: "https://www.bing.com",
+};
+
+// Leading marker on the current language button. U+2713 is not an emoji, so capture
+// does not treat it as one. Endonyms are never translated; they stay in their own script.
+const LANGUAGE_MARKER = "✓ ";
+
 class OrbitalApp {
   constructor() {
     this.frame = document.getElementById("mobile-frame");
@@ -775,16 +788,40 @@ class OrbitalApp {
       });
     }
 
-    // Privacy Policy Modal
-    const privacyModal = document.getElementById("modal-privacy");
+    // Privacy Policy and User Agreement leave the app. The privacy modal markup stays
+    // for the captured spec; the button no longer opens it. See openPrivacyModal.
     document.getElementById("btn-open-privacy").addEventListener("click", () => {
-      privacyModal.classList.add("active");
+      this.openExternal(LEGAL_LINKS.privacyPolicy);
     });
+    document.getElementById("btn-open-user-agreement").addEventListener("click", () => {
+      this.openExternal(LEGAL_LINKS.userAgreement);
+    });
+    const privacyModal = document.getElementById("modal-privacy");
     document.getElementById("btn-close-privacy").addEventListener("click", () => {
       privacyModal.classList.remove("active");
     });
     document.getElementById("btn-dismiss-privacy").addEventListener("click", () => {
       privacyModal.classList.remove("active");
+    });
+
+    const languageModal = document.getElementById("modal-language");
+    document.getElementById("btn-open-language").addEventListener("click", () => {
+      this.syncLanguageRow();
+      languageModal.classList.add("active");
+    });
+    document.getElementById("btn-close-language").addEventListener("click", () => {
+      languageModal.classList.remove("active");
+    });
+    document.querySelectorAll(".lang-option").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const code = btn.getAttribute("data-lang");
+        if (!code) return;
+        if (!this.economy.profile.settings) this.economy.profile.settings = {};
+        this.economy.profile.settings.language = code;
+        this.economy.saveProfile();
+        this.syncLanguageRow();
+        languageModal.classList.remove("active");
+      });
     });
 
     // Reset Progress Modal
@@ -823,7 +860,36 @@ class OrbitalApp {
     if (sfxSlider) sfxSlider.value = s.sfxVolume !== undefined ? s.sfxVolume : 80;
     if (ambienceSlider) ambienceSlider.value = s.ambientVolume !== undefined ? s.ambientVolume : 70;
     if (hapticsToggle) hapticsToggle.checked = !!s.hapticsEnabled;
+    this.syncLanguageRow();
     this.applyAudioVolumesFromProfile();
+  }
+
+  // Capture-only. The privacy row opens LEGAL_LINKS.privacyPolicy instead.
+  openPrivacyModal() {
+    const privacyModal = document.getElementById("modal-privacy");
+    if (privacyModal) privacyModal.classList.add("active");
+  }
+
+  openExternal(url) {
+    if (!url) return;
+    window.open(url, "_blank", "noopener");
+  }
+
+  syncLanguageRow() {
+    const settings = (this.economy.profile && this.economy.profile.settings) || {};
+    const code = settings.language || "en";
+    const buttons = document.querySelectorAll(".lang-option");
+    let endonym = "English";
+    buttons.forEach((btn) => {
+      const lang = btn.getAttribute("data-lang");
+      const name = btn.getAttribute("data-endonym") || btn.textContent.replace(/^✓\s*/, "");
+      if (!btn.getAttribute("data-endonym")) btn.setAttribute("data-endonym", name);
+      const selected = lang === code;
+      btn.textContent = (selected ? LANGUAGE_MARKER : "") + name;
+      if (selected) endonym = name;
+    });
+    const value = document.getElementById("settings-language-value");
+    if (value) value.textContent = endonym;
   }
 
   /* =========================================================

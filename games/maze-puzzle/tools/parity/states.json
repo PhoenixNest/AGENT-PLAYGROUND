@@ -2037,8 +2037,9 @@
         "ms": 240
       },
       {
-        "op": "click",
-        "target": "btn-open-privacy"
+        "op": "call",
+        "method": "openPrivacyModal",
+        "args": []
       },
       {
         "op": "advance",
@@ -2066,12 +2067,42 @@
         "ms": 240
       },
       {
-        "op": "click",
-        "target": "btn-open-privacy"
+        "op": "call",
+        "method": "openPrivacyModal",
+        "args": []
       },
       {
         "op": "advance",
         "ms": 150
+      },
+      {
+        "op": "capture"
+      }
+    ]
+  },
+  {
+    "id": "settings_modal_language",
+    "description": "Settings with the language picker modal open (17 endonyms, no scroll)",
+    "profiles": ["zero", "iphone"],
+    "steps": [
+      {
+        "op": "boot"
+      },
+      {
+        "op": "click",
+        "target": "btn-home-settings"
+      },
+      {
+        "op": "advance",
+        "ms": 240
+      },
+      {
+        "op": "click",
+        "target": "btn-open-language"
+      },
+      {
+        "op": "advance",
+        "ms": 300
       },
       {
         "op": "capture"

@@ -377,6 +377,22 @@
             </div>
           </div>
 
+          <!-- Language -->
+          <div class="settings-section-card">
+            <span class="settings-section-title">Language</span>
+            <div class="settings-row">
+              <div class="settings-label-box">
+                <span class="settings-label">Language</span>
+                <span class="settings-sublabel" id="settings-language-value"
+                  >English</span
+                >
+              </div>
+              <button class="btn-cartoon-primary" id="btn-open-language" type="button">
+                Change
+              </button>
+            </div>
+          </div>
+
           <!-- Privacy & Safety -->
           <div class="settings-section-card">
             <span class="settings-section-title">🛡️ Privacy & Safety</span>
@@ -387,8 +403,19 @@
                   >100% offline, kid-safe, no trackers</span
                 >
               </div>
-              <button class="btn-cartoon-primary" id="btn-open-privacy">
+              <button class="btn-cartoon-primary" id="btn-open-privacy" type="button">
                 View Policy
+              </button>
+            </div>
+            <div class="settings-row">
+              <div class="settings-label-box">
+                <span class="settings-label">User Agreement</span>
+                <span class="settings-sublabel"
+                  >The rules for playing the game</span
+                >
+              </div>
+              <button class="btn-cartoon-primary" id="btn-open-user-agreement" type="button">
+                View
               </button>
             </div>
           </div>
@@ -423,7 +450,7 @@
               text-align: center;
               color: rgba(255, 255, 255, 0.5);
               font-size: 12px;
-              margin-top: 8px;
+              margin-top: 2px;
             "
           >
             Orbital Salvage • Space Trash Clean v1.2.0<br />
@@ -433,7 +460,7 @@
       </div>
 
       <!-- =========================================================
-           (8) Modals: Pause, Privacy Policy, Reset Confirm, Debrief
+           (8) Modals: Pause, Privacy Policy, Language, Reset Confirm, Debrief
            ========================================================= -->
       <!-- In-Game Pause Overlay Modal -->
       <div class="modal-overlay" id="modal-pause">
@@ -523,6 +550,37 @@
             >
               Awesome, Got It! 👍
             </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Language picker. Current language is a leading check mark, not a fill, so one capture covers every selection. -->
+      <div class="modal-overlay" id="modal-language">
+        <div class="modal-card lang-modal-card">
+          <div class="modal-header">
+            <h2 class="modal-title" id="language-modal-title">Choose Language</h2>
+            <button class="lang-close" id="btn-close-language" type="button">Close</button>
+          </div>
+          <div class="modal-body lang-modal-body">
+            <div class="lang-grid" id="language-grid">
+              <button type="button" class="lang-option" id="btn-lang-en" data-lang="en" lang="en">✓ English</button>
+              <button type="button" class="lang-option" id="btn-lang-zh-Hans" data-lang="zh-Hans" lang="zh-Hans">简体中文</button>
+              <button type="button" class="lang-option" id="btn-lang-zh-Hant" data-lang="zh-Hant" lang="zh-Hant">繁體中文</button>
+              <button type="button" class="lang-option" id="btn-lang-ja" data-lang="ja" lang="ja">日本語</button>
+              <button type="button" class="lang-option" id="btn-lang-ko" data-lang="ko" lang="ko">한국어</button>
+              <button type="button" class="lang-option" id="btn-lang-de" data-lang="de" lang="de">Deutsch</button>
+              <button type="button" class="lang-option" id="btn-lang-fr" data-lang="fr" lang="fr">Français</button>
+              <button type="button" class="lang-option" id="btn-lang-es" data-lang="es" lang="es">Español</button>
+              <button type="button" class="lang-option" id="btn-lang-it" data-lang="it" lang="it">Italiano</button>
+              <button type="button" class="lang-option" id="btn-lang-pt-PT" data-lang="pt-PT" lang="pt-PT">Português</button>
+              <button type="button" class="lang-option" id="btn-lang-vi" data-lang="vi" lang="vi">Tiếng Việt</button>
+              <button type="button" class="lang-option" id="btn-lang-fil" data-lang="fil" lang="fil">Filipino</button>
+              <button type="button" class="lang-option" id="btn-lang-id" data-lang="id" lang="id">Bahasa Indonesia</button>
+              <button type="button" class="lang-option" id="btn-lang-uz" data-lang="uz" lang="uz">Oʻzbekcha</button>
+              <button type="button" class="lang-option" id="btn-lang-km" data-lang="km" lang="km">ភាសាខ្មែរ</button>
+              <button type="button" class="lang-option" id="btn-lang-hi" data-lang="hi" lang="hi">हिन्दी</button>
+              <button type="button" class="lang-option" id="btn-lang-ar" data-lang="ar" lang="ar" dir="rtl">العربية</button>
+            </div>
           </div>
         </div>
       </div>
