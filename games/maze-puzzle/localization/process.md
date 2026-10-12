@@ -31,7 +31,7 @@ The warning does not by itself fail the process exit code. The TVR gate below st
 
 ## 3. Translate
 
-One agent per language, in parallel. The prompt is `translator-brief.md`. The glossary is mandatory. Agents return `<code>.json` and `<code>.notes.md`. They do not commit into `Assets/Resources/Localization/`.
+One agent per language, in parallel. The prompt is `translator-brief.md`. The glossary is mandatory. The deliverable table is `Assets/Resources/Localization/<code>.json` (with a Unity `.meta` when the file is new). Notes are `localization/notes/<code>-notes.md`. Accepted fit warnings go in `localization/notes/<code>-fit-exceptions.json`. Agents write those paths. They do not leave the table only in a scratch directory.
 
 Stubs, if you need a skeleton to diff against:
 
@@ -50,7 +50,7 @@ python3 localization/tools/merge_table.py \
   --out /tmp/de.merged.json
 ```
 
-Omit `--into` to start from English. The merge keeps English key order, drops unknown keys, and recomputes hashes. The lead copies the merged file into `Assets/Resources/Localization/<code>.json` only after validation.
+Omit `--into` to start from English. The merge keeps English key order, drops unknown keys, and recomputes hashes. Point `--out` at `Assets/Resources/Localization/<code>.json` when that file should be updated. Validation runs on that path.
 
 ## 4. Validate
 
@@ -61,6 +61,10 @@ python3 localization/tools/validate_table.py --lang de \
 ```
 
 Exit 1 means at least one error. Warnings are printed and do not change the exit code. `--max-ratio` overrides the Latin length error ratio (default 2.5). `--fonts-dir` defaults to `Assets/Fonts`. Chains are `tools/fonts-chains.json`.
+
+`kg`, `/`, and `+` are counted as tokens, not as letters inside a word. `{0} kg`, `{0}kg`, and `{0}` with U+00A0 before `kg` may be copied; deleting `kg` is an error. Parenthesis and bracket counts must match English, including a fragment that is cut off (`Unlock (1200`). Glossary aliases live in the second block of `glossary.md` (`LVL` → `level`, `space junk` → `space trash`, `Auxiliary Scrap Pod` → `backup pod`). A hit inside the logo or another brand string does not count. A glossary loanword that is the whole string (`Donut`, `Pause`, `Bronze`, including `🍩 DONUT 🍩`) may be copied.
+
+When `localization/notes/<code>-fit-exceptions.json` exists, those fit warnings are listed in the summary and omitted from the warning count. `--show-suppressed` prints them. `--ignore-fit-keys` adds keys for one run. Fit errors stay. `--register-check` warns once that imperative and telegraphic style is not scored. It does not add style rules.
 
 Fix every error before review. Read the warnings. Glossary hits are warnings on purpose: the lead accepts or rejects them at review.
 
@@ -136,7 +140,7 @@ All of these, or the TVR stays blocked:
 | Gate | Rule |
 | --- | --- |
 | Coverage | 100% of `spec` and `str` keys. No missing, empty, or untranslated strings outside the do-not-translate list. |
-| Validator | 0 errors. |
+| Validator | 0 errors. Fit warnings listed in `notes/<code>-fit-exceptions.json` are accepted and do not count. |
 | Glyphs | 0 `glyph` errors. A `font-pending` warning is allowed only for a language whose chain is still pending, and it is written in the TVR. |
 | Audit | Hard findings 0 on `qps` and on the real table. |
 | Stale | 0 `stale` warnings, or one waiver per key in the notes. |
