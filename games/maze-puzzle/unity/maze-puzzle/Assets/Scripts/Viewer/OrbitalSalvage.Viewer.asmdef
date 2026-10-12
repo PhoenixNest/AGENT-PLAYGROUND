@@ -6,7 +6,9 @@
         "OrbitalSalvage.App",
         "OrbitalSalvage.AudioDsp",
         "OrbitalSalvage.Logic",
-        "OrbitalSalvage.JsCompat"
+        "OrbitalSalvage.JsCompat",
+        "OrbitalSalvage.Loc",
+        "OrbitalSalvage.Loc.Unity"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

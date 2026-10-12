@@ -2,9 +2,11 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using OrbitalSalvage.JsCompat;
+using OrbitalSalvage.Loc;
 
 namespace OrbitalSalvage.Logic
 {
+    using Loc = OrbitalSalvage.Loc.Loc;
     public sealed class CategoryNames
     {
         public string Singular;
@@ -83,11 +85,35 @@ namespace OrbitalSalvage.Logic
             return GetDefaultProfile();
         }
 
+        /// <summary>
+        /// Progress reset. Language is a device preference, not campaign progress, so it is copied
+        /// onto the fresh profile before the save.
+        /// </summary>
         public Profile ResetProfile()
         {
+            string language = Profile != null && Profile.Settings != null && Profile.Settings.Language != null
+                ? Profile.Settings.Language
+                : "";
             Profile = GetDefaultProfile();
+            Profile.Settings.Language = language;
             SaveProfile();
             return Profile;
+        }
+
+        /// <summary>
+        /// Stores a registry language code and tells <see cref="Loc"/> to activate it.
+        /// Unknown codes are rejected. A supported code is saved even when its table is missing;
+        /// <see cref="Loc.CurrentLanguage"/> then stays on English until the table loads.
+        /// </summary>
+        public bool SetLanguage(string code)
+        {
+            if (!LanguageRegistry.IsSupported(code)) return false;
+            if (Profile == null) Profile = GetDefaultProfile();
+            if (Profile.Settings == null) Profile.Settings = new ProfileSettings();
+            Profile.Settings.Language = code;
+            SaveProfile();
+            Loc.SetLanguage(code);
+            return true;
         }
 
         public void RecordSectorCompleted(string sectorId)

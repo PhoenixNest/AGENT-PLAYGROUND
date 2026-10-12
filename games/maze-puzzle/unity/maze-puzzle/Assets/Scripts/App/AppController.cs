@@ -2,10 +2,12 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using OrbitalSalvage.JsCompat;
+using OrbitalSalvage.Loc;
 using OrbitalSalvage.Logic;
 
 namespace OrbitalSalvage.App
 {
+    using Loc = OrbitalSalvage.Loc.Loc;
     /// <summary>
     /// Port of <c>web/main.js</c> <c>OrbitalApp</c>: pages, modals, boot timers, navigation,
     /// economy actions, and the win/lose UI. Physics stays in <c>LiveGameSession</c>; this type
@@ -91,6 +93,33 @@ namespace OrbitalSalvage.App
             RefreshCredits();
             RefreshHome();
             Rebuild();
+        }
+
+        /// <summary>
+        /// Saves a registry language code and activates it. See <see cref="EconomyManager.SetLanguage"/>.
+        /// </summary>
+        public bool SetLanguage(string code)
+        {
+            return Economy.SetLanguage(code);
+        }
+
+        /// <summary>
+        /// Boot step, called by the host immediately after this controller is constructed and the
+        /// profile has loaded. The constructor does not detect a language: EditMode tests build a
+        /// controller with no device locale, and an unset profile must stay byte-identical.
+        /// App has no UnityEngine reference, so the host supplies <see cref="IDeviceLocaleProvider"/>.
+        /// </summary>
+        public void InitializeLanguage(IDeviceLocaleProvider device)
+        {
+            string stored = Economy.Profile != null && Economy.Profile.Settings != null
+                ? Economy.Profile.Settings.Language
+                : "";
+            LocInitResult result = Loc.InitializeFromProfile(stored, device);
+            if (string.IsNullOrEmpty(result.PersistLanguage)) return;
+            if (Economy.Profile == null || Economy.Profile.Settings == null) return;
+            if (Economy.Profile.Settings.Language == result.PersistLanguage) return;
+            Economy.Profile.Settings.Language = result.PersistLanguage;
+            Economy.SaveProfile();
         }
 
         public EconomyManager Economy { get; }
