@@ -22,6 +22,10 @@ namespace OrbitalSalvage.Viewer
         int tabPlanCursor;
         double tabPlanScale;
         bool tabPrewarmArmed;
+        int locFrameVersion;
+        bool locFrameReady;
+        bool langBakeActive;
+        int langBakeCursor;
         bool residentBudgetReady;
         AppController app;
         IAppClock appClock;
@@ -83,6 +87,8 @@ namespace OrbitalSalvage.Viewer
             // does not persist a language and does not change any painted string.
             Loc.SetLoader(new ResourcesLocTableLoader());
             app.InitializeLanguage(new UnityDeviceLocaleProvider());
+            // os.parity.lang, including qps, overrides the profile for this process only.
+            LocBootPref.Apply();
             if (session != null) session.Renderer.Dispose();
             session = LiveGameSession.CreateBound(app.Economy, ParityPages.CssWidth, ParityPages.CssHeight);
             session.NowMs = () => app.NowMs;
@@ -161,8 +167,66 @@ namespace OrbitalSalvage.Viewer
             evicted.Clear();
         }
 
+        /// <summary>One int compare per frame. A change drops resident bakes and spreads the rebuild.</summary>
+        void PollLanguageFrame()
+        {
+            int version = Loc.Version;
+            if (!locFrameReady)
+            {
+                locFrameReady = true;
+                locFrameVersion = version;
+                return;
+            }
+            if (version == locFrameVersion) return;
+            locFrameVersion = version;
+            OnLanguageChanged();
+        }
+
+        void OnLanguageChanged()
+        {
+            cache.ForEach((key, chrome) =>
+            {
+                if (chrome != null) chrome.InvalidateForLanguage();
+            });
+            if (current != null) current.InvalidateForLanguage();
+            langBakeActive = true;
+            langBakeCursor = 0;
+        }
+
+        /// <summary>One resident page per frame, same idea as tab prewarm, so a language switch does not rebake every tab at once.</summary>
+        bool PumpLanguageBake()
+        {
+            if (!langBakeActive || HomeChrome.DeferLayerCache) return false;
+            HomeChrome job = null;
+            int index = 0;
+            cache.ForEach((key, chrome) =>
+            {
+                if (job != null || chrome == null) return;
+                if (index++ < langBakeCursor) return;
+                if (chrome.LayerCacheReady) return;
+                if (ReferenceEquals(chrome, current)) return;
+                job = chrome;
+            });
+            if (job == null)
+            {
+                langBakeActive = false;
+                return false;
+            }
+            langBakeCursor++;
+            try
+            {
+                job.BakeStaticLayers();
+            }
+            catch (Exception ex)
+            {
+                Debug.LogError("[ParityViewer] language rebake: " + ex.Message);
+            }
+            return true;
+        }
+
         void PumpTabPrewarm()
         {
+            if (PumpLanguageBake()) return;
             if (RenderOpts.NoPrewarm && app != null && app.CurrentPage == "game") return;
             if (!ParityPages.ShouldPrewarmTabs(selfTesting) || app == null || tabPlan == null || tabPlan.Length == 0) return;
             bool hold = string.IsNullOrEmpty(app.LoadingBar) && app.CurrentPage == "loading";
