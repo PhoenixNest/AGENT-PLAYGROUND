@@ -85,4 +85,26 @@ for name, text in need.items():
         raise SystemExit("bad subset " + name)
     font.close()
 PY
+# Uzbek modifier. Fredoka has no U+02BB. Nunito's glyph is advance 500 with
+# ~180 side bearings and no kern pair, so oʻ / gʻ draws as a detached apostrophe.
+# These four files contain only the corrected mark. latin-uz puts the matching
+# weight first. Display 600/700 follow Fredoka's face weight. Body 700/800/900
+# follow Nunito. 700 is checked against Fredoka-700 'o', the tighter of the two.
+PATCH="$HERE/patch_uz_modifier.py"
+NUNITO_VAR="$DL/Nunito[wght].ttf"
+patch_mark() {
+  local weight="$1" letter="$2"
+  echo "uz patch $weight"
+  "$PY" "$SUB" --font "$NUNITO_VAR" --variations "wght=$weight" \
+    --unicodes U+02BB --keep-os2 --out "$WORK/nunito-$weight.ttf"
+  "$PY" "$PATCH" --font "$WORK/nunito-$weight.ttf" --letter-font "$letter" \
+    --out "$FONTS/Nunito-uz-patch-$weight.ttf"
+  cp -f "$FONTS/Nunito-uz-patch-$weight.ttf" "$BYTES/Nunito-uz-patch-$weight.bytes"
+}
+patch_mark 600 "$FONTS/Fredoka-600.ttf"
+patch_mark 700 "$FONTS/Fredoka-700.ttf"
+patch_mark 800 "$FONTS/Nunito-800.ttf"
+patch_mark 900 "$FONTS/Nunito-900.ttf"
+cp -f "$DL/licenses/Nunito-OFL.txt" "$FONTS/Nunito-uz-patch-OFL.txt"
+
 echo "make_fonts done"

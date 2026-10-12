@@ -46,6 +46,13 @@ namespace OrbitalSalvage.Viewer.Tests
             AssertHasHole("hi", "हिन्दी");
             AssertHasHole("ar", "العربية");
 
+            Assert.IsTrue(Loc.SetLanguage("uz"), "uz.json did not load");
+            OutlineFonts.Clear();
+            Paint("settings_modal_language", "uz-after-picker.png", true);
+            Paint("maps_world_1_fresh", "uz-after-play.png", false);
+            Paint("shop_skyboxes_default", "uz-after-level.png", false);
+            Paint("modal_defeat_12_of_20", "uz-after-void.png", false);
+
             Assert.IsTrue(Loc.SetDiagnostic("qps"));
             Paint("settings_default", "settings_default__qps.png", false);
             Paint("settings_modal_language", "settings_modal_language__qps.png", true);

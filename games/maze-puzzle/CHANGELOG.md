@@ -13,6 +13,13 @@ Paths written as `tools/parity/...` in entries dated before 2026-10-08 are the l
 
 ### Fixed
 
+#### Uzbek modifier letter sat away from the letter (2026-10-12)
+
+- U+02BB (`oʻ`, `gʻ`) drew as a detached apostrophe. Fredoka has no glyph for it. Nunito's glyph has advance 500, side bearings near 180, and no GPOS pair, and the renderer only kerns glyphs from one font.
+- `latin-uz` puts `Nunito-uz-patch` first for Uzbek only. The patch is U+02BB with the outline shifted to a left side bearing of 24 and a short advance (600: 169, 700: 187, 800: 207, 900: 227 font units). Display uses the Fredoka face weight (600 or 700). Body uses Nunito 700, 800, and 900. `de`, `fr`, and English stay on the previous chain.
+- Rebuilt with `localization/tools/make_fonts.sh` and `patch_uz_modifier.py`. Each patch file is 880 bytes except weight 900, which is 876. The OFL sidecar is `Nunito-uz-patch-OFL.txt`.
+- Focused EditMode (`LocFontRegistryTests|LocFontChainTests|LocFontPickerTests`): 12 passed, 0 failed. Results `/tmp/maze-i18n/loc-fonts/uz-focused.xml`, log `/tmp/maze-i18n/loc-fonts/uz-focused.log`. Full EditMode: 543 passed, 83 failed, 3 skipped, 629 total, exit 2. Results `/tmp/maze-i18n/loc-fonts/uz-full.xml`, log `/tmp/maze-i18n/loc-fonts/uz-full.log`. The 83 are the known set (`ReferenceComparisonTests` 73, `ReferenceGateTests` 9, `QuotaAndModalTests.GameAndPauseStills_MatchKnownHashes`).
+
 #### Identical English copies per language (2026-10-12)
 
 - `notes/<code>-identical-ok.json` lets a key stay equal to English without an `untranslated` error. German `Hangar` and `Reset` use that file. `merge_table.py` recopies `doNotTranslate` from English and no longer keeps language-specific entries.
