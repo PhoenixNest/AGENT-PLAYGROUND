@@ -2,7 +2,7 @@
 
 Controlled vocabulary for the 16 target languages. English is the source. These recommendations are drafts by the localisation lead, not a native-speaker sign-off. Confidence is the lead's confidence in the Chinese, Japanese, Korean, and European rows. Every translated row is marked **native review recommended** for Khmer, Uzbek, Filipino, and Hindi.
 
-The machine-readable block at the bottom is what `tools/validate_table.py` reads. A `check: yes` term produces a **warning** (never an error) when the English string contains the term and the translation does not contain the recommendation.
+The machine-readable block at the bottom is what `tools/validate_table.py` reads. A `check: yes` term produces a **warning** (never an error) when the English string contains the term and the translation does not contain the recommendation. A second block, `alias` then `term`, maps another English surface onto a term id (`LVL` onto `level`). A match inside a do-not-translate string or a brand string does not count. `space trash` inside the logo `SPACE TRASH CLEAN` is not a request for the space-trash word.
 
 ## How to read a row
 
@@ -87,7 +87,7 @@ One line each. The translations are in the table below, not here.
 - shift — one daily job.
 - bronze, silver, gold — the three shift tiers. Gold here is not gold coins.
 - master bounty — the reward for all three shifts.
-- backup pod — the spare pod on a failed run.
+- backup pod — the spare pod on a failed run. English has two names for the same thing: the button says Backup Pod (`Launch Backup Pod`) and the toast says Auxiliary Scrap Pod (`Auxiliary Scrap Pod Deployed`). Pick this one glossary word for both. Do not invent a second word for the toast.
 - stipend — the free daily coins.
 - allowance — that gift on the claim banner.
 - debrief — the success summary.
@@ -140,7 +140,7 @@ bronze	bronze	no	no	med	km uz fil hi	Easiest daily shift. A metal colour, not a 
 silver	silver	no	no	med	km uz fil hi	Middle daily shift.	银	銀	シルバー	실버	Silber	argent	plata	argento	prata	bạc	pilak	perak	kumush	ប្រាក់	चाँदी	فضي
 gold	gold	no	no	med	km uz fil hi	Hardest daily shift. Do not reuse the gold-coins phrase here.	金	金	ゴールド	골드	Gold	or	oro	oro	ouro	vàng	ginto	emas	oltin	មាស	स्वर्ण	ذهبي
 master-bounty	master bounty	no	no	low	km uz fil hi	The bonus for finishing all three shifts. Master All-Clear Bounty.	大师赏金	大師賞金	マスターほうしゅう	마스터 포상	Meisterprämie	prime de maître	recompensa maestra	taglia maestra	prémio mestre	thưởng bậc thầy	gantimpalang master	hadiah master	usta mukofoti	រង្វាន់អ្នកជំនាញ	मास्टर इनाम	مكافأة الخبير
-backup-pod	backup pod	no	yes	low	km uz fil hi	The spare pod offered on a failed run. Helpful, not scary.	备用舱	備用艙	バックアップポッド	예비 포드	Reservekapsel	capsule de secours	cápsula de reserva	capsula di riserva	cápsula de reserva	khoang dự phòng	ekstrang pod	pod cadangan	zaxira kapsula	កន្សោមបម្រុង	बैकअप पॉड	حجرة احتياط
+backup-pod	backup pod	no	yes	low	km uz fil hi	The spare pod offered on a failed run. Helpful, not scary. English says Backup Pod on the button and Auxiliary Scrap Pod on the toast. Use this one word for both.	备用舱	備用艙	バックアップポッド	예비 포드	Reservekapsel	capsule de secours	cápsula de reserva	capsula di riserva	cápsula de reserva	khoang dự phòng	ekstrang pod	pod cadangan	zaxira kapsula	កន្សោមបម្រុង	बैकअप पॉड	حجرة احتياط
 stipend	stipend	no	yes	med	km uz fil hi	The free daily coin gift. FREE DAILY STIPEND. Same family as allowance.	每日津贴	每日津貼	まいにちのてあて	일일 용돈	Tagesprämie	allocation du jour	asignación diaria	paghetta giornaliera	subsídio diário	trợ cấp hằng ngày	araw-araw na baon	uang saku harian	kunlik nafaqa	ប្រាក់ឧបត្ថម្ភប្រចាំថ្ងៃ	रोज़ का भत्ता	مخصص يومي
 allowance	allowance	no	no	med	km uz fil hi	The same gift on the claim banner. Allowance Claimed. Pocket money, not a salary.	零用钱	零用錢	おこづかい	용돈	Taschengeld	argent de poche	dinero de bolsillo	paghetta	mesada	tiền tiêu vặt	baon	uang jajan	choʻntak puli	លុយហោប៉ៅ	जेब खर्च	مصروف
 debrief	debrief	no	no	med	km uz fil hi	The success summary after a run. Cheerful, short.	结算	結算	結果報告	결과 보고	Abschluss	bilan	resumen	riepilogo	resumo	tổng kết	ulat	laporan	hisobot	សង្ខេប	सारांश	ملخص
@@ -162,4 +162,15 @@ care-package	care package	no	no	low	km uz fil hi	A gift bundle. Fragment keys ma
 wear	wear	no	no	med	km uz fil hi	Button that puts a costume on.	穿上	穿上	きる	입기	Anziehen	porter	poner	indossa	vestir	mặc	isuot	pakai	kiyish	ពាក់	पहनें	ارتد
 unlock	unlock	no	no	med	km uz fil hi	Button that spends coins on a costume. Unlock (1200. The number stays in its own run.	解锁	解鎖	かいじょ	잠금 해제	Freischalten	débloquer	desbloquear	sblocca	desbloquear	mở khóa	buksan	buka	ochish	ដោះសោ	अनलॉक	افتح
 nom-nom	nom nom	no	no	low	km uz fil hi	Nibbles' eating noise. A cute local sound is fine. Keeping nom nom is also fine.	啊呜啊呜	啊嗚啊嗚	もぐもぐ	냠냠	mampf mampf	miam miam	ñam ñam	gnam gnam	nham nham	nham nham	nyam nyam	nyam nyam	ham ham	ញ៉ាំញ៉ាំ	नम नम	نام نام
+```
+
+## Aliases
+
+Surfaces the headword does not spell. `validate_table.py` treats each alias as the term id, with the same `check` flag. Abbreviations are exact (`LVL` does not match inside another word). `space junk` is the body-copy form of `space trash`. `Auxiliary Scrap Pod` is the toast name of `backup pod`.
+
+```text
+alias	term
+LVL	level
+space junk	space-trash
+Auxiliary Scrap Pod	backup-pod
 ```
