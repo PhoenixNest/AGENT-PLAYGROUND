@@ -382,6 +382,311 @@ def test_real_german_stub():
         print(f"untranslated findings: {len(untranslated_keys)}")
 
 
+def test_unit_token_not_substring():
+    english = make(
+        "en",
+        {
+            "Melody": "Background space synth melody",
+            "Mass": "105 kg",
+            "Slash": "Ready",
+            "Plus": "Ready",
+            "Quota": "0 / 3",
+            "Bonus": "+100",
+        },
+    )
+    german = make(
+        "de",
+        {
+            "Melody": "Hintergrund-Melodie",
+            "Mass": "105 kg im Background",
+            "Slash": "und/oder",
+            "Plus": "und+oder",
+            "Quota": "0 / 3",
+            "Bonus": "+100",
+        },
+    )
+    findings = check(english, german, "de")
+    assert not has(findings, "error", "unit", "spec:Melody"), findings
+    assert not has(findings, "error", "unit", "spec:Mass"), findings
+    assert not has(findings, "error", "unit", "spec:Slash"), findings
+    assert not has(findings, "error", "unit", "spec:Plus"), findings
+
+    dropped = make(
+        "de",
+        {
+            "Melody": "Hintergrund-Melodie",
+            "Mass": "105",
+            "Slash": "und/oder",
+            "Plus": "und+oder",
+            "Quota": "0  3",
+            "Bonus": "100",
+        },
+    )
+    bad = check(english, dropped, "de")
+    assert has(bad, "error", "unit", "spec:Mass"), bad
+    assert has(bad, "error", "unit", "spec:Quota"), bad
+    assert has(bad, "error", "unit", "spec:Bonus"), bad
+
+
+def test_placeholder_unit_copy():
+    for sample in ("{0} kg", "{0}kg", "{0}\u00a0kg", "{0} / {1} kg"):
+        assert kit.is_unit_like(sample), sample
+        assert kit.allowed_identical(sample, set()), sample
+    assert not kit.is_unit_like("Goal: {0} kg")
+    assert not kit.is_unit_like("Background")
+
+    english = make("en", {}, {"unit.kg": "{0} kg", "unit.quota": "{0} / {1} kg"})
+    copied = make("de", {}, {"unit.kg": "{0} kg", "unit.quota": "{0} / {1} kg"})
+    same = check(english, copied, "de")
+    assert not has(same, "error", "untranslated", "str:unit.kg"), same
+    assert not has(same, "error", "untranslated", "str:unit.quota"), same
+    assert not kinds(same, "unit")
+
+    spaced = make("de", {}, {"unit.kg": "{0}\u00a0kg", "unit.quota": "{0} / {1}\u00a0kg"})
+    nobreak = check(english, spaced, "de")
+    assert not kinds(nobreak, "unit"), nobreak
+    assert not has(nobreak, "error", "untranslated", "str:unit.kg")
+
+    tight = make("de", {}, {"unit.kg": "{0}kg", "unit.quota": "{0}/{1} kg"})
+    packed = check(english, tight, "de")
+    assert not kinds(packed, "unit"), packed
+
+    dropped = make("de", {}, {"unit.kg": "{0}", "unit.quota": "{0} / {1}"})
+    gone = check(english, dropped, "de")
+    assert has(gone, "error", "unit", "str:unit.kg"), gone
+    assert has(gone, "error", "unit", "str:unit.quota"), gone
+
+
+def test_glossary_brand_and_aliases():
+    glossary = [
+        {
+            "term": "space-trash",
+            "en": "space trash",
+            "dnt": False,
+            "check": True,
+            "alternates": ["space trash"],
+            "de": "Weltraummüll",
+        },
+        {
+            "term": "space-trash-clean",
+            "en": "SPACE TRASH CLEAN",
+            "dnt": True,
+            "check": True,
+            "alternates": ["SPACE TRASH CLEAN"],
+            "de": "SPACE TRASH CLEAN",
+        },
+        {
+            "term": "level",
+            "en": "level/levels",
+            "dnt": False,
+            "check": True,
+            "alternates": ["level", "levels"],
+            "de": "Level",
+        },
+    ]
+    aliases = [
+        {"alias": "LVL", "term": "level"},
+        {"alias": "space junk", "term": "space-trash"},
+    ]
+    english = make(
+        "en",
+        {
+            "Logo": "SPACE TRASH CLEAN",
+            "Body": "Eat space trash",
+            "Junk": "Feed space junk",
+            "Chip": "LVL 10",
+            "Kept": "LVL 2",
+            "Footer": "Eat space trash. SPACE TRASH CLEAN",
+        },
+    )
+    german = make(
+        "de",
+        {
+            "Logo": "WELTRAUM",
+            "Body": "Essen",
+            "Junk": "Futter",
+            "Chip": "Stufe 10",
+            "Kept": "Level 2",
+            "Footer": "Weltraummüll. SPACE TRASH CLEAN",
+        },
+    )
+    findings = check(english, german, "de", glossary=glossary, aliases=aliases)
+    logo = [item for item in findings if item.key == "spec:Logo" and item.kind == "glossary"]
+    assert logo, findings
+    assert all("Weltraummüll" not in item.message for item in logo), logo
+    assert any("SPACE TRASH CLEAN" in item.message for item in logo), logo
+    assert has(findings, "warning", "glossary", "spec:Body"), findings
+    assert has(findings, "warning", "glossary", "spec:Junk"), findings
+    assert has(findings, "warning", "glossary", "spec:Chip"), findings
+    assert not has(findings, "warning", "glossary", "spec:Kept"), findings
+    assert not has(findings, "warning", "glossary", "spec:Footer"), findings
+
+
+def test_fragment_paren_balance():
+    english = make(
+        "en",
+        {
+            "Unlock": "Unlock (1200",
+            "Trophy": "Trophy: Daily Duty Star (+500",
+            "Ok": "(ready)",
+        },
+    )
+    matched = make(
+        "de",
+        {
+            "Unlock": "Öffnen (1200",
+            "Trophy": "Trophäe: Tagesstern (+500",
+            "Ok": "(bereit)",
+        },
+    )
+    good = check(english, matched, "de")
+    assert not kinds(good, "balance"), good
+
+    closed = make(
+        "de",
+        {
+            "Unlock": "Öffnen (1200)",
+            "Trophy": "Trophäe: Tagesstern (+500)",
+            "Ok": "bereit",
+        },
+    )
+    bad = check(english, closed, "de")
+    assert has(bad, "warning", "balance", "spec:Unlock"), bad
+    assert has(bad, "warning", "balance", "spec:Trophy"), bad
+    assert has(bad, "warning", "balance", "spec:Ok"), bad
+
+
+def test_fit_exceptions_suppressed():
+    index = {
+        ("spec", "LVL 1"): {"fz": "16px", "uppercase": "none", "max_width": "10", "key": "LVL 1"},
+        ("spec", "Wide"): {"fz": "16px", "uppercase": "none", "max_width": "10", "key": "Wide"},
+    }
+    english = make("en", {"LVL 1": "Name", "Wide": "Name"})
+    german = make("de", {"LVL 1": "Namen", "Wide": "Namen"})
+    reason = "Glossary keeps Level. The LVL chip is narrower than the word."
+    findings = check(english, german, "de", index=index, fit_exceptions={"spec:LVL 1": reason})
+    assert has(findings, "suppressed", "fit", "spec:LVL 1"), findings
+    assert not has(findings, "warning", "fit", "spec:LVL 1"), findings
+    assert has(findings, "warning", "fit", "spec:Wide"), findings
+    suppressed = next(item for item in findings if item.key == "spec:LVL 1" and item.kind == "fit")
+    assert suppressed.reason == reason
+
+    bare = check(english, german, "de", index=index, fit_exceptions={"LVL 1": reason})
+    assert has(bare, "suppressed", "fit", "spec:LVL 1"), bare
+
+    huge = make("de", {"LVL 1": "Namen" * 12, "Wide": "Namen"})
+    forced = check(english, huge, "de", index=index, fit_exceptions={"spec:LVL 1": reason})
+    assert has(forced, "error", "fit", "spec:LVL 1"), forced
+    assert not has(forced, "suppressed", "fit", "spec:LVL 1"), forced
+
+
+def test_backup_pod_glossary_note():
+    blob = kit.DEFAULT_GLOSSARY.read_text(encoding="utf-8")
+    assert "Auxiliary Scrap Pod" in blob
+    assert "Backup Pod" in blob
+    assert "two names" in blob
+    aliases = kit.parse_aliases(kit.DEFAULT_GLOSSARY)
+    assert {"alias": "LVL", "term": "level"} in aliases
+    assert {"alias": "space junk", "term": "space-trash"} in aliases
+    assert {"alias": "Auxiliary Scrap Pod", "term": "backup-pod"} in aliases
+    terms = kit.parse_glossary(kit.DEFAULT_GLOSSARY)
+    english = make(
+        "en",
+        {"Launch": "Launch Backup Pod (+8 Scrap!)"},
+        {"toast.backup.deployed": "Auxiliary Scrap Pod Deployed! (+8 Scrap)"},
+    )
+    split = make(
+        "de",
+        {"Launch": "Reservekapsel (+8 Schrott)"},
+        {"toast.backup.deployed": "Hilfskapsel gestartet! (+8 Schrott)"},
+    )
+    warned = check(english, split, "de", glossary=terms, aliases=aliases)
+    assert has(warned, "warning", "glossary", "str:toast.backup.deployed"), warned
+    assert not has(warned, "warning", "glossary", "spec:Launch"), warned
+    one_word = make(
+        "de",
+        {"Launch": "Reservekapsel (+8 Schrott)"},
+        {"toast.backup.deployed": "Reservekapsel gestartet! (+8 Schrott)"},
+    )
+    quiet = check(english, one_word, "de", glossary=terms, aliases=aliases)
+    assert not kinds(quiet, "glossary"), quiet
+
+
+def test_loanword_identical_copy():
+    glossary = [
+        {
+            "term": "donut",
+            "en": "donut",
+            "dnt": False,
+            "check": False,
+            "alternates": ["donut"],
+            "de": "Donut",
+        },
+        {
+            "term": "pause",
+            "en": "pause",
+            "dnt": False,
+            "check": False,
+            "alternates": ["pause"],
+            "de": "Pause",
+        },
+        {
+            "term": "bronze",
+            "en": "bronze",
+            "dnt": False,
+            "check": False,
+            "alternates": ["bronze"],
+            "de": "Bronze",
+        },
+    ]
+    english = make("en", {"Donut": "🍩 DONUT 🍩", "Pause": "Pause", "Bronze": "Bronze", "Hello": "Hello"})
+    copied = make("de", {"Donut": "🍩 DONUT 🍩", "Pause": "Pause", "Bronze": "Bronze", "Hello": "Hello"})
+    findings = check(english, copied, "de", glossary=glossary)
+    assert not has(findings, "error", "untranslated", "spec:Donut"), findings
+    assert not has(findings, "error", "untranslated", "spec:Pause"), findings
+    assert not has(findings, "error", "untranslated", "spec:Bronze"), findings
+    assert has(findings, "error", "untranslated", "spec:Hello"), findings
+
+
+def test_register_check_skips_style():
+    english = make("en", {"Close": "Close", "Play": "Play"})
+    german = make("de", {"Close": "Schließen", "Play": "Spiel"})
+    off = check(english, german, "de")
+    assert not kinds(off, "register"), off
+    assert not any(item.kind == "style" for item in off), off
+    on = check(english, german, "de", register_check=True)
+    assert has(on, "warning", "register", "table"), on
+    assert not any(item.kind == "style" for item in on), on
+    assert not any(item.key == "spec:Close" and item.kind == "register" for item in on), on
+
+
+def test_real_german_table():
+    _en_raw, english = kit.load_json(kit.DEFAULT_EN)
+    table_path = kit.DEFAULT_EN.with_name("de.json")
+    _raw, german = kit.load_json(table_path)
+    fit_path = kit.LOC_DIR / "notes" / "de-fit-exceptions.json"
+    findings = check(
+        english,
+        german,
+        "de",
+        glossary=kit.parse_glossary(kit.DEFAULT_GLOSSARY),
+        aliases=kit.parse_aliases(kit.DEFAULT_GLOSSARY),
+        index=kit.load_key_index(kit.DEFAULT_INDEX),
+        fit_exceptions=kit.load_fit_exceptions(fit_path),
+    )
+    errors = [item for item in findings if item.severity == "error"]
+    warnings = [item for item in findings if item.severity == "warning"]
+    suppressed = [item for item in findings if item.severity == "suppressed"]
+    assert not errors, errors[:8]
+    assert not kinds(findings, "unit"), findings
+    assert len(suppressed) == 50, len(suppressed)
+    assert all(item.kind == "fit" and item.key.startswith("spec:LVL ") for item in suppressed)
+    assert not has(findings, "warning", "fit", "spec:LVL 1")
+    assert not has(findings, "error", "untranslated", "str:unit.kg")
+    assert has(findings, "warning", "glossary", "spec:TOY SHOP"), findings
+    assert len(warnings) == 28, (len(warnings), kit.summarise(findings))
+
+
 def main() -> int:
     tests = [
         test_csharp_parity,
@@ -392,6 +697,15 @@ def main() -> int:
         test_glyphs_and_pending,
         test_stubs_merge_sample_glossary,
         test_real_german_stub,
+        test_unit_token_not_substring,
+        test_placeholder_unit_copy,
+        test_glossary_brand_and_aliases,
+        test_fragment_paren_balance,
+        test_fit_exceptions_suppressed,
+        test_backup_pod_glossary_note,
+        test_loanword_identical_copy,
+        test_register_check_skips_style,
+        test_real_german_table,
     ]
     for test in tests:
         test()
