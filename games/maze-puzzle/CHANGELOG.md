@@ -13,6 +13,13 @@ Paths written as `tools/parity/...` in entries dated before 2026-10-08 are the l
 
 ### Added
 
+#### Unity app icon (2026-10-12)
+
+- The default app icon is now the Orbital Salvage icon: a cute black-hole mascot inside a pink and cyan vortex, pulling in a cheese wedge, a spiky gold star and a donut. The source is `Assets/Icons/AppIcon.png` (1024x1024, opaque RGB, no pre-rounded corners). The three concepts Gemini 3.8 Flash produced, and the chosen one (`orbital-salvage-icon-alt1-1024.png`), are under `resources/app-icon/`.
+- `AppIconSetup` (menu `Orbital Salvage/Build/Apply App Icon`, batch `OrbitalSalvage.Editor.AppIconSetup.ApplyBatch`) configures the importer (no alpha, no mipmaps, uncompressed) and assigns the texture as the project default icon. iOS generates every size from it. The `ProjectSettings.asset` change is only the `m_BuildTargetIcons` entry; other fields Unity reserialises on open are left out.
+- The iOS device export writes `AppIcon.appiconset` with the 1024 store icon and the 180, 120, 87, 80, 60, 58, 40 and 29 px icons (all RGB). The icon on the iPhone X home screen was read back through SpringBoard and matches. The bundle id stays `io.dev.maze`.
+- `AppIconTests` (4) check the 1024 size, that the source has no alpha, that the default icon is the project icon, and that the bundle id is unchanged.
+
 #### Unity GPU cost, playbatch A11 fix (2026-10-11, `agent/perf/gpu-cost`)
 
 - The phone corruption is in the batch path that `c2fafd0` took off the default. `playbatch` stays off that default (`rrshadow,rrplus,backdroplow,playhalf,fastshape,fastarc`) and remains a pref token. The phone still needs a screenshot pass.
