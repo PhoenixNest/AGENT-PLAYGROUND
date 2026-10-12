@@ -10,10 +10,11 @@ namespace OrbitalSalvage.Render
     /// Side padding is 16px, the horizontal padding of <c>.btn-cartoon-primary</c>
     /// (the 288px pause buttons). A shrink-wrapped span whose captured run is already
     /// wider than that inset relaxes the pad back to the element edges so a same-length
-    /// string still fits. Sibling icons that are children of the element reserve their box.
-    /// A button whose icon+text pair is centered shifts that icon with the text when the
-    /// pair still fits. A shrink-wrapped label span (the home play label) does not own
-    /// the sibling icon, so the text stays inside its own box and the icon is not moved.
+    /// string still fits. A preceding emoji reserves its right edge plus the captured gap
+    /// and the English leading whitespace, even when the translation is shorter. A centered
+    /// pair shifts that icon with the text. An icon in the middle of the English glyphs
+    /// stays put unless the translation is wider. A same-row sibling the English run already
+    /// overlaps (a dock badge) keeps the captured x. The home play ▶ is that kind of sibling.
     /// </remarks>
     public static class TextFit
     {
@@ -60,6 +61,8 @@ namespace OrbitalSalvage.Render
         {
             public int Index;
             public double X, Y, W, H;
+            /// <summary>Emoji in the same row whose parent is the text element's sibling, not the text element.</summary>
+            public bool RowSibling;
         }
 
         public struct Input
@@ -81,6 +84,10 @@ namespace OrbitalSalvage.Render
             public double CeilingY;
             /// <summary>Parent content box. ParentW &lt;= 0 means unknown. Used only when this element is shrink-wrapped to the run.</summary>
             public double ParentX, ParentW;
+            /// <summary>Width of the English run's leading whitespace. The translated string does not include it.</summary>
+            public double LeadPad;
+            /// <summary>Width of the English run's trailing whitespace.</summary>
+            public double TrailPad;
         }
 
         public struct Layout
@@ -117,8 +124,10 @@ namespace OrbitalSalvage.Render
                 LinePitch = input.RunH > 1 ? input.RunH : Math.Max(1, input.FontPx)
             };
             double width = measure != null ? measure(input.FontPx, input.LetterSpacing) : input.RunW;
-            // An icon that already sits on the English run is left alone unless the translation is wider.
-            if (HasRunOverlap(input) && width <= input.RunW + 0.5)
+            // A mid-run icon that already sits on the English glyphs stays put unless the
+            // translation is wider. A preceding icon is reserved even when the translation is shorter,
+            // because re-anchoring would otherwise start the first letter under it.
+            if (HasRunOverlap(input) && !HasPrefixIcon(input) && width <= input.RunW + 0.5)
             {
                 plan.Action = Action.Single;
                 plan.KeepX = true;
@@ -277,10 +286,11 @@ namespace OrbitalSalvage.Render
         {
             if (plan.Anchor == Anchor.Center && input.IsButton && leading)
             {
-                double gap = input.RunX - (leadX + leadW);
-                if (gap < 0) gap = 0;
-                if (gap <= IconGapSlop)
+                double rawGap = input.RunX - (leadX + leadW);
+                if (rawGap < 0) rawGap = 0;
+                if (rawGap <= IconGapSlop)
                 {
+                    double gap = rawGap + Math.Max(0, input.LeadPad);
                     double pairW = leadW + gap + textW;
                     double pairLeft = input.ElX + (input.ElW - pairW) * 0.5;
                     bool fits = pairLeft >= input.ElX - OutsideSlop
@@ -348,6 +358,37 @@ namespace OrbitalSalvage.Render
             return false;
         }
 
+        /// <summary>
+        /// The icon starts at or before the run and is part of the same element.
+        /// A shorter translation re-anchored at <see cref="Input.RunX"/> would paint its first letter on it.
+        /// </summary>
+        static bool HasPrefixIcon(Input input)
+        {
+            if (input.Icons == null) return false;
+            for (int i = 0; i < input.Icons.Length; i++)
+            {
+                Icon icon = input.Icons[i];
+                if (icon.RowSibling || icon.X > input.RunX + 2) continue;
+                if (OverlapsRun(icon, input)) return true;
+            }
+            return false;
+        }
+
+        /// <summary>Leading or trailing whitespace of the captured English run. Empty when there is none.</summary>
+        public static string EdgeSpaces(string raw, bool lead)
+        {
+            if (string.IsNullOrEmpty(raw)) return "";
+            if (lead)
+            {
+                int n = 0;
+                while (n < raw.Length && char.IsWhiteSpace(raw[n])) n++;
+                return n == 0 ? "" : raw.Substring(0, n);
+            }
+            int end = raw.Length;
+            while (end > 0 && char.IsWhiteSpace(raw[end - 1])) end--;
+            return end == raw.Length ? "" : raw.Substring(end);
+        }
+
         static int MaxLines(Input input, double pitch)
         {
             if (LocksToOneLine(input)) return 1;
@@ -396,9 +437,12 @@ namespace OrbitalSalvage.Render
                     double runRight = input.RunX + input.RunW;
                     bool lead = iconRight <= input.RunX + 2 && input.RunX - iconRight <= IconGapSlop;
                     bool trail = icon.X >= runRight - 2 && icon.X - runRight <= IconGapSlop;
-                    if (lead)
+                    // A sibling badge is captured on top of its icon. Do not push that text past the icon.
+                    bool prefix = icon.X <= input.RunX + 2 && (lead || (!icon.RowSibling && OverlapsRun(icon, input)));
+                    if (prefix)
                     {
-                        double edge = iconRight + Math.Max(0, input.RunX - iconRight);
+                        double gap = Math.Max(0, input.RunX - iconRight);
+                        double edge = iconRight + gap + Math.Max(0, input.LeadPad);
                         if (edge > left) left = edge;
                         if (!leading || icon.X < leadX)
                         {
@@ -411,7 +455,12 @@ namespace OrbitalSalvage.Render
                     else if (trail)
                     {
                         double edge = icon.X - Math.Max(0, icon.X - runRight);
+                        if (input.TrailPad > 0) edge -= input.TrailPad;
                         if (edge < right) right = edge;
+                    }
+                    else if (icon.RowSibling && OverlapsRun(icon, input))
+                    {
+                        if (input.RunX > left) left = input.RunX;
                     }
                     else if (OverlapsRun(icon, input))
                     {
@@ -448,6 +497,16 @@ namespace OrbitalSalvage.Render
                 }
             }
             if (right < left) right = left + 1;
+            // Pad relax can pull a centered badge back under the icon it already sits on.
+            if (icons != null)
+            {
+                for (int i = 0; i < icons.Length; i++)
+                {
+                    Icon icon = icons[i];
+                    if (!icon.RowSibling || !OverlapsRun(icon, input)) continue;
+                    if (input.RunX > left) left = input.RunX;
+                }
+            }
         }
 
         static bool TryLeading(Input input, out Icon lead)
