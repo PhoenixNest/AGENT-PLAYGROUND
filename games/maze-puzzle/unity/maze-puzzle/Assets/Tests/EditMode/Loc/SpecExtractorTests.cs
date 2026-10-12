@@ -116,7 +116,7 @@ namespace OrbitalSalvage.Loc.Tests
             Assert.IsFalse(zero.EnglishJson.Contains("\r"));
 
             string editor = File.ReadAllText(Path.Combine(Application.dataPath, "Scripts", "Editor", "LocExtract.cs"));
-            StringAssert.Contains("Orbital Salvage/Localization/Extract Spec Strings", editor);
+            StringAssert.Contains("Orbital Salvage/Tools/Extract Localization Spec Strings", editor);
             StringAssert.Contains("RunBatch", editor);
         }
 

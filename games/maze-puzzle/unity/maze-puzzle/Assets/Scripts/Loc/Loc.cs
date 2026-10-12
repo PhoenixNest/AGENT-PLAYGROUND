@@ -129,27 +129,27 @@ namespace OrbitalSalvage.Loc
         /// Chooses the active language from a stored profile code and a device provider.
         /// <paramref name="storedLanguage"/> is the raw <c>settings.language</c> value.
         /// This method does not write the profile. <see cref="LocInitResult.PersistLanguage"/>
-        /// is the canonical code to store, or null when the host must leave the file alone.
-        /// English detection is never persisted. A non-English detection is persisted only when
-        /// that table loaded. A stored supported code whose table is missing stays stored and
-        /// the active language is English, so a later drop-in of the table can pick it up.
-        /// The stored value is then authoritative on the next boot.
+        /// is set only when the profile is empty and device detection yields a non-English code
+        /// whose table loaded. A stored value is never rewritten: <see cref="SetLanguage"/> is
+        /// what writes a registry code, and a hand-edited tag is only resolved for activation.
+        /// English detection is never persisted. A stored code whose table is missing, or that
+        /// does not resolve, leaves the active language at English.
         /// </summary>
         public static LocInitResult InitializeFromProfile(string storedLanguage, IDeviceLocaleProvider device)
         {
             string stored = storedLanguage ?? "";
-            string canonical = Canonical(stored);
-            if (canonical != null && TableAvailable(canonical))
+            if (stored.Length > 0)
             {
-                SetLanguage(canonical);
-                return new LocInitResult
+                string resolved = Canonical(stored);
+                if (resolved != null && TableAvailable(resolved))
                 {
-                    ActiveLanguage = canonical,
-                    PersistLanguage = stored == canonical ? null : canonical,
-                };
-            }
-            if (canonical != null)
-            {
+                    SetLanguage(resolved);
+                    return new LocInitResult
+                    {
+                        ActiveLanguage = resolved,
+                        PersistLanguage = null,
+                    };
+                }
                 SetLanguage(LanguageRegistry.DefaultCode);
                 return new LocInitResult
                 {

@@ -9,7 +9,7 @@ namespace OrbitalSalvage.Viewer.Tests
 {
     public class MenuPathTests
     {
-        static readonly string[] Groups = { "Preview", "Build", "Play", "Localization", "Tools" };
+        static readonly string[] Groups = { "Preview", "Build", "Play", "Tools" };
 
         static readonly string[] CheckedToggles =
         {
@@ -29,10 +29,10 @@ namespace OrbitalSalvage.Viewer.Tests
         }
 
         [Test]
-        public void Menu_UsesFiveGroupsWithUniquePairedPaths()
+        public void Menu_UsesFourGroupsWithUniquePairedPaths()
         {
             var entries = Collect();
-            Assert.GreaterOrEqual(entries.Count, 12, "expected Preview, Build, Play, Localization, and Tools items");
+            Assert.GreaterOrEqual(entries.Count, 12, "expected Preview, Build, Play, and Tools items");
 
             var pairs = new HashSet<string>();
             var groups = new HashSet<string>();

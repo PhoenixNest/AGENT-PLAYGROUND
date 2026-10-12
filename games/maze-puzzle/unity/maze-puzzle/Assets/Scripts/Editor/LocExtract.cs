@@ -13,13 +13,19 @@ namespace OrbitalSalvage.Editor
     /// </summary>
     public static class LocExtract
     {
-        public const string MenuPath = "Orbital Salvage/Localization/Extract Spec Strings";
+        public const string MenuPath = "Orbital Salvage/Tools/Extract Localization Spec Strings";
+        public const int Priority = 401;
 
-        // 320 sits between Play (305) and Tools (400) so the menu-path test keeps its group gap.
-        [MenuItem(MenuPath, false, 320)]
+        [MenuItem(MenuPath, false, Priority)]
         public static void ExtractMenu()
         {
             Run();
+        }
+
+        [MenuItem(MenuPath, true)]
+        static bool ValidateExtract()
+        {
+            return true;
         }
 
         public static void RunBatch()
