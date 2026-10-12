@@ -17,6 +17,12 @@ from pathlib import Path
 import validate_table as kit
 
 
+def _string_list(value) -> list:
+    if not isinstance(value, list):
+        return []
+    return [item for item in value if isinstance(item, str)]
+
+
 def as_map(table, section) -> dict:
     mapping = table.get(section) if isinstance(table, dict) else None
     if not isinstance(mapping, dict):
@@ -90,9 +96,20 @@ def main(argv=None) -> int:
         "spec": merged["spec"],
         "str": merged["str"],
     }
+    # doNotTranslate is the English list only. A language-specific copy
+    # (German Hangar, French Hangar, Indonesian level) belongs in
+    # localization/notes/<code>-identical-ok.json, not in this array.
+    english_dnt = _string_list(english.get("doNotTranslate"))
+    for label, source in (("partial", partial), ("into", into)):
+        extra = [item for item in _string_list(source.get("doNotTranslate")) if item not in english_dnt]
+        for item in extra:
+            print(
+                f"ignored {label} doNotTranslate entry {item!r}; list it in notes/{args.lang}-identical-ok.json",
+                file=sys.stderr,
+            )
     listed = english.get("doNotTranslate")
     if isinstance(listed, list):
-        table["doNotTranslate"] = sorted((item for item in listed if isinstance(item, str)), key=kit.ordinal_bytes)
+        table["doNotTranslate"] = sorted(set(english_dnt), key=kit.ordinal_bytes)
     out = Path(args.out)
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(kit.dump_table(table), encoding="utf-8", newline="\n")

@@ -16,6 +16,8 @@ Playful, warm, short, upbeat, safe for children. No slang that will date. No sar
 
 Nibbles. The logo lines ORBITAL, SALVAGE, and SPACE TRASH CLEAN. The sentence name Orbital Salvage, until the app name is chosen. The unit kg. Endonyms in the language picker (English, Deutsch, Français, and the rest of the registry, including the leading `✓ `). Strings with no letters (digits, `×`, `▶`, `/`). `localStorage` stays as that token inside the privacy sentence.
 
+A word that is already correct in the target language stays identical to English, but it does not go in `doNotTranslate`. That list is the English list and `merge_table.py` recopies it. Write the key in `localization/notes/<code>-identical-ok.json` with a reason. German `Hangar` is a loanword and German `Reset` is a common UI word. The same file is how French keeps `Hangar` and Indonesian keeps `level` or `orbit` when the whole string is already the right word.
+
 ## False friends / things not to localise
 
 kg, ×, ▶, ←, /, %, +, Western digits 0-9, `{0}` `{1}`, endonyms, Nibbles, ORBITAL, SALVAGE, SPACE TRASH CLEAN, localStorage, and version tokens such as v1.2.0. The arrow ← stays left-pointing in Arabic for now; flag it to the lead before mirroring.
