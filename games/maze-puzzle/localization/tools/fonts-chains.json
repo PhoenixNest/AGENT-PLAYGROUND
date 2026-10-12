@@ -1,0 +1,101 @@
+{
+  "note": "File names are looked up in --fonts-dir (default Assets/Fonts). pending faces are not shipped yet; the glyph check skips a language whose chain is empty and warns font-pending. vi and uz keep the shipped Latin faces so the cmap check runs today; Baloo 2 is still pending for display.",
+  "languages": {
+    "de": {
+      "fontGroup": "latin",
+      "expansion": 1.35,
+      "chain": ["Fredoka-400.ttf", "Fredoka-600.ttf", "Fredoka-700.ttf", "Nunito-700.ttf", "Nunito-800.ttf", "Nunito-900.ttf", "NotoSansSymbols2-Regular.ttf", "NotoSansSymbols-Regular.ttf"],
+      "pending": []
+    },
+    "fr": {
+      "fontGroup": "latin",
+      "expansion": 1.25,
+      "chain": ["Fredoka-400.ttf", "Fredoka-600.ttf", "Fredoka-700.ttf", "Nunito-700.ttf", "Nunito-800.ttf", "Nunito-900.ttf", "NotoSansSymbols2-Regular.ttf", "NotoSansSymbols-Regular.ttf"],
+      "pending": []
+    },
+    "es": {
+      "fontGroup": "latin",
+      "expansion": 1.25,
+      "chain": ["Fredoka-400.ttf", "Fredoka-600.ttf", "Fredoka-700.ttf", "Nunito-700.ttf", "Nunito-800.ttf", "Nunito-900.ttf", "NotoSansSymbols2-Regular.ttf", "NotoSansSymbols-Regular.ttf"],
+      "pending": []
+    },
+    "it": {
+      "fontGroup": "latin",
+      "expansion": 1.20,
+      "chain": ["Fredoka-400.ttf", "Fredoka-600.ttf", "Fredoka-700.ttf", "Nunito-700.ttf", "Nunito-800.ttf", "Nunito-900.ttf", "NotoSansSymbols2-Regular.ttf", "NotoSansSymbols-Regular.ttf"],
+      "pending": []
+    },
+    "pt-PT": {
+      "fontGroup": "latin",
+      "expansion": 1.25,
+      "chain": ["Fredoka-400.ttf", "Fredoka-600.ttf", "Fredoka-700.ttf", "Nunito-700.ttf", "Nunito-800.ttf", "Nunito-900.ttf", "NotoSansSymbols2-Regular.ttf", "NotoSansSymbols-Regular.ttf"],
+      "pending": []
+    },
+    "fil": {
+      "fontGroup": "latin",
+      "expansion": 1.40,
+      "chain": ["Fredoka-400.ttf", "Fredoka-600.ttf", "Fredoka-700.ttf", "Nunito-700.ttf", "Nunito-800.ttf", "Nunito-900.ttf", "NotoSansSymbols2-Regular.ttf", "NotoSansSymbols-Regular.ttf"],
+      "pending": []
+    },
+    "id": {
+      "fontGroup": "latin",
+      "expansion": 1.20,
+      "chain": ["Fredoka-400.ttf", "Fredoka-600.ttf", "Fredoka-700.ttf", "Nunito-700.ttf", "Nunito-800.ttf", "Nunito-900.ttf", "NotoSansSymbols2-Regular.ttf", "NotoSansSymbols-Regular.ttf"],
+      "pending": []
+    },
+    "vi": {
+      "fontGroup": "latin-vi",
+      "expansion": 1.15,
+      "chain": ["Fredoka-400.ttf", "Fredoka-600.ttf", "Fredoka-700.ttf", "Nunito-700.ttf", "Nunito-800.ttf", "Nunito-900.ttf", "NotoSansSymbols2-Regular.ttf", "NotoSansSymbols-Regular.ttf"],
+      "pending": ["Baloo2-700.ttf"]
+    },
+    "uz": {
+      "fontGroup": "latin",
+      "expansion": 1.25,
+      "chain": ["Fredoka-400.ttf", "Fredoka-600.ttf", "Fredoka-700.ttf", "Nunito-700.ttf", "Nunito-800.ttf", "Nunito-900.ttf", "NotoSansSymbols2-Regular.ttf", "NotoSansSymbols-Regular.ttf"],
+      "pending": ["Baloo2-700.ttf"]
+    },
+    "zh-Hans": {
+      "fontGroup": "cjk-sc",
+      "expansion": 0.55,
+      "chain": [],
+      "pending": ["ZCOOLKuaiLe-Regular.ttf"]
+    },
+    "zh-Hant": {
+      "fontGroup": "cjk-tc",
+      "expansion": 0.55,
+      "chain": [],
+      "pending": ["Huninn-Regular.ttf"]
+    },
+    "ja": {
+      "fontGroup": "cjk-jp",
+      "expansion": 0.80,
+      "chain": [],
+      "pending": ["MPLUSRounded1c-Bold.ttf"]
+    },
+    "ko": {
+      "fontGroup": "cjk-kr",
+      "expansion": 0.75,
+      "chain": [],
+      "pending": ["Jua-Regular.ttf"]
+    },
+    "hi": {
+      "fontGroup": "devanagari",
+      "expansion": 1.3,
+      "chain": [],
+      "pending": ["Baloo2-700.ttf"]
+    },
+    "km": {
+      "fontGroup": "khmer",
+      "expansion": 1.40,
+      "chain": [],
+      "pending": ["KantumruyPro-700.ttf"]
+    },
+    "ar": {
+      "fontGroup": "arabic",
+      "expansion": 1.1,
+      "chain": [],
+      "pending": ["Cairo-700.ttf"]
+    }
+  }
+}

@@ -22,6 +22,12 @@ Paths written as `tools/parity/...` in entries dated before 2026-10-08 are the l
 
 ### Added
 
+#### Translation kit for the 16 target languages (2026-10-12)
+
+- `localization/glossary.md` is the controlled glossary (49 terms) with a recommended draft for each target language, do-not-translate flags, and the per-language style rules.
+- `localization/translator-brief.md` is the prompt for a per-language translation agent. `localization/process.md` is the path from extract and string freeze through validation, a 30-key sample, the pseudo-locale audit, and a Translation Verification Report.
+- `localization/tools/validate_table.py` checks a table against `en.json` using the `LocValidator` rules plus empty strings, untranslated copies, script, placeholders, emoji, digits, glossary warnings, expansion, line-box fit, stale source hashes, and missing glyphs. `fonts-chains.json` names the shipped Latin faces and the pending faces. Stubs go to a scratch directory. `merge_table.py` folds a partial table back in and writes `meta.sourceHashes`.
+
 #### Settings language picker and legal rows (2026-10-12)
 
 - Settings gains a Language row and a User Agreement row. Change opens `settings_modal_language`, a two-column grid of the 17 endonyms with no scroll. The current language is a leading `✓ ` (`U+2713`) on that button. The English capture marks English. Unity overrides `settings-language-value` and the two marker buttons from the saved code. `HomeChrome.PaintRuns` is unchanged, so a non-English marker stays at the captured run origin.
