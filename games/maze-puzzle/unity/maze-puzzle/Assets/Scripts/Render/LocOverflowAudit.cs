@@ -32,13 +32,13 @@ namespace OrbitalSalvage.Render
             public int Files;
             public int Runs;
             public int FragmentElements;
-            public int HardOutside, HardOverlap, HardBand, HardWider, HardWrapped;
+            public int HardOutside, HardOverlap, HardBand, HardWider, HardWrapped, HardMissing;
             public int SoftShrink, SoftEllipsis, SoftWrap, SoftControlEllipsis;
             public string Text = "";
 
             public int Hard
             {
-                get { return HardOutside + HardOverlap + HardBand + HardWider + HardWrapped; }
+                get { return HardOutside + HardOverlap + HardBand + HardWider + HardWrapped + HardMissing; }
             }
 
             public int Soft
@@ -161,6 +161,7 @@ namespace OrbitalSalvage.Render
                 BandY = iphone ? HomeIndicatorY : 0,
                 CeilingY = ceiling
             };
+            NoteMissingGlyphs(file, id, shown, font, report);
             TextFit.Layout plan = TextFit.Plan(input, (px, spacing) => Measure(canvas, font, shown, px, spacing));
             var lines = new List<string>();
             Func<string, double> measureLine = s => Measure(canvas, font, s, plan.FontPx, plan.LetterSpacing);
@@ -267,10 +268,52 @@ namespace OrbitalSalvage.Render
             return x1 - x0 > 0.5 && y1 - y0 > 0.5;
         }
 
+        static void NoteMissingGlyphs(string file, string id, string shown, string font, Report report)
+        {
+            if (string.IsNullOrEmpty(shown) || Loc.EnglishActive) return;
+            int weight;
+            string family;
+            OutlineFonts.SplitCssFont(font, out weight, out family);
+            string lang = Loc.CurrentLanguage;
+            if (id.StartsWith(LanguageMarker.ButtonPrefix, StringComparison.Ordinal))
+            {
+                string code = id.Substring(LanguageMarker.ButtonPrefix.Length);
+                if (LanguageRegistry.IsSupported(code)) lang = code;
+            }
+            TrueTypeFont[] chain = OutlineFonts.ChainFor(lang, family, weight);
+            var missing = new List<int>();
+            LocGlyphCoverage.CollectString(shown, cp =>
+            {
+                for (int i = 0; i < chain.Length; i++)
+                    if (chain[i] != null && chain[i].GlyphIndex(cp) != 0) return true;
+                return false;
+            }, CanvasEmoji.IsEmoji, missing);
+            var seen = new HashSet<int>();
+            for (int i = 0; i < missing.Count; i++)
+            {
+                if (!seen.Add(missing[i])) continue;
+                report.HardMissing++;
+                Add(report, file, id, "missing-glyph", "U+" + missing[i].ToString("X4", CultureInfo.InvariantCulture));
+            }
+        }
+
         static double Measure(Canvas2D canvas, string font, string text, double px, double ls)
         {
             canvas.Font = FontSized(font, px);
             canvas.LetterSpacing = ls;
+            if (Loc.EnglishActive)
+            {
+                canvas.TextChain = null;
+                canvas.TextChainStamp = 0;
+            }
+            else
+            {
+                int weight;
+                string family;
+                OutlineFonts.SplitCssFont(font, out weight, out family);
+                canvas.TextChain = OutlineFonts.ChainFor(Loc.CurrentLanguage, family, weight);
+                canvas.TextChainStamp = OutlineFonts.ChainStamp(Loc.CurrentLanguage, family, weight);
+            }
             return canvas.MeasureText(text ?? "");
         }
 
@@ -302,6 +345,7 @@ namespace OrbitalSalvage.Render
             sb.Append(" hard_band=").Append(report.HardBand.ToString(CultureInfo.InvariantCulture));
             sb.Append(" hard_wider=").Append(report.HardWider.ToString(CultureInfo.InvariantCulture));
             sb.Append(" hard_wrapped=").Append(report.HardWrapped.ToString(CultureInfo.InvariantCulture));
+            sb.Append(" hard_missing=").Append(report.HardMissing.ToString(CultureInfo.InvariantCulture));
             sb.Append(" soft_shrink=").Append(report.SoftShrink.ToString(CultureInfo.InvariantCulture));
             sb.Append(" soft_ellipsis=").Append(report.SoftEllipsis.ToString(CultureInfo.InvariantCulture));
             sb.Append(" soft_wrap=").Append(report.SoftWrap.ToString(CultureInfo.InvariantCulture));

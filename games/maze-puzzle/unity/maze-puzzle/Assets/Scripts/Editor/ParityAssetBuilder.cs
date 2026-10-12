@@ -30,6 +30,16 @@ namespace OrbitalSalvage.Editor
 
         private static readonly string[] FallbackFonts = { "NotoSansSymbols2-Regular", "NotoSansSymbols-Regular" };
 
+        // Outline-only faces. They are not TMP assets and they are not in the parity font folder.
+        // BuildAll copies Assets/Fonts/<name>.ttf onto Resources/Fonts/Ttf/<name>.bytes and does not delete them.
+        private static readonly string[] OutlineExtraFonts =
+        {
+            "ZCOOLKuaiLe-endonym",
+            "Huninn-endonym",
+            "MPLUSRounded1c-endonym",
+            "Jua-endonym",
+        };
+
         // Exactly the faces ParityFonts.FaceWeights lists: Fredoka 400/600/700 and Nunito 700/800/900.
         // These are the faces Google Fonts serves for the web app; other weights resolve by CSS font matching.
         private static string[] PrimaryFonts
@@ -149,6 +159,11 @@ namespace OrbitalSalvage.Editor
             string ttfDir = Path.Combine(ProjectRoot, "Assets/Resources/Fonts/Ttf");
             foreach (var name in PrimaryFonts) CopyIfDifferent(Path.Combine(srcDir, name + ".ttf"), Path.Combine(ttfDir, name + ".bytes"));
             foreach (var name in FallbackFonts) CopyIfDifferent(Path.Combine(srcDir, name + ".ttf"), Path.Combine(ttfDir, name + ".bytes"));
+            foreach (var name in OutlineExtraFonts)
+            {
+                string extra = Path.Combine(dstDir, name + ".ttf");
+                if (File.Exists(extra)) CopyIfDifferent(extra, Path.Combine(ttfDir, name + ".bytes"));
+            }
             foreach (var file in Directory.GetFiles(srcDir, "*-OFL.txt"))
             {
                 CopyIfDifferent(file, Path.Combine(dstDir, Path.GetFileName(file)));

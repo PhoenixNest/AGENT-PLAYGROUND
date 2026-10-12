@@ -22,6 +22,14 @@ Paths written as `tools/parity/...` in entries dated before 2026-10-08 are the l
 
 ### Added
 
+#### Per-language outline font chains (2026-10-12)
+
+- `Assets/Resources/Localization/fonts.json` maps each font group to display and body faces and a fallback list. `LocFonts.GetChain` reads it. A missing or broken file keeps the Fredoka and Nunito names and does not throw. `OutlineFonts.ChainFor` skips a face whose `.bytes` file is missing.
+- English `PaintRuns` still takes the captured loop when `Loc.EnglishActive` is set and `TextLangOverrides` is empty. `ChainFor("en")` returns the same font array as `Chain(Primary)`. Latin languages other than English insert Nunito at the same CSS weight after Fredoka, which covers `ế`, `ệ`, and U+02BB.
+- The four CJK picker endonyms ship as temporary subsets: `ZCOOLKuaiLe-endonym` 7004 bytes, `Huninn-endonym` 13708, `MPLUSRounded1c-endonym` 12208, `Jua-endonym` 22868, each with its OFL text. Baloo 2, Kantumruy Pro, and Cairo are named in the manifest and not shipped. `km`, `hi`, and `ar` still draw boxes.
+- The 17 `btn-lang-<code>` runs use that language's display chain while the settings page or the language modal is open. A `missing-glyph` audit finding is hard. Rebuild with `localization/tools/make_fonts.sh`.
+- Focused EditMode (`LocFontRegistryTests|LocFontChainTests|LocFontPickerTests`): 10 passed, 0 failed. Results `/tmp/maze-i18n/loc-fonts/focused.xml`, log `/tmp/maze-i18n/loc-fonts/focused.log`. Full EditMode: 511 passed, 83 failed, 3 skipped, 597 total, exit 2. Results `/tmp/maze-i18n/loc-fonts/full.xml`, log `/tmp/maze-i18n/loc-fonts/full.log`. The 83 are the known set (`ReferenceComparisonTests` 73, `ReferenceGateTests` 9, `QuotaAndModalTests.GameAndPauseStills_MatchKnownHashes`). The skips are `FrameRateHarness.Measure`, `FrameRateHarness.MeasureAccumulated`, and `PagePreviewTests.Stills_MatchTheParityPlayer_IncludingShopRingsDefault`.
+
 #### Settings language picker and legal rows (2026-10-12)
 
 - Settings gains a Language row and a User Agreement row. Change opens `settings_modal_language`, a two-column grid of the 17 endonyms with no scroll. The current language is a leading `✓ ` (`U+2713`) on that button. The English capture marks English. Unity overrides `settings-language-value` and the two marker buttons from the saved code. `HomeChrome.PaintRuns` is unchanged, so a non-English marker stays at the captured run origin.
