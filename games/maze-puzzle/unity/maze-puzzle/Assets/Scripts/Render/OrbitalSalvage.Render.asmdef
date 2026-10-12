@@ -5,7 +5,8 @@
         "Unity.TextMeshPro",
         "OrbitalSalvage.JsCompat",
         "OrbitalSalvage.Logic",
-        "OrbitalSalvage.Loc"
+        "OrbitalSalvage.Loc",
+        "OrbitalSalvage.Loc.Unity"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
