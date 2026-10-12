@@ -24,6 +24,18 @@
       "body": "nunito",
       "fallback": ["@symbols"]
     },
+    "latin-uz": {
+      "note": "Uzbek only. prefix is U+02BB with a narrow advance, placed ahead of Fredoka and Nunito. Display 600/700 follow the Fredoka face. Body uses 700/800/900. Other Latin languages do not use this group.",
+      "display": "fredoka",
+      "body": "nunito",
+      "prefix": [
+        { "weight": 600, "file": "Nunito-uz-patch-600" },
+        { "weight": 700, "file": "Nunito-uz-patch-700" },
+        { "weight": 800, "file": "Nunito-uz-patch-800" },
+        { "weight": 900, "file": "Nunito-uz-patch-900" }
+      ],
+      "fallback": ["@symbols"]
+    },
     "cjk-sc": {
       "temporary": "ZCOOLKuaiLe-endonym is the picker subset (简体中文 plus printable ASCII). A later wave replaces this file under group cjk-sc.",
       "display": [{ "weight": 400, "file": "ZCOOLKuaiLe-endonym" }],

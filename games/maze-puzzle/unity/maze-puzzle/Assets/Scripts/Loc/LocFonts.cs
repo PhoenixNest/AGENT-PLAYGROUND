@@ -52,6 +52,7 @@ namespace OrbitalSalvage.Loc
             public string BodyRole;
             public FaceList Display;
             public FaceList Body;
+            public FaceList Prefix;
             public string[] Fallback = Array.Empty<string>();
         }
 
@@ -97,10 +98,18 @@ namespace OrbitalSalvage.Loc
 
             var names = new List<string>(6);
             bool display = IsFredoka(family);
+            bool uzbek = groupId == "latin-uz";
+            if (haveGroup && group.Prefix != null)
+                Add(names, group.Prefix.FileFor(FaceWeight(display, weight)));
             string primary = haveGroup ? Face(group, display, weight) : RoleFile(display ? "fredoka" : "nunito", weight);
             Add(names, primary);
             if (code != LanguageRegistry.DefaultCode && display)
-                Add(names, RoleFile("nunito", weight));
+            {
+                // uz display follows the Fredoka face (800 and 900 are 700). Other Latin
+                // languages keep Nunito at the CSS weight.
+                int nunitoWeight = uzbek ? FaceWeight(true, weight) : weight;
+                Add(names, RoleFile("nunito", nunitoWeight));
+            }
             if (haveGroup) AppendFallback(names, group.Fallback, weight);
             else AddSymbols(names);
             return names.ToArray();
@@ -209,6 +218,13 @@ namespace OrbitalSalvage.Loc
             var parsedGroup = new GroupDef();
             if (!ReadSlot(node.Get("display"), out parsedGroup.DisplayRole, out parsedGroup.Display)) return false;
             if (!ReadSlot(node.Get("body"), out parsedGroup.BodyRole, out parsedGroup.Body)) return false;
+            JsonValue prefix = node.Get("prefix");
+            if (prefix != null)
+            {
+                FaceList prefixList;
+                if (!ReadFaceList(prefix, out prefixList)) return false;
+                parsedGroup.Prefix = prefixList;
+            }
             string[] fallback = ReadStringArray(node.Get("fallback"));
             parsedGroup.Fallback = fallback ?? Array.Empty<string>();
             group = parsedGroup;
@@ -264,9 +280,25 @@ namespace OrbitalSalvage.Loc
         static string GroupId(string code)
         {
             if (code == PseudoLocale.Code) return "latin";
+            // Uzbek stays FontGroup.Latin for line breaking. The modifier patch is a
+            // font-chain override only.
+            if (code == "uz") return "latin-uz";
             LanguageInfo info;
             if (LanguageRegistry.TryGet(code, out info)) return info.FontGroupId();
             return "latin";
+        }
+
+        /// <summary>Fredoka face weight for display, Nunito face weight for body.</summary>
+        static int FaceWeight(bool display, int cssWeight)
+        {
+            string role = display ? "fredoka" : "nunito";
+            FaceList list;
+            if (roles != null && roles.TryGetValue(role, out list) && list != null)
+            {
+                int face = MatchWeight(cssWeight, list.Weights);
+                if (face > 0) return face;
+            }
+            return cssWeight;
         }
 
         static string Face(GroupDef group, bool display, int cssWeight)
