@@ -24,6 +24,11 @@ namespace OrbitalSalvage.Render
         public const double CenterSlop = 2;
         public const double RightEdgeSlop = 1.5;
         public const double RightMinLeft = 8;
+        /// <summary>A box this close to the run width is the text itself, not a centering frame.</summary>
+        public const double ShrinkWrapSlack = 2;
+        /// <summary>A button run this close to the element center stays centered. The coin on Claim +100 sits 6px off.</summary>
+        public const double ButtonCenterSlop = 8;
+        public const double FlushLeftSlack = 1;
         public const double OutsideSlop = 0.5;
         public const double TwoLineFactor = 1.9;
         /// <summary>A captured run at most this tall is one line: <c>1.5 * fontPx + 2</c>.</summary>
@@ -74,6 +79,8 @@ namespace OrbitalSalvage.Render
             public double BandY;
             /// <summary>Bottom y this run may use. 0 means the element bottom. Following runs reserve their captured height below this.</summary>
             public double CeilingY;
+            /// <summary>Parent content box. ParentW &lt;= 0 means unknown. Used only when this element is shrink-wrapped to the run.</summary>
+            public double ParentX, ParentW;
         }
 
         public struct Layout
@@ -187,6 +194,8 @@ namespace OrbitalSalvage.Render
         {
             double runCenter = input.RunX + input.RunW * 0.5;
             double elCenter = input.ElX + input.ElW * 0.5;
+            double leftGap = input.RunX - input.ElX;
+            double rightGap = (input.ElX + input.ElW) - (input.RunX + input.RunW);
             if (input.IsButton)
             {
                 Icon lead;
@@ -198,10 +207,31 @@ namespace OrbitalSalvage.Render
                     if (Math.Abs(pairCenter - elCenter) <= CenterSlop) return Anchor.Center;
                 }
             }
+            // A shrink-wrapped box has the same centre as its run because the box is the English text.
+            // That is not centering. Left is the captured edge, unless the box itself is centered or
+            // flush-right in a wider parent.
+            if (input.ElW - input.RunW <= ShrinkWrapSlack && leftGap <= FlushLeftSlack && rightGap <= ShrinkWrapSlack)
+                return ShrinkAnchor(input);
+            if (input.IsButton && leftGap >= RightMinLeft && rightGap >= RightMinLeft && Math.Abs(runCenter - elCenter) <= ButtonCenterSlop)
+                return Anchor.Center;
             if (Math.Abs(runCenter - elCenter) <= CenterSlop || input.CenteredBlock) return Anchor.Center;
-            double rightGap = (input.ElX + input.ElW) - (input.RunX + input.RunW);
-            double leftGap = input.RunX - input.ElX;
             if (rightGap <= RightEdgeSlop && leftGap >= RightMinLeft) return Anchor.Right;
+            return Anchor.Left;
+        }
+
+        static Anchor ShrinkAnchor(Input input)
+        {
+            if (input.ParentW > 1)
+            {
+                double elCenter = input.ElX + input.ElW * 0.5;
+                double parentCenter = input.ParentX + input.ParentW * 0.5;
+                bool parentWider = input.ParentW > input.ElW + ShrinkWrapSlack;
+                if (parentWider && Math.Abs(elCenter - parentCenter) <= CenterSlop) return Anchor.Center;
+                double parentRight = input.ParentX + input.ParentW;
+                double elRight = input.ElX + input.ElW;
+                if (parentWider && parentRight - elRight <= RightEdgeSlop && input.ElX - input.ParentX >= RightMinLeft)
+                    return Anchor.Right;
+            }
             return Anchor.Left;
         }
 
@@ -346,6 +376,10 @@ namespace OrbitalSalvage.Render
             double pad = input.SidePad;
             left = input.ElX + pad;
             right = input.ElX + input.ElW - pad;
+            // A run already sitting on the element's left edge is a block label. The 16px button pad
+            // would indent it away from the sibling line that shares that edge.
+            if (input.RunX - input.ElX <= FlushLeftSlack)
+                left = input.RunX;
             leading = false;
             leadIndex = -1;
             leadX = 0;
