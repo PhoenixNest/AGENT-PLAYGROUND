@@ -1,13 +1,6 @@
 [
-  {"key": "Reset", "reason": "Everyday Filipino UI loanword. Burahin sits on the shrink floor of this 30px button."},
-  {"key": "Cyber Orbit 1", "reason": "Cyber and orbit are the everyday loanwords. Glossary orbit stays orbit."},
-  {"key": "Cyber Orbit 2", "reason": "Cyber and orbit are the everyday loanwords. Glossary orbit stays orbit."},
-  {"key": "Cyber Orbit 3", "reason": "Cyber and orbit are the everyday loanwords. Glossary orbit stays orbit."},
-  {"key": "Cyber Orbit 4", "reason": "Cyber and orbit are the everyday loanwords. Glossary orbit stays orbit."},
-  {"key": "Cyber Orbit 5", "reason": "Cyber and orbit are the everyday loanwords. Glossary orbit stays orbit."},
-  {"key": "Cyber Orbit 6", "reason": "Cyber and orbit are the everyday loanwords. Glossary orbit stays orbit."},
-  {"key": "Cyber Orbit 7", "reason": "Cyber and orbit are the everyday loanwords. Glossary orbit stays orbit."},
-  {"key": "Cyber Orbit 8", "reason": "Cyber and orbit are the everyday loanwords. Glossary orbit stays orbit."},
-  {"key": "Cyber Orbit 9", "reason": "Cyber and orbit are the everyday loanwords. Glossary orbit stays orbit."},
-  {"key": "Cyber Orbit 10", "reason": "Cyber and orbit are the everyday loanwords. Glossary orbit stays orbit."}
+  {
+    "key": "Reset",
+    "reason": "Everyday Filipino UI loanword on phones and apps. Burahin is 42px in this 30px button and sits on the shrink floor. Yes, Reset stays Oo, reset so the confirm uses the same word."
+  }
 ]
