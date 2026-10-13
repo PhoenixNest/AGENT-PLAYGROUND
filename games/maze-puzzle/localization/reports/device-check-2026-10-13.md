@@ -59,3 +59,21 @@ The new build is installed and open on English Home. No `os.parity.lang` was pus
 ![Hindi gameplay](device-check-2026-10-13/hi-game.jpg)
 
 ![Arabic gameplay](device-check-2026-10-13/ar-game.jpg)
+
+## Ring pill fix verification
+
+Rechecked on `99a7e5f` after a new device export. `[IosExport] result=Succeeded`, no `error CS`, `** BUILD SUCCEEDED **`, install complete. The phone was unlocked. Home only.
+
+The white pill above the pink ring now has the donut icon and the name, inside the capsule:
+
+- **hi:** तैरता डोनट. Headstrokes are intact. Not blank.
+- **km:** ដូណាត់អណ្ដែត, stacked, with the icon. Not blank.
+- **ar:** joined عوامة دونات, icon on the left of the pill. Not blank.
+
+The rest of those Home screens matches the earlier check: Hindi मशीन खेलो / नक्शे / रोज़ / दुकान / ट्रॉफी and स्तर 1, Khmer play label and dock, Arabic play label to the right of the icon. Controls still show the name too: zh-Hans 甜甜圈浮圈 with 开始清理 and 关卡1, ja ドーナツフロート with さあ、あそぶ and `Lv1`, de DONUT-FLOSS with LOS GEHT'S! / KARTE / TAG / LADEN / TROPHÄEN. No crash in the launch streams.
+
+![Hindi ring pill](device-check-2026-10-13/hi-pill.jpg)
+
+![Khmer ring pill](device-check-2026-10-13/km-pill.jpg)
+
+![Arabic ring pill](device-check-2026-10-13/ar-pill.jpg)
