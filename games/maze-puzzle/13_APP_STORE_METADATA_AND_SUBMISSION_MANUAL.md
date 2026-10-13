@@ -134,6 +134,7 @@ HOW TO PLAY
 
 WHAT YOU GET
 • 50 levels across 5 sectors, from easy sweeps to tricky orbits
+• Infinite mode: finish all 50 levels and the cleanup never ends
 • A Daily Shift every day with Bronze, Silver and Gold goals
 • A free daily coin gift
 • The Toy Shop: spend the gold coins you earn on Donut Rings, Nibbles Hats and new Skies
@@ -148,7 +149,7 @@ Everything in the Toy Shop is paid for with coins you earn by playing. Your prog
 A quick break, a cosy evening, or a game to share with the family. Come and help Nibbles tidy up the sky!
 ```
 
-Check before you paste: the line "50 levels across 5 sectors" is true as far as the data goes, but see the world 3–5 note in section 1.
+Check before you paste: the line "50 levels across 5 sectors" is true as far as the data goes, but see the world 3–5 note in section 1. The "Infinite mode" line is true in the build as of 2026-10-13 (see `03_GAME_DESIGN_DOCUMENT.md` section 3.9). It replays levels 30 to 50 at random, so do not call them new levels. Nobody has proven that every one of those levels can be beaten.
 
 ### 3.4 Keywords (limit 100 characters, commas, no spaces after commas)
 
