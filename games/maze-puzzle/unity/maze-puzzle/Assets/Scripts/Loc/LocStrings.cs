@@ -36,6 +36,9 @@ namespace OrbitalSalvage.Loc
 
             Def("home.level.title", "{0} \u2022 {1}", "Home mission name and pause level name. {0} is the level code and {1} is the level name, both passed through Loc.TrName."),
             Def("home.mission.goal", "Goal: {0} kg", "Home mission card goal. {0} is the quota. Keep kg in the string. About 18 characters at small quotas."),
+            Def("home.infinite.world", "Infinite Mode", "Home mission card small badge once all 50 levels are done. Names the endless mode. Keep it short, about the length of a world name."),
+            Def("home.infinite.title", "Round {0}", "Home mission card title in infinite mode. {0} is the round number. Same word for 'round' as toast.infinite.round."),
+            Def("home.infinite.best", "Best: {0}", "Home mission card gold pill in infinite mode. {0} is the best round reached. Keep it very short, it sits where 'Goal: {0} kg' sits."),
             Def("home.mission.world_fallback", "World {0}", "Home mission world line only when the world table has no match. {0} is the world number."),
             Def("home.daily.bounty", "+{0} \U0001FA99 Bounty", "Home card bounty for the silver daily shift. {0} is the coin amount. Keep the coin emoji."),
 

@@ -1101,7 +1101,16 @@ namespace OrbitalSalvage.App
         void RefreshHome()
         {
             var sec = ActiveSector ?? (Sectors.Count > 0 ? Sectors[0] : null);
-            if (sec != null)
+            if (sec != null && Sectors.Count > 0 && FirstUncompletedIndex() < 0)
+            {
+                // All levels done: the Home card shows infinite mode, not the random level that was picked.
+                double round = Math.Max(1, Economy.Profile.InfiniteRound);
+                double best = Math.Max(round, Economy.Profile.InfiniteBest);
+                MissionName = Loc.Tr("home.infinite.title", round);
+                MissionGoal = Loc.Tr("home.infinite.best", best);
+                MissionWorld = Loc.Tr("home.infinite.world");
+            }
+            else if (sec != null)
             {
                 MissionName = _missionTitle.Text("home.level.title", _names.Get(sec.Code), _names.Get(sec.Name));
                 MissionGoal = _missionGoal.Num("home.mission.goal", sec.Quota);
