@@ -41,7 +41,9 @@ SYMBOLS = {
     0x2190,  # ←
     0x2192,  # →
     0x2194,
+    0x2026,  # …  not in the script faces; the symbol chain has it
     0x23E9,  # ⏩
+    0x23EA,  # ⏪
     0x25B6,  # ▶
     0x25C0,
     0x2605,
@@ -153,12 +155,17 @@ def _kind_of(cp: int, lang: str) -> str:
     return "punct"
 
 
-def _boundary_ok(ch: str | None) -> bool:
-    if ch is None:
-        return True
-    if ch.isspace():
-        return True
-    return "0" <= ch <= "9"
+def _joining_neighbor(ch: str | None) -> bool:
+    """True when the character is a letter of Arabic, Devanagari, or Khmer.
+
+    A placeholder may sit next to punctuation, a Western digit, or a Latin
+    token (``+{0}``, ``{0}h``, ``({1}/{0}``). It may not sit against a
+    joining letter or a conjunct piece.
+    """
+    if ch is None or ch.isspace():
+        return False
+    cp = ord(ch)
+    return _is_script(cp, "ar") or _is_script(cp, "hi") or _is_script(cp, "km")
 
 
 def check_placeholders(text: str) -> None:
@@ -171,7 +178,7 @@ def check_placeholders(text: str) -> None:
     for match in PLACEHOLDER.finditer(text):
         before = text[match.start() - 1] if match.start() > 0 else None
         after = text[match.end()] if match.end() < len(text) else None
-        if _boundary_ok(before) and _boundary_ok(after):
+        if not _joining_neighbor(before) and not _joining_neighbor(after):
             continue
         left = before if before is not None else "start"
         right = after if after is not None else "end"
@@ -180,7 +187,7 @@ def check_placeholders(text: str) -> None:
             + match.group(1)
             + "} in "
             + repr(text)
-            + " is not on a space or digit boundary "
+            + " is glued to a joining letter "
             + f"(left={left!r}, right={right!r}). "
             + "It must not sit inside a joining or conjunct sequence."
         )
@@ -366,10 +373,24 @@ def _level_at(levels: list[int], index: int) -> int:
     return levels[index]
 
 
+def paragraph_dir(face: Face, text: str) -> str:
+    """Arabic is RTL only when the string itself has an Arabic letter.
+
+    A Latin-only value such as ``12 / 20 kg`` stays left to right. Forcing
+    the Arabic paragraph direction on it paints ``kg 20 / 12``.
+    """
+    if face.base_dir != "R":
+        return face.base_dir
+    for ch in text:
+        if _is_script(ord(ch), "ar"):
+            return "R"
+    return "L"
+
+
 def shape_string(face: Face, text: str) -> dict:
     text = unicodedata.normalize("NFC", text)
     check_placeholders(text)
-    base, levels = bidi_levels(text, face.base_dir)
+    base, levels = bidi_levels(text, paragraph_dir(face, text))
     u16 = _utf16_map(text)
     atoms = _merge(_atoms(text, face.lang))
     runs = []
@@ -513,7 +534,7 @@ def level_runs(levels: list[int]) -> list[tuple[int, int, int]]:
 def hb_visual(face: Face, text: str) -> list[dict]:
     """Shape the whole string with one face, including digits. Proof helper."""
     text = unicodedata.normalize("NFC", text)
-    _base, levels = bidi_levels(text, face.base_dir)
+    _base, levels = bidi_levels(text, paragraph_dir(face, text))
     parts = []
     for start, end, level in level_runs(levels):
         glyphs = face.shape_slice(text[start:end], level)
@@ -542,11 +563,11 @@ def stitch_match(face: Face, template: str, number: str) -> bool:
         if part == "":
             continue
         glyphs = hb_visual(face, part)
-        if face.base_dir == "R":
+        if paragraph_dir(face, template) == "R":
             level = 2 if part == number else 1
             glyphs = [dict(g, level=level) for g in glyphs]
         parts.append(glyphs)
-    stitched = _reorder_parts(parts) if face.base_dir == "R" else [g for part in parts for g in part]
+    stitched = _reorder_parts(parts) if paragraph_dir(face, template) == "R" else [g for part in parts for g in part]
     full_ids = [(g["gid"], g["dx"], g["dy"]) for g in full]
     stitch_ids = [(g["gid"], g["dx"], g["dy"]) for g in stitched]
     return full_ids == stitch_ids

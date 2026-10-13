@@ -52,6 +52,34 @@ namespace OrbitalSalvage.Render
             return lang == "ar" || lang == "hi" || lang == "km";
         }
 
+        /// <summary>
+        /// Shrink <paramref name="fontPx"/> so the script em box fits <paramref name="box"/>
+        /// divided by <paramref name="lines"/>. The captured line box is the Latin em.
+        /// Cairo, Baloo 2, and Kantumruy are taller, and a mark that does not fit is clipped.
+        /// </summary>
+        public static double PxForBox(string lang, double fontPx, double box, int lines)
+        {
+            if (!IsComplex(lang) || fontPx <= 0 || box <= 1) return fontPx;
+            int n = lines < 1 ? 1 : lines;
+            ShapedTable table = Table(lang);
+            if (table == null || table.Refused) return fontPx;
+            TrueTypeFont face;
+            try
+            {
+                face = OutlineFonts.Load(table.FontName);
+            }
+            catch (InvalidOperationException)
+            {
+                return fontPx;
+            }
+            if (face == null || face.unitsPerEm <= 0) return fontPx;
+            double em = (face.ascender - face.descender) / (double)face.unitsPerEm;
+            if (em <= 0) return fontPx;
+            double per = box / n;
+            if (fontPx * em <= per + 0.5) return fontPx;
+            return per / em;
+        }
+
         /// <summary>Language whose baked table should be used, or null. English with no per-run override returns null.</summary>
         public static string ActiveLang(bool englishActive, string currentLanguage, string shapeCode)
         {
@@ -119,7 +147,7 @@ namespace OrbitalSalvage.Render
         public static Fit Build(ShapedTable.Resolved resolved, Func<string, double> measurePassthrough, double px, int upem, double width,
             double letterSpacing, TextFit.Action action, int maxLines)
         {
-            var atoms = Atoms(resolved, measurePassthrough, px, upem);
+            var atoms = Atoms(resolved, measurePassthrough, px, upem, 0);
             var fit = new Fit { RightAlign = resolved.RightAlign };
             if (action == TextFit.Action.Ellipsis)
             {
@@ -154,7 +182,7 @@ namespace OrbitalSalvage.Render
             return fit;
         }
 
-        static List<Atom> Atoms(ShapedTable.Resolved resolved, Func<string, double> measure, double px, int upem)
+        static List<Atom> Atoms(ShapedTable.Resolved resolved, Func<string, double> measure, double px, int upem, int depth)
         {
             var atoms = new List<Atom>();
             double k = px / (upem > 0 ? upem : 1000);
@@ -201,6 +229,16 @@ namespace OrbitalSalvage.Render
                 else
                 {
                     string show = run.Kind == ShapedTable.KindSlot ? resolved.SlotText(run.Slot) : run.Text;
+                    if (run.Kind == ShapedTable.KindSlot && depth < 3 && resolved.Source != null)
+                    {
+                        ShapedTable.Entry nested;
+                        if (resolved.Source.TryGet(show, out nested) && nested != null && !nested.HasSlot)
+                        {
+                            var inner = new ShapedTable.Resolved(nested, Array.Empty<string>(), resolved.Source);
+                            atoms.AddRange(Atoms(inner, measure, px, upem, depth + 1));
+                            continue;
+                        }
+                    }
                     if (string.IsNullOrEmpty(show)) continue;
                     double w = measure != null ? measure(show) : 0;
                     atoms.Add(new Atom
@@ -296,7 +334,7 @@ namespace OrbitalSalvage.Render
             var visual = new Piece[pieces.Count];
             for (int i = 0; i < pieces.Count; i++)
             {
-                if (i > 0 && !trailing && letterSpacing != 0) pen += letterSpacing;
+                if (i > 0 && !trailing && letterSpacing != 0 && !(pieces[i].Glyph && pieces[i - 1].Glyph)) pen += letterSpacing;
                 visual[i] = pieces[i].ToPiece();
                 pen += pieces[i].Width;
                 trailing = pieces[i].TrailingSpace;

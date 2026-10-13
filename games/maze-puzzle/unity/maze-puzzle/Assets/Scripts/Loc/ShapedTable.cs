@@ -105,6 +105,16 @@ namespace OrbitalSalvage.Loc
             return entries[index];
         }
 
+        public bool TryGet(string text, out Entry entry)
+        {
+            entry = null;
+            if (Refused || string.IsNullOrEmpty(text)) return false;
+            int index;
+            if (!byHash.TryGetValue(Hash(text), out index)) return false;
+            entry = entries[index];
+            return true;
+        }
+
         public bool TryResolve(string text, out Resolved resolved)
         {
             resolved = null;
@@ -114,7 +124,7 @@ namespace OrbitalSalvage.Loc
             int index;
             if (byHash.TryGetValue(hash, out index))
             {
-                resolved = new Resolved(entries[index], Array.Empty<string>());
+                resolved = new Resolved(entries[index], Array.Empty<string>(), this);
                 cache[text] = resolved;
                 return true;
             }
@@ -125,12 +135,12 @@ namespace OrbitalSalvage.Loc
             {
                 Entry entry = entries[slotted[i]];
                 string[] values;
-                if (!TryFill(entry, text, out values)) continue;
+                if (!TryFill(entry, text, byHash, out values)) continue;
                 int score = entry.Template.Length;
                 if (score > bestScore)
                 {
                     bestScore = score;
-                    best = new Resolved(entry, values);
+                    best = new Resolved(entry, values, this);
                     ties = 1;
                 }
                 else if (score == bestScore) ties++;
@@ -237,7 +247,7 @@ namespace OrbitalSalvage.Loc
             };
         }
 
-        static bool TryFill(Entry entry, string painted, out string[] values)
+        static bool TryFill(Entry entry, string painted, Dictionary<ulong, int> byHash, out string[] values)
         {
             values = null;
             string template = entry.Template;
@@ -254,19 +264,31 @@ namespace OrbitalSalvage.Loc
                     int litEnd = lit;
                     while (litEnd < template.Length && !TrySlotAt(template, litEnd, out _, out _)) litEnd++;
                     string literal = template.Substring(lit, litEnd - lit);
-                    int end;
-                    if (literal.Length == 0) end = painted.Length;
-                    else
+                    int search = pi;
+                    bool matched = false;
+                    while (true)
                     {
-                        end = painted.IndexOf(literal, pi, StringComparison.Ordinal);
-                        if (end < 0) return false;
+                        int end;
+                        if (literal.Length == 0) end = painted.Length;
+                        else
+                        {
+                            end = painted.IndexOf(literal, search, StringComparison.Ordinal);
+                            if (end < 0) return false;
+                        }
+                        if (end < pi) return false;
+                        string mid = painted.Substring(pi, end - pi);
+                        if (SlotOk(mid, byHash))
+                        {
+                            found[slot] = mid;
+                            pi = end;
+                            ti = lit;
+                            matched = true;
+                            break;
+                        }
+                        if (literal.Length == 0) return false;
+                        search = end + 1;
                     }
-                    if (end < pi) return false;
-                    string mid = painted.Substring(pi, end - pi);
-                    if (!IsWesternNumber(mid)) return false;
-                    found[slot] = mid;
-                    pi = end;
-                    ti = lit;
+                    if (!matched) return false;
                     continue;
                 }
                 if (pi >= painted.Length || painted[pi] != template[ti]) return false;
@@ -279,6 +301,20 @@ namespace OrbitalSalvage.Loc
             values = new string[max + 1];
             foreach (KeyValuePair<int, string> kv in found) values[kv.Key] = kv.Value;
             return true;
+        }
+
+        static bool SlotOk(string mid, Dictionary<ulong, int> byHash)
+        {
+            if (string.IsNullOrEmpty(mid)) return false;
+            if (IsWesternNumber(mid)) return true;
+            if (!ContainsAnyScript(mid)) return true;
+            int index;
+            return byHash.TryGetValue(Hash(mid), out index);
+        }
+
+        static bool ContainsAnyScript(string text)
+        {
+            return ContainsScript(text, "ar") || ContainsScript(text, "hi") || ContainsScript(text, "km");
         }
 
         static bool TrySlotAt(string template, int index, out int slot, out int length)
@@ -380,11 +416,13 @@ namespace OrbitalSalvage.Loc
         {
             public readonly Entry Entry;
             public readonly string[] Slots;
+            public readonly ShapedTable Source;
 
-            public Resolved(Entry entry, string[] slots)
+            public Resolved(Entry entry, string[] slots, ShapedTable source)
             {
                 Entry = entry;
                 Slots = slots ?? Array.Empty<string>();
+                Source = source;
             }
 
             public bool RightAlign

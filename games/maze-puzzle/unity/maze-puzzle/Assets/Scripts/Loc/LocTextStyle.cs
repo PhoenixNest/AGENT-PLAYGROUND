@@ -20,13 +20,15 @@ namespace OrbitalSalvage.Loc
         }
 
         /// <summary>
-        /// Captured CSS letter-spacing is Latin tracking, about 0.2–1px on a 0.5em advance.
-        /// A CJK advance is already about 1em, so that tracking is dropped to 0.
-        /// Any other language, including English and a null code, keeps the captured value.
+        /// Captured CSS letter-spacing is Latin tracking. CJK advances are already
+        /// about 1em, and Arabic joins, the Devanagari headline, and Khmer clusters
+        /// break if that tracking is inserted between letters. Those languages drop
+        /// it to 0. Latin languages keep the captured value.
         /// </summary>
         public static double LetterSpacing(string languageCode, double captured)
         {
             if (IsCjk(languageCode)) return 0;
+            if (languageCode == "ar" || languageCode == "hi" || languageCode == "km") return 0;
             return captured;
         }
 
