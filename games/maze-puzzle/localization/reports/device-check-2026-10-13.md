@@ -4,12 +4,12 @@ Second pass, after the phone was unlocked. Same Release build as the locked atte
 
 ## Build (from the earlier export)
 
-| | |
-| --- | --- |
-| Export | `[IosExport] result=Succeeded sdk=DeviceSDK arch=unchanged frameTiming=1`. No `error CS` |
-| Sign | `** BUILD SUCCEEDED **` |
-| Install | `Install: Complete`, `com.curiomatch.test` 1.0 |
-| Project bundle id | left `io.dev.maze` |
+|                   |                                                                                          |
+| ----------------- | ---------------------------------------------------------------------------------------- |
+| Export            | `[IosExport] result=Succeeded sdk=DeviceSDK arch=unchanged frameTiming=1`. No `error CS` |
+| Sign              | `** BUILD SUCCEEDED **`                                                                  |
+| Install           | `Install: Complete`, `com.curiomatch.test` 1.0                                           |
+| Project bundle id | left `io.dev.maze`                                                                       |
 
 ## Home
 

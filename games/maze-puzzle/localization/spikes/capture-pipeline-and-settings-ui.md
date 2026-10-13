@@ -8,11 +8,11 @@ Scratch outputs: `/tmp/maze-i18n/capture/` (listed at the end).
 
 `package.json` has no npm scripts. Run the Node CLIs from `games/maze-puzzle/tools/parity`. There are two Playwright producers. The Unity chrome painter reads the second one.
 
-| Step | Command | Output |
-| --- | --- | --- |
-| Pixels and layout | `node web/capture-web.mjs` | `out/web/<stateId>__<profile>.png` (1290×2796), `.layout.json`, `traces/<stateId>.trace.json` |
-| DOM dump | `node web/dump-spec.mjs` | `out/web/spec/<name>__<profile>.json` (full computed style, text runs) |
-| Distill | `node web/distill-spec.mjs --page <name>` | `Assets/Resources/Parity/Spec/<name>__<profile>.json` |
+| Step              | Command                                   | Output                                                                                        |
+| ----------------- | ----------------------------------------- | --------------------------------------------------------------------------------------------- |
+| Pixels and layout | `node web/capture-web.mjs`                | `out/web/<stateId>__<profile>.png` (1290×2796), `.layout.json`, `traces/<stateId>.trace.json` |
+| DOM dump          | `node web/dump-spec.mjs`                  | `out/web/spec/<name>__<profile>.json` (full computed style, text runs)                        |
+| Distill           | `node web/distill-spec.mjs --page <name>` | `Assets/Resources/Parity/Spec/<name>__<profile>.json`                                         |
 
 `HomeChrome.Load` (`Assets/Scripts/Render/HomeChrome.cs` lines 491–500) paints that distilled JSON with Canvas2D. Viewport in every committed settings spec is `{w:430,h:932,scale:3}`.
 
@@ -90,12 +90,12 @@ node web/distill-spec.mjs --page settings_modal_privacy --out /tmp/maze-i18n/cap
 
 Parsed JSON is equal for all four files (337 elements, `t0` 220, same viewport). SHA-256 of the distilled bytes:
 
-| File | Committed | Fresh distill | Bytes |
-| --- | --- | --- | --- |
-| `settings_default__iphone.json` | `bfc789c6b85c0ee084a7d07f2ba969fc2648d759848d76625d30fe94eb33081f` | same | identical |
-| `settings_modal_privacy__zero.json` | `0bb3c9e7b4279813fbad25b61b5458f8a8484826cd8f866f239f575466810eb2` | same | identical |
-| `settings_modal_privacy__iphone.json` | `cd04c2cd3b4815da54db461fd3e53d743551951d3c0414655e7a5b42277a3169` | same | identical |
-| `settings_default__zero.json` | `1e78155f2b25e2c7ebe0b69835ea769d87cda0c854fc4a8cfe2ee25619a8ef1b` | `1b881fa8d1d749f7bafca366e6585129430de558f7d88ef3cf7628565e707f0d` | not identical |
+| File                                  | Committed                                                          | Fresh distill                                                      | Bytes         |
+| ------------------------------------- | ------------------------------------------------------------------ | ------------------------------------------------------------------ | ------------- |
+| `settings_default__iphone.json`       | `bfc789c6b85c0ee084a7d07f2ba969fc2648d759848d76625d30fe94eb33081f` | same                                                               | identical     |
+| `settings_modal_privacy__zero.json`   | `0bb3c9e7b4279813fbad25b61b5458f8a8484826cd8f866f239f575466810eb2` | same                                                               | identical     |
+| `settings_modal_privacy__iphone.json` | `cd04c2cd3b4815da54db461fd3e53d743551951d3c0414655e7a5b42277a3169` | same                                                               | identical     |
+| `settings_default__zero.json`         | `1e78155f2b25e2c7ebe0b69835ea769d87cda0c854fc4a8cfe2ee25619a8ef1b` | `1b881fa8d1d749f7bafca366e6585129430de558f7d88ef3cf7628565e707f0d` | not identical |
 
 The one byte difference is key order only. Committed `settings_default__zero.json` has `"t0":220` after `elements`. A fresh distill writes `t0` before `count` (`distill-spec.mjs` lines 282–288). `JSON.parse` equality holds; no font, run, or rect differs. Cause: `mergePaint` (lines 84–107) loads an existing file and assigns `base.t0`, which appends the key. That file was merge-painted once. The other three match a fresh stringify. No macOS-vs-Windows font-hinting delta showed up under the pinned launch args and the local fonts.
 
@@ -132,8 +132,13 @@ Language section after Gameplay, User Agreement as the second row of Privacy & S
     <span class="settings-label">User Agreement</span>
     <span class="settings-sublabel">The rules for playing the game</span>
   </div>
-  <button class="btn-cartoon-primary" id="btn-open-user-agreement"
-          data-url="https://example.com/user-agreement">View</button>
+  <button
+    class="btn-cartoon-primary"
+    id="btn-open-user-agreement"
+    data-url="https://example.com/user-agreement"
+  >
+    View
+  </button>
 </div>
 
 <div class="modal-overlay" id="modal-language">
@@ -144,23 +149,76 @@ Language section after Gameplay, User Agreement as the second row of Privacy & S
     </div>
     <div class="modal-body lang-modal-body">
       <div class="lang-grid" id="language-grid">
-        <button type="button" class="lang-option active" id="btn-lang-en" data-lang="en" lang="en">English</button>
-        <button type="button" class="lang-option" id="btn-lang-zh-hans" data-lang="zh-Hans" lang="zh-Hans">简体中文</button>
-        <button type="button" class="lang-option" id="btn-lang-zh-hant" data-lang="zh-Hant" lang="zh-Hant">繁體中文</button>
-        <button type="button" class="lang-option" id="btn-lang-ja" data-lang="ja" lang="ja">日本語</button>
-        <button type="button" class="lang-option" id="btn-lang-ko" data-lang="ko" lang="ko">한국어</button>
-        <button type="button" class="lang-option" id="btn-lang-de" data-lang="de" lang="de">Deutsch</button>
-        <button type="button" class="lang-option" id="btn-lang-fr" data-lang="fr" lang="fr">Français</button>
-        <button type="button" class="lang-option" id="btn-lang-es" data-lang="es" lang="es">Español</button>
-        <button type="button" class="lang-option" id="btn-lang-it" data-lang="it" lang="it">Italiano</button>
-        <button type="button" class="lang-option" id="btn-lang-pt" data-lang="pt" lang="pt">Português</button>
-        <button type="button" class="lang-option" id="btn-lang-vi" data-lang="vi" lang="vi">Tiếng Việt</button>
-        <button type="button" class="lang-option" id="btn-lang-fil" data-lang="fil" lang="fil">Filipino</button>
-        <button type="button" class="lang-option" id="btn-lang-id" data-lang="id" lang="id">Bahasa Indonesia</button>
-        <button type="button" class="lang-option" id="btn-lang-uz" data-lang="uz" lang="uz">Oʻzbekcha</button>
-        <button type="button" class="lang-option" id="btn-lang-km" data-lang="km" lang="km">ភាសាខ្មែរ</button>
-        <button type="button" class="lang-option" id="btn-lang-hi" data-lang="hi" lang="hi">हिन्दी</button>
-        <button type="button" class="lang-option" id="btn-lang-ar" data-lang="ar" lang="ar" dir="rtl">العربية</button>
+        <button type="button" class="lang-option active" id="btn-lang-en" data-lang="en" lang="en">
+          English
+        </button>
+        <button
+          type="button"
+          class="lang-option"
+          id="btn-lang-zh-hans"
+          data-lang="zh-Hans"
+          lang="zh-Hans"
+        >
+          简体中文
+        </button>
+        <button
+          type="button"
+          class="lang-option"
+          id="btn-lang-zh-hant"
+          data-lang="zh-Hant"
+          lang="zh-Hant"
+        >
+          繁體中文
+        </button>
+        <button type="button" class="lang-option" id="btn-lang-ja" data-lang="ja" lang="ja">
+          日本語
+        </button>
+        <button type="button" class="lang-option" id="btn-lang-ko" data-lang="ko" lang="ko">
+          한국어
+        </button>
+        <button type="button" class="lang-option" id="btn-lang-de" data-lang="de" lang="de">
+          Deutsch
+        </button>
+        <button type="button" class="lang-option" id="btn-lang-fr" data-lang="fr" lang="fr">
+          Français
+        </button>
+        <button type="button" class="lang-option" id="btn-lang-es" data-lang="es" lang="es">
+          Español
+        </button>
+        <button type="button" class="lang-option" id="btn-lang-it" data-lang="it" lang="it">
+          Italiano
+        </button>
+        <button type="button" class="lang-option" id="btn-lang-pt" data-lang="pt" lang="pt">
+          Português
+        </button>
+        <button type="button" class="lang-option" id="btn-lang-vi" data-lang="vi" lang="vi">
+          Tiếng Việt
+        </button>
+        <button type="button" class="lang-option" id="btn-lang-fil" data-lang="fil" lang="fil">
+          Filipino
+        </button>
+        <button type="button" class="lang-option" id="btn-lang-id" data-lang="id" lang="id">
+          Bahasa Indonesia
+        </button>
+        <button type="button" class="lang-option" id="btn-lang-uz" data-lang="uz" lang="uz">
+          Oʻzbekcha
+        </button>
+        <button type="button" class="lang-option" id="btn-lang-km" data-lang="km" lang="km">
+          ភាសាខ្មែរ
+        </button>
+        <button type="button" class="lang-option" id="btn-lang-hi" data-lang="hi" lang="hi">
+          हिन्दी
+        </button>
+        <button
+          type="button"
+          class="lang-option"
+          id="btn-lang-ar"
+          data-lang="ar"
+          lang="ar"
+          dir="rtl"
+        >
+          العربية
+        </button>
       </div>
     </div>
   </div>
@@ -168,24 +226,58 @@ Language section after Gameplay, User Agreement as the second row of Privacy & S
 ```
 
 ```css
-#modal-language.modal-overlay { align-items: center; padding: 24px 16px; }
+#modal-language.modal-overlay {
+  align-items: center;
+  padding: 24px 16px;
+}
 #modal-language .lang-modal-card {
-  width: 100%; max-height: none; border-radius: 28px; transform: translateY(16px);
+  width: 100%;
+  max-height: none;
+  border-radius: 28px;
+  transform: translateY(16px);
 }
-#modal-language.modal-overlay.active .lang-modal-card { transform: translateY(0); }
-#modal-language .lang-modal-body { overflow: hidden; padding: 12px 12px 14px; gap: 0; }
-.lang-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+#modal-language.modal-overlay.active .lang-modal-card {
+  transform: translateY(0);
+}
+#modal-language .lang-modal-body {
+  overflow: hidden;
+  padding: 12px 12px 14px;
+  gap: 0;
+}
+.lang-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
 .lang-option {
-  font-family: var(--font-bubble); font-weight: 800; font-size: 14px;
-  line-height: 1.15; padding: 8px 6px; min-height: 36px; border-radius: 14px;
-  border: 2.5px solid var(--cartoon-border); background: rgba(255,255,255,0.1);
-  color: #fff; text-align: center; white-space: nowrap;
+  font-family: var(--font-bubble);
+  font-weight: 800;
+  font-size: 14px;
+  line-height: 1.15;
+  padding: 8px 6px;
+  min-height: 36px;
+  border-radius: 14px;
+  border: 2.5px solid var(--cartoon-border);
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+  text-align: center;
+  white-space: nowrap;
 }
-.lang-option.active { background: var(--yellow-main); color: var(--text-dark); }
+.lang-option.active {
+  background: var(--yellow-main);
+  color: var(--text-dark);
+}
 .lang-close {
-  background: #fff; border: 2px solid var(--cartoon-border); color: var(--text-dark);
-  font-family: var(--font-bubble); font-size: 13px; font-weight: 800;
-  height: 32px; padding: 0 12px; border-radius: 999px; flex: 0 0 auto;
+  background: #fff;
+  border: 2px solid var(--cartoon-border);
+  color: var(--text-dark);
+  font-family: var(--font-bubble);
+  font-size: 13px;
+  font-weight: 800;
+  height: 32px;
+  padding: 0 12px;
+  border-radius: 999px;
+  flex: 0 0 auto;
 }
 ```
 
@@ -197,7 +289,7 @@ State declaration that captured:
 add(
   "settings_modal_language",
   "Settings with the language picker modal open (17 endonyms, no scroll)",
-  [...settingsOpen, click("btn-open-language"), adv(300), CAP],
+  [...settingsOpen, click("btn-open-language"), adv(300), CAP]
 );
 ```
 
@@ -225,31 +317,31 @@ An unmapped emoji infinite-loops the harness. `page-init.js` replaces emoji text
 
 Naming: `ParityViewer.IsGamePage` treats every id that starts with `modal_` as a game-page sheet, and calls out that settings sheets are `settings_modal_*` (`Assets/Scripts/Viewer/ParityViewer.cs` lines 815–820). The new file must be `settings_modal_language`, not `modal_language`. `QuotaAndModalTests` already asserts `settings_modal_privacy` and `settings_modal_reset_confirm` are not game pages (lines 71–72).
 
-| Place | Change |
-| --- | --- |
-| `TemplateSelector.Select` | `modal == "language"` returns `settings_modal_language` (privacy/reset are lines 72–73). `Settings()` (lines 212–216) stays `settings_sliders_moved` / `settings_toggles_off` / `settings_default`, but those three JSON files must be recaptured so the new rows are in the paint. |
-| `AppController.ModalOrder` | Add `"modal-language"` (lines 38–41). |
-| `AppController.ChooseTemplate` | Map `_modals` contains `"modal-language"` to `modal = "language"` (lines 1152–1159). |
-| `AppController.Click` | `btn-open-language` opens the modal; `btn-close-language` closes it; each `btn-lang-*` sets the current language and closes; `btn-open-user-agreement` opens the URL. Privacy is lines 420–427. If both policy rows become URLs, `btn-open-privacy` stops calling `_modals.Add("modal-privacy")` and `settings_modal_privacy` is no longer the live template. |
-| `ParityPages.InteractiveIds` | `btn-open-language`, `btn-close-language`, `btn-open-user-agreement`, and the 17 `btn-lang-*` ids. Class `lang-option` is optional if every button has an id. |
-| `ParityPages.Edges` | Only if the viewer keyboard nav should open the picker. Not required for `AppController`. |
-| `ParityPages.MainTabPages` / `PrewarmTemplates` | No change. Comment at line 41: prewarm is home, maps, daily, shop, achievements. Not settings. |
-| `HomeChrome.Applies` | No switch edit required. After the explicit cases it returns true when `Resources/Parity/Spec/<id>__zero` or `__iphone` exists (lines 43–44). |
-| `PageCatalog` | `LoadZeroSpecs` discovers files. `GroupOf` already buckets `settings*` (line 58). `MenuSpecIds` (lines 32–45) stays on `settings_default` unless a menu entry for the picker is wanted. |
-| `PagePreviewMenu` | Optional menu item next to `settings_default` (lines 27–28). |
+| Place                                           | Change                                                                                                                                                                                                                                                                                                                                                        |
+| ----------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `TemplateSelector.Select`                       | `modal == "language"` returns `settings_modal_language` (privacy/reset are lines 72–73). `Settings()` (lines 212–216) stays `settings_sliders_moved` / `settings_toggles_off` / `settings_default`, but those three JSON files must be recaptured so the new rows are in the paint.                                                                           |
+| `AppController.ModalOrder`                      | Add `"modal-language"` (lines 38–41).                                                                                                                                                                                                                                                                                                                         |
+| `AppController.ChooseTemplate`                  | Map `_modals` contains `"modal-language"` to `modal = "language"` (lines 1152–1159).                                                                                                                                                                                                                                                                          |
+| `AppController.Click`                           | `btn-open-language` opens the modal; `btn-close-language` closes it; each `btn-lang-*` sets the current language and closes; `btn-open-user-agreement` opens the URL. Privacy is lines 420–427. If both policy rows become URLs, `btn-open-privacy` stops calling `_modals.Add("modal-privacy")` and `settings_modal_privacy` is no longer the live template. |
+| `ParityPages.InteractiveIds`                    | `btn-open-language`, `btn-close-language`, `btn-open-user-agreement`, and the 17 `btn-lang-*` ids. Class `lang-option` is optional if every button has an id.                                                                                                                                                                                                 |
+| `ParityPages.Edges`                             | Only if the viewer keyboard nav should open the picker. Not required for `AppController`.                                                                                                                                                                                                                                                                     |
+| `ParityPages.MainTabPages` / `PrewarmTemplates` | No change. Comment at line 41: prewarm is home, maps, daily, shop, achievements. Not settings.                                                                                                                                                                                                                                                                |
+| `HomeChrome.Applies`                            | No switch edit required. After the explicit cases it returns true when `Resources/Parity/Spec/<id>__zero` or `__iphone` exists (lines 43–44).                                                                                                                                                                                                                 |
+| `PageCatalog`                                   | `LoadZeroSpecs` discovers files. `GroupOf` already buckets `settings*` (line 58). `MenuSpecIds` (lines 32–45) stays on `settings_default` unless a menu entry for the picker is wanted.                                                                                                                                                                       |
+| `PagePreviewMenu`                               | Optional menu item next to `settings_default` (lines 27–28).                                                                                                                                                                                                                                                                                                  |
 
 ### Tests
 
-| Test | What happens |
-| --- | --- |
-| `IphoneSafeAreaTests.EveryZeroSpec_HasAnIphoneSpec` | Asserts count `>= 44` and a twin `__iphone` file (`IphoneSafeAreaTests.cs` lines 37–47). Adding a pair passes. The visible-text test (lines 111–115) **fails** on the new iPhone settings specs until the footer clears y=898. Text is not in `BoxMayCrossHomeIndicator` (lines 28–34); that list is only for control boxes. |
-| `PagePreviewTests.Catalog_GroupsSpecsAndOffersIphoneForEveryPage` | `>= MenuSpecIds.Length`, not an exact count. New `settings_*` group themselves. |
-| `PagePreviewTests.CapturePose_MatchesTheEditModePaintPath` | Paints `settings_default` (lines 16–22) and compares two painters. It does not pin a stored PNG. It still passes if both painters see the new spec. |
-| `PagePreviewTests.Stills_MatchTheParityPlayer_IncludingShopRingsDefault` | Asserts `screenshot-states.json` length **23** (line 81) and byte-matches `tools/parity/out/unity-before/<id>__zero.png`. The only settings id in that list is `settings_default`. That still changes. The other 22 do not. The test ignores when the still directory is absent. |
-| `TemplateSelectorTests` | Lines 73–82 pin `settings_default`, `settings_toggles_off`, `settings_sliders_moved`, `settings_modal_privacy`, `settings_modal_reset_confirm`. Add a language case. |
-| `ToastAgeTests` | Loads `settings_default` (line 24) as a toast host. It does not pin settings pixels. It keeps passing if the spec still loads. |
-| `TabPrewarmTests` | Unchanged. Settings is not a prewarm tab. |
-| `AppFlowTests` | Replays every `golden/app/*.json` (`AppFlowTests.cs` lines 14–19). Those traces do not include settings DOM labels. |
+| Test                                                                     | What happens                                                                                                                                                                                                                                                                                                                 |
+| ------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `IphoneSafeAreaTests.EveryZeroSpec_HasAnIphoneSpec`                      | Asserts count `>= 44` and a twin `__iphone` file (`IphoneSafeAreaTests.cs` lines 37–47). Adding a pair passes. The visible-text test (lines 111–115) **fails** on the new iPhone settings specs until the footer clears y=898. Text is not in `BoxMayCrossHomeIndicator` (lines 28–34); that list is only for control boxes. |
+| `PagePreviewTests.Catalog_GroupsSpecsAndOffersIphoneForEveryPage`        | `>= MenuSpecIds.Length`, not an exact count. New `settings_*` group themselves.                                                                                                                                                                                                                                              |
+| `PagePreviewTests.CapturePose_MatchesTheEditModePaintPath`               | Paints `settings_default` (lines 16–22) and compares two painters. It does not pin a stored PNG. It still passes if both painters see the new spec.                                                                                                                                                                          |
+| `PagePreviewTests.Stills_MatchTheParityPlayer_IncludingShopRingsDefault` | Asserts `screenshot-states.json` length **23** (line 81) and byte-matches `tools/parity/out/unity-before/<id>__zero.png`. The only settings id in that list is `settings_default`. That still changes. The other 22 do not. The test ignores when the still directory is absent.                                             |
+| `TemplateSelectorTests`                                                  | Lines 73–82 pin `settings_default`, `settings_toggles_off`, `settings_sliders_moved`, `settings_modal_privacy`, `settings_modal_reset_confirm`. Add a language case.                                                                                                                                                         |
+| `ToastAgeTests`                                                          | Loads `settings_default` (line 24) as a toast host. It does not pin settings pixels. It keeps passing if the spec still loads.                                                                                                                                                                                               |
+| `TabPrewarmTests`                                                        | Unchanged. Settings is not a prewarm tab.                                                                                                                                                                                                                                                                                    |
+| `AppFlowTests`                                                           | Replays every `golden/app/*.json` (`AppFlowTests.cs` lines 14–19). Those traces do not include settings DOM labels.                                                                                                                                                                                                          |
 
 ### Goldens
 
@@ -281,24 +373,24 @@ Do not change: home, maps, daily, shop, achievements, game, loading, pause, debr
 
 One English capture is enough for the picker grid if Unity overstamps two strings.
 
-| String | id | Translate? |
-| --- | --- | --- |
-| English, 简体中文, 繁體中文, 日本語, 한국어, Deutsch, Français, Español, Italiano, Português, Tiếng Việt, Filipino, Bahasa Indonesia, Oʻzbekcha, ភាសាខ្មែរ, हिन्दी, العربية | `btn-lang-*` runs | Never. Own script, every locale. |
-| Current value under the Language row | `settings-language-value` | Not a translation. It is the selected endonym. Overstamp it when the language changes. "Bahasa Indonesia" is the longest Latin label (run width 109px in a 180px grid button at 14px). On the settings row it is 11px Nunito; a long endonym can wrap and push the iPhone footer further. Not measured in a non-English selection. |
-| "Choose Language" | `language-modal-title` | Yes. |
-| "Close" | `btn-close-language` | Yes. The pill grows with the word (`padding: 0 12px`). A long translation has to stay clear of the title in the header. |
-| "Language", "Change", "User Agreement", "View", "Privacy Policy", "View Policy" | settings labels | Yes, when the settings page itself is localized. They are English in this capture. |
+| String                                                                                                                                                                      | id                        | Translate?                                                                                                                                                                                                                                                                                                                         |
+| --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| English, 简体中文, 繁體中文, 日本語, 한국어, Deutsch, Français, Español, Italiano, Português, Tiếng Việt, Filipino, Bahasa Indonesia, Oʻzbekcha, ភាសាខ្មែរ, हिन्दी, العربية | `btn-lang-*` runs         | Never. Own script, every locale.                                                                                                                                                                                                                                                                                                   |
+| Current value under the Language row                                                                                                                                        | `settings-language-value` | Not a translation. It is the selected endonym. Overstamp it when the language changes. "Bahasa Indonesia" is the longest Latin label (run width 109px in a 180px grid button at 14px). On the settings row it is 11px Nunito; a long endonym can wrap and push the iPhone footer further. Not measured in a non-English selection. |
+| "Choose Language"                                                                                                                                                           | `language-modal-title`    | Yes.                                                                                                                                                                                                                                                                                                                               |
+| "Close"                                                                                                                                                                     | `btn-close-language`      | Yes. The pill grows with the word (`padding: 0 12px`). A long translation has to stay clear of the title in the header.                                                                                                                                                                                                            |
+| "Language", "Change", "User Agreement", "View", "Privacy Policy", "View Policy"                                                                                             | settings labels           | Yes, when the settings page itself is localized. They are English in this capture.                                                                                                                                                                                                                                                 |
 
 Do not capture 17 copies of the page for the endonyms. Capture English chrome once, keep the endonym runs, and replace title, Close, and `settings-language-value` by id. Privacy and User Agreement body copy is not in the game if those rows only open a URL.
 
 ## 6. Effort
 
-| Work | Days | Notes |
-| --- | --- | --- |
-| Web | 1.5 | Rows, centered grid, profile field for the selected language, URL handlers, iPhone footer tightened by at least 6px, no unmapped emoji. |
-| Capture and spec regen | 0.5 | This Mac can distill the five existing settings specs plus `settings_modal_language`. Do not regen other pages. Run Prettier after `gen-states.mjs`. |
-| Unity wiring | 2 | Template, modal order, click, 20 hit ids, `OpenURL`, overstamp of title / Close / current endonym. |
-| Tests and baselines | 1.5 | Recapture the five settings specs (both profiles), add the new pair, update `TemplateSelectorTests`, fix the iPhone footer so `IphoneSafeAreaTests` passes, replace the `settings_default` player still if `out/unity-before` is in play. |
+| Work                   | Days | Notes                                                                                                                                                                                                                                     |
+| ---------------------- | ---- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Web                    | 1.5  | Rows, centered grid, profile field for the selected language, URL handlers, iPhone footer tightened by at least 6px, no unmapped emoji.                                                                                                   |
+| Capture and spec regen | 0.5  | This Mac can distill the five existing settings specs plus `settings_modal_language`. Do not regen other pages. Run Prettier after `gen-states.mjs`.                                                                                      |
+| Unity wiring           | 2    | Template, modal order, click, 20 hit ids, `OpenURL`, overstamp of title / Close / current endonym.                                                                                                                                        |
+| Tests and baselines    | 1.5  | Recapture the five settings specs (both profiles), add the new pair, update `TemplateSelectorTests`, fix the iPhone footer so `IphoneSafeAreaTests` passes, replace the `settings_default` player still if `out/unity-before` is in play. |
 
 Fonts are extra and are the long pole: about 2–4 days on top of Unity wiring if the picker must match in-game rather than rely on the system. Not included in the 5.5 days above.
 

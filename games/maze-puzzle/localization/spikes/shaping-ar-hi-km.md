@@ -12,25 +12,25 @@ Bake glyph runs offline with HarfBuzz (approach A) for the closed set of Arabic,
 
 Estimates are judgment, not a tracked plan. "Verified" means this spike ran the check or read the named file. "Assumed" means it was not run.
 
-| | A. Offline HarfBuzz | B. Runtime HarfBuzz plugin | C. Unity TextCore / ATG |
-| --- | --- | --- | --- |
-| Effort | 6–10 engineer-days for the bake, the draw/wrap path, and the gameplay call sites that splice numbers. Linguist QA is extra. | 10–20 engineer-days on top of the same draw/offset work, to build and bind a static lib. Not built here. | Replacing canvas text with UI Toolkit is a different renderer (weeks). Calling the internal shaper from game code is unsupported. |
-| Risk | Medium. Glyph ids are pinned to a font file hash. Khmer line breaks and Arabic row direction are product risks, not shaper risks. | High. A second HarfBuzz next to the one already inside the engine, plus IL2CPP static-link bring-up that was not attempted. | High for the outline renderer. The public ATG entry is a UI Toolkit label, and it paints SDF meshes. |
-| Runtime cost | Table lookup plus the current outline emit. No shaping on the frame. | Shaping cost on first use. Not measured on an A11. A cache would make the steady state look like A, with a native transition. | ATG shape + SDF raster inside UI Toolkit. Not timed. |
-| Size | See §2.1. Order of 60–180 KB of glyph records per language, plus one subset font per script per weight. | HarfBuzz binary size not measured. The engine already contains a HarfBuzz face (`CreateHbFaceIfNeeded` in `UnityEngine.TextCoreTextEngineModule.dll`). | No extra native library. Font assets become TextCore SDF atlases, which this canvas does not consume. |
-| iOS / Android | Same pure-C# IL2CPP path as today's outline text. | iOS static plugins are documented as `DllImport("__Internal")` in the 6000.4 manual `ios-native-plugin-create.html`. Android would be an arm64-v8a `.so`. Neither was linked. Upstream HarfBuzzSharp bindings import a library named `HARFBUZZ`, so the stock binding does not match `__Internal`. | ATG is documented for UI Toolkit on the platforms that ship UI Toolkit. It was not driven from this canvas. |
-| Verified | uharfbuzz 0.56.3 shaped the samples; FreeType rasterised the glyph ids; placeholder stitch matched; Noto fonts are glyf. | HarfBuzz COPYING is the Old MIT licence (upstream `COPYING`). Unity documents `__Internal` for static iOS plugins. | Metadata of the 6000.4 editor assemblies, plus the local manual pages named below. |
-| Assumed | A reader will accept Noto (or a rounder OFL face) in place of Fredoka. A11 memory is a non-issue at these sizes. | A11 shaping latency, stripped library size, and whether a patched HarfBuzzSharp actually loads under IL2CPP. | That internal `TextLib.ShapeText` would keep working across a Unity patch. It is non-public, so that is not a plan. |
+|               | A. Offline HarfBuzz                                                                                                               | B. Runtime HarfBuzz plugin                                                                                                                                                                                                                                                                         | C. Unity TextCore / ATG                                                                                                           |
+| ------------- | --------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
+| Effort        | 6–10 engineer-days for the bake, the draw/wrap path, and the gameplay call sites that splice numbers. Linguist QA is extra.       | 10–20 engineer-days on top of the same draw/offset work, to build and bind a static lib. Not built here.                                                                                                                                                                                           | Replacing canvas text with UI Toolkit is a different renderer (weeks). Calling the internal shaper from game code is unsupported. |
+| Risk          | Medium. Glyph ids are pinned to a font file hash. Khmer line breaks and Arabic row direction are product risks, not shaper risks. | High. A second HarfBuzz next to the one already inside the engine, plus IL2CPP static-link bring-up that was not attempted.                                                                                                                                                                        | High for the outline renderer. The public ATG entry is a UI Toolkit label, and it paints SDF meshes.                              |
+| Runtime cost  | Table lookup plus the current outline emit. No shaping on the frame.                                                              | Shaping cost on first use. Not measured on an A11. A cache would make the steady state look like A, with a native transition.                                                                                                                                                                      | ATG shape + SDF raster inside UI Toolkit. Not timed.                                                                              |
+| Size          | See §2.1. Order of 60–180 KB of glyph records per language, plus one subset font per script per weight.                           | HarfBuzz binary size not measured. The engine already contains a HarfBuzz face (`CreateHbFaceIfNeeded` in `UnityEngine.TextCoreTextEngineModule.dll`).                                                                                                                                             | No extra native library. Font assets become TextCore SDF atlases, which this canvas does not consume.                             |
+| iOS / Android | Same pure-C# IL2CPP path as today's outline text.                                                                                 | iOS static plugins are documented as `DllImport("__Internal")` in the 6000.4 manual `ios-native-plugin-create.html`. Android would be an arm64-v8a `.so`. Neither was linked. Upstream HarfBuzzSharp bindings import a library named `HARFBUZZ`, so the stock binding does not match `__Internal`. | ATG is documented for UI Toolkit on the platforms that ship UI Toolkit. It was not driven from this canvas.                       |
+| Verified      | uharfbuzz 0.56.3 shaped the samples; FreeType rasterised the glyph ids; placeholder stitch matched; Noto fonts are glyf.          | HarfBuzz COPYING is the Old MIT licence (upstream `COPYING`). Unity documents `__Internal` for static iOS plugins.                                                                                                                                                                                 | Metadata of the 6000.4 editor assemblies, plus the local manual pages named below.                                                |
+| Assumed       | A reader will accept Noto (or a rounder OFL face) in place of Fredoka. A11 memory is a non-issue at these sizes.                  | A11 shaping latency, stripped library size, and whether a patched HarfBuzzSharp actually loads under IL2CPP.                                                                                                                                                                                       | That internal `TextLib.ShapeText` would keep working across a Unity patch. It is non-public, so that is not a plan.               |
 
 ### 2.1 Sizes measured in the proof
 
 Fonts are the Google Fonts variable TTFs (glyf + gvar, default axis wght 400 / wdth 100), SIL OFL 1.1:
 
-| Font | Full file | Glyphs | Sample-character subset (layout closure) |
-| --- | ---: | ---: | ---: |
-| Noto Sans Arabic | 844,676 B | 1,711 | 96,596 B |
-| Noto Sans Devanagari | 641,944 B | 1,117 | 236,788 B |
-| Noto Sans Khmer | 359,788 B | 673 | 129,692 B |
+| Font                 | Full file | Glyphs | Sample-character subset (layout closure) |
+| -------------------- | --------: | -----: | ---------------------------------------: |
+| Noto Sans Arabic     | 844,676 B |  1,711 |                                 96,596 B |
+| Noto Sans Devanagari | 641,944 B |  1,117 |                                236,788 B |
+| Noto Sans Khmer      | 359,788 B |    673 |                                129,692 B |
 
 The subset is a floor for the characters in the 18 sample strings, not a prediction for 500 strings. Hindi is already 237 KB because conjunct closure pulls in many alternate glyphs from a short text. The full variable font is the ceiling if we refuse to subset. `HVAR` is in all three fonts, so advances baked at Regular are wrong for Bold. Glyph records have to be baked per weight instance. The runtime `TrueTypeFont` reader reads `glyf` and ignores `gvar`, so a variable file draws the default instance only.
 
@@ -123,17 +123,17 @@ Approach B does not remove the draw-offset work, and approach C does not return 
 
 All under `/tmp/maze-i18n/shaping`. Not in git.
 
-| Path | What it is |
-| --- | --- |
-| `src/shape_poc.py` | uharfbuzz 0.56.3, python-bidi levels, FreeType raster of the glyph ids |
-| `venv/` | throwaway virtualenv |
-| `fonts/NotoSansArabic-VF.ttf` | OFL 1.1, `fonts/OFL-arabic.txt` |
-| `fonts/NotoSansDevanagari-VF.ttf` | OFL 1.1, `fonts/OFL-devanagari.txt` |
-| `fonts/NotoSansKhmer-VF.ttf` | OFL 1.1, `fonts/OFL-khmer.txt` |
-| `out/shaped-runs.json` | proposed storage, visual glyph runs |
-| `out/summary.json` | widths, wrap lines, placeholder match, subset sizes |
-| `out/ar-sheet.png` `out/hi-sheet.png` `out/km-sheet.png` | the six samples per language |
-| `out/{ar,hi,km}-confirm-wrapped.png` | logical wrap at 280 px, then each line redrawn from stored advances |
-| `out/{ar,hi,km}-subset.ttf` | fontTools subset of the sample characters |
+| Path                                                     | What it is                                                             |
+| -------------------------------------------------------- | ---------------------------------------------------------------------- |
+| `src/shape_poc.py`                                       | uharfbuzz 0.56.3, python-bidi levels, FreeType raster of the glyph ids |
+| `venv/`                                                  | throwaway virtualenv                                                   |
+| `fonts/NotoSansArabic-VF.ttf`                            | OFL 1.1, `fonts/OFL-arabic.txt`                                        |
+| `fonts/NotoSansDevanagari-VF.ttf`                        | OFL 1.1, `fonts/OFL-devanagari.txt`                                    |
+| `fonts/NotoSansKhmer-VF.ttf`                             | OFL 1.1, `fonts/OFL-khmer.txt`                                         |
+| `out/shaped-runs.json`                                   | proposed storage, visual glyph runs                                    |
+| `out/summary.json`                                       | widths, wrap lines, placeholder match, subset sizes                    |
+| `out/ar-sheet.png` `out/hi-sheet.png` `out/km-sheet.png` | the six samples per language                                           |
+| `out/{ar,hi,km}-confirm-wrapped.png`                     | logical wrap at 280 px, then each line redrawn from stored advances    |
+| `out/{ar,hi,km}-subset.ttf`                              | fontTools subset of the sample characters                              |
 
 What the PNGs show, read back in this spike: Arabic goal is joined and ordered `كغ` / `20` / `الهدف` from left to right. Arabic mixed puts `Orbital Salvage` on the left and `المرحلة` on the right, with `12` between Arabic words. Hindi title shows `क्ष` and the matras in `कक्षीय सफ़ाई`. Hindi wrap line 0 is `क्या आप` with a space. Khmer title and `បន្តលេង` show coeng forms below the baseline. The back-arrow samples show a `.notdef` box. This was FreeType, not `TrueTypeFont.cs`. Unity was not launched.

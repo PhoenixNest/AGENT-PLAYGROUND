@@ -4,14 +4,14 @@ Taiwan wording, address 你. Full-width `，。！？、：`. ASCII `(` `)` kept
 
 ## Coverage
 
-| | Count |
-| --- | ---: |
-| spec keys | 355 |
-| str keys | 81 |
-| validator errors | 0 |
-| visible warnings | 45 |
-| suppressed fit warnings | 2 |
-| accepted identical copies | 0 |
+|                           | Count |
+| ------------------------- | ----: |
+| spec keys                 |   355 |
+| str keys                  |    81 |
+| validator errors          |     0 |
+| visible warnings          |    45 |
+| suppressed fit warnings   |     2 |
+| accepted identical copies |     0 |
 
 Visible warnings by kind: `expansion` 44, `font-pending` 1. The font-pending line is `Huninn-Regular.ttf`. The 44 expansion warnings are copies that have to stay identical to English (kg lines, logo lines, emoji, and `{0}` templates). They are 1.0× English, and the zh-Hant warn line is 0.88×, so a legal copy always warns. No translated sentence is in that list.
 
@@ -21,18 +21,18 @@ There is no `zh-Hant-identical-ok.json`. Logo lines, kg strings, emoji-only stri
 
 ## Doubtful lines
 
-| English | Choice | Alternative |
-| --- | --- | --- |
-| `Hangar` | 機庫 | 停機坪 |
-| `Lost In Void` | 迷失虛空 | 掉進虛空 |
-| `Party Popper Hole` | 拉炮黑洞 | 派對黑洞 |
-| `Silver Shift • Sector Hazard` | 銀班次•扇區危機 | 銀班次•扇區險境 |
-| `The hungriest… big anime eyes! Nom nom!` | 眼睛又大又圓！啊嗚啊嗚！ | 大大的動漫眼睛 |
-| `SORT RIG` (`fx.hub.sort`) | 整理環 | 分類環 |
-| `Cyber Orbit 1` | 電子軌道1 | 賽博軌道1 |
-| `Switchbacks & One-Way Flappers` | 折返彎道和單向小門 | 折返和單向拍板 |
-| `Awesome, Got It!` | 好，知道了！ | 太好了！ |
-| `First Nom Nom!` | 初次啊嗚啊嗚！ | 第一次啊嗚 |
+| English                                   | Choice                   | Alternative     |
+| ----------------------------------------- | ------------------------ | --------------- |
+| `Hangar`                                  | 機庫                     | 停機坪          |
+| `Lost In Void`                            | 迷失虛空                 | 掉進虛空        |
+| `Party Popper Hole`                       | 拉炮黑洞                 | 派對黑洞        |
+| `Silver Shift • Sector Hazard`            | 銀班次•扇區危機          | 銀班次•扇區險境 |
+| `The hungriest… big anime eyes! Nom nom!` | 眼睛又大又圓！啊嗚啊嗚！ | 大大的動漫眼睛  |
+| `SORT RIG` (`fx.hub.sort`)                | 整理環                   | 分類環          |
+| `Cyber Orbit 1`                           | 電子軌道1                | 賽博軌道1       |
+| `Switchbacks & One-Way Flappers`          | 折返彎道和單向小門       | 折返和單向拍板  |
+| `Awesome, Got It!`                        | 好，知道了！             | 太好了！        |
+| `First Nom Nom!`                          | 初次啊嗚啊嗚！           | 第一次啊嗚      |
 
 `初次啊嗚啊嗚！` is the short form that fits the 96px box. `第一次啊嗚啊嗚！` was 102px.
 

@@ -4,14 +4,14 @@
 
 ## Coverage
 
-| | Count |
-| --- | ---: |
-| spec keys | 355 |
-| str keys | 81 |
-| validator errors | 0 |
-| visible warnings | 187 |
-| suppressed fit warnings | 0 |
-| accepted identical copies | 0 |
+|                           | Count |
+| ------------------------- | ----: |
+| spec keys                 |   355 |
+| str keys                  |    81 |
+| validator errors          |     0 |
+| visible warnings          |   187 |
+| suppressed fit warnings   |     0 |
+| accepted identical copies |     0 |
 
 Visible warnings by kind: `fit` 136, `glossary` 51. The 51 glossary warnings are the 50 `LVL` chips (they say `LvN`; sentences still say `レベル`) and `TOY SHOP` (`おもちゃや`). There is no `ja-identical-ok.json`.
 
@@ -41,16 +41,16 @@ Other child-facing labels and blurbs whose kanji is above about grade 3 moved to
 
 Left in kanji because the kana misses the 3% line or the box:
 
-| English | Kept | Why |
-| --- | --- | --- |
-| `Goal: N kg` and the quota lines | `目標` | `もくひょう` is past the floor on the quota pills |
-| `Kessler Hero` | `ケスラー勇者` | `ゆうしゃ` is 112px, past the 107px 3% line |
-| `View Policy` | `規約をみる` | `きやくをみる` is wider than the button |
-| vibration sublabel | `振動します` | `しんどう` pushes the line past the floor. The short label is `しんどう` |
-| black-hole blurb | `お腹` | the line is already 468px against a 475px floor |
-| `Cute Cosmic Janitor` and the 1,000-item line | `宇宙のおそうじ屋さん` | glossary phrase |
-| privacy paragraphs | legal kanji | parent-facing, and already past the real-font floor |
-| toy-shop money sentence | `購入` | parent-facing, and already past the real-font floor |
+| English                                       | Kept                   | Why                                                                      |
+| --------------------------------------------- | ---------------------- | ------------------------------------------------------------------------ |
+| `Goal: N kg` and the quota lines              | `目標`                 | `もくひょう` is past the floor on the quota pills                        |
+| `Kessler Hero`                                | `ケスラー勇者`         | `ゆうしゃ` is 112px, past the 107px 3% line                              |
+| `View Policy`                                 | `規約をみる`           | `きやくをみる` is wider than the button                                  |
+| vibration sublabel                            | `振動します`           | `しんどう` pushes the line past the floor. The short label is `しんどう` |
+| black-hole blurb                              | `お腹`                 | the line is already 468px against a 475px floor                          |
+| `Cute Cosmic Janitor` and the 1,000-item line | `宇宙のおそうじ屋さん` | glossary phrase                                                          |
+| privacy paragraphs                            | legal kanji            | parent-facing, and already past the real-font floor                      |
+| toy-shop money sentence                       | `購入`                 | parent-facing, and already past the real-font floor                      |
 
 ## Glyphs
 
@@ -66,10 +66,10 @@ ASCII `(` `)` stay, including the cut-off `Unlock (` and trophy fragments. A kat
 
 Measured on `Assets/Fonts/MPLUSRounded1c-700.ttf` (upem 1000, kana and kanji 1.00em). Every character in these two strings is in that subset. The sparkle on the shop title is the English emoji, drawn as a sprite.
 
-| English | New | Width | Box | Floor | Under the floor |
-| --- | --- | ---: | ---: | ---: | ---: |
-| `GOLD` | `金` | 10.0px at 10px | 33.1px | 46.0px | 78% |
-| `Allowance Claimed!` | `おこづかいゲット！` | 121.5px at 13.5px | 128.3px | 178.1px | 32% |
+| English              | New                  |             Width |     Box |   Floor | Under the floor |
+| -------------------- | -------------------- | ----------------: | ------: | ------: | --------------: |
+| `GOLD`               | `金`                 |    10.0px at 10px |  33.1px |  46.0px |             78% |
+| `Allowance Claimed!` | `おこづかいゲット！` | 121.5px at 13.5px | 128.3px | 178.1px |             32% |
 
 `金` is the one-character gold-medal label. `ゴールド` was 40px and the daily chip painted `ゴー…`. `GOLD ✓` stays `ゴールド✓` because that wider chip already fits. `ゴールドコイン` and `ゴールドシフト` are unchanged.
 
@@ -86,14 +86,14 @@ The claim title fits the 128px box at full size. The shop string `gift.title.cla
 
 These lines are within 5% of the shrink floor on `mplus-ja-joyo.ttf`, or past it. The estimator still reports them as fit warnings, because it counts Latin at 0.50em and full-width punctuation at 0.32em. This pass did not widen them.
 
-| English | Real px | Floor px | Ratio |
-| --- | ---: | ---: | ---: |
-| `All 3 shifts completed! Claim your reward!` | 249 | 241 | 1.04 |
-| `Clean up Bronze Shift • Cadet Sweep!` | 280 | 271 | 1.03 |
-| `Nibbles is still hungry! Out of orbital scrap!` | 387 | 389 | 1.00 |
-| black-hole blurb (`お腹`) | 468 | 475 | 0.99 |
-| `Nibbles Hats` | 92 | 94 | 0.97 |
-| vibration sublabel | 275 | 285 | 0.96 |
+| English                                          | Real px | Floor px | Ratio |
+| ------------------------------------------------ | ------: | -------: | ----: |
+| `All 3 shifts completed! Claim your reward!`     |     249 |      241 |  1.04 |
+| `Clean up Bronze Shift • Cadet Sweep!`           |     280 |      271 |  1.03 |
+| `Nibbles is still hungry! Out of orbital scrap!` |     387 |      389 |  1.00 |
+| black-hole blurb (`お腹`)                        |     468 |      475 |  0.99 |
+| `Nibbles Hats`                                   |      92 |       94 |  0.97 |
+| vibration sublabel                               |     275 |      285 |  0.96 |
 
 The two privacy paragraphs, the reset confirmation, and the toy-shop money sentence are also past the real-font floor. They wrap, and the estimator still has them under its floor.
 

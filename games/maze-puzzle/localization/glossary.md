@@ -24,24 +24,24 @@ kg, ×, ▶, ←, /, %, +, Western digits 0-9, `{0}` `{1}`, endonyms, Nibbles, O
 
 ## Address and formality
 
-| Language | Choice |
-| --- | --- |
-| de | du. Not Sie. |
-| fr | tu (France). Not vous. |
-| es | tú, always. Neutral Latin-American vocabulary: computadora, celular, aplicación. No vosotros, no ordenador, no vos. |
-| it | tu. |
-| pt-PT | tu for the child. European lexicon: ecrã, telemóvel. Not Brazilian você as the default, and not tela or celular. |
-| vi | bạn, or drop the pronoun. Not mày. |
-| fil | ka. Standard Filipino. A little Taglish is fine for a kid; do not leave a whole sentence in English. |
-| id | kamu. Not Anda, not kau. |
-| uz | sen. Latin script only. |
-| hi | तुम. Not आप, not तू. Devanagari. Western digits. |
-| ar | Modern Standard Arabic, kid-friendly, little or no tashkeel. Not a dialect. RTL. Western digits. |
-| ja | Sentences use です/ます. Buttons and fragments are short nouns or the polite stem, without だ・である and without slang. です/ます is the choice for kids: clear, warm, and not a teacher's lecture. |
-| ko | 해요체 (해요, 이에요). Not 합니다체, not 해체. Labels can be nouns. |
-| zh-Hans | 你. Mainland wording (软件, 屏幕, 视频). |
-| zh-Hant | 你. Taiwan wording (軟體, 螢幕, 影片, 首頁). Not mainland terms. |
-| km | Polite kid tone. Not the royal register. Native review. |
+| Language | Choice                                                                                                                                                                                               |
+| -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| de       | du. Not Sie.                                                                                                                                                                                         |
+| fr       | tu (France). Not vous.                                                                                                                                                                               |
+| es       | tú, always. Neutral Latin-American vocabulary: computadora, celular, aplicación. No vosotros, no ordenador, no vos.                                                                                  |
+| it       | tu.                                                                                                                                                                                                  |
+| pt-PT    | tu for the child. European lexicon: ecrã, telemóvel. Not Brazilian você as the default, and not tela or celular.                                                                                     |
+| vi       | bạn, or drop the pronoun. Not mày.                                                                                                                                                                   |
+| fil      | ka. Standard Filipino. A little Taglish is fine for a kid; do not leave a whole sentence in English.                                                                                                 |
+| id       | kamu. Not Anda, not kau.                                                                                                                                                                             |
+| uz       | sen. Latin script only.                                                                                                                                                                              |
+| hi       | तुम. Not आप, not तू. Devanagari. Western digits.                                                                                                                                                     |
+| ar       | Modern Standard Arabic, kid-friendly, little or no tashkeel. Not a dialect. RTL. Western digits.                                                                                                     |
+| ja       | Sentences use です/ます. Buttons and fragments are short nouns or the polite stem, without だ・である and without slang. です/ます is the choice for kids: clear, warm, and not a teacher's lecture. |
+| ko       | 해요체 (해요, 이에요). Not 합니다체, not 해체. Labels can be nouns.                                                                                                                                  |
+| zh-Hans  | 你. Mainland wording (软件, 屏幕, 视频).                                                                                                                                                             |
+| zh-Hant  | 你. Taiwan wording (軟體, 螢幕, 影片, 首頁). Not mainland terms.                                                                                                                                     |
+| km       | Polite kid tone. Not the royal register. Native review.                                                                                                                                              |
 
 ## Numbers, units, emoji
 
@@ -111,7 +111,6 @@ One line each. The translations are in the table below, not here.
 - wear — put a costume on.
 - unlock — spend coins on a costume.
 - nom nom — Nibbles' eating noise.
-
 
 ```text
 term	en	dnt	check	confidence	native-review	definition	zh-Hans	zh-Hant	ja	ko	de	fr	es	it	pt-PT	vi	fil	id	uz	km	hi	ar

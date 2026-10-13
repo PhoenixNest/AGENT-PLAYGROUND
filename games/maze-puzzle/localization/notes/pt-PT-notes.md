@@ -4,13 +4,13 @@ Wording pass 2, 2026-10-12, after the all-language audit. Address is `tu`. Europ
 
 ## Coverage
 
-| | Count |
-| --- | ---: |
-| spec keys | 355 |
-| str keys | 81 |
-| validator errors | 0 |
-| visible warnings | 51 |
-| suppressed fit warnings | 51 |
+|                         | Count |
+| ----------------------- | ----: |
+| spec keys               |   355 |
+| str keys                |    81 |
+| validator errors        |     0 |
+| visible warnings        |    51 |
+| suppressed fit warnings |    51 |
 
 Visible warnings by kind: `fit` 48, `glossary` 3. Suppressed fit warnings: `LVL 1`–`LVL 50` (glossary word nível) and `TOY SHOP` (the plural `BRINQUEDOS` painted in full at 0.76; the kit is about 1px over). No `stale`, `glyph`, `length`, or `expansion` warnings.
 
@@ -18,16 +18,16 @@ Pass 1 had 56 visible warnings (`fit` 54, `glossary` 2). The wording pass remove
 
 ## What changed in this pass
 
-| English | Before | After | Fit |
-| --- | --- | --- | --- |
-| `LOCKED` (16 control ellipses) | `PRESO` | `FECHADO` | `PRESO` means imprisoned. `FECHADO` is 42px against a 50px box (0.61 of the 72% floor). `TRANCADO` was 48px (0.69) and ellipsized, so this is about 12% narrower. `BLOQUEADO` is 54px (0.78 of the floor) and `COM CADEADO` is 63px. The earned badge stays `✓ OBTIDO`: shut, or you have it. |
-| `Close` | `Fecha` | `Fechar` | Kit 39px against a 32px box, scale 0.83, above the 72% floor. `Fecha` painted in full and was the clipped tu form. |
-| `Claim +100` / gift button | `Toma +100` | `Recebe +100` | Kit 61px against 59px, scale 0.97. If the old pill was full size, paint is about 0.81. |
-| `Claim +300` | `Toma +300` | `Recebe +300` | Kit 63px against 62px, scale 0.98. Paint about 0.81 if the old pill was full size. |
-| `Unlock (500`–`3000` and `shop.footer.unlock` | `Desbloquear` | `Abre` | Audit 0.72–0.74 with the whole word still visible. `Abre (500` is 49px against a 67px box (scale 1.00). Longest price the same. |
-| `DAILY OPERATIONS` | `OPERAÇÕES DIÁRIAS` | `TAREFAS DIÁRIAS` | Audit 0.76, whole title visible. Extrapolated paint 0.86. Kit box clears. |
-| `TOY SHOP` | `BRINQUEDO` | `BRINQUEDOS` | Singular read as one toy. The plural painted in full at 0.76. Kit 85px against 84px, accepted in the fit exceptions. |
-| reset confirm | the long `Não dá para desfazer!` line | `Tens a certeza? Apaga os mapas, trajes e moedas de ouro. Sem volta!` | The still cut it at `Não dá par…` at 0.72. New line extrapolates to about 0.92. Not the privacy modal. |
+| English                                       | Before                                | After                                                                 | Fit                                                                                                                                                                                                                                                                                           |
+| --------------------------------------------- | ------------------------------------- | --------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `LOCKED` (16 control ellipses)                | `PRESO`                               | `FECHADO`                                                             | `PRESO` means imprisoned. `FECHADO` is 42px against a 50px box (0.61 of the 72% floor). `TRANCADO` was 48px (0.69) and ellipsized, so this is about 12% narrower. `BLOQUEADO` is 54px (0.78 of the floor) and `COM CADEADO` is 63px. The earned badge stays `✓ OBTIDO`: shut, or you have it. |
+| `Close`                                       | `Fecha`                               | `Fechar`                                                              | Kit 39px against a 32px box, scale 0.83, above the 72% floor. `Fecha` painted in full and was the clipped tu form.                                                                                                                                                                            |
+| `Claim +100` / gift button                    | `Toma +100`                           | `Recebe +100`                                                         | Kit 61px against 59px, scale 0.97. If the old pill was full size, paint is about 0.81.                                                                                                                                                                                                        |
+| `Claim +300`                                  | `Toma +300`                           | `Recebe +300`                                                         | Kit 63px against 62px, scale 0.98. Paint about 0.81 if the old pill was full size.                                                                                                                                                                                                            |
+| `Unlock (500`–`3000` and `shop.footer.unlock` | `Desbloquear`                         | `Abre`                                                                | Audit 0.72–0.74 with the whole word still visible. `Abre (500` is 49px against a 67px box (scale 1.00). Longest price the same.                                                                                                                                                               |
+| `DAILY OPERATIONS`                            | `OPERAÇÕES DIÁRIAS`                   | `TAREFAS DIÁRIAS`                                                     | Audit 0.76, whole title visible. Extrapolated paint 0.86. Kit box clears.                                                                                                                                                                                                                     |
+| `TOY SHOP`                                    | `BRINQUEDO`                           | `BRINQUEDOS`                                                          | Singular read as one toy. The plural painted in full at 0.76. Kit 85px against 84px, accepted in the fit exceptions.                                                                                                                                                                          |
+| reset confirm                                 | the long `Não dá para desfazer!` line | `Tens a certeza? Apaga os mapas, trajes e moedas de ouro. Sem volta!` | The still cut it at `Não dá par…` at 0.72. New line extrapolates to about 0.92. Not the privacy modal.                                                                                                                                                                                        |
 
 `Recebe` is the one claim verb on the pills, the gift button, and the longer claim sentences. Shop buttons say `Abre`; the banner and the unlock toast still say `desbloquear`, because those lines fit and `abre` is the wrong verb in a sentence.
 
@@ -39,62 +39,62 @@ Left as copies because they are the brand, the unit, or a symbol, not wording to
 
 ## Doubtful lines
 
-| Key | Choice | Alternative |
-| --- | --- | --- |
-| `Close` | `Fechar` | `Fecha` is the tu imperative and fits at full size. It reads as a clipped word. `Fechar` is the full infinitive, scale about 0.83. |
-| `Claim +100` / `Claim +300` | `Recebe +100` / `Recebe +300` | `Toma` fit the pill and is the wrong verb. `Recebe` is the glossary tu form and is 1–2px over the kit box. |
-| `LOCKED` | `FECHADO` | Pair with `✓ OBTIDO`. `TRAVADO` is the same width and means jammed. `BLOQUEADO` and `COM CADEADO` sit on the ellipsis side of the floor. |
-| `Try Again` | `Outra vez` | `Repete` also fits. `Outra vez` is what you say to a child after a miss. It is not a finite verb. |
-| `Wear` | `Usar` | `Vestir` is the glossary verb and overflows the 29px button. |
-| `Nibbles Hats` | `Chapéus Nibbles` | `Chapéus do Nibbles` is a fit error (about 103px against a 96px floor). |
-| `TOY SHOP` | `BRINQUEDOS` | `Loja de brinquedos` is a fit error. The singular `BRINQUEDO` painted smaller and read as one toy. |
-| `DAILY OPERATIONS` | `TAREFAS DIÁRIAS` | `OPERAÇÕES DIÁRIAS` painted at 0.76 and is the checked phrase. The shorter synonym clears about 0.86 and warns on glossary. |
-| `Unlock` buttons | `Abre` | `Desbloquear` painted in full at 0.72–0.74. `Abre` is the tu imperative and sits at full size. Sentences keep `desbloquear`. |
-| `FREE` | `GRÁTIS` | No shorter word means free of cost. `Livre` would mean unoccupied. |
-| `Cute Cosmic Janitor` | `Auxiliar cósmico de limpeza` | The glossary phrase is stiff for a child and wider than the badge. Dropping words would miss the checked term. |
-| `Launch Backup Pod (+8 Scrap!)` | `Lançar cápsula de reserva (+8 sucata!)` | The verb plus both checked words shrinks. Dropping `Lançar` still does not clear the box. |
-| `Bubblegum Chute N` | `Escorrega pastilha N` | `Goma` fits and is the wrong candy. The map still shows the full name. |
-| `Moon Chute N` | `Escorrega lua N` | Same slide word as the other chutes. |
-| `0 / 3 CLEARED` and `CLEARED ✓` | `FEITO` | `Concluído` does not fit the daily pill. |
-| privacy body | left as written | Not tuned. The three body ellipses are the privacy modal. |
+| Key                             | Choice                                   | Alternative                                                                                                                              |
+| ------------------------------- | ---------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| `Close`                         | `Fechar`                                 | `Fecha` is the tu imperative and fits at full size. It reads as a clipped word. `Fechar` is the full infinitive, scale about 0.83.       |
+| `Claim +100` / `Claim +300`     | `Recebe +100` / `Recebe +300`            | `Toma` fit the pill and is the wrong verb. `Recebe` is the glossary tu form and is 1–2px over the kit box.                               |
+| `LOCKED`                        | `FECHADO`                                | Pair with `✓ OBTIDO`. `TRAVADO` is the same width and means jammed. `BLOQUEADO` and `COM CADEADO` sit on the ellipsis side of the floor. |
+| `Try Again`                     | `Outra vez`                              | `Repete` also fits. `Outra vez` is what you say to a child after a miss. It is not a finite verb.                                        |
+| `Wear`                          | `Usar`                                   | `Vestir` is the glossary verb and overflows the 29px button.                                                                             |
+| `Nibbles Hats`                  | `Chapéus Nibbles`                        | `Chapéus do Nibbles` is a fit error (about 103px against a 96px floor).                                                                  |
+| `TOY SHOP`                      | `BRINQUEDOS`                             | `Loja de brinquedos` is a fit error. The singular `BRINQUEDO` painted smaller and read as one toy.                                       |
+| `DAILY OPERATIONS`              | `TAREFAS DIÁRIAS`                        | `OPERAÇÕES DIÁRIAS` painted at 0.76 and is the checked phrase. The shorter synonym clears about 0.86 and warns on glossary.              |
+| `Unlock` buttons                | `Abre`                                   | `Desbloquear` painted in full at 0.72–0.74. `Abre` is the tu imperative and sits at full size. Sentences keep `desbloquear`.             |
+| `FREE`                          | `GRÁTIS`                                 | No shorter word means free of cost. `Livre` would mean unoccupied.                                                                       |
+| `Cute Cosmic Janitor`           | `Auxiliar cósmico de limpeza`            | The glossary phrase is stiff for a child and wider than the badge. Dropping words would miss the checked term.                           |
+| `Launch Backup Pod (+8 Scrap!)` | `Lançar cápsula de reserva (+8 sucata!)` | The verb plus both checked words shrinks. Dropping `Lançar` still does not clear the box.                                                |
+| `Bubblegum Chute N`             | `Escorrega pastilha N`                   | `Goma` fits and is the wrong candy. The map still shows the full name.                                                                   |
+| `Moon Chute N`                  | `Escorrega lua N`                        | Same slide word as the other chutes.                                                                                                     |
+| `0 / 3 CLEARED` and `CLEARED ✓` | `FEITO`                                  | `Concluído` does not fit the daily pill.                                                                                                 |
+| privacy body                    | left as written                          | Not tuned. The three body ellipses are the privacy modal.                                                                                |
 
 `settings_modal_privacy` is translated and not tuned. That collision is the layout already reported on German.
 
 ## Glossary terms not used as written
 
-| Term | What the table says | Why |
-| --- | --- | --- |
-| `operações diárias` | `Tarefas diárias` | The checked phrase painted at 0.76 on the daily header and the card. |
-| `chapéus do Nibbles` | `Chapéus Nibbles` | Full phrase is a fit error on the tab. |
-| `loja de brinquedos` on `TOY SHOP` | `Brinquedos` | Full phrase is a fit error. The shop sentence still says `loja de brinquedos`. |
-| `vestir` | `Usar` | Button box. |
-| `concluído` | `Feito` | Daily pill. One word on the pill and the badge. |
-| `singularidade` on `Singularity Horizon` | `Horizonte singular` | Header box. |
-| `desbloquear` on the price button | `Abre` | The button sat at the 72% floor. The banner and the toast still say `desbloquear`. |
+| Term                                     | What the table says  | Why                                                                                |
+| ---------------------------------------- | -------------------- | ---------------------------------------------------------------------------------- |
+| `operações diárias`                      | `Tarefas diárias`    | The checked phrase painted at 0.76 on the daily header and the card.               |
+| `chapéus do Nibbles`                     | `Chapéus Nibbles`    | Full phrase is a fit error on the tab.                                             |
+| `loja de brinquedos` on `TOY SHOP`       | `Brinquedos`         | Full phrase is a fit error. The shop sentence still says `loja de brinquedos`.     |
+| `vestir`                                 | `Usar`               | Button box.                                                                        |
+| `concluído`                              | `Feito`              | Daily pill. One word on the pill and the badge.                                    |
+| `singularidade` on `Singularity Horizon` | `Horizonte singular` | Header box.                                                                        |
+| `desbloquear` on the price button        | `Abre`               | The button sat at the 72% floor. The banner and the toast still say `desbloquear`. |
 
 Checked terms that do appear, and still warn on fit: `nível` (LVL chips, suppressed), `auxiliar cósmico de limpeza`, `cápsula de reserva`, `escorrega` on the chute chips, `sucata` on the backup button. `receber` now appears on the claim pills.
 
 ## Every visible warning left
 
-| Keys | n | Kind | Why it stays |
-| --- | ---: | --- | --- |
-| `LVL 1`–`LVL 50` | 50 | fit, suppressed | Glossary word nível. |
-| `TOY SHOP` | 1 | fit, suppressed | `BRINQUEDOS`, about 1px over. Painted in full at 0.76. |
-| `Bubblegum Chute 1`–`10` | 10 | fit | `Escorrega pastilha`. About 12px over. `Pastilha` is the candy word. The map still shows the full name. |
-| `Moon Chute 1`–`10` | 10 | fit | `Escorrega lua`. About 12px over. Same slide word. |
-| `Cyber Orbit 1`–`10` | 10 | fit | `Ciberórbita`. About 2px over. |
-| `Horizon Sector 1`–`9` | 9 | fit | `Setor horizonte`. About 6px over. `Setor` is required. |
-| `Close` | 1 | fit | `Fechar`, 39px against 32px. Above the 72% floor. |
-| `Claim +100` | 1 | fit | `Recebe +100`, 61px against 59px. Glossary verb. |
-| `Claim +300` | 1 | fit | `Recebe +300`, 63px against 62px. Same verb. |
-| `Cute Cosmic Janitor` | 1 | fit | Glossary phrase. |
-| `Launch Backup Pod (+8 Scrap!)` | 1 | fit | Verb plus `cápsula de reserva` and `sucata`. |
-| `Nibbles Hats` | 1 | fit and glossary | `Chapéus Nibbles`. The full phrase does not fit. |
-| `FREE` | 1 | fit | `GRÁTIS`. |
-| `Kessler Hero` | 1 | fit | `Herói Kessler`. |
-| `Prize` | 1 | fit | `Prémio`. |
-| `DAILY OPERATIONS` | 1 | glossary | `Tarefas diárias` so the header clears about 0.86. |
-| `TOY SHOP` | 1 | glossary | `Brinquedos`. `Loja de brinquedos` does not fit the header. |
+| Keys                            |   n | Kind             | Why it stays                                                                                            |
+| ------------------------------- | --: | ---------------- | ------------------------------------------------------------------------------------------------------- |
+| `LVL 1`–`LVL 50`                |  50 | fit, suppressed  | Glossary word nível.                                                                                    |
+| `TOY SHOP`                      |   1 | fit, suppressed  | `BRINQUEDOS`, about 1px over. Painted in full at 0.76.                                                  |
+| `Bubblegum Chute 1`–`10`        |  10 | fit              | `Escorrega pastilha`. About 12px over. `Pastilha` is the candy word. The map still shows the full name. |
+| `Moon Chute 1`–`10`             |  10 | fit              | `Escorrega lua`. About 12px over. Same slide word.                                                      |
+| `Cyber Orbit 1`–`10`            |  10 | fit              | `Ciberórbita`. About 2px over.                                                                          |
+| `Horizon Sector 1`–`9`          |   9 | fit              | `Setor horizonte`. About 6px over. `Setor` is required.                                                 |
+| `Close`                         |   1 | fit              | `Fechar`, 39px against 32px. Above the 72% floor.                                                       |
+| `Claim +100`                    |   1 | fit              | `Recebe +100`, 61px against 59px. Glossary verb.                                                        |
+| `Claim +300`                    |   1 | fit              | `Recebe +300`, 63px against 62px. Same verb.                                                            |
+| `Cute Cosmic Janitor`           |   1 | fit              | Glossary phrase.                                                                                        |
+| `Launch Backup Pod (+8 Scrap!)` |   1 | fit              | Verb plus `cápsula de reserva` and `sucata`.                                                            |
+| `Nibbles Hats`                  |   1 | fit and glossary | `Chapéus Nibbles`. The full phrase does not fit.                                                        |
+| `FREE`                          |   1 | fit              | `GRÁTIS`.                                                                                               |
+| `Kessler Hero`                  |   1 | fit              | `Herói Kessler`.                                                                                        |
+| `Prize`                         |   1 | fit              | `Prémio`.                                                                                               |
+| `DAILY OPERATIONS`              |   1 | glossary         | `Tarefas diárias` so the header clears about 0.86.                                                      |
+| `TOY SHOP`                      |   1 | glossary         | `Brinquedos`. `Loja de brinquedos` does not fit the header.                                             |
 
 ## Twelve least-sure keys
 
