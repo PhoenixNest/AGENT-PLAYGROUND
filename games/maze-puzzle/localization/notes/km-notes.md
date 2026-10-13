@@ -11,23 +11,39 @@ No native speaker has reviewed this table. Khmer is high-risk for an agent draft
 | spec keys | 355 |
 | str keys | 81 |
 | validator errors | 0 |
-| visible warnings | 8 |
+| visible warnings | 15 |
 | suppressed fit warnings | 50 |
 | accepted identical copies | 0 |
 
-Visible warnings by kind: `fit` 7, `font-pending` 1. No `glossary`, `stale`, `glyph`, `expansion`, `placeholder`, `emoji`, or `number` findings. The 50 suppressed warnings are `LVL 1`–`LVL 50` in `km-fit-exceptions.json`. There is no `km-identical-ok.json`. Brand lines, unit strings, and emoji-only strings stay as English because the validator already allows them.
+Visible warnings by kind: `fit` 14, `font-pending` 1. No `glossary`, `stale`, `glyph`, `expansion`, `placeholder`, `emoji`, or `number` findings. The 50 suppressed warnings are `LVL 1`–`LVL 50` in `km-fit-exceptions.json`. There is no `km-identical-ok.json`. Brand lines, unit strings, and emoji-only strings stay as English because the validator already allows them.
 
 `font-pending` is the Kantumruy Pro chain, which is not wired yet. A local cmap check (Kantumruy Pro variable, Kantumruy Pro 700, Noto Sans Khmer) found no missing Khmer-block character. `…`, `។`, `←`, Latin, and digits are in Kantumruy Pro. `▶` (U+25B6) is not in Kantumruy Pro; it needs the symbol fallback, same as English. Emoji, `✓`, and U+FE0F are outside both Khmer faces. Noto Sans Khmer also lacks `←`; Kantumruy Pro has it.
 
+## Lead corrections
+
+The doll-shop word, the disease reading of "cleared", and "student" for cadet were wrong words. Two more lines had the same kind of slip. Shortenings and softer tone were left as they were.
+
+| English | Was | Now |
+| --- | --- | --- |
+| `TOY SHOP` and the shop sentence | `ហាងតុក្កតា` (doll shop) | `ហាងរបស់លេង` |
+| `0 / 3 CLEARED`, `CLEARED ✓`, the all-clear toast | `បានឆ្លង` | `បានបញ្ចប់` |
+| Bronze shift name, cleanup line, `Tidy Space Cadet` | `សិស្ស` | `អ្នកហ្វឹកហាត់` |
+| `Nebula Pinball` and `Cotton Candy Nebula` | `ផ្កាយ` / `ពពក` | `ណេប៊ុយឡា` |
+| `Sound FX Volume` | `សំឡេងបែបផែន` (effects, no volume) | `កម្រិតសំឡេងបែបផែន` |
+
+`ហាងប្រដាប់ក្មេងលេង` is the longer toy-shop phrase. On the 17px header it is 138px against an 84px budget and a 116px shrink floor, so it would be a fit error. `ហាងរបស់លេង` is the short shop-sign word and measures 76px, inside the 84px budget. The glossary `km` cell for `toy-shop` is now that word. No other glossary cell was edited. `cleared` and `cadet` stay `check: no`; the table no longer uses those two cells.
+
+`បានបញ្ចប់` on `0 / 3 CLEARED` is 68px vs a 62px budget (floor 86px). `CLEARED ✓` fits. Bronze `វេនសំរឹទ្ធ • អ្នកហ្វឹកហាត់សម្អាត` is 202px vs 175px (floor 244px). The cleanup line is 220px vs 212px (floor 295px). `Tidy Space Cadet` is `អ្នកហ្វឹកហាត់អវកាស`, 113px vs 110px (floor 152px). "Tidy" is not on that badge; the longer tidy+space trainee line sits on the shrink floor.
+
 ## Five least sure
 
-| English | This draft | Alternative |
+| English | This draft | Why it is still open |
 | --- | --- | --- |
-| `Bronze Shift • Cadet Sweep` | `វេនសំរឹទ្ធ • សិស្សសម្អាត` | `វេនសំរឹទ្ធ • សម្អាតថ្នាក់សិស្ស` (clearer, about 13px over the title) |
-| `TOY SHOP` | `ហាងតុក្កតា` | `ហាងប្រដាប់ក្មេងលេង` (toy shop; glossary word means doll shop) |
-| `0 / 3 CLEARED` / `CLEARED ✓` | `បានឆ្លង` | `បានឆ្លងផុត` (`ឆ្លង` also means contagious) |
-| `Lost In Void` | `បាត់ចន្លោះ` | `វង្វេងក្នុងចន្លោះ` if this is a failure title, not a stat |
-| `Silver Shift • Sector Hazard` | `វេនប្រាក់ • ផ្នែកលំបាក` | `វេនប្រាក់ • ផ្នែកគ្រោះ` (closer to hazard, harsher for children) |
+| `Lost In Void` | `បាត់ចន្លោះ` | Still read as a result stat next to snacks and coins. A fail banner would need `វង្វេងក្នុងចន្លោះ`. |
+| `Silver Shift • Sector Hazard` | `វេនប្រាក់ • ផ្នែកលំបាក` | Softened from "hazard" for children. `គ្រោះ` is nearer and sounds like an accident. Left as tone. |
+| `The Kessler Singularity` / `Kessler Hero` | `ខេស្លឺ` | Transliteration. Latin `Kessler` would also pass the script rules. |
+| `Party Popper Hole` | `ប្រហោងបាញ់បុណ្យ` | "Popper" is still a guess. |
+| `ណេប៊ុយឡា` | loan spelling | Meaning is nebula, not star. The spelling itself has not had a native check. |
 
 ## Every line that still needs a native check
 
@@ -35,9 +51,6 @@ Not a full reread list. These are the lines where the wording, the spelling, or 
 
 | English | Draft | Why it is doubtful |
 | --- | --- | --- |
-| `Bronze Shift • Cadet Sweep` | `វេនសំរឹទ្ធ • សិស្សសម្អាត` | `សិស្សសម្អាត` can be read as "clean the pupil". Same stem in `Clean up Bronze Shift • Cadet Sweep!` and `Tidy Space Cadet` (`សិស្សសម្អាតអវកាស`). |
-| `TOY SHOP` and the shop sentence | `ហាងតុក្កតា` | Required glossary string. `តុក្កតា` is a doll, not toys in general. |
-| `CLEARED`, `បានឆ្លង` chips and toasts | `បានឆ្លង` | Glossary word. Also the everyday word for catching a disease. |
 | `Lost In Void` | `បាត់ចន្លោះ` | Read as a result stat next to snacks and coins. If it is a fail banner, this is the wrong meaning. |
 | `Silver Shift • Sector Hazard` | `ផ្នែកលំបាក` | Softened from "hazard". `គ្រោះ` is nearer and sounds like an accident. |
 | `FREE DAILY STIPEND` and the stipend toast | `ប្រាក់ឧបត្ថម្ភប្រចាំថ្ងៃ` | Required glossary string. Formal for a child's pocket money. The claim banner uses `លុយហោប៉ៅ` for allowance. |
@@ -45,7 +58,7 @@ Not a full reread list. These are the lines where the wording, the spelling, or 
 | `Yes, Reset` | `ចាស លុប` | `ចាស` is a spoken yes-particle. `យល់ព្រម លុប` is more button-like. `Reset` itself is `លុប` (erase), not a literal reset. |
 | `The Kessler Singularity` / `Kessler Hero` | `ស៊ីងហ្គុយឡារីតេខេស្លឺ` / `វីរបុរសខេស្លឺ` | Transliteration of Kessler. Keeping `Kessler` in Latin also fits the script rules. |
 | `Singularity Horizon` | `ជើងមេឃស៊ីងហ្គុយឡារីតេ` | Glossary spelling of singularity. 142px vs a 139px title. |
-| `Nebula Pinball` / `Cotton Candy Nebula` | `ភីនបលផ្កាយ` / `ពពកស្ករស` | "Nebula" became "star" or "cloud". `ណេប៊ុយឡា` is an uncertain loan. |
+| `Nebula Pinball` / `Cotton Candy Nebula` | `ភីនបលណេប៊ុយឡា` / `ណេប៊ុយឡាស្ករស` | Star and cloud are gone. The loan spelling is still unchecked. |
 | `Moon Chute N` | `ផ្លូវចន្ទ N` | Dropped `រអិល` from glossary `ផ្លូវរអិល` so the card fits. The world title `Cheese Moon Chutes` keeps `ផ្លូវរអិលចន្ទឈីស`. |
 | `Bubblegum Chute N` | `ផ្លូវរអិលស្ករសៀវ N` | `ស្ករសៀវ` is chewing gum. `ស្ករកៅស៊ូ` is closer to bubblegum and is about 4px over. The belt name keeps `ខ្សែស្ករកៅស៊ូ`. |
 | `Cyber Donut Rings` / `Cyber Orbit` | `សាយប័រ` | Usual tech loan for "cyber". 3px over on the world title. |
@@ -53,7 +66,7 @@ Not a full reread list. These are the lines where the wording, the spelling, or 
 | `100% offline, kid-safe, no trackers` | `100% អហ្វឡាញ សុវត្ថិភាព គ្មានតាមដាន` | "Kid" is only `សុវត្ថិភាព` here. All three claims plus `កុមារ` do not fit. |
 | `Next Map ▶` | `ទៅផែនទី ▶` | "Next" is only the arrow. `ផែនទីបន្ទាប់ ▶` is 74px vs 64px. |
 | `LVL N` chips | `កម្រិតN` | Digit is glued to the word. A space makes `LVL 11` a fit error on a 31px chip. |
-| `Sound FX Volume` | `សំឡេងបែបផែន` | Did not use `កម្រិតសំឡេង`, because `កម្រិត` is the stage word. |
+| `Sound FX Volume` | `កម្រិតសំឡេងបែបផែន` | Now says volume. `កម្រិត` here is the slider, not a stage. It fits the row. |
 | `Galaxy Janitor King` | `ស្តេចសម្អាតកាឡាក់ស៊ី` | `ស្តេច` is playful, not royal vocabulary. Still worth a check. |
 | `Party Popper Hole` | `ប្រហោងបាញ់បុណ្យ` | "Popper" is a guess. |
 | `Fiesta vortex…` | `ខ្យល់កួចបុណ្យ…` | Dropped the loan `Fiesta`. |
@@ -93,11 +106,11 @@ Checked terms (`check: yes`) are in the strings that contain them. The validator
 | Term | What happened |
 | --- | --- |
 | `chute` `ផ្លូវរអិល` | Kept on bubblegum chutes and on `Cheese Moon Chutes`. Moon level cards are `ផ្លូវចន្ទ` so they fit. |
-| `Toy Shop` `ហាងតុក្កតា` | Used, with the doll-shop doubt above. |
+| `Toy Shop` `ហាងរបស់លេង` | Glossary `km` cell corrected. The old cell was a doll shop. Header fits. |
 | `stipend` | Used. It is formal next to `លុយហោប៉ៅ`. |
-| `cleared` `បានឆ្លង` | Used, with the disease reading above. |
-| `level` `កម្រិត` | Used. Not used for the volume slider. |
-| `cadet` `សិស្ស` | Used. The shift name is the awkward line. |
+| `cleared` `បានឆ្លង` | Not used. The table says `បានបញ្ចប់`. The glossary cell was left as written (`check: no`). |
+| `level` `កម្រិត` | Used on stages, and now on the volume slider as `កម្រិតសំឡេង`. |
+| `cadet` `សិស្ស` | Not used. The table says `អ្នកហ្វឹកហាត់`. The glossary cell was left as written (`check: no`). |
 | `singularity` | Used as `ស៊ីងហ្គុយឡារីតេ`. |
 
 `check: no` words that were shortened on a control: moon-chute `រអិល`, bubblegum `ស្ករកៅស៊ូ` on the numbered cards, `Next Map` "next".
@@ -147,5 +160,9 @@ Gift fragments, read in order: `ទទួលឥតថ្លៃប្រចាំ
 | `Kessler Hero` | 82px vs 81px | `វីរបុរសខេស្លឺ`. |
 | `Prize` | 41px vs 34px | `រង្វាន់`. Already the short noun. |
 | `Singularity Horizon` | 142px vs 139px | Glossary spelling plus horizon. |
+| `0 / 3 CLEARED` (and 1, 2, 3) | 68px vs 62px | `បានបញ្ចប់`. Floor is 86px. |
+| `Bronze Shift • Cadet Sweep` | 202px vs 175px | Trainee plus sweep. Floor is 244px. |
+| `Clean up Bronze Shift • Cadet Sweep!` | 220px vs 212px | Same name. Floor is 295px. |
+| `Tidy Space Cadet` | 113px vs 110px | `អ្នកហ្វឹកហាត់អវកាស`. Floor is 152px. |
 
 None of these cross the 72% shrink floor. `LVL 11` did, until the space before the digits was removed.
