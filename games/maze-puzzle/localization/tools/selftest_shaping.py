@@ -81,6 +81,10 @@ def test_glued_placeholder_fails():
         raise AssertionError("bake accepted a glued placeholder: " + text)
     check_placeholders("كلمة {0} كغ")
     check_placeholders("{0} كغ")
+    check_placeholders("+{0}")
+    check_placeholders("{0}h {1}m")
+    check_placeholders("({1}/{0})")
+    check_placeholders("{0}!")
 
 
 def test_roundtrip_and_symbol_run():

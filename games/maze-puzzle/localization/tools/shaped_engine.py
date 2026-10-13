@@ -41,7 +41,9 @@ SYMBOLS = {
     0x2190,  # ←
     0x2192,  # →
     0x2194,
+    0x2026,  # …  not in the script faces; the symbol chain has it
     0x23E9,  # ⏩
+    0x23EA,  # ⏪
     0x25B6,  # ▶
     0x25C0,
     0x2605,
@@ -153,12 +155,17 @@ def _kind_of(cp: int, lang: str) -> str:
     return "punct"
 
 
-def _boundary_ok(ch: str | None) -> bool:
-    if ch is None:
-        return True
-    if ch.isspace():
-        return True
-    return "0" <= ch <= "9"
+def _joining_neighbor(ch: str | None) -> bool:
+    """True when the character is a letter of Arabic, Devanagari, or Khmer.
+
+    A placeholder may sit next to punctuation, a Western digit, or a Latin
+    token (``+{0}``, ``{0}h``, ``({1}/{0}``). It may not sit against a
+    joining letter or a conjunct piece.
+    """
+    if ch is None or ch.isspace():
+        return False
+    cp = ord(ch)
+    return _is_script(cp, "ar") or _is_script(cp, "hi") or _is_script(cp, "km")
 
 
 def check_placeholders(text: str) -> None:
@@ -171,7 +178,7 @@ def check_placeholders(text: str) -> None:
     for match in PLACEHOLDER.finditer(text):
         before = text[match.start() - 1] if match.start() > 0 else None
         after = text[match.end()] if match.end() < len(text) else None
-        if _boundary_ok(before) and _boundary_ok(after):
+        if not _joining_neighbor(before) and not _joining_neighbor(after):
             continue
         left = before if before is not None else "start"
         right = after if after is not None else "end"
@@ -180,7 +187,7 @@ def check_placeholders(text: str) -> None:
             + match.group(1)
             + "} in "
             + repr(text)
-            + " is not on a space or digit boundary "
+            + " is glued to a joining letter "
             + f"(left={left!r}, right={right!r}). "
             + "It must not sit inside a joining or conjunct sequence."
         )
