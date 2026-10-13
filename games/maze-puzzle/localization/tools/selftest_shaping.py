@@ -81,6 +81,20 @@ def test_glued_placeholder_fails():
         raise AssertionError("bake accepted a glued placeholder: " + text)
     check_placeholders("كلمة {0} كغ")
     check_placeholders("{0} كغ")
+    check_placeholders("+{0}")
+    check_placeholders("{0}h {1}m")
+    check_placeholders("({1}/{0})")
+    check_placeholders("{0}!")
+
+
+def test_latin_only_stays_ltr():
+    fc = face("ar")
+    quota = shape_string(fc, "{0} / {1} kg")
+    assert quota["base_level"] == 0, quota["base_level"]
+    kg = shape_string(fc, "{0} kg")
+    assert kg["base_level"] == 0, kg["base_level"]
+    mixed = shape_string(fc, "هدف: {0} kg")
+    assert mixed["base_level"] == 1, mixed["base_level"]
 
 
 def test_roundtrip_and_symbol_run():
@@ -110,6 +124,7 @@ def main() -> int:
         test_khmer_coeng_one_cluster,
         test_placeholder_stitch,
         test_glued_placeholder_fails,
+        test_latin_only_stays_ltr,
         test_roundtrip_and_symbol_run,
     ]
     for test in tests:

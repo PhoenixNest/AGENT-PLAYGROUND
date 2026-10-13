@@ -291,6 +291,9 @@ namespace OrbitalSalvage.Loc.Tests
             Assert.AreEqual(0, LocTextStyle.LetterSpacing("zh-Hant", 1));
             Assert.AreEqual(0, LocTextStyle.LetterSpacing("ja", 0.5));
             Assert.AreEqual(0, LocTextStyle.LetterSpacing("ko", 0.4));
+            Assert.AreEqual(0, LocTextStyle.LetterSpacing("ar", 0.8));
+            Assert.AreEqual(0, LocTextStyle.LetterSpacing("hi", 1));
+            Assert.AreEqual(0, LocTextStyle.LetterSpacing("km", 0.4));
             Assert.AreEqual(0.8, LocTextStyle.LetterSpacing("de", 0.8));
             Assert.AreEqual(0.8, LocTextStyle.LetterSpacing("en", 0.8));
             Assert.AreEqual(0.8, LocTextStyle.LetterSpacing(null, 0.8));

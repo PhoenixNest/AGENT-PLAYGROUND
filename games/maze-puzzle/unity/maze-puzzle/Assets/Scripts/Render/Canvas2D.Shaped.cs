@@ -123,7 +123,7 @@ namespace OrbitalSalvage.Render
             TrueTypeFont script = ScriptFace(lang, table == null ? "" : table.FontName);
             if (script != null && table != null && table.UnitsPerEm > 0 && script.unitsPerEm != table.UnitsPerEm)
                 script = null;
-            shapedFace = script;
+            shapedFace = null;
             double pen = 0;
             bool trailing = false;
             bool needScript = false;
@@ -135,6 +135,7 @@ namespace OrbitalSalvage.Render
                 shapedFace = null;
                 return 0;
             }
+            if (needScript) shapedFace = script;
             double k = script == null ? 0 : px / script.unitsPerEm;
             for (int i = 0; i < pieces.Length; i++)
             {

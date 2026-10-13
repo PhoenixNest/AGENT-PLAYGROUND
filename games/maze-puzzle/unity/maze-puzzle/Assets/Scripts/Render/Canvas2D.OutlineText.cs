@@ -202,6 +202,15 @@ namespace OrbitalSalvage.Render
         /// </summary>
         TrueTypeFont AscentFace(string family, int weight)
         {
+            if (ShapedText.IsComplex(ShapeCode))
+            {
+                var table = ShapedText.Table(ShapeCode);
+                if (table != null && !table.Refused)
+                {
+                    TrueTypeFont script = ScriptFace(ShapeCode, table.FontName);
+                    if (script != null) return script;
+                }
+            }
             if (TextChain != null && TextChain.Length > 0 && !LatinStrut(TextChain[0]))
                 return OutlineFonts.Primary(family, weight);
             if (TextChain != null && TextChain.Length > 0) return TextChain[0];
@@ -253,8 +262,11 @@ namespace OrbitalSalvage.Render
 
             // Blink: ascent/descent are the rounded hhea metrics; top/middle/bottom use the OS/2 typo metrics normalised to 1 em.
             // A CJK primary has a different em box. Gate badges and hub labels use middle,
-            // so the metrics stay on Fredoka or Nunito and the ideographs sit where the English word sat.
-            TrueTypeFont metrics = LatinStrut(primary) ? primary : OutlineFonts.Primary(spec.family, spec.weight);
+            // so those metrics stay on Fredoka or Nunito. A shaped Arabic, Hindi, or Khmer
+            // run keeps the script face, or the marks sit on the Latin em and clip.
+            TrueTypeFont metrics = primary;
+            if ((shapedFace == null || primary != shapedFace) && !LatinStrut(primary))
+                metrics = OutlineFonts.Primary(spec.family, spec.weight);
             double ascent = RoundHalfUp(metrics.ascender * px / metrics.unitsPerEm);
             double descent = RoundHalfUp(-metrics.descender * px / metrics.unitsPerEm);
             double ta = metrics.typoAscender, td = -metrics.typoDescender;
