@@ -88,6 +88,8 @@ namespace OrbitalSalvage.Render
             public double LeadPad;
             /// <summary>Width of the English run's trailing whitespace.</summary>
             public double TrailPad;
+            /// <summary>When &gt; 0, wrapped lines use this pitch instead of the captured run height. 0 keeps the run height. Latin paint leaves it at 0.</summary>
+            public double LinePitch;
         }
 
         public struct Layout
@@ -121,7 +123,9 @@ namespace OrbitalSalvage.Render
                 LetterSpacing = input.LetterSpacing,
                 Scale = 1,
                 IconIndex = -1,
-                LinePitch = input.RunH > 1 ? input.RunH : Math.Max(1, input.FontPx)
+                LinePitch = input.LinePitch > 0
+                    ? input.LinePitch
+                    : (input.RunH > 1 ? input.RunH : Math.Max(1, input.FontPx))
             };
             double width = measure != null ? measure(input.FontPx, input.LetterSpacing) : input.RunW;
             // A mid-run icon that already sits on the English glyphs stays put unless the
