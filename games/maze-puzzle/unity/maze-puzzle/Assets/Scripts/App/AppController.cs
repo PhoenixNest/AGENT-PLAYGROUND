@@ -68,6 +68,8 @@ namespace OrbitalSalvage.App
         double _faceHoldUntil = -1;
         bool _dockGift = true;
         bool _infinite;
+        bool _nextIsInfinite;
+        double _roundShown = 1;
 
         /// <summary>True while an infinite-mode round is the active level.</summary>
         public bool InfiniteActive { get { return _infinite; } }
@@ -754,10 +756,16 @@ namespace OrbitalSalvage.App
             int level = InfiniteMode.NextLevel(InfiniteRandom);
             if (Sectors.Count == 0) return;
             int idx = Math.Min(Math.Max(level - 1, 0), Sectors.Count - 1);
-            Economy.BeginInfiniteRound();
+            _roundShown = Economy.BeginInfiniteRound();
+            _nextIsInfinite = true;
             LoadSector(Sectors[idx], false);
-            _infinite = true;
             if (toast) ShowInfiniteToast();
+        }
+
+        /// <summary>"Round N" for the round that is being played. It does not change when the round is won, only when the next one starts.</summary>
+        string InfiniteRoundText()
+        {
+            return Loc.Tr("home.infinite.title", _roundShown);
         }
 
         void ShowInfiniteToast()
@@ -768,7 +776,8 @@ namespace OrbitalSalvage.App
 
         public void LoadSector(SectorConfig sector, bool toast)
         {
-            _infinite = false;
+            _infinite = _nextIsInfinite;
+            _nextIsInfinite = false;
             ActiveSector = sector;
             CollectedMass = 0;
             SpilledMass = 0;
@@ -796,9 +805,11 @@ namespace OrbitalSalvage.App
 
         public void RestartSector()
         {
+            if (ActiveSector == null) return;
             bool infinite = _infinite;
-            if (ActiveSector != null) LoadSector(ActiveSector, true);
-            _infinite = infinite && ActiveSector != null;
+            _nextIsInfinite = infinite;
+            LoadSector(ActiveSector, !infinite);
+            if (infinite) ShowInfiniteToast();
         }
 
         public void NextSector()
@@ -1145,7 +1156,9 @@ namespace OrbitalSalvage.App
 
             if (ActiveSector != null)
             {
-                PauseName = _pauseTitle.Text("home.level.title", _names.Get(ActiveSector.Code), _names.Get(ActiveSector.Name));
+                PauseName = _infinite
+                    ? InfiniteRoundText()
+                    : _pauseTitle.Text("home.level.title", _names.Get(ActiveSector.Code), _names.Get(ActiveSector.Name));
                 PauseQuota = _pauseQuota.Num("pause.quota", ActiveSector.Quota, CollectedMass);
             }
 
@@ -1200,7 +1213,7 @@ namespace OrbitalSalvage.App
             Text("home-mission-world", MissionWorld);
             Text("home-daily-bounty", DailyBounty);
             Text("hud-quota-text", QuotaText);
-            if (ActiveSector != null) Text("hud-sector-code", _sectorCode.Text("hud.sector_code", _names.Get(ActiveSector.Code)));
+            if (ActiveSector != null) Text("hud-sector-code", _sectorCode.Text("hud.sector_code", _infinite ? InfiniteRoundText() : _names.Get(ActiveSector.Code)));
             double pct = quota > 0 ? Math.Min(100, (CollectedMass / quota) * 100) : 0;
             WidthPx("hud-quota-bar", QuotaTrackWidth * pct / 100.0);
             Text("dock-daily-badge", DailyBadge);
