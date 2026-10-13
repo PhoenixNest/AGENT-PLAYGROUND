@@ -56,6 +56,13 @@ Paths written as `tools/parity/...` in entries dated before 2026-10-08 are the l
 
 ### Added
 
+#### Shaped-run bake for Arabic, Hindi, and Khmer (2026-10-13)
+
+- Offline HarfBuzz bake for the three complex scripts. `localization/tools/bake_shaped.py` writes a compact `OSB1` table to `Assets/Resources/Localization/shaped/<code>.bytes`, keyed by the translation string. Glyph ids match the shipped subset (`--retain-gids`). The header stores the font file's SHA-256; a mismatch is refused at runtime once the reader lands.
+- One weight-700 instance each. Baloo 2 has no 900 and Kantumruy Pro stops at 700. Cairo can go higher, but CSS 600–900 already collapse onto Fredoka 700, so button, title, and combat text share that one instance. Files: Baloo 2 330740 bytes, Kantumruy Pro 67916 bytes, Cairo 58640 bytes, all glyf, OFL sidecars beside them. Hindi is shaped as `dev2`; `deva` on this Baloo 2 file does not form `क्ष`.
+- Placeholders must sit on a space or digit boundary. A `{0}` glued to a joining letter fails the bake. Symbols and arrows stay out of the script face so they are not `.notdef` boxes.
+- Fixture strings used to develop the bake live in `localization/tools/fixtures/shaped-ui.json`. They are not translation tables. Rebuild fonts with `build_shaped_fonts.py`. Bake a real table, once it exists, with `bake_shaped.py --lang ar` (and `hi`, `km`).
+
 #### German translation table (2026-10-12)
 
 - German translation table (de): 355 spec + 81 str keys, validator errors 0.
