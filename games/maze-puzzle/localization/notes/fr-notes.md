@@ -9,10 +9,10 @@ France usage, 2026-10-12. Informal `tu`. U+00A0 before `! ? : ;`. No U+202F. No 
 | spec keys | 355 |
 | str keys | 81 |
 | validator errors | 0 |
-| visible warnings | 100 |
+| visible warnings | 96 |
 | suppressed fit warnings | 50 |
 
-Visible warnings by kind: `fit` 42, `glossary` 54, `length` 4. No `stale`, `glyph`, `punctuation`, `expansion`, or `balance` warnings. Accepted identical: `Hangar`, `Reset`. `BRONZE` and `BRONZE ✓` are recorded in `fr-identical-ok.json`; the validator already allows them as the glossary loanword `bronze`.
+Visible warnings by kind: `fit` 41, `glossary` 54, `length` 1. No `stale`, `glyph`, `punctuation`, `expansion`, or `balance` warnings. Accepted identical: `Hangar`, `Reset`, `1 NEW`, `2 NEW`, `3 NEW`, `dock.daily.new`. `BRONZE` and `BRONZE ✓` are recorded in `fr-identical-ok.json`; the validator already allows them as the glossary loanword `bronze`.
 
 `str:unit.kg` and `str:unit.quota` stay `{0} kg` and `{0} / {1} kg`.
 
@@ -53,7 +53,7 @@ Left as they were:
 | `FREE` | `OFFERT` | `LIBRE` would mean available, not free of charge. Under the shrink floor. |
 | `✓ UNLOCKED` | `✓ DÉBLOQUÉ` | `OUVERT` would mean still open. |
 | `0 / 3 CLEARED` | `0 / 3 RÉUSSI` | Shorter than `CLEARED`, same word on `CLEARED ✓`. |
-| `1 NEW` family | `NOUVEAU` | `NEUF` is also the number nine. `1 NEUF` is ambiguous. Under the shrink floor on `3 NEW`. |
+| `1 NEW`, `2 NEW`, `3 NEW`, `dock.daily.new` | `NEW` | The pill is the width of English `3 NEW` (30px at 9px). `NOUVEAU` is 38px and paints as `3 NOUVE`. With 10% headroom the safe width is 27px, so a 5-letter word does not fit. `NEUF` fits that width and also means nine. `NEW` is the loanword, the same for one item and for several. |
 | Backup pod, both English names | `capsule de secours` | Button and toast. `ferraille` for scrap on both. |
 | Care package | `colis cadeau` | Title, fragment, toast, and gift banner. |
 | Chute | `glisse` | `Toboggan` does not fit `Moon Chute`. One word on every chute. |
@@ -79,7 +79,6 @@ No shorter natural synonym exists, or the shorter synonym would mean something e
 | `Claim +100`, `Claim +300` | 2 | `Prends`. About 1–2px over. |
 | `Wear` | 1 | `Porte`. About 1px over. |
 | `FREE` | 1 | `OFFERT`. |
-| `3 NEW` | 1 | `3 NOUVEAU`. |
 | `Kessler Hero` | 1 | `Héros Kessler`. About 7px over. |
 | `Trophy: Daily Duty Star (+500` | 1 | `Trophée : Étoile du jour (+500`. Same trophy name as `Daily Duty Star`. About 4px over. The missing `)` is English. |
 
@@ -96,7 +95,6 @@ No shorter natural synonym exists, or the shorter synonym would mean something e
 
 | Keys | Decision |
 | --- | --- |
-| `1 NEW`, `2 NEW`, `3 NEW` | `NOUVEAU` is 1.8× English. `NEUF` collides with the number nine. |
 | `str:fx.hub.mint` | `ANNEAU MENTHE` is 1.625× `MINT RIG`. Same `ANNEAU` pattern as the other rig labels. No line box on `str`. |
 
 ## Doubtful lines
