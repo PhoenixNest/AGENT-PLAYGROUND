@@ -27,23 +27,23 @@ node games/maze-puzzle/tools/parity/golden/generate.mjs --engine node --only phy
 
 ## Fixture layout (`fixtures/`)
 
-| File | Content |
-| --- | --- |
-| `engine.txt` | Engine that produced the fixtures (`chromium 153...`) |
-| `jsmath-vectors.json` | Hex-bit input/output vectors for every `JsMath`/`JsNumber` function (`jsmath-vectors.mjs`) |
-| `rng-reference.json` | First mulberry32 outputs as hex bits |
-| `maze.json` | `getSectors`, `getSectorWorlds`, all 50 `buildLevel` results, 48 daily-shift cases and a no-title case, as exact JSON text |
-| `economy.json` | Catalog and achievements JSON; operation sequences (shop, campaign, daily, load) with return values and the stored localStorage JSON text; countdown cases |
-| `physics/<run>.json.gz` | Static sector config, RNG call counts and state, event/cue log, per-frame hash, sampled snapshots, resync fixtures |
-| `physics/<run>.frames.bin.gz` | Float64 snapshot vectors for the sampled frames (all frames with `--full`) |
+| File                          | Content                                                                                                                                                    |
+| ----------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `engine.txt`                  | Engine that produced the fixtures (`chromium 153...`)                                                                                                      |
+| `jsmath-vectors.json`         | Hex-bit input/output vectors for every `JsMath`/`JsNumber` function (`jsmath-vectors.mjs`)                                                                 |
+| `rng-reference.json`          | First mulberry32 outputs as hex bits                                                                                                                       |
+| `maze.json`                   | `getSectors`, `getSectorWorlds`, all 50 `buildLevel` results, 48 daily-shift cases and a no-title case, as exact JSON text                                 |
+| `economy.json`                | Catalog and achievements JSON; operation sequences (shop, campaign, daily, load) with return values and the stored localStorage JSON text; countdown cases |
+| `physics/<run>.json.gz`       | Static sector config, RNG call counts and state, event/cue log, per-frame hash, sampled snapshots, resync fixtures                                         |
+| `physics/<run>.frames.bin.gz` | Float64 snapshot vectors for the sampled frames (all frames with `--full`)                                                                                 |
 
 Run names are `L<level>-<program>-<audio|silent>`. Levels 1, 11, 21, 31 and 41 are the SPEC sectors. Levels 38 and 50 are added for mechanics coverage:
 
-| Level | Mechanics |
-| --- | --- |
-| 1, 11 | dividers and gates |
-| 21 | + deflector pins, track wall, concentric rings |
-| 31, 38 | + deflector pins, one-way flap |
+| Level  | Mechanics                                                         |
+| ------ | ----------------------------------------------------------------- |
+| 1, 11  | dividers and gates                                                |
+| 21     | + deflector pins, track wall, concentric rings                    |
+| 31, 38 | + deflector pins, one-way flap                                    |
 | 41, 50 | + deflector pins, two one-way flaps, track wall, concentric rings |
 
 Programs:
@@ -73,7 +73,7 @@ The frame hash is a dual 32-bit FNV-style hash over the vector as uint words. Lo
 - Unity EditMode: `OrbitalSalvage.Logic.Tests` (`Assets/Tests/EditMode/Logic`). Fixtures are found by walking up from the working directory until a folder contains both `web/index.html` and `tools/parity/golden/fixtures` (that folder is `games/maze-puzzle`).
 - Fast loop: `dotnet test games/maze-puzzle/tools/parity/golden/dotnet`. It compiles the same sources and tests on .NET 10.
 
-The command below is the Windows editor. A macOS Unity binary is not scripted yet (`../macos/README.md`). This line is the logic-fixture loop. The full EditMode suite is a separate run and needs a GPU.
+The command below is the Windows editor. A macOS Unity binary is not scripted yet (`../macos/README.md`). This line is the logic-fixture loop. The full EditMode suite is a separate run and needs a GPU. The path in that command is the Windows editor `6000.4.6f1`. This checkout's `ProjectSettings/ProjectVersion.txt` is `6000.4.0f1`, and that is the editor installed under `/Applications/Unity/Hub/Editor/` on this Mac.
 
 ```powershell
 & "C:\Program Files\Unity\Hub\Editor\6000.4.6f1\Editor\Unity.exe" -batchmode -nographics -projectPath games\maze-puzzle\unity\maze-puzzle -runTests -testPlatform EditMode -testResults $env:TEMP\logic-results.xml -logFile $env:TEMP\logic-tests.log
