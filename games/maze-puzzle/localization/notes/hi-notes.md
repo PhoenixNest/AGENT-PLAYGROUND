@@ -100,3 +100,5 @@ The verb `लो` sits on the allowance fragment so the pair is verb-final. The 
 Checked with fontTools against `/tmp/maze-i18n/fonts/dl/Baloo2[wght].ttf`, `fonts/out/baloo2-deva.ttf`, and `fonts/out/baloo2-700-latn-deva.ttf`. Every Devanagari and Latin character in the table is in all three, including danda, chandrabindu, and nukta (`ज़`, `फ़`, `ड़`, `ढ़`). `←` and `▶` are in Baloo. No Devanagari exception.
 
 Not in Baloo, and not in Noto Sans Devanagari either: the emoji, `✓` (U+2713), `⏩` `⏪`, `⚡`, `✨`, `⭐`, `⚙`, and U+FE0F. Noto Sans Devanagari also lacks `←` and `▶`. Those symbols are the same ones the English table already uses. The validator still warns `font-pending` because `fonts-chains.json` has an empty chain for hi.
+
+toast.infinite.round: agent draft, no native review

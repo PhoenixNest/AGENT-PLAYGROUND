@@ -77,3 +77,5 @@ Checked against `/tmp/maze-i18n/fonts/out/zcool-sc-l1.ttf` (3,755 han, level 1).
 | 浏 U+6D4F | 浏览器localStorage | Mainland word for browser.              |
 
 `←` is in the Python GB2312 codec and not in this font file. `▶` and `✓` are not in the file and not in that codec. The brief says to keep all three. `•` U+2022 is in the font file and not in GB2312. GB2312 A1A4 decodes as kana `・` U+30FB, which the validator rejects, so the separator stays `•`. Emoji are not in this font file. They stay because the brief says to keep them.
+
+toast.infinite.round: agent draft, no native review

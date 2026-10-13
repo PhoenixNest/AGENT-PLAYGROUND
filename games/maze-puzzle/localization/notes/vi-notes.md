@@ -123,3 +123,5 @@ Backup Pod and Auxiliary Scrap Pod are both `khoang dự phòng`. Scrap is `ph�
 - `str` rows still have no line box, so toast width is not fit-checked.
 - The shift recommendation `ca` is two letters. A hit inside another word such as `cao` would satisfy the check. This table uses `ca` as its own word (`ca đồng`, `ca bạc`, `ca vàng`).
 - `cookie` is left in the privacy sentence. It is the usual Vietnamese loanword there, not a whole-string copy.
+
+toast.infinite.round: agent draft, no native review

@@ -151,3 +151,5 @@ Every fit warning is under the 72% shrink floor. The stills that were read show 
 - `str` rows still have no line box, so toasts are not fit-checked.
 - A length of exactly 1.60× warns. `HARI INI` is 8 UTF-16 units against `TODAY` at 5.
 - The fit estimate missed the two real control ellipses on pass 1. Pass 2 treats "same width as the English control, or shorter" as the bar for a clipped control.
+
+toast.infinite.round: agent draft, no native review

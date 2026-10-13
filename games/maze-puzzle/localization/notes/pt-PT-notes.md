@@ -119,3 +119,5 @@ Checked terms that do appear, and still warn on fit: `nível` (LVL chips, suppre
 - `str` rows have no line box, so toast width is not fit-checked.
 - Identical loanwords are accepted through `pt-PT-identical-ok.json`. `BRONZE` and `🍩 DONUT 🍩` are also glossary loanwords, so the checker allows them even before that file. The file still records the reason.
 - The privacy modal was not edited.
+
+toast.infinite.round: agent draft, no native review

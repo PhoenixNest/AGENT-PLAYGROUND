@@ -151,3 +151,5 @@ No shorter natural form keeps the meaning, or the glossary string is the English
 - The LVL alias requires `Antas` on chips narrower than the word. Those 50 fit warnings are suppressed, not fixed.
 - `settings_modal_privacy` is out of the app flow. Pass 2 did not edit it. `cookies` stays as the web word. `localStorage` stays.
 - Identical loanwords are listed in `fil-identical-ok.json`. They are not added to `doNotTranslate`. Pass 2 keeps only `Reset`.
+
+toast.infinite.round: agent draft, no native review

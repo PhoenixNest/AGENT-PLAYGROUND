@@ -84,3 +84,5 @@ Measured with the kit width estimate (font size × average advance). The card ti
 `turno` is the shift word everywhere, including the new daily title. `dona` is the donut word on the tab and on the items. `inicio` is the home word on the defeat button and on `Ir al inicio`. `chatarra`, `monedas de oro`, `nivel`, `cápsula de reserva`, and `basura espacial` are unchanged.
 
 Still short of the glossary string, on purpose: `operaciones diarias` (title), `sector` (the uppercased chip only), `gorros de Nibbles`, `tienda de juguetes` (header and dock), `tobogán` (`rampa` on every chute), `superado` (`hecho`), `desbloquear` (`abre` on price buttons), `dinero de bolsillo` (`bolsillo` on the gift line), `cielos` (`cielo`).
+
+toast.infinite.round: agent draft, no native review

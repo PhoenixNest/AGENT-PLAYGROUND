@@ -132,3 +132,5 @@ The daily countdown `Tra {0}h {1}m` still loses its first letter under the alarm
 ## Validator summary
 
 `validate_table.py --lang it`: errors 0, warnings 99 (`glossary` 53, `fit` 46), suppressed fit 47, accepted identical 1 (`Hangar`). `it-identical-ok.json` also lists `SHOP`; the table stores `Shop` so the runtime can capitalize it, which keeps the uppercase warning off. The fit-exception file has 50 `LVL` keys and nothing else. Glyph check passed (Fredoka / Nunito). No native speaker has reviewed this table.
+
+toast.infinite.round: agent draft, no native review
