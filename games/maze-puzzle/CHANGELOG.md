@@ -15,6 +15,13 @@ Paths written as `tools/parity/...` in entries dated before 2026-10-08 are the l
 
 ### Added
 
+#### CJK tables in the subsets and on the playfield (2026-10-13)
+
+- Rebuilt the four subsets from the real `zh-Hans`, `zh-Hant`, `ja`, and `ko` tables. `ZCOOLKuaiLe-sc` is 134392 bytes, `Huninn-tc` is 297972, `MPLUSRounded1c-700` is 301324, `Jua-kr` is 313780. `莓` and `浏` are in ZCOOL. `々` is still absent from ZCOOL and is not used in the Simplified table. Jua still has no `•`, `·`, or `×`; Nunito draws them. Report: `localization/reports/audit-cjk-2026-10-13.md`.
+- Playfield gate labels, hub subtitles, and floating words use the active language's face. English still leaves `TextChain` null. Middle baseline stays on the Fredoka or Nunito metrics.
+- Audit hard is 0 for the nine Latin languages and the four CJK languages. Japanese ellipsizes `ゴールド` (unclaimed daily chip) and `おこづかいをもらいました！` (gift banner). Those two need a shorter line. The other lines the translator flagged fit.
+- `selftest_kit.py`: 19 groups, all passed. Full EditMode: 569 passed, 83 failed, 3 skipped, 655 total, exit 2. Results `/tmp/maze-i18n/cjk-core/full.xml`, log `/tmp/maze-i18n/cjk-core/full.log`. The 83 are the known set (`ReferenceComparisonTests` 73, `ReferenceGateTests` 9, `QuotaAndModalTests.GameAndPauseStills_MatchKnownHashes`). The three skips are unchanged.
+
 #### CJK font subsets and line breaking (2026-10-13)
 
 - `cjk-sc`, `cjk-tc`, `cjk-jp`, and `cjk-kr` now load real glyf subsets instead of the endonym-only files. `ZCOOLKuaiLe-sc` is 91184 bytes, `Huninn-tc` is 202064, `MPLUSRounded1c-700` is 292120, `Jua-kr` is 270856. Each is under 1.5 MB, cmap format 4, no `fvar`. Rebuild after the translation tables land with `/tmp/maze-i18n/kit-venv/bin/python games/maze-puzzle/localization/tools/make_cjk_fonts.py`. A missing table builds from `cjk_safety.json` only.

@@ -75,12 +75,27 @@ namespace OrbitalSalvage.Render
             var spec = ParseFont(state.font);
             if (TryConsumeShaped(text, spec.px, true, out double shapedWidth)) return shapedWidth;
             if (string.IsNullOrEmpty(text)) return 0;
-            if (TextChain == null || TextChain.Length == 0)
+            TrueTypeFont[] chain = ResolvedChain(spec);
+            if (chain == null || chain.Length == 0)
             {
                 var primary = OutlineFonts.Primary(spec.family, spec.weight);
                 return Layout(text, spec.px, primary, null, true);
             }
-            return Layout(text, spec.px, TextChain[0], TextChain, true);
+            return Layout(text, spec.px, chain[0], chain, true);
+        }
+
+        /// <summary>
+        /// HomeChrome sets <see cref="TextChain"/> per run. The playfield does not.
+        /// English keeps a null chain so the Fredoka path stays the one the pinned
+        /// stills were hashed from. Any other language uses that language's face
+        /// for the CSS family the caller already set (Fredoka for gate labels,
+        /// Nunito for hub subtitles).
+        /// </summary>
+        TrueTypeFont[] ResolvedChain(FontSpec spec)
+        {
+            if (TextChain != null && TextChain.Length > 0) return TextChain;
+            if (OrbitalSalvage.Loc.Loc.EnglishActive) return null;
+            return OutlineFonts.ChainFor(OrbitalSalvage.Loc.Loc.CurrentLanguage, spec.family, spec.weight);
         }
 
         /// <summary>
@@ -213,21 +228,22 @@ namespace OrbitalSalvage.Render
             TrueTypeFont primary;
             double px = spec.px;
             double total;
+            TrueTypeFont[] chain = null;
             if (TryConsumeShaped(text, px, false, out total))
             {
                 if (shapedFace != null) primary = shapedFace;
                 else if (TextChain != null && TextChain.Length > 0) primary = TextChain[0];
                 else primary = OutlineFonts.Primary(spec.family, spec.weight);
             }
-            else if (TextChain == null || TextChain.Length == 0)
+            else if ((chain = ResolvedChain(spec)) == null || chain.Length == 0)
             {
                 primary = OutlineFonts.Primary(spec.family, spec.weight);
                 total = Layout(text, px, primary, null, false);
             }
             else
             {
-                primary = TextChain[0];
-                total = Layout(text, px, primary, TextChain, false);
+                primary = chain[0];
+                total = Layout(text, px, primary, chain, false);
             }
 
             double startX = x;
@@ -236,9 +252,12 @@ namespace OrbitalSalvage.Render
             else if (align == "right" || align == "end") startX = x - total;
 
             // Blink: ascent/descent are the rounded hhea metrics; top/middle/bottom use the OS/2 typo metrics normalised to 1 em.
-            double ascent = RoundHalfUp(primary.ascender * px / primary.unitsPerEm);
-            double descent = RoundHalfUp(-primary.descender * px / primary.unitsPerEm);
-            double ta = primary.typoAscender, td = -primary.typoDescender;
+            // A CJK primary has a different em box. Gate badges and hub labels use middle,
+            // so the metrics stay on Fredoka or Nunito and the ideographs sit where the English word sat.
+            TrueTypeFont metrics = LatinStrut(primary) ? primary : OutlineFonts.Primary(spec.family, spec.weight);
+            double ascent = RoundHalfUp(metrics.ascender * px / metrics.unitsPerEm);
+            double descent = RoundHalfUp(-metrics.descender * px / metrics.unitsPerEm);
+            double ta = metrics.typoAscender, td = -metrics.typoDescender;
             double emAscent = ta + td > 0 ? px * ta / (ta + td) : ascent;
             double emDescent = px - emAscent;
             double baseline = y;
