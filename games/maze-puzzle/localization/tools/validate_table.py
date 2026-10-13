@@ -438,8 +438,66 @@ def advance_of(cp: int) -> float:
     return ADVANCE_EM["other"]
 
 
-def estimate_px(text: str, font_px: float) -> float:
-    return font_px * sum(advance_of(ord(ch)) for ch in text)
+CJK_LANGS = ("zh-Hans", "zh-Hant", "ja", "ko")
+_ADVANCE_CACHE = {}
+
+
+def estimate_px(text: str, font_px: float, advances: dict | None = None) -> float:
+    total = 0.0
+    for ch in text:
+        cp = ord(ch)
+        if advances is not None and cp in advances:
+            total += advances[cp]
+        else:
+            total += advance_of(cp)
+    return font_px * total
+
+
+def load_cjk_advances(lang, options) -> dict | None:
+    """Advance width in em from the first file in the language chain. None falls back to advance_of."""
+    if lang not in CJK_LANGS:
+        return None
+    chains = options.get("chains")
+    if not chains:
+        chains = load_chains(DEFAULT_CHAINS)
+    info = chains.get(lang) or {}
+    chain = list(info.get("chain") or [])
+    if not chain:
+        return None
+    fonts_dir = options.get("fonts_dir")
+    if fonts_dir is None:
+        fonts_dir = DEFAULT_FONTS
+    fonts_dir = Path(fonts_dir)
+    if not fonts_dir.is_dir():
+        return None
+    path = fonts_dir / chain[0]
+    if not path.is_file():
+        return None
+    key = (str(path), path.stat().st_size)
+    cached = _ADVANCE_CACHE.get(key)
+    if cached is not None:
+        return cached
+    try:
+        from fontTools.ttLib import TTFont
+    except ImportError:
+        return None
+    font = TTFont(str(path), lazy=True)
+    try:
+        upem = int(font["head"].unitsPerEm) or 1000
+        cmap = font.getBestCmap() or {}
+        hmtx = font["hmtx"].metrics
+        advances = {}
+        for cp, name in cmap.items():
+            if not name or name == ".notdef":
+                continue
+            metrics = hmtx.get(name)
+            if not metrics:
+                continue
+            advances[cp] = metrics[0] / upem
+    finally:
+        font.close()
+    _ADVANCE_CACHE[key] = advances
+    return advances
 
 
 def script_flags(text: str) -> dict:
@@ -831,7 +889,7 @@ def check_pair(
                 )
 
     if index_row and isinstance(target, str):
-        check_fit(index_row, source, target, ident, findings)
+        check_fit(index_row, source, target, ident, findings, table_flags.get("advances"))
         if (index_row.get("uppercase") or "") == "uppercase":
             letters = [ch for ch in target if "A" <= ch <= "Z" or "a" <= ch <= "z"]
             if len(letters) >= 4 and all("A" <= ch <= "Z" for ch in letters):
@@ -941,13 +999,13 @@ def check_script(lang, target, ident, findings, table_flags):
             )
 
 
-def check_fit(index_row, source, target, ident, findings):
+def check_fit(index_row, source, target, ident, findings, advances=None):
     font_px = parse_px(index_row.get("fz") or "")
     box = parse_px(index_row.get("max_width") or "")
     if font_px is None or box is None or font_px <= 0 or box <= 0:
         return
-    english_px = estimate_px(source, font_px)
-    target_px = estimate_px(target, font_px)
+    english_px = estimate_px(source, font_px, advances)
+    target_px = estimate_px(target, font_px, advances)
     budget = max(box, english_px)
     if target_px > budget / SHRINK_FLOOR:
         add(
@@ -1084,10 +1142,14 @@ def validate(english, translation, lang, options) -> list:
         hashes = meta.get("sourceHashes")
 
     covered = options.get("covered")
+    advances = options.get("advances")
+    if advances is None and lang in CJK_LANGS:
+        advances = load_cjk_advances(lang, options)
     table_flags = {
         "kana": False,
         "aliases": options.get("aliases") or [],
         "identical_ok": options.get("identical_ok") or {},
+        "advances": advances,
     }
     keys = set(spec_en) | set(spec_tr)
     for key in sorted(keys, key=ordinal_bytes):
