@@ -75,3 +75,7 @@ games/maze-puzzle/tools/parity/reports/iter-*/images/
 .venv/
 .claude/settings.local.json
 
+
+# Python caches
+__pycache__/
+*.pyc
