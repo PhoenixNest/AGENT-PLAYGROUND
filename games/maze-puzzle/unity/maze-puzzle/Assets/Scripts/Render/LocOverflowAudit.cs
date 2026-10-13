@@ -144,7 +144,7 @@ namespace OrbitalSalvage.Render
             List<TextFit.Icon> icons, bool iphone, double drawY, double ceiling, double parentX, double parentW, Canvas2D canvas, Report report)
         {
             string font = Str(e, "fw") + " " + Str(e, "fz") + " " + Family(Str(e, "ff"));
-            double ls = CssLength(Str(e, "ls"));
+            double ls = LocTextStyle.LetterSpacing(Loc.CurrentLanguage, CssLength(Str(e, "ls")));
             double fontPx = CssLength(Str(e, "fz"));
             string id = Str(e, "id");
             if (id.Length == 0) id = Str(e, "c");
@@ -158,6 +158,7 @@ namespace OrbitalSalvage.Render
                 ButtonLike = buttonLike,
                 FontPx = fontPx,
                 LetterSpacing = ls,
+                LinePitch = LocTextStyle.LinePitchOverride(Loc.CurrentLanguage, raw, rr[3]),
                 OriginalMultiLine = fontPx > 0 && rr[3] > TextFit.SingleLineFactor * fontPx + TextFit.SingleLineSlack,
                 SidePad = TextFit.SidePadding,
                 Icons = icons == null || icons.Count == 0 ? null : icons.ToArray(),
