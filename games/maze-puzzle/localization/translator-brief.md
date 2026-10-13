@@ -92,7 +92,7 @@ The character budget is the English UTF-16 length times your expansion factor. T
 
 `ru` is not a target language.
 
-There is a second check against `max_width` and `fz`. It estimates width with an average advance (Latin letter 0.50 em, space 0.28, digit 0.50, CJK/kana/Hangul 1.00, Arabic 0.48, Devanagari 0.40, Khmer 0.45). The budget is the wider of the CSV box and the English estimate, so the English string itself is not flagged. It warns when the translation is wider than that line, and it errors when the width passes the renderer's 72% shrink floor (`TextFit.FloorRatio`). The 16px button inset is already outside a captured run width, so it is not subtracted again. Single-line controls never wrap. Treat a fit warning on a single-line control as a request to shorten the line.
+There is a second check against `max_width` and `fz`. It estimates width with an average advance (Latin letter 0.50 em, space 0.28, digit 0.50, CJK/kana/Hangul 1.00, Arabic 0.48, Devanagari 0.40, Khmer 0.45). For `zh-Hans`, `zh-Hant`, `ja`, and `ko`, when the subset in `fonts-chains.json` is on disk and fontTools can read it, the estimate uses that file's `hmtx` advances instead of 1.00 em. A missing file or a missing fontTools install falls back to 1.00 em. The budget is the wider of the CSV box and the English estimate, so the English string itself is not flagged. It warns when the translation is wider than that line, and it errors when the width passes the renderer's 72% shrink floor (`TextFit.FloorRatio`). The 16px button inset is already outside a captured run width, so it is not subtracted again. Single-line controls never wrap. Treat a fit warning on a single-line control as a request to shorten the line.
 
 The fit check compares the whole string with one line box. A paragraph that wraps can warn even when the wrapped lines fit. That warning is a budget, not proof of a single-line overflow. `str` rows often have no `fz` or `max_width`, so they are not fit-checked. Use `max_chars` and the context note (a dock badge is about 6 characters).
 
@@ -170,7 +170,7 @@ python3 validate_table.py --lang <code> \
 
 `--show-suppressed` prints fit warnings hidden by the allowlist. `--ignore-fit-keys` adds keys for that run. `--register-check` adds one warning that imperative and telegraphic style is not scored. It does not judge buttons.
 
-Fix every error. Read every warning. Glyph errors mean a character is not in the shipped font chain. Languages whose chain is `pending` in `tools/fonts-chains.json` (zh, ja, ko, hi, km, ar) warn `font-pending` and do not fail the glyph check yet. vi and uz are checked against Fredoka, Nunito, and the Noto symbol fonts; Baloo 2 is still pending.
+Fix every error. Read every warning. Glyph errors mean a character is not in the shipped font chain. `zh-Hans`, `zh-Hant`, `ja`, and `ko` are checked against their subset plus Nunito and the Noto symbol fonts. `hi`, `km`, and `ar` still have an empty chain, so they warn `font-pending` and do not fail the glyph check yet. vi and uz are checked against Fredoka, Nunito, and the Noto symbol fonts; Baloo 2 is still pending.
 
 ## What you return
 

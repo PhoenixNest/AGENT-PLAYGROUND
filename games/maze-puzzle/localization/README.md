@@ -107,7 +107,13 @@ A child emoji, including one wrapped in a span, or a one-glyph symbol beside the
 
 `LineBreaker.For` is Latin for `en`, `de`, `fr`, `es`, `it`, `pt-PT`, `vi`, `fil`, `id`, `uz`, and for `qps`. Latin splits on spaces and matches `WrapWords`. CJK (`zh-Hans`, `zh-Hant`, `ja`) breaks between characters, keeps Latin words and number+unit tokens together, and applies kinsoku. Korean breaks on spaces, then per syllable when one word is too wide. `km`, `hi`, and `ar` still use the Latin breaker.
 
-Non-English `text-transform: uppercase` goes through `LocCase.Upper`. German `ß` becomes `SS`. `zh-Hans`, `zh-Hant`, `ja`, `ko`, `km`, `hi`, and `ar` are not uppercased, so a Latin token such as `kg` stays as written.
+Non-English `text-transform: uppercase` goes through `LocCase.Upper`. German `ß` becomes `SS`. `zh-Hans`, `zh-Hant`, `ja`, `ko`, `km`, `hi`, and `ar` return the whole string unchanged. A Latin token inside a CJK string (`kg`, `Nibbles`) is not uppercased, even when the spec says `uppercase`. The translator writes the case they want.
+
+CJK letter-spacing is 0. The captured value is Latin tracking (about 0.2–1px). A CJK advance is already about 1em, so that tracking is dropped. English and the Latin languages keep the captured value. `PaintRuns` still returns before any of this when `Loc.EnglishActive` is set and `TextLangOverrides` is empty.
+
+The baseline stays on the Latin face. `FontAscent` uses Fredoka or Nunito when the chain's first face is not one of those (and not a Noto symbol font). ZCOOL, Huninn, M PLUS, and Jua have different hhea boxes. Jua's own ascent (0.800 em) would clip. M PLUS's (1.075 em) would sit the line too low. Ideograph centers land near the English cap center on the alphabetic baseline. The Uzbek patch starts with `Nunito`, so it keeps its own ascent.
+
+A wrapped CJK paragraph whose English source already had more than one line uses the captured run height divided by that English line count as the line pitch. That is the CSS line box. A single-line run keeps the captured run height. Descenders and kana stay inside the Fredoka ascent, which is taller than the CJK yMax.
 
 `qps` is not in the language list and is never written to the profile. Set PlayerPrefs `os.parity.lang` to `qps` or a registry code before launch. Boot reads it once, and only when the key is set. The `qps` table is built in memory from `en.json`: Latin-1 look-alikes, padded to +40% with `~`, wrapped in `[` `]`. Digits, `{n}`, emoji, `/`, `×`, and `▶` stay as they are.
 
@@ -124,10 +130,10 @@ A face lists the CSS weights it serves. One weight is used for every other CSS w
 | en | Fredoka 400/600/700, Nunito 700/800/900 | primary, NotoSansSymbols2, NotoSansSymbols |
 | de, fr, es, it, pt-PT, fil, id, vi, qps | same faces | primary, Nunito at the same CSS weight when the family is Fredoka, then the two symbol fonts |
 | uz (`latin-uz`) | same faces, plus `Nunito-uz-patch` first | patch at the Fredoka face weight for display (600 or 700) and at the Nunito face weight for body (700, 800, 900), then the Latin chain. Other Latin languages do not load the patch |
-| cjk-sc | ZCOOL KuaiLe, one weight, all CSS weights | ZCOOL, Nunito, symbols |
-| cjk-tc | Huninn, one weight | Huninn, Nunito, symbols |
-| cjk-jp | M PLUS Rounded 1c Bold (700) | M PLUS, Nunito, symbols |
-| cjk-kr | Jua, one weight | Jua, Nunito, symbols |
+| cjk-sc | ZCOOL KuaiLe, one master (OS/2 400), every CSS weight including 900 | ZCOOLKuaiLe-sc, Nunito, symbols |
+| cjk-tc | Huninn, one regular master (OS/2 400), every CSS weight including 900 | Huninn-tc, Nunito, symbols |
+| cjk-jp | M PLUS Rounded 1c Bold (700) for CSS 400, 600, 700, 800, and 900 | MPLUSRounded1c-700, Nunito, symbols |
+| cjk-kr | Jua, one master (OS/2 400), every CSS weight including 900 | Jua-kr, Nunito, symbols |
 | devanagari | Baloo 2 Bold (700), not shipped | Baloo 2, Nunito, symbols, or the Latin chain when the file is missing |
 | khmer | Kantumruy Pro Bold (700), not shipped | same shape |
 | arabic | Cairo Bold, slant 0 (700), not shipped | same shape |
@@ -136,16 +142,24 @@ English paint does not call `LocFonts`. `HomeChrome.PaintRuns` takes the capture
 
 The 17 `btn-lang-<code>` runs use that language's display chain even when the active language is English. `ParityViewer.WriteDynamicOverrides` fills the map on the settings page and while the language modal is open. `km`, `hi`, and `ar` still draw `.notdef` boxes until those files and shaping land. Baloo 2 is not shipped in this task: Nunito already covers Vietnamese and Uzbek, and Hindi boxes are expected until shaping.
 
-To add or replace a face: put a static `glyf` `.ttf` in `Assets/Fonts`, add the name to `fonts.json` for that group, add it to `ParityAssetBuilder.OutlineExtraFonts`, and copy the bytes to `Resources/Fonts/Ttf`. Rebuild with `localization/tools/make_fonts.sh` (venv `/tmp/maze-i18n/fonts-venv`, downloads `/tmp/maze-i18n/fonts/dl`). Do not commit a variable font. `subset_fonts.py --variations wght=700` pins axes with `fontTools.varLib.instancer` before subsetting.
+To add or replace a face: put a static `glyf` `.ttf` in `Assets/Fonts`, add the name to `fonts.json` for that group, add it to `ParityAssetBuilder.OutlineExtraFonts`, and copy the bytes to `Resources/Fonts/Ttf`. Rebuild Latin and the Uzbek patch with `localization/tools/make_fonts.sh` (venv `/tmp/maze-i18n/fonts-venv`, downloads `/tmp/maze-i18n/fonts/dl`). That script also runs `make_cjk_fonts.py`. Do not commit a variable font. `subset_fonts.py --variations wght=700` pins axes with `fontTools.varLib.instancer` before subsetting.
 
-The four CJK files are temporary endonym subsets (the endonym plus printable ASCII). A later wave replaces the file for the same group. Jua's source has no U+0060, so that one ASCII slot is absent. Ship the OFL text beside the font.
+CJK subsets are `localization/tools/make_cjk_fonts.py`. The character set is every code point in `Assets/Resources/Localization/<code>.json` `spec` and `str` values when that file exists, plus printable ASCII, digits, full-width and CJK punctuation, `…` `·` `×` `←`, the endonym, and the 500 most common characters in `cjk_safety.json`. Japanese also keeps the kana letter blocks. A missing table builds the safety set only. Rebuild after the tables land:
+
+```bash
+/tmp/maze-i18n/kit-venv/bin/python games/maze-puzzle/localization/tools/make_cjk_fonts.py
+```
+
+ZCOOL KuaiLe and Jua are display drawings and the only master, so CSS 900 uses that file. Huninn is a regular rounded gothic and has no heavier file, so CSS 900 is the same regular. M PLUS ships Bold 700 only. Black is not shipped because the same file also paints body text. CSS 900 maps to 700, the same ceiling as Fredoka.
+
+Holes the source face does not have fall through the chain. `←` (U+2190) is missing from ZCOOL and Jua and is in `NotoSansSymbols-Regular`. `…` `×` `·` `—` and U+0060 are in Nunito, so Jua falls through. Jua has no U+0060 and almost no CJK punctuation (U+3000 and above). Korean copy uses spaces and ASCII punctuation. `々` (U+3005) is in Huninn and M PLUS. It is not in ZCOOL, Nunito, or either symbol font, so a Simplified string that uses `々` is `missing-glyph`. Huninn's safety list skipped 11 rare characters the face does not contain: 琌硂璶穦碞眔筁秨痷翴瞷. The OFL text stays beside the font.
 
 | File | Bytes | Licence |
 | --- | ---: | --- |
-| `ZCOOLKuaiLe-endonym.ttf` / `.bytes` | 7004 | OFL 1.1, Copyright 2018 The ZCOOL KuaiLe Project Authors. `ZCOOLKuaiLe-OFL.txt` (4398) |
-| `Huninn-endonym.ttf` / `.bytes` | 13708 | OFL 1.1, Copyright 2025 The Huninn Project Authors. `Huninn-OFL.txt` (4382) |
-| `MPLUSRounded1c-endonym.ttf` / `.bytes` | 12208 | OFL 1.1, Copyright 2016 The Rounded M+ Project Authors. `MPLUSRounded1c-OFL.txt` (4350). Upstream has no `OFL.txt`; the sidecar is name IDs 0 and 13 plus the OFL 1.1 text |
-| `Jua-endonym.ttf` / `.bytes` | 22868 | OFL 1.1, Copyright 2018 The Jua Project Authors. `Jua-OFL.txt` (4342) |
+| `ZCOOLKuaiLe-sc.ttf` / `.bytes` | 91184 | OFL 1.1, Copyright 2018 The ZCOOL KuaiLe Project Authors. `ZCOOLKuaiLe-OFL.txt` |
+| `Huninn-tc.ttf` / `.bytes` | 202064 | OFL 1.1, Copyright 2025 The Huninn Project Authors. `Huninn-OFL.txt` |
+| `MPLUSRounded1c-700.ttf` / `.bytes` | 292120 | OFL 1.1, Copyright 2016 The Rounded M+ Project Authors. `MPLUSRounded1c-OFL.txt`. Upstream has no `OFL.txt`; the sidecar is name IDs 0 and 13 plus the OFL 1.1 text |
+| `Jua-kr.ttf` / `.bytes` | 270856 | OFL 1.1, Copyright 2018 The Jua Project Authors. `Jua-OFL.txt` |
 
 Fredoka, Nunito, and the two Noto symbol fonts are unchanged. Their OFL files were already in `Assets/Fonts`.
 

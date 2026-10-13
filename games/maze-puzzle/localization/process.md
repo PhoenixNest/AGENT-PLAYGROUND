@@ -153,4 +153,4 @@ LQA severities from the skill, mapped onto this kit: a broken placeholder, an of
 
 ## What this kit does not do
 
-It does not run Unity, shape Arabic, Hindi, or Khmer, or ship the pending fonts (ZCOOL KuaiLe, Huninn, M PLUS Rounded 1c, Jua, Baloo 2, Kantumruy Pro, Cairo). It does not decide the app name. Logo strings stay in English until that decision.
+It does not run Unity, or shape Arabic, Hindi, or Khmer. Baloo 2, Kantumruy Pro, and Cairo are still pending. The CJK subsets (ZCOOL KuaiLe, Huninn, M PLUS Rounded 1c, Jua) are shipped. It does not decide the app name. Logo strings stay in English until that decision.
