@@ -2620,6 +2620,18 @@ namespace OrbitalSalvage.Render
             return chain;
         }
 
+        /// <summary>Override language for this element, otherwise the active language. English with no override is <c>en</c>.</summary>
+        string RunLanguage(string elementId)
+        {
+            if (TextLangOverrides.Count > 0 && elementId != null && elementId.Length > 0)
+            {
+                string over;
+                if (TextLangOverrides.TryGetValue(elementId, out over) && !string.IsNullOrEmpty(over))
+                    return over;
+            }
+            return Loc.CurrentLanguage;
+        }
+
         void BindRunFont(string elementId, string font)
         {
             string lang = null;
@@ -2687,7 +2699,7 @@ namespace OrbitalSalvage.Render
 
             canvas.Save();
             canvas.Font = font;
-            canvas.LetterSpacing = ls;
+            canvas.LetterSpacing = LocTextStyle.LetterSpacing(RunLanguage(textId), ls);
             int slot = k * 16 + ri;
             string[] lines;
             if (!replaceText && laid.TryGetValue(slot, out var lay) && lay.font == font && lay.text == text && Math.Abs(lay.width - r[2]) < 0.05)
@@ -2786,7 +2798,7 @@ namespace OrbitalSalvage.Render
             if (lay == null || lay.Version != version || lay.Source != display || lay.Font != font || Math.Abs(lay.ElW - er[2]) > 0.05 || Math.Abs(lay.RunW - runW) > 0.05
                 || Math.Abs(lay.Incoming - incoming) > 0.05 || Math.Abs(lay.Ceiling - ceiling) > 0.05)
             {
-                lay = BuildFit(e, k, run, display, font, ls, er, runX, runY, runW, runH, version, incoming, ceiling);
+                lay = BuildFit(e, k, run, display, font, ls, er, runX, runY, runW, runH, version, incoming, ceiling, RunLanguage(textId));
                 if (fitLay == null || slot >= fitLay.Length) fitLay = new FitLay[Math.Max(slot + 16, elements.Count * 16)];
                 fitLay[slot] = lay;
             }
@@ -2815,7 +2827,7 @@ namespace OrbitalSalvage.Render
         }
 
         FitLay BuildFit(Dictionary<string, object> e, int k, Dictionary<string, object> run, string display, string font, double ls,
-            double[] er, double runX, double runY, double runW, double runH, int version, double incoming, double ceiling)
+            double[] er, double runX, double runY, double runW, double runH, int version, double incoming, double ceiling, string runLang)
         {
             EnsureFitMeasure();
             fitFontBase = font;
@@ -2831,7 +2843,8 @@ namespace OrbitalSalvage.Render
                 IsButton = S(e, "t") == "button",
                 ButtonLike = buttonLike,
                 FontPx = fontPx,
-                LetterSpacing = ls,
+                LetterSpacing = LocTextStyle.LetterSpacing(runLang, ls),
+                LinePitch = LocTextStyle.LinePitchOverride(runLang, S(run, "s"), runH),
                 OriginalMultiLine = fontPx > 0 && runH > TextFit.SingleLineFactor * fontPx + TextFit.SingleLineSlack,
                 SidePad = TextFit.SidePadding,
                 Icons = icons,
@@ -2853,8 +2866,8 @@ namespace OrbitalSalvage.Render
             string rawRun = S(run, "s");
             string leadSpaces = TextFit.EdgeSpaces(rawRun, true);
             string trailSpaces = TextFit.EdgeSpaces(rawRun, false);
-            if (leadSpaces.Length > 0) input.LeadPad = fitMeasure(leadSpaces, fontPx, ls);
-            if (trailSpaces.Length > 0) input.TrailPad = fitMeasure(trailSpaces, fontPx, ls);
+            if (leadSpaces.Length > 0) input.LeadPad = fitMeasure(leadSpaces, fontPx, input.LetterSpacing);
+            if (trailSpaces.Length > 0) input.TrailPad = fitMeasure(trailSpaces, fontPx, input.LetterSpacing);
             TextFit.Layout plan = TextFit.Plan(input, (px, spacing) =>
             {
                 fitFontBase = font;
