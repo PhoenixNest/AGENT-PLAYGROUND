@@ -2531,6 +2531,8 @@ namespace OrbitalSalvage.Render
             if (replaceText)
             {
                 // The equipped label is "🍩 DONUT FLOAT" while the spec already paints that emoji as a child image.
+                // The cut keeps the following space. For hi/km/ar that space sits inside the next shaped run,
+                // and ShapedTable resolves the cut from that entry instead of painting nothing.
                 string mark = ChildEmoji(e);
                 if (mark.Length > 0 && textReplacement.StartsWith(mark, StringComparison.Ordinal))
                 {

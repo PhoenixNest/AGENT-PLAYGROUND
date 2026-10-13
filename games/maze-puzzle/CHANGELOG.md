@@ -39,6 +39,12 @@ Paths written as `tools/parity/...` in entries dated before 2026-10-08 are the l
 
 ### Fixed
 
+#### Home ring name was blank for Hindi, Khmer, and Arabic (2026-10-13)
+
+- The device paints `home-diorama-ring-label` from `Loc.Tr("home.ring.donut")` (`🍩 तैरता डोनट` and the same shape in Khmer and Arabic). The spec already draws that emoji as a child image, so `HomeChrome` drops the emoji and keeps the following space. That cut is not a bake key, and a complex-script string with no bake paints nothing. The sim still substitutes the captured `DONUT FLOAT` run, which is a different string and does draw.
+- A lookup that is exactly an entry with its leading emoji run removed now uses the remaining runs. Duckie, candy, and kitty labels take the same path. `HomeRingLabel_PaintsAfterTheChildEmojiIsStripped` draws the cut. `TranslatedNames_ResolveInsteadOfReturningEnglish` checks every spec and str value, and that `TrName` does not return English when the table has another value.
+- `selftest_shaping.py` 7 groups, `selftest_kit.py` 19 groups. Full EditMode: 590 passed, 83 failed, 3 skipped, 676 total, exit 2. Results `/tmp/maze-i18n/shaping-core/full-ring.xml`, log `/tmp/maze-i18n/shaping-core/full-ring.log`. The 83 are the known set (`ReferenceComparisonTests` 73, `ReferenceGateTests` 9, `QuotaAndModalTests.GameAndPauseStills_MatchKnownHashes`).
+
 #### Uzbek modifier letter sat away from the letter (2026-10-12)
 
 - U+02BB (`oʻ`, `gʻ`) drew as a detached apostrophe. Fredoka has no glyph for it. Nunito's glyph has advance 500, side bearings near 180, and no GPOS pair, and the renderer only kerns glyphs from one font.

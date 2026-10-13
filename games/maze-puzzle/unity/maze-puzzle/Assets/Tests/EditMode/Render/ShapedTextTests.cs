@@ -260,6 +260,104 @@ namespace OrbitalSalvage.Render.Tests
         }
 
         [Test]
+        public void HomeRingLabel_PaintsAfterTheChildEmojiIsStripped()
+        {
+            Directory.CreateDirectory(OutDir);
+            string[] keys = { "home.ring.donut", "home.ring.duckie", "home.ring.candy", "home.ring.kitty" };
+            foreach (string lang in new[] { "hi", "km", "ar" })
+            {
+                ShapedTable table = Load(lang);
+                LocTable loc = ReadTable(lang);
+                foreach (string key in keys)
+                {
+                    string full = loc.Str[key];
+                    ShapedTable.Resolved whole;
+                    Assert.IsTrue(table.TryResolve(full, out whole), key);
+                    Assert.AreEqual(ShapedTable.KindEmoji, whole.Entry.Runs[0].Kind, key);
+                    string cut = full.Substring(whole.Entry.Runs[0].Text.Length);
+                    ShapedTable.Resolved tail;
+                    Assert.IsTrue(table.TryResolve(cut, out tail), lang + " " + key + " cut " + cut);
+                    Assert.AreNotEqual(ShapedTable.KindEmoji, tail.Entry.Runs[0].Kind, key);
+                    using (var canvas = new Canvas2D(64, 64))
+                    {
+                        canvas.Font = "700 28px Fredoka";
+                        canvas.ShapeCode = lang;
+                        canvas.LetterSpacing = 0;
+                        var marks = new List<Canvas2D.ShapedMark>();
+                        double width;
+                        Assert.IsTrue(canvas.LayoutShapedMarks(cut, marks, out width), cut);
+                        Assert.Greater(width, 8, cut);
+                        Assert.Greater(marks.Count, 0, cut);
+                        string face = lang == "ar" ? "Cairo-700" : lang == "hi" ? "Baloo2-700" : "KantumruyPro-700";
+                        bool script = false;
+                        for (int i = 0; i < marks.Count; i++)
+                            if (marks[i].Font == face) script = true;
+                        Assert.IsTrue(script, lang + " " + key + " did not use " + face);
+                    }
+                }
+                string donut = loc.Str["home.ring.donut"];
+                ShapedTable.Resolved donutEntry;
+                Assert.IsTrue(table.TryResolve(donut, out donutEntry));
+                string pill = donut.Substring(donutEntry.Entry.Runs[0].Text.Length);
+                int ink = Paint(lang, pill, lang + "-ring-pill.png", false, false);
+                Assert.Greater(ink, 20, lang + " ring pill painted nothing");
+            }
+        }
+
+        [Test]
+        public void TranslatedNames_ResolveInsteadOfReturningEnglish()
+        {
+            LocTable english = ReadTable("en");
+            Loc.SetLoader(new FileLocLoader());
+            foreach (LanguageInfo info in LanguageRegistry.All)
+            {
+                if (info.Code == "en") continue;
+                LocTable table = ReadTable(info.Code);
+                Assert.IsTrue(Loc.SetLanguage(info.Code), info.Code);
+                Assert.AreEqual(info.Code, Loc.CurrentLanguage, info.Code + " table did not load");
+                foreach (var kv in english.Spec)
+                {
+                    string translated;
+                    if (!table.Spec.TryGetValue(kv.Key, out translated)) continue;
+                    if (translated == null || translated.Trim() == kv.Value.Trim()) continue;
+                    Assert.AreEqual(translated.Trim(), Loc.TrName(kv.Key), info.Code + " TrName " + kv.Key);
+                }
+                if (!ShapedText.IsComplex(info.Code)) continue;
+                ShapedTable shaped = Load(info.Code);
+                foreach (var kv in table.Spec)
+                    AssertResolves(shaped, info.Code, "spec", kv.Key, kv.Value);
+                foreach (var kv in table.Str)
+                    AssertResolves(shaped, info.Code, "str", kv.Key, kv.Value);
+                string line = Loc.Tr("home.level.title", Loc.TrName("LVL 1"), Loc.TrName("Bubblegum Chute 1"));
+                AssertResolves(shaped, info.Code, "composed", "home.level.title", line);
+                string toast = Loc.Tr("toast.sector.cleanup", Loc.TrName("Bubblegum Chute 1"));
+                AssertResolves(shaped, info.Code, "composed", "toast.sector.cleanup", toast);
+            }
+        }
+
+        static void AssertResolves(ShapedTable table, string lang, string section, string key, string text)
+        {
+            if (string.IsNullOrEmpty(text) || !ShapedTable.ContainsScript(text, lang)) return;
+            ShapedTable.Resolved resolved;
+            Assert.IsTrue(table.TryResolve(text, out resolved), lang + " " + section + " " + key + " does not bake: " + text);
+            if (resolved.Entry.Runs == null || resolved.Entry.Runs.Length == 0) return;
+            if (resolved.Entry.Runs[0].Kind != ShapedTable.KindEmoji) return;
+            string cut = text.Substring(resolved.Entry.Runs[0].Text.Length);
+            if (!ShapedTable.ContainsScript(cut, lang)) return;
+            ShapedTable.Resolved tail;
+            Assert.IsTrue(table.TryResolve(cut, out tail), lang + " emoji cut " + key + " : " + cut);
+            Assert.AreNotEqual(ShapedTable.KindEmoji, tail.Entry.Runs[0].Kind, key);
+        }
+
+        static LocTable ReadTable(string code)
+        {
+            string path = Path.Combine(Application.dataPath, "Resources", "Localization", code + ".json");
+            LocTable table;
+            Assert.IsTrue(LocTable.TryParse(File.ReadAllText(path), out table), code);
+            return table;
+        }
+
+        [Test]
         public void Stills_ShowJoinsConjunctsCoengAndWraps()
         {
             Directory.CreateDirectory(OutDir);
@@ -399,6 +497,21 @@ namespace OrbitalSalvage.Render.Tests
             byte[] data = File.ReadAllBytes(Path.Combine(ShapedDir, lang + ".bytes"));
             string font = lang == "ar" ? "Cairo-700.ttf" : lang == "hi" ? "Baloo2-700.ttf" : "KantumruyPro-700.ttf";
             return ShapedTable.Load(data, File.ReadAllBytes(Path.Combine(FontDir, font)));
+        }
+
+        sealed class FileLocLoader : ILocTableLoader
+        {
+            public bool TryLoad(string code, out string json)
+            {
+                string path = Path.Combine(Application.dataPath, "Resources", "Localization", code + ".json");
+                if (!File.Exists(path))
+                {
+                    json = null;
+                    return false;
+                }
+                json = File.ReadAllText(path);
+                return true;
+            }
         }
     }
 }
