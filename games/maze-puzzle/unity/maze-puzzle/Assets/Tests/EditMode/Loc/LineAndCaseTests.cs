@@ -100,6 +100,112 @@ namespace OrbitalSalvage.Loc.Tests
             Assert.IsTrue(lines[0].StartsWith("Hello"), string.Join("|", lines));
         }
 
+        [TestCase("zh-Hans")]
+        [TestCase("zh-Hant")]
+        [TestCase("ja")]
+        public void Cjk_KinsokuKeepsNumbersLatinAndMarks(string code)
+        {
+            Assert.AreSame(LineBreaker.Cjk, LineBreaker.For(code));
+            var lines = new List<string>();
+            ILineBreaker breaker = LineBreaker.For(code);
+
+            breaker.Wrap("你好。世界", 20, 0, Width, lines);
+            AssertNoStart(lines, "。");
+
+            breaker.Wrap("（你好）", 20, 0, Width, lines);
+            AssertNoEnd(lines, "（");
+
+            breaker.Wrap("きゃっ", 10, 0, Width, lines);
+            Assert.AreEqual("きゃっ", lines[0]);
+            AssertNoStart(lines, "ゃ");
+            AssertNoStart(lines, "っ");
+
+            breaker.Wrap("花々", 10, 0, Width, lines);
+            Assert.AreEqual("花々", string.Join("", lines));
+            AssertNoStart(lines, "々");
+
+            breaker.Wrap("他说……完了", 20, 0, Width, lines);
+            Assert.IsTrue(JoinedOnOneLine(lines, "……"), string.Join("|", lines));
+
+            breaker.Wrap("走——停", 10, 0, Width, lines);
+            Assert.IsTrue(JoinedOnOneLine(lines, "——"), string.Join("|", lines));
+
+            breaker.Wrap("获得1,234.50%个", 30, 0, Width, lines);
+            Assert.IsTrue(JoinedOnOneLine(lines, "1,234.50%"), string.Join("|", lines));
+
+            breaker.Wrap("分数{0}点", 20, 0, Width, lines);
+            Assert.IsTrue(JoinedOnOneLine(lines, "{0}"), string.Join("|", lines));
+
+            breaker.Wrap("看Nibbles 20 kg吧", 40, 0, Width, lines);
+            Assert.IsTrue(JoinedOnOneLine(lines, "Nibbles"), string.Join("|", lines));
+            Assert.IsTrue(JoinedOnOneLine(lines, "20 kg"), string.Join("|", lines));
+
+            breaker.Wrap("目标：喂", 20, 0, Width, lines);
+            AssertNoStart(lines, "：");
+        }
+
+        [Test]
+        public void Korean_BreaksOnSpacesThenSyllables_AndKeepsLatin()
+        {
+            var lines = new List<string>();
+            LineBreaker.Korean.Wrap("안녕 하세요", 50, 0, Width, lines);
+            CollectionAssert.AreEqual(new[] { "안녕", "하세요" }, lines);
+
+            LineBreaker.Korean.Wrap("가나다라마바", 20, 0, Width, lines);
+            Assert.Greater(lines.Count, 1);
+            Assert.AreEqual("가나다라마바", string.Join("", lines));
+            foreach (string line in lines) Assert.LessOrEqual(Width(line), 20.5);
+
+            LineBreaker.Korean.Wrap("안녕Hello세요", 60, 0, Width, lines);
+            Assert.IsTrue(JoinedOnOneLine(lines, "Hello"), string.Join("|", lines));
+            Assert.IsFalse(lines.Exists(line => line.Contains("Hel") && !line.Contains("Hello")));
+
+            LineBreaker.Korean.Wrap("가격1,234원", 60, 0, Width, lines);
+            Assert.IsTrue(JoinedOnOneLine(lines, "1,234"), string.Join("|", lines));
+        }
+
+        [Test]
+        public void LatinLanguages_StayOnWrapLatin()
+        {
+            string[] samples =
+            {
+                "PLAY MISSION",
+                "Goal: Feed Nibbles 20 kg space snacks",
+                "one two three four"
+            };
+            var latin = new List<string>();
+            var via = new List<string>();
+            string[] codes = { "en", "de", "fr", "es", "it", "pt-PT", "vi", "fil", "id", "uz" };
+            for (int c = 0; c < codes.Length; c++)
+            {
+                for (int s = 0; s < samples.Length; s++)
+                {
+                    LineBreaker.WrapLatin(samples[s], 80, 8, Width, latin);
+                    LineBreaker.For(codes[c]).Wrap(samples[s], 80, 8, Width, via);
+                    CollectionAssert.AreEqual(latin, via, codes[c] + " " + samples[s]);
+                }
+            }
+        }
+
+        static void AssertNoStart(List<string> lines, string mark)
+        {
+            for (int i = 1; i < lines.Count; i++)
+                Assert.IsFalse(lines[i].StartsWith(mark), string.Join("|", lines));
+        }
+
+        static void AssertNoEnd(List<string> lines, string mark)
+        {
+            for (int i = 0; i < lines.Count - 1; i++)
+                Assert.IsFalse(lines[i].EndsWith(mark), string.Join("|", lines));
+        }
+
+        static bool JoinedOnOneLine(List<string> lines, string token)
+        {
+            for (int i = 0; i < lines.Count; i++)
+                if (lines[i].Contains(token)) return true;
+            return false;
+        }
+
         [Test]
         public void Korean_BreaksOnSpacesThenSyllables()
         {
@@ -169,6 +275,28 @@ namespace OrbitalSalvage.Loc.Tests
             Assert.AreEqual("kg", LocCase.Upper("kg", "km"));
             Assert.AreEqual("kg", LocCase.Upper("kg", "hi"));
             Assert.AreSame("kg", LocCase.Upper("kg", "zh-Hant"));
+            // A CJK string is not uppercased, including a Latin token, even when the spec says uppercase.
+            Assert.AreEqual("喂 Nibbles 20 kg", LocCase.Upper("喂 Nibbles 20 kg", "zh-Hans"));
+            Assert.AreEqual("Nibbles", LocCase.Upper("Nibbles", "ja"));
+            Assert.AreEqual("20 kg", LocCase.Upper("20 kg", "ko"));
+        }
+    }
+
+    public class LocTextStyleTests : LocTestBase
+    {
+        [Test]
+        public void Cjk_DropsTracking_LatinKeepsIt_MultiLinePitchUsesTheEnglishBox()
+        {
+            Assert.AreEqual(0, LocTextStyle.LetterSpacing("zh-Hans", 0.8));
+            Assert.AreEqual(0, LocTextStyle.LetterSpacing("zh-Hant", 1));
+            Assert.AreEqual(0, LocTextStyle.LetterSpacing("ja", 0.5));
+            Assert.AreEqual(0, LocTextStyle.LetterSpacing("ko", 0.4));
+            Assert.AreEqual(0.8, LocTextStyle.LetterSpacing("de", 0.8));
+            Assert.AreEqual(0.8, LocTextStyle.LetterSpacing("en", 0.8));
+            Assert.AreEqual(0.8, LocTextStyle.LetterSpacing(null, 0.8));
+            Assert.AreEqual(19, LocTextStyle.LinePitchOverride("ja", "one\ntwo", 38), 0.001);
+            Assert.AreEqual(0, LocTextStyle.LinePitchOverride("ja", "one line", 18));
+            Assert.AreEqual(0, LocTextStyle.LinePitchOverride("fr", "one\ntwo", 38));
         }
     }
 
