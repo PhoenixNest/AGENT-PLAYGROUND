@@ -312,7 +312,7 @@ The steps below are the procedure recorded in the localisation documents and the
 10. **Let Unity import.** Open the Editor, or run a batch job, so that changed `Resources` files are imported before tests or builds.
 11. **Test.** Run the EditMode suite (section 9). Run the Python self-tests (`selftest_kit.py`, `selftest_shaping.py`).
 
-**Adding a language** needs more than a table. It needs a `LanguageRegistry` row, a `LocaleResolver` entry if device codes map to it, a `fonts.json` group if it needs new faces, and tool entries in `validate_table.py`. The repository documents no lock or serialisation procedure for running Unity batch jobs and the Python tools against the same files. Run them one at a time.
+**Adding a language** needs more than a table. It needs a `LanguageRegistry` row, a `LocaleResolver` entry if device codes map to it, a `fonts.json` group if it needs new faces, and tool entries in `validate_table.py`. Run Unity batch jobs one at a time (section 9.1).
 
 ---
 
