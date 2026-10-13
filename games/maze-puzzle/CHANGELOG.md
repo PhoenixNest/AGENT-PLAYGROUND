@@ -15,6 +15,10 @@ Paths written as `tools/parity/...` in entries dated before 2026-10-08 are the l
 
 ### Added
 
+#### Localisation: 17 languages (2026-10-13)
+
+- The Unity app now ships English plus 16 translations: de, fr, es, it, pt-PT, vi, fil, id, uz (Latin), zh-Hans, zh-Hant, ja, ko (CJK), and hi, km, ar (offline-shaped). The default follows the device language, with a manual Language row in Settings and an English fallback. Every translation is an agent draft with no native-speaker review. Samples for a reviewer: `localization/reports/review-samples-2026-10-13/`. Device checks: `localization/reports/device-check-2026-10-12.md` and `device-check-2026-10-13.md`. Known limits: Arabic is right-aligned text only (the layout is not mirrored); Khmer wraps between clusters; the privacy and `localStorage` paragraphs ellipsize in some languages and are not reachable in the app; Settings, Shop and Daily were not opened on a phone.
+
 #### Real Arabic, Hindi, and Khmer tables (2026-10-13)
 
 - `bake_shaped.py` packed every spec and str key. Failures: 0. Unique strings in the bake: Arabic 431 (84461 bytes), Hindi 432 (96826), Khmer 431 (88170). The fixture bytes are gone. Font files are unchanged in size: Baloo 2 330740, Kantumruy Pro 67916, Cairo 58640. `…` and `⏪` are symbol runs. A `{0}` next to punctuation or a Latin token bakes; a `{0}` glued to an Arabic, Devanagari, or Khmer letter still fails. A string with no Arabic letter stays left to right, so `{0} / {1} kg` paints `12 / 20 kg` and not `kg 20 / 12`. A line that does contain Arabic stays right to left.

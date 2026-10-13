@@ -1,0 +1,37 @@
+# Review sample — zh-Hant
+
+Thirty keys (or fewer): placeholder-heavy, then longest, then the first keys of each screen area.
+Ratio is UTF-16 length of the translation divided by the English length.
+
+| Area | English | Translation | Ratio | Why |
+| --- | --- | --- | ---: | --- |
+| other | Goal: Feed Nibbles {0} kg ({1}/{0} kg eaten) | 目標：餵Nibbles {0} kg (已吃{1}/{0} kg) | 0.75 | placeholders |
+| other | Resets in {0}h {1}m | {0}h {1}m後重置 | 0.632 | placeholders |
+| other | {0} • {1} | {0} • {1} | 1 | placeholders |
+| other | 🏆 Trophy: {0} (+{1} 🪙) | 🏆獎盃：{0} (+{1} 🪙) | 0.75 | placeholders |
+| other | {0} / {1} kg | {0} / {1} kg | 1 | placeholders |
+| trophies | All game progression, gold coins, and cosmetic unlocks are saved locally on your device via standard browser localStorage. No account creation, no external tracking SDKs, and zero behavioral ads. | 遊戲進度、金幣和造型解鎖都存在你的裝置上，用瀏覽器的localStorage。不用註冊，沒有外部追蹤程式，也沒有行為廣告。 | 0.313 | longest |
+| trophies | Orbital Salvage is built with strict privacy-by-design. We do not collect, store, sell, or transmit any personally identifiable information, cookies, device identifiers, or location data. | Orbital Salvage從設計上就嚴格保護隱私。我們不收集、儲存、出售或傳送任何可識別身分的資料、Cookie、裝置識別碼或位置資料。 | 0.374 | longest |
+| trophies | Are you sure? This will reset all your unlocked maps, custom costumes, and earned gold coins. This cannot be undone! | 你確定嗎？這會重設你解鎖的地圖、自訂造型和賺到的金幣。不能還原！ | 0.276 | longest |
+| trophies | All items in the Toy Shop are earned through in-game gameplay coins. There are no real-money in-app purchases. | 玩具店的東西都用遊戲裡的金幣換。沒有花真錢的購買。 | 0.227 | longest |
+| daily | Cosmic Vortex Overdrive: High-density debris cloud & dual shredder gates! | 宇宙漩渦超轉：密密碎片雲和雙粉碎門！ | 0.247 | longest |
+| shop | Squeaky bright yellow bath duck with cute orange beak and water bubbles! | 吱吱叫的亮黃小鴨，橘色嘴巴和水泡泡！ | 0.25 | longest |
+| shop | The hungriest, cutest cartoon black hole with big anime eyes! Nom nom! | 最餓最可愛的卡通黑洞，眼睛又大又圓！啊嗚啊嗚！ | 0.329 | longest |
+| shop | Fluffy pastel indigo and magenta clouds with sparkling star smileys. | 蓬蓬的淡紫和桃紅色雲，帶著亮晶晶的星星笑臉。 | 0.324 | longest |
+| daily | Calm Orbit Sweep: Gentle centrifugal speed, wide gates & easy flow. | 平靜軌道清掃：轉得輕、門很寬、很好過。 | 0.284 | longest |
+| trophies | 100% Free • Unlock cute costumes with your earned recycling coins! | 100%免費•用你賺到的金幣解鎖可愛造型！ | 0.318 | longest |
+| maps | 0 / 105 kg | 0 / 105 kg | 1 | area |
+| trophies | 0 / 20 kg | 0 / 20 kg | 1 | area |
+| debrief | 0 / 210 kg | 0 / 210 kg | 1 | area |
+| daily | 0 / 26 kg | 0 / 26 kg | 1 | area |
+| defeat | 15 / 20 kg | 15 / 20 kg | 1 | area |
+| shop | A happy cartoon moon made of Swiss cheese floating in twilight. | 一顆瑞士起司做的開心卡通月亮，漂在黃昏裡。 | 0.333 | area |
+| settings | Change | 更換 | 0.333 | area |
+| pause | Goal: Feed Nibbles 20 kg (0/20 kg eaten) | 目標：餵Nibbles 20 kg (已吃0/20 kg) | 0.725 | area |
+| other | Waking up Nibbles for breakfast... | 叫Nibbles起床吃早餐… | 0.412 | area |
+| maps | 0 / 132 kg | 0 / 132 kg | 1 | area |
+| trophies | 1,000 items recycled! You are the ultimate cosmic cleaner! | 1,000件回收完成！你是最棒的宇宙清潔員！ | 0.379 | area |
+| debrief | 105 kg | 105 kg | 1 | area |
+| daily | 0 / 3 CLEARED | 0 / 3已通過 | 0.615 | area |
+| defeat | 5 / 20 kg | 5 / 20 kg | 1 | area |
+| shop | A sleepy pastel blue cloud that yawns and gulps down space junk! | 一朵粉藍瞌睡雲，打個哈欠，把太空垃圾吞下去！ | 0.344 | area |

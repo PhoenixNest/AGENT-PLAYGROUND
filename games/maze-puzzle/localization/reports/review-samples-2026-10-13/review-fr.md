@@ -1,0 +1,37 @@
+# Review sample — fr
+
+Thirty keys (or fewer): placeholder-heavy, then longest, then the first keys of each screen area.
+Ratio is UTF-16 length of the translation divided by the English length.
+
+| Area | English | Translation | Ratio | Why |
+| --- | --- | --- | ---: | --- |
+| other | Goal: Feed Nibbles {0} kg ({1}/{0} kg eaten) | But : {0} kg pour Nibbles ({1}/{0} kg mangés) | 1.023 | placeholders |
+| other | Resets in {0}h {1}m | Encore {0}h {1}m | 0.842 | placeholders |
+| other | {0} • {1} | {0} • {1} | 1 | placeholders |
+| other | 🏆 Trophy: {0} (+{1} 🪙) | 🏆 Trophée : {0} (+{1} 🪙) | 1.083 | placeholders |
+| other | {0} / {1} kg | {0} / {1} kg | 1 | placeholders |
+| trophies | All game progression, gold coins, and cosmetic unlocks are saved locally on your device via standard browser localStorage. No account creation, no external tracking SDKs, and zero behavioral ads. | La progression, les pièces d'or et les costumes restent sur ton appareil, dans le localStorage du navigateur. Pas de compte, pas de pistage, pas de publicité. | 0.81 | longest |
+| trophies | Orbital Salvage is built with strict privacy-by-design. We do not collect, store, sell, or transmit any personally identifiable information, cookies, device identifiers, or location data. | Orbital Salvage est fait pour respecter ta vie privée. Nous ne collectons, ne gardons, ne vendons et n'envoyons aucune donnée personnelle, aucun cookie, aucun identifiant ni ta position. | 0.995 | longest |
+| trophies | Are you sure? This will reset all your unlocked maps, custom costumes, and earned gold coins. This cannot be undone! | Tu confirmes ? Ça efface tes cartes, tes costumes et tes pièces d'or. Sans retour ! | 0.716 | longest |
+| trophies | All items in the Toy Shop are earned through in-game gameplay coins. There are no real-money in-app purchases. | Tout dans la boutique de jouets s'obtient avec les pièces d'or du jeu. Aucun achat en argent réel. | 0.891 | longest |
+| daily | Cosmic Vortex Overdrive: High-density debris cloud & dual shredder gates! | Vortex cosmique : nuage de ferraille dense et deux portes broyeuses ! | 0.945 | longest |
+| shop | Squeaky bright yellow bath duck with cute orange beak and water bubbles! | Canard de bain jaune qui couine, bec orange et bulles ! | 0.764 | longest |
+| shop | The hungriest, cutest cartoon black hole with big anime eyes! Nom nom! | Le trou noir le plus gourmand, avec de grands yeux ! Miam miam ! | 0.914 | longest |
+| shop | Fluffy pastel indigo and magenta clouds with sparkling star smileys. | Nuages indigo et magenta tout doux, avec des étoiles qui sourient. | 0.971 | longest |
+| daily | Calm Orbit Sweep: Gentle centrifugal speed, wide gates & easy flow. | Orbite calme : rotation douce, grandes portes, flux facile. | 0.881 | longest |
+| trophies | 100% Free • Unlock cute costumes with your earned recycling coins! | 100% gratuit • Débloque de jolis costumes avec tes pièces d'or ! | 0.97 | longest |
+| maps | 0 / 105 kg | 0 / 105 kg | 1 | area |
+| trophies | 0 / 20 kg | 0 / 20 kg | 1 | area |
+| debrief | 0 / 210 kg | 0 / 210 kg | 1 | area |
+| daily | 0 / 26 kg | 0 / 26 kg | 1 | area |
+| defeat | 15 / 20 kg | 15 / 20 kg | 1 | area |
+| shop | A happy cartoon moon made of Swiss cheese floating in twilight. | Une lune en fromage suisse, toute contente, flotte au crépuscule. | 1.032 | area |
+| settings | Change | Changer | 1.167 | area |
+| pause | Goal: Feed Nibbles 20 kg (0/20 kg eaten) | But : 20 kg pour Nibbles (0/20 kg mangés) | 1.025 | area |
+| other | Waking up Nibbles for breakfast... | Nibbles au petit-déjeuner... | 0.824 | area |
+| maps | 0 / 132 kg | 0 / 132 kg | 1 | area |
+| trophies | 1,000 items recycled! You are the ultimate cosmic cleaner! | 1,000 objets recyclés ! Tu es le champion cosmique ! | 0.897 | area |
+| debrief | 105 kg | 105 kg | 1 | area |
+| daily | 0 / 3 CLEARED | 0 / 3 RÉUSSI | 0.923 | area |
+| defeat | 5 / 20 kg | 5 / 20 kg | 1 | area |
+| shop | A sleepy pastel blue cloud that yawns and gulps down space junk! | Nuage bleu endormi qui avale les déchets de l'espace ! | 0.844 | area |

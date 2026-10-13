@@ -1,0 +1,37 @@
+# Review sample — ko
+
+Thirty keys (or fewer): placeholder-heavy, then longest, then the first keys of each screen area.
+Ratio is UTF-16 length of the translation divided by the English length.
+
+| Area | English | Translation | Ratio | Why |
+| --- | --- | --- | ---: | --- |
+| other | Goal: Feed Nibbles {0} kg ({1}/{0} kg eaten) | 목표: Nibbles 먹이 {0} kg (먹은 양 {1}/{0} kg) | 0.886 | placeholders |
+| other | Resets in {0}h {1}m | {0}h {1}m 후 초기화 | 0.789 | placeholders |
+| other | {0} • {1} | {0} • {1} | 1 | placeholders |
+| other | 🏆 Trophy: {0} (+{1} 🪙) | 🏆 트로피: {0} (+{1} 🪙) | 0.875 | placeholders |
+| other | {0} / {1} kg | {0} / {1} kg | 1 | placeholders |
+| trophies | All game progression, gold coins, and cosmetic unlocks are saved locally on your device via standard browser localStorage. No account creation, no external tracking SDKs, and zero behavioral ads. | 게임 진행, 골드 코인, 꾸미기 잠금 해제는 기기 브라우저의 localStorage에만 저장해요. 계정은 없고, 외부 추적 SDK도 없고, 행동 광고도 없어요. | 0.456 | longest |
+| trophies | Orbital Salvage is built with strict privacy-by-design. We do not collect, store, sell, or transmit any personally identifiable information, cookies, device identifiers, or location data. | Orbital Salvage는 개인정보를 지키도록 만들었어요. 누구인지 알 수 있는 정보, 쿠키, 기기 식별자, 위치는 모으거나 저장하거나 팔거나 보내지 않아요. | 0.481 | longest |
+| trophies | Are you sure? This will reset all your unlocked maps, custom costumes, and earned gold coins. This cannot be undone! | 정말이에요? 열린 맵, 꾸민 옷, 모은 골드 코인을 모두 지워요. 되돌릴 수 없어요! | 0.405 | longest |
+| trophies | All items in the Toy Shop are earned through in-game gameplay coins. There are no real-money in-app purchases. | 장난감 가게 물건은 모두 게임에서 모은 골드 코인으로 얻어요. 진짜 돈은 쓰지 않아요. | 0.436 | longest |
+| daily | Cosmic Vortex Overdrive: High-density debris cloud & dual shredder gates! | 우주 소용돌이 최고속: 가득한 조각 구름과 분쇄 문 둘이에요! | 0.466 | longest |
+| shop | Squeaky bright yellow bath duck with cute orange beak and water bubbles! | 삑삑 노란 목욕 오리, 주황 부리와 물거품이 귀여워요! | 0.417 | longest |
+| shop | The hungriest, cutest cartoon black hole with big anime eyes! Nom nom! | 가장 배고프고 귀여운 만화 블랙홀, 커다란 동그란 눈! 냠냠! | 0.486 | longest |
+| shop | Fluffy pastel indigo and magenta clouds with sparkling star smileys. | 폭신한 파스텔 남색과 자홍 구름에 반짝이는 별 웃음이 있어요. | 0.5 | longest |
+| daily | Calm Orbit Sweep: Gentle centrifugal speed, wide gates & easy flow. | 잔잔한 궤도 청소: 천천히 돌고, 문은 넓고, 흐름은 쉬워요. | 0.507 | longest |
+| trophies | 100% Free • Unlock cute costumes with your earned recycling coins! | 100% 무료 • 모은 골드 코인으로 귀여운 옷을 잠금 해제해요! | 0.545 | longest |
+| maps | 0 / 105 kg | 0 / 105 kg | 1 | area |
+| trophies | 0 / 20 kg | 0 / 20 kg | 1 | area |
+| debrief | 0 / 210 kg | 0 / 210 kg | 1 | area |
+| daily | 0 / 26 kg | 0 / 26 kg | 1 | area |
+| defeat | 15 / 20 kg | 15 / 20 kg | 1 | area |
+| shop | A happy cartoon moon made of Swiss cheese floating in twilight. | 해 질 녘, 스위스 치즈로 만든 행복한 만화 달이에요. | 0.476 | area |
+| settings | Change | 변경 | 0.333 | area |
+| pause | Goal: Feed Nibbles 20 kg (0/20 kg eaten) | 목표: Nibbles 먹이 20 kg (먹은 양 0/20 kg) | 0.875 | area |
+| other | Waking up Nibbles for breakfast... | Nibbles, 아침 깨우는 중... | 0.588 | area |
+| maps | 0 / 132 kg | 0 / 132 kg | 1 | area |
+| trophies | 1,000 items recycled! You are the ultimate cosmic cleaner! | 1,000개를 재활용했어요! 최고의 우주 청소부예요! | 0.5 | area |
+| debrief | 105 kg | 105 kg | 1 | area |
+| daily | 0 / 3 CLEARED | 0 / 3 클리어 | 0.692 | area |
+| defeat | 5 / 20 kg | 5 / 20 kg | 1 | area |
+| shop | A sleepy pastel blue cloud that yawns and gulps down space junk! | 하품하다 우주 쓰레기를 삼키는 졸린 파스텔 파란 구름이에요! | 0.516 | area |

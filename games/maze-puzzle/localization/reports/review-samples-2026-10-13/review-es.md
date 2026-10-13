@@ -1,0 +1,37 @@
+# Review sample — es
+
+Thirty keys (or fewer): placeholder-heavy, then longest, then the first keys of each screen area.
+Ratio is UTF-16 length of the translation divided by the English length.
+
+| Area | English | Translation | Ratio | Why |
+| --- | --- | --- | ---: | --- |
+| other | Goal: Feed Nibbles {0} kg ({1}/{0} kg eaten) | Meta: dale a Nibbles {0} kg ({1}/{0} kg comidos) | 1.091 | placeholders |
+| other | Resets in {0}h {1}m | Vuelve en {0}h {1}m | 1 | placeholders |
+| other | {0} • {1} | {0} • {1} | 1 | placeholders |
+| other | 🏆 Trophy: {0} (+{1} 🪙) | 🏆 Trofeo: {0} (+{1} 🪙) | 1 | placeholders |
+| other | {0} / {1} kg | {0} / {1} kg | 1 | placeholders |
+| trophies | All game progression, gold coins, and cosmetic unlocks are saved locally on your device via standard browser localStorage. No account creation, no external tracking SDKs, and zero behavioral ads. | El progreso, las monedas de oro y los disfraces se guardan en tu dispositivo, en el localStorage del navegador. Sin cuenta, sin rastreo y sin anuncios. | 0.774 | longest |
+| trophies | Orbital Salvage is built with strict privacy-by-design. We do not collect, store, sell, or transmit any personally identifiable information, cookies, device identifiers, or location data. | Orbital Salvage se hizo para cuidar tu privacidad. No reunimos, guardamos, vendemos ni enviamos datos personales, cookies, identificadores del dispositivo ni tu ubicación. | 0.914 | longest |
+| trophies | Are you sure? This will reset all your unlocked maps, custom costumes, and earned gold coins. This cannot be undone! | ¿Seguro? Esto borra tus mapas, disfraces y monedas de oro. ¡No se puede deshacer! | 0.698 | longest |
+| trophies | All items in the Toy Shop are earned through in-game gameplay coins. There are no real-money in-app purchases. | Todo en la tienda de juguetes se gana con monedas de oro del juego. No hay compras con dinero real. | 0.9 | longest |
+| daily | Cosmic Vortex Overdrive: High-density debris cloud & dual shredder gates! | ¡Vórtice cósmico: nube densa de chatarra y dos compuertas! | 0.795 | longest |
+| shop | Squeaky bright yellow bath duck with cute orange beak and water bubbles! | ¡Patito de baño amarillo, pico naranja y burbujas! | 0.694 | longest |
+| shop | The hungriest, cutest cartoon black hole with big anime eyes! Nom nom! | ¡El agujero negro más hambriento y tierno, con ojos enormes! ¡Ñam ñam! | 1 | longest |
+| shop | Fluffy pastel indigo and magenta clouds with sparkling star smileys. | Nubes esponjosas índigo y magenta, con estrellas sonrientes. | 0.882 | longest |
+| daily | Calm Orbit Sweep: Gentle centrifugal speed, wide gates & easy flow. | Órbita en calma: giro suave, compuertas anchas y paso fácil. | 0.896 | longest |
+| trophies | 100% Free • Unlock cute costumes with your earned recycling coins! | 100% gratis • Desbloquea disfraces lindos con tus monedas de oro. | 0.985 | longest |
+| maps | 0 / 105 kg | 0 / 105 kg | 1 | area |
+| trophies | 0 / 20 kg | 0 / 20 kg | 1 | area |
+| debrief | 0 / 210 kg | 0 / 210 kg | 1 | area |
+| daily | 0 / 26 kg | 0 / 26 kg | 1 | area |
+| defeat | 15 / 20 kg | 15 / 20 kg | 1 | area |
+| shop | A happy cartoon moon made of Swiss cheese floating in twilight. | Una luna feliz de queso con hoyos, flotando al atardecer. | 0.905 | area |
+| settings | Change | Cambia | 1 | area |
+| pause | Goal: Feed Nibbles 20 kg (0/20 kg eaten) | Meta: Nibbles 20 kg (0/20 kg comidos) | 0.925 | area |
+| other | Waking up Nibbles for breakfast... | Nibbles despierta a desayunar... | 0.941 | area |
+| maps | 0 / 132 kg | 0 / 132 kg | 1 | area |
+| trophies | 1,000 items recycled! You are the ultimate cosmic cleaner! | ¡1,000 piezas recicladas! ¡Eres el gran conserje cósmico! | 0.983 | area |
+| debrief | 105 kg | 105 kg | 1 | area |
+| daily | 0 / 3 CLEARED | 0 / 3 HECHO | 0.846 | area |
+| defeat | 5 / 20 kg | 5 / 20 kg | 1 | area |
+| shop | A sleepy pastel blue cloud that yawns and gulps down space junk! | ¡Una nube azul pastel que bosteza y traga basura espacial! | 0.906 | area |
