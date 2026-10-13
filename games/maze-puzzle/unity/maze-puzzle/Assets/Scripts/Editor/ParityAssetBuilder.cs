@@ -34,10 +34,10 @@ namespace OrbitalSalvage.Editor
         // BuildAll copies Assets/Fonts/<name>.ttf onto Resources/Fonts/Ttf/<name>.bytes and does not delete them.
         private static readonly string[] OutlineExtraFonts =
         {
-            "ZCOOLKuaiLe-endonym",
-            "Huninn-endonym",
-            "MPLUSRounded1c-endonym",
-            "Jua-endonym",
+            "ZCOOLKuaiLe-sc",
+            "Huninn-tc",
+            "MPLUSRounded1c-700",
+            "Jua-kr",
             "Nunito-uz-patch-600",
             "Nunito-uz-patch-700",
             "Nunito-uz-patch-800",

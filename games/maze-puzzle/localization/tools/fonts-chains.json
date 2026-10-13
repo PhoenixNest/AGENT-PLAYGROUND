@@ -58,26 +58,26 @@
     "zh-Hans": {
       "fontGroup": "cjk-sc",
       "expansion": 0.55,
-      "chain": [],
-      "pending": ["ZCOOLKuaiLe-Regular.ttf"]
+      "chain": ["ZCOOLKuaiLe-sc.ttf", "Nunito-700.ttf", "Nunito-800.ttf", "Nunito-900.ttf", "NotoSansSymbols2-Regular.ttf", "NotoSansSymbols-Regular.ttf"],
+      "pending": []
     },
     "zh-Hant": {
       "fontGroup": "cjk-tc",
       "expansion": 0.55,
-      "chain": [],
-      "pending": ["Huninn-Regular.ttf"]
+      "chain": ["Huninn-tc.ttf", "Nunito-700.ttf", "Nunito-800.ttf", "Nunito-900.ttf", "NotoSansSymbols2-Regular.ttf", "NotoSansSymbols-Regular.ttf"],
+      "pending": []
     },
     "ja": {
       "fontGroup": "cjk-jp",
       "expansion": 0.80,
-      "chain": [],
-      "pending": ["MPLUSRounded1c-Bold.ttf"]
+      "chain": ["MPLUSRounded1c-700.ttf", "Nunito-700.ttf", "Nunito-800.ttf", "Nunito-900.ttf", "NotoSansSymbols2-Regular.ttf", "NotoSansSymbols-Regular.ttf"],
+      "pending": []
     },
     "ko": {
       "fontGroup": "cjk-kr",
       "expansion": 0.75,
-      "chain": [],
-      "pending": ["Jua-Regular.ttf"]
+      "chain": ["Jua-kr.ttf", "Nunito-700.ttf", "Nunito-800.ttf", "Nunito-900.ttf", "NotoSansSymbols2-Regular.ttf", "NotoSansSymbols-Regular.ttf"],
+      "pending": []
     },
     "hi": {
       "fontGroup": "devanagari",

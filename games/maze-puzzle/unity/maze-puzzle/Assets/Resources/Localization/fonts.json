@@ -37,27 +37,27 @@
       "fallback": ["@symbols"]
     },
     "cjk-sc": {
-      "temporary": "ZCOOLKuaiLe-endonym is the picker subset (简体中文 plus printable ASCII). A later wave replaces this file under group cjk-sc.",
-      "display": [{ "weight": 400, "file": "ZCOOLKuaiLe-endonym" }],
-      "body": [{ "weight": 400, "file": "ZCOOLKuaiLe-endonym" }],
+      "note": "ZCOOL KuaiLe has one master (OS/2 400). It is a display drawing. Every CSS weight uses this file. No heavier master exists.",
+      "display": [{ "weight": 400, "file": "ZCOOLKuaiLe-sc" }],
+      "body": [{ "weight": 400, "file": "ZCOOLKuaiLe-sc" }],
       "fallback": ["@nunito", "@symbols"]
     },
     "cjk-tc": {
-      "temporary": "Huninn-endonym is the picker subset (繁體中文 plus printable ASCII). A later wave replaces this file under group cjk-tc.",
-      "display": [{ "weight": 400, "file": "Huninn-endonym" }],
-      "body": [{ "weight": 400, "file": "Huninn-endonym" }],
+      "note": "Huninn has one master (OS/2 400), a regular rounded gothic. Every CSS weight uses this file. No heavier master exists.",
+      "display": [{ "weight": 400, "file": "Huninn-tc" }],
+      "body": [{ "weight": 400, "file": "Huninn-tc" }],
       "fallback": ["@nunito", "@symbols"]
     },
     "cjk-jp": {
-      "temporary": "MPLUSRounded1c-endonym is the picker subset (日本語 plus printable ASCII). A later wave replaces this file under group cjk-jp.",
-      "display": [{ "weight": 700, "file": "MPLUSRounded1c-endonym" }],
-      "body": [{ "weight": 700, "file": "MPLUSRounded1c-endonym" }],
+      "note": "M PLUS Rounded 1c Bold (700). CSS 400 and CSS 900 both resolve to this file. Black (900) is not shipped: the same face paints body text, and Fredoka already maps 800 and 900 to 700.",
+      "display": [{ "weight": 700, "file": "MPLUSRounded1c-700" }],
+      "body": [{ "weight": 700, "file": "MPLUSRounded1c-700" }],
       "fallback": ["@nunito", "@symbols"]
     },
     "cjk-kr": {
-      "temporary": "Jua-endonym is the picker subset (한국어 plus printable ASCII). A later wave replaces this file under group cjk-kr. The source Jua file has no U+0060.",
-      "display": [{ "weight": 400, "file": "Jua-endonym" }],
-      "body": [{ "weight": 400, "file": "Jua-endonym" }],
+      "note": "Jua has one master (OS/2 400). It is a display drawing. Every CSS weight uses this file. The source has no U+0060; Nunito in the chain has it.",
+      "display": [{ "weight": 400, "file": "Jua-kr" }],
+      "body": [{ "weight": 400, "file": "Jua-kr" }],
       "fallback": ["@nunito", "@symbols"]
     },
     "devanagari": {

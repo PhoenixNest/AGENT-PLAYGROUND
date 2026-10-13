@@ -101,13 +101,36 @@ namespace OrbitalSalvage.Loc.Tests
         [Test]
         public void ScriptGroups_NameTheSpikeFace_ForEveryWeight()
         {
-            Expect("zh-Hans", "ZCOOLKuaiLe-endonym");
-            Expect("zh-Hant", "Huninn-endonym");
-            Expect("ja", "MPLUSRounded1c-endonym");
-            Expect("ko", "Jua-endonym");
+            Expect("zh-Hans", "ZCOOLKuaiLe-sc");
+            Expect("zh-Hant", "Huninn-tc");
+            Expect("ja", "MPLUSRounded1c-700");
+            Expect("ko", "Jua-kr");
             Expect("hi", "Baloo2-700");
             Expect("km", "KantumruyPro-700");
             Expect("ar", "Cairo-700");
+        }
+
+        [Test]
+        public void Cjk_EveryCssWeightUsesTheSingleShippedFace()
+        {
+            var faces = new[]
+            {
+                new[] { "zh-Hans", "ZCOOLKuaiLe-sc" },
+                new[] { "zh-Hant", "Huninn-tc" },
+                new[] { "ja", "MPLUSRounded1c-700" },
+                new[] { "ko", "Jua-kr" }
+            };
+            int[] weights = { 400, 600, 700, 800, 900 };
+            for (int i = 0; i < faces.Length; i++)
+            {
+                for (int w = 0; w < weights.Length; w++)
+                {
+                    string[] display = LocFonts.GetChain(faces[i][0], "Fredoka", weights[w]);
+                    string[] body = LocFonts.GetChain(faces[i][0], "Nunito", weights[w]);
+                    Assert.AreEqual(faces[i][1], display[0], faces[i][0] + " " + weights[w]);
+                    Assert.AreEqual(faces[i][1], body[0], faces[i][0] + " body " + weights[w]);
+                }
+            }
         }
 
         [Test]
