@@ -188,6 +188,18 @@ To ensure clear mechanical superiority over generic clones:
    - **Radial Clone Fanning:** Multiplier clones are spawned distributed across the radial gate span with tangential jitter rather than stacked on a single coordinate.
    - **Impulse Clamping:** Inter-debris collision impulses are capped ($p \le 38$) with penetration depth limits, eliminating explosive physics repulsion.
 
+### 3.9 Infinite Mode (After the 50-Level Campaign)
+
+Status: built in the Unity port. The web prototype has no infinite mode.
+
+1. **Idea:** once the player has won all 50 levels, the game does not end. Each new round picks a random level from the existing levels 30 to 50 and plays it exactly like a campaign level (same layout, same quota, same coins). No new levels are made, and the campaign data is only read.
+2. **Unlock:** all of `level_1` to `level_50` are in the saved `completedSectors`. All levels are open from the start, so a player cannot skip ahead into infinite mode.
+3. **Entry:** there is no new button or screen. Winning level 50 once all 50 levels are done (including the first time), and then pressing Next, starts round 1. Home → Play does the same when all 50 are done. After that, Home → Play continues infinite mode. Opening a level from level select goes back to normal campaign play.
+4. **Picking:** `InfiniteMode.NextLevel` uses its own random source, never the shared game random, so existing game behaviour is not changed. The same level may come twice in a row.
+5. **Rounds:** the profile stores `infiniteRound` (the round being played, starting at 1) and `infiniteBest` (the highest round reached). Both are left out of the save file until infinite mode starts. A win adds 1 to the round. There are no lives: a failed round is retried with the normal retry button. If the player quits, Home → Play resumes at the saved round with a new random level.
+6. **Feedback:** when a round starts, a toast reads "Round N, best M! 🚀". There is no new trophy, and the shop still uses gold coins only.
+7. **Not covered:** nothing proves that every level from 30 to 50 can be beaten by a child. The tests only check that they build and run without errors.
+
 ---
 
 ## 4. The Daily Shift (Daily Mission System)
