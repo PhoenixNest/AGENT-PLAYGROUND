@@ -4,14 +4,14 @@ Draft, 2026-10-13. Standard Hindi in Devanagari. Address is तुम (खेल
 
 ## Coverage
 
-| | Count |
-| --- | ---: |
-| spec keys | 355 |
-| str keys | 81 |
-| validator errors | 0 |
-| visible warnings | 3 |
-| suppressed fit warnings | 11 |
-| accepted identical copies | 0 |
+|                           | Count |
+| ------------------------- | ----: |
+| spec keys                 |   355 |
+| str keys                  |    81 |
+| validator errors          |     0 |
+| visible warnings          |     3 |
+| suppressed fit warnings   |    11 |
+| accepted identical copies |     0 |
 
 Visible warnings: `fit` 2 (`Close`, `Nibbles Hats`), `font-pending` 1 (`Baloo2-700.ttf`). No glossary warnings. No expansion warnings. No identical-ok file: brand lines, `kg` strings, and strings with no letters stay English because the validator already allows them.
 
@@ -19,20 +19,20 @@ Visible warnings: `fit` 2 (`Close`, `Nibbles Hats`), `font-pending` 1 (`Baloo2-7
 
 ## Doubtful lines
 
-| English | Choice | Alternative |
-| --- | --- | --- |
-| `SHIFT INCOMPLETE!` | `पाली अभी बाकी!` | `पाली अधूरी!` |
-| `LOCKED` | `ताला` | `बंद` |
-| `Close` | `बंद करो` | `बंद` (drops the verb; 16px in the 32px box) |
-| `MISSION PAUSED` | `मिशन रुका` | `मिशन रोकें` (glossary आप-form; reads as a command) |
-| `Party Popper Hole` | `पार्टी पॉपर होल` | `कंफेटी होल` |
-| `Hangar` | `हैंगर` | `बेस` |
-| `Lost In Void` | `शून्य में खोया` | `खाली शून्य` |
-| `Nibbles the Void` | `शून्य Nibbles` | `खाली Nibbles` |
-| `{0} NEW` | `{0} नए` | `{0} नया` (1 नया / 2 नए / 3 नए are inflected; the template cannot agree) |
-| `Resets in {0}h {1}m` | `{0}h {1}m में रीसेट` | `{0} घंटे {1} मिनट में रीसेट` |
-| `Goal: Feed Nibbles 20 kg space snacks` | `लक्ष्य: Nibbles को 20 kg स्नैक्स खिलाओ` | `अंतरिक्ष स्नैक्स` was about 14px over the 233px line |
-| `Wear` | `पहनो` | glossary `पहनें` |
+| English                                 | Choice                                   | Alternative                                                              |
+| --------------------------------------- | ---------------------------------------- | ------------------------------------------------------------------------ |
+| `SHIFT INCOMPLETE!`                     | `पाली अभी बाकी!`                         | `पाली अधूरी!`                                                            |
+| `LOCKED`                                | `ताला`                                   | `बंद`                                                                    |
+| `Close`                                 | `बंद करो`                                | `बंद` (drops the verb; 16px in the 32px box)                             |
+| `MISSION PAUSED`                        | `मिशन रुका`                              | `मिशन रोकें` (glossary आप-form; reads as a command)                      |
+| `Party Popper Hole`                     | `पार्टी पॉपर होल`                        | `कंफेटी होल`                                                             |
+| `Hangar`                                | `हैंगर`                                  | `बेस`                                                                    |
+| `Lost In Void`                          | `शून्य में खोया`                         | `खाली शून्य`                                                             |
+| `Nibbles the Void`                      | `शून्य Nibbles`                          | `खाली Nibbles`                                                           |
+| `{0} NEW`                               | `{0} नए`                                 | `{0} नया` (1 नया / 2 नए / 3 नए are inflected; the template cannot agree) |
+| `Resets in {0}h {1}m`                   | `{0}h {1}m में रीसेट`                    | `{0} घंटे {1} मिनट में रीसेट`                                            |
+| `Goal: Feed Nibbles 20 kg space snacks` | `लक्ष्य: Nibbles को 20 kg स्नैक्स खिलाओ` | `अंतरिक्ष स्नैक्स` was about 14px over the 233px line                    |
+| `Wear`                                  | `पहनो`                                   | glossary `पहनें`                                                         |
 
 ## Glossary terms not used as recommended
 
@@ -40,14 +40,14 @@ Checked terms (`check: yes`) all matched. The validator reported no glossary war
 
 These `check: no` words were changed so the line stays तुम-form or grammatical:
 
-| Term | Recommendation | Used | Why |
-| --- | --- | --- | --- |
-| wear | पहनें | पहनो | पहनें is आप. The button is the तुम imperative. |
-| pause | रोकें | मिशन रुका | The banner is a state, not a command. रोकें would tell the player to pause. |
-| defeat | हार | not used | The fail line is `SHIFT INCOMPLETE!`. हार is harsher than the banner. |
-| map | नक्शा | नक्शे on `MAPS` and `CLEANUP MAPS` | Plural. `Next Map ▶` stays `अगला नक्शा`. |
-| ring | छल्ला | छल्ले / छल्लों where the grammar needs a plural or oblique | Singular छल्ला is the shop word `पुदीना कैंडी छल्ला`. |
-| space snacks | स्नैक्स | स्नैक्स, without अंतरिक्ष, on the one tight goal line | `अंतरिक्ष स्नैक्स` did not fit. Other space lines keep अंतरिक्ष. |
+| Term         | Recommendation | Used                                                       | Why                                                                         |
+| ------------ | -------------- | ---------------------------------------------------------- | --------------------------------------------------------------------------- |
+| wear         | पहनें          | पहनो                                                       | पहनें is आप. The button is the तुम imperative.                              |
+| pause        | रोकें          | मिशन रुका                                                  | The banner is a state, not a command. रोकें would tell the player to pause. |
+| defeat       | हार            | not used                                                   | The fail line is `SHIFT INCOMPLETE!`. हार is harsher than the banner.       |
+| map          | नक्शा          | नक्शे on `MAPS` and `CLEANUP MAPS`                         | Plural. `Next Map ▶` stays `अगला नक्शा`.                                    |
+| ring         | छल्ला          | छल्ले / छल्लों where the grammar needs a plural or oblique | Singular छल्ला is the shop word `पुदीना कैंडी छल्ला`.                       |
+| space snacks | स्नैक्स        | स्नैक्स, without अंतरिक्ष, on the one tight goal line      | `अंतरिक्ष स्नैक्स` did not fit. Other space lines keep अंतरिक्ष.            |
 
 `TROPHIES` is the singular glossary form `ट्रॉफी`. `ट्रॉफियाँ` does not contain that string, so the dock uses the singular.
 
@@ -59,14 +59,14 @@ These `check: no` words were changed so the line stays तुम-form or grammat
 
 `{0}` is never glued to a Devanagari letter or matra. No ordinal suffix (`{0}वाँ`) was used.
 
-| Key | Rephrase |
-| --- | --- |
-| `daily.countdown` | `{0}h {1}m में रीसेट`. The clock stays in Latin `h`/`m`. `{0}` starts the line. |
-| `toast.sector.cleanup` | `{0} साफ करो! 🚀`. The name is first so the verb can end the line. |
-| `pause.quota` | `लक्ष्य: Nibbles को {0} kg खिलाओ ({1}/{0} kg खाया)`. `{0}` sits next to a space or `/`. |
-| `home.mission.world_fallback` | `दुनिया {0}` with a space. |
-| `dock.daily.new` | `{0} नए` with a space. |
-| `shop.footer.unlock` | `अनलॉक ({0} 🪙)`. `{0}` follows `(`. |
+| Key                           | Rephrase                                                                                |
+| ----------------------------- | --------------------------------------------------------------------------------------- |
+| `daily.countdown`             | `{0}h {1}m में रीसेट`. The clock stays in Latin `h`/`m`. `{0}` starts the line.         |
+| `toast.sector.cleanup`        | `{0} साफ करो! 🚀`. The name is first so the verb can end the line.                      |
+| `pause.quota`                 | `लक्ष्य: Nibbles को {0} kg खिलाओ ({1}/{0} kg खाया)`. `{0}` sits next to a space or `/`. |
+| `home.mission.world_fallback` | `दुनिया {0}` with a space.                                                              |
+| `dock.daily.new`              | `{0} नए` with a space.                                                                  |
+| `shop.footer.unlock`          | `अनलॉक ({0} 🪙)`. `{0}` follows `(`.                                                    |
 
 Gift banner fragments, read in order:
 
@@ -77,9 +77,9 @@ The verb `लो` sits on the allowance fragment so the pair is verb-final. The 
 
 ## Fit that is still visible
 
-| Key | Estimate | Why it stays |
-| --- | --- | --- |
-| `Close` | 35px vs a 32px box, floor 45px | `बंद करो` is the verb. `बंद` fits and is not a verb. Shrink is about 93%. |
+| Key            | Estimate                       | Why it stays                                                                                                    |
+| -------------- | ------------------------------ | --------------------------------------------------------------------------------------------------------------- |
+| `Close`        | 35px vs a 32px box, floor 45px | `बंद करो` is the verb. `बंद` fits and is not a verb. Shrink is about 93%.                                       |
 | `Nibbles Hats` | 92px vs a 69px box, floor 96px | The checked phrase `Nibbles की टोपियाँ` is the whole string. Shrink is about 75%, above the 72% ellipsis floor. |
 
 `Moon Chute 1`–`10` (`चाँद फिसलपट्टी`) are about 1px over. Suppressed. The virama in `फिसलपट्टी` is counted at 0.40 em.

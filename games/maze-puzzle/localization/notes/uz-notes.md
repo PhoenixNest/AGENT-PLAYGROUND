@@ -6,13 +6,13 @@ Wording pass 2 follows the 2026-10-12 all-language audit. U+02BB was not changed
 
 ## Coverage
 
-| | Count |
-| --- | ---: |
-| spec keys | 355 |
-| str keys | 81 |
-| validator errors | 0 |
-| visible warnings | 54 |
-| suppressed fit warnings | 48 |
+|                         | Count |
+| ----------------------- | ----: |
+| spec keys               |   355 |
+| str keys                |    81 |
+| validator errors        |     0 |
+| visible warnings        |    54 |
+| suppressed fit warnings |    48 |
 
 Visible warnings by kind: `glossary` 52, `fit` 1, `font-pending` 1. No `stale`, `glyph`, `length`, `expansion`, `orthography`, or `balance` warnings.
 
@@ -34,31 +34,31 @@ The validator suppresses 47 of those chips (`LVL 1`, `LVL 21`, and `LVL 41` alre
 
 Every other previous suppression was removed and the string was shortened so the width model fits the box:
 
-| English | Before | After | Fit |
-| --- | --- | --- | --- |
-| `SHOP` | `doʻkon` | `bozor` | 33/30 warn, scale 0.90 → 28/30 |
-| `MAPS` | `xarita` | `karta` | 33/31 warn → 28/31 |
-| `Cyber Orbit 1`–`10` | `Kiber orbita N` | `Kiber davra N` | 79/73 warn → 73/73 |
-| `Kessler Hero` | `Kessler botir` | `Kessler mard` | 88/81 warn → 81/81 |
-| `Nibbles the Void` | `Boʻshliq Nibbles` | `Hechlik Nibbles` | 109/106 warn → 102/106 |
-| `Prize` | `Sovrin` | `Yutuq` | 39/34 warn → 33/34 |
-| `allowance.` | `choʻntak puli.` | `choʻntak.` | 73/55 warn, scale 0.75 → 48/55 |
-| `Allowance Claimed!` | `Choʻntak puli olindi!` | `Choʻntak olindi!` | 133/128 warn → 103/128 |
-| `care package!` | `sovgʻa qutisi!` | `sovgʻa quti!` | 73/72 warn → 62/72 |
-| `Resets in 14h 59m` | `14 soat 59 daqiqada` | `14 soat 59 daqiqa` | 93/82 warn → 82/82 |
+| English              | Before                  | After               | Fit                            |
+| -------------------- | ----------------------- | ------------------- | ------------------------------ |
+| `SHOP`               | `doʻkon`                | `bozor`             | 33/30 warn, scale 0.90 → 28/30 |
+| `MAPS`               | `xarita`                | `karta`             | 33/31 warn → 28/31             |
+| `Cyber Orbit 1`–`10` | `Kiber orbita N`        | `Kiber davra N`     | 79/73 warn → 73/73             |
+| `Kessler Hero`       | `Kessler botir`         | `Kessler mard`      | 88/81 warn → 81/81             |
+| `Nibbles the Void`   | `Boʻshliq Nibbles`      | `Hechlik Nibbles`   | 109/106 warn → 102/106         |
+| `Prize`              | `Sovrin`                | `Yutuq`             | 39/34 warn → 33/34             |
+| `allowance.`         | `choʻntak puli.`        | `choʻntak.`         | 73/55 warn, scale 0.75 → 48/55 |
+| `Allowance Claimed!` | `Choʻntak puli olindi!` | `Choʻntak olindi!`  | 133/128 warn → 103/128         |
+| `care package!`      | `sovgʻa qutisi!`        | `sovgʻa quti!`      | 73/72 warn → 62/72             |
+| `Resets in 14h 59m`  | `14 soat 59 daqiqada`   | `14 soat 59 daqiqa` | 93/82 warn → 82/82             |
 
 `CLEANUP MAPS` and `Next Map ▶` use `karta` as well, so the map label is one word. The prize sentence uses `yutuq`. `daily.countdown` uses `daqiqa`, matching the clock.
 
 ## Wording pass
 
-| English | Before | After | Why |
-| --- | --- | --- | --- |
-| `SHOP` | `doʻkon` | `bozor` | The dock drew `DOʻK…`. `bozor` fits the box and has no modifier letter, so the apostrophe gap cannot push it over. |
-| `TOY SHOP` | `OʻYINCHOQ` | `BOZOR` | Same shop word as the dock. The full glossary phrase does not fit the header. |
-| `✓ UNLOCKED` | `✓ OCHIQ` | `✓ OLINGAN` | `OCHIQ` means open. `OLINGAN` means obtained. `OLINDI` stays on claimed rewards. 57px in an 81px badge. |
-| `Close` | `Yop` | `Bekit` | `Bekit` is the full sen imperative and sits on the 33px budget. `Yopish` is 39px and warns. |
-| `Cancel` | `Bekor` | `Bekor` | `Bekor qil` is 51px against a 37px box and a 51px floor (scale 0.72), which is the ellipsis edge. |
-| `LVL N` | `Qism N` | `Qism N` | `Bosqich 5` is a fit error. No other stage word fits. |
+| English      | Before      | After       | Why                                                                                                                |
+| ------------ | ----------- | ----------- | ------------------------------------------------------------------------------------------------------------------ |
+| `SHOP`       | `doʻkon`    | `bozor`     | The dock drew `DOʻK…`. `bozor` fits the box and has no modifier letter, so the apostrophe gap cannot push it over. |
+| `TOY SHOP`   | `OʻYINCHOQ` | `BOZOR`     | Same shop word as the dock. The full glossary phrase does not fit the header.                                      |
+| `✓ UNLOCKED` | `✓ OCHIQ`   | `✓ OLINGAN` | `OCHIQ` means open. `OLINGAN` means obtained. `OLINDI` stays on claimed rewards. 57px in an 81px badge.            |
+| `Close`      | `Yop`       | `Bekit`     | `Bekit` is the full sen imperative and sits on the 33px budget. `Yopish` is 39px and warns.                        |
+| `Cancel`     | `Bekor`     | `Bekor`     | `Bekor qil` is 51px against a 37px box and a 51px floor (scale 0.72), which is the ellipsis edge.                  |
+| `LVL N`      | `Qism N`    | `Qism N`    | `Bosqich 5` is a fit error. No other stage word fits.                                                              |
 
 `PLAY` / `OʻYNA` is inside the model box (38/42). The audit shrink to 0.78 is the detached apostrophe, not a longer synonym. The character stays.
 
@@ -66,40 +66,40 @@ The reset body was ellipsized in the audit and is not the privacy modal. It is n
 
 ## Doubtful lines
 
-| Key | Choice | Alternative |
-| --- | --- | --- |
-| `LVL 1`–`LVL 50` | `Qism N` | `bosqich` is a fit error |
-| `SHOP` / `TOY SHOP` | `bozor` | `doʻkon` ellipsizes on the dock; `oʻyinchoq doʻkoni` does not fit the header |
-| `MAPS` | `karta` | `xarita` is 2px over the dock |
-| `Cyber Orbit N` | `Kiber davra N` | `orbita` stays in sentences; the level card cannot hold `Kiber orbita` |
-| `Nibbles Hats` | `Nibbles qalpoq` | `Qalpoqlar` fits and drops Nibbles |
-| `Nibbles the Void` | `Hechlik Nibbles` | `boʻshliq` is the place word (`boʻshliqda`) and is 3px over this title |
-| `Kessler Hero` | `Kessler mard` | `botir` is 7px over; `mard` means brave |
-| `Prize` | `Yutuq` | `sovrin` is 5px over the chip |
-| `allowance.` | `choʻntak.` | `choʻntak puli` crosses the floor; `nafaqa` is the stipend word |
-| `Close` | `Bekit` | `Yop` is a real stem imperative and looked clipped |
-| `Cancel` | `Bekor` | `Bekor qil` meets the shrink floor |
-| `Resets in 14h 59m` | `14 soat 59 daqiqa` | `daqiqada` was 11px over; the clock icon carries "in" |
-| `care package!` | `sovgʻa quti!` | `sovgʻa qutisi` stays on the longer title, which fits |
-| chute names | `sirpanma` | glossary `sirpanchiq` did not fit the cards |
-| `Skies` | `Osmon` | plural `osmonlar` crosses the shrink floor |
-| `Donut Rings` | `Donut halqa` | plural `donut halqalari` crosses the shrink floor |
-| `← Back` | `← Qayt` | `Orqaga` overflows; the arrow stays `←` |
+| Key                 | Choice              | Alternative                                                                  |
+| ------------------- | ------------------- | ---------------------------------------------------------------------------- |
+| `LVL 1`–`LVL 50`    | `Qism N`            | `bosqich` is a fit error                                                     |
+| `SHOP` / `TOY SHOP` | `bozor`             | `doʻkon` ellipsizes on the dock; `oʻyinchoq doʻkoni` does not fit the header |
+| `MAPS`              | `karta`             | `xarita` is 2px over the dock                                                |
+| `Cyber Orbit N`     | `Kiber davra N`     | `orbita` stays in sentences; the level card cannot hold `Kiber orbita`       |
+| `Nibbles Hats`      | `Nibbles qalpoq`    | `Qalpoqlar` fits and drops Nibbles                                           |
+| `Nibbles the Void`  | `Hechlik Nibbles`   | `boʻshliq` is the place word (`boʻshliqda`) and is 3px over this title       |
+| `Kessler Hero`      | `Kessler mard`      | `botir` is 7px over; `mard` means brave                                      |
+| `Prize`             | `Yutuq`             | `sovrin` is 5px over the chip                                                |
+| `allowance.`        | `choʻntak.`         | `choʻntak puli` crosses the floor; `nafaqa` is the stipend word              |
+| `Close`             | `Bekit`             | `Yop` is a real stem imperative and looked clipped                           |
+| `Cancel`            | `Bekor`             | `Bekor qil` meets the shrink floor                                           |
+| `Resets in 14h 59m` | `14 soat 59 daqiqa` | `daqiqada` was 11px over; the clock icon carries "in"                        |
+| `care package!`     | `sovgʻa quti!`      | `sovgʻa qutisi` stays on the longer title, which fits                        |
+| chute names         | `sirpanma`          | glossary `sirpanchiq` did not fit the cards                                  |
+| `Skies`             | `Osmon`             | plural `osmonlar` crosses the shrink floor                                   |
+| `Donut Rings`       | `Donut halqa`       | plural `donut halqalari` crosses the shrink floor                            |
+| `← Back`            | `← Qayt`            | `Orqaga` overflows; the arrow stays `←`                                      |
 
 ## Glossary terms not used as written
 
-| Term | Where | What was used | Addition requested |
-| --- | --- | --- | --- |
-| `bosqich` | `LVL` chips | `Qism` | a chip-length stage word, or accept `Qism` |
-| `oʻyinchoq doʻkoni` | shop chrome | `bozor` | a dock-length shop word; the sentence keeps the full phrase |
-| `Nibbles qalpoqlari` | hats tab | `Nibbles qalpoq` | accept the singular beside the name |
-| `xarita` | map chrome | `karta` | the dock cannot hold `xarita` |
-| `orbita` | `Cyber Orbit` titles | `davra` | a 5-letter orbit word, or a wider level card |
-| `sovrin` | prize chip | `yutuq` | a 5-letter prize word |
-| `sirpanchiq` | chute cards | `sirpanma` | a shorter slide word for cards |
-| `osmonlar` | `Skies` | `Osmon` | singular is the tab that fits |
-| `donut halqalari` | ring tab | `Donut halqa` | singular fits the tab |
-| `oltin tangalar` | `Coins Won` | `oltin tanga` | singular for the narrow stat; sentences keep the plural |
+| Term                 | Where                | What was used    | Addition requested                                          |
+| -------------------- | -------------------- | ---------------- | ----------------------------------------------------------- |
+| `bosqich`            | `LVL` chips          | `Qism`           | a chip-length stage word, or accept `Qism`                  |
+| `oʻyinchoq doʻkoni`  | shop chrome          | `bozor`          | a dock-length shop word; the sentence keeps the full phrase |
+| `Nibbles qalpoqlari` | hats tab             | `Nibbles qalpoq` | accept the singular beside the name                         |
+| `xarita`             | map chrome           | `karta`          | the dock cannot hold `xarita`                               |
+| `orbita`             | `Cyber Orbit` titles | `davra`          | a 5-letter orbit word, or a wider level card                |
+| `sovrin`             | prize chip           | `yutuq`          | a 5-letter prize word                                       |
+| `sirpanchiq`         | chute cards          | `sirpanma`       | a shorter slide word for cards                              |
+| `osmonlar`           | `Skies`              | `Osmon`          | singular is the tab that fits                               |
+| `donut halqalari`    | ring tab             | `Donut halqa`    | singular fits the tab                                       |
+| `oltin tangalar`     | `Coins Won`          | `oltin tanga`    | singular for the narrow stat; sentences keep the plural     |
 
 Checked terms that the line can hold are used: `temir parcha`, `sektor`, `dunyo`, `smena`, `zaxira kapsula`, `kunlik nafaqa`, `kunlik ishlar`, `kubok`, `koinot chiqindisi`, `koinot farroshi`, `qora tuynuk`. Backup Pod and Auxiliary Scrap Pod are both `zaxira kapsula`.
 

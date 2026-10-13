@@ -4,13 +4,13 @@ Neutral Latin-American Spanish, `tú` in sentences. Buttons that fit use the inf
 
 ## Coverage after the audit pass
 
-| | Count |
-| --- | ---: |
-| spec keys | 355 |
-| str keys | 81 |
-| validator errors | 0 |
-| visible warnings | 32 |
-| suppressed fit warnings | 50 |
+|                         | Count |
+| ----------------------- | ----: |
+| spec keys               |   355 |
+| str keys                |    81 |
+| validator errors        |     0 |
+| visible warnings        |    32 |
+| suppressed fit warnings |    50 |
 
 Visible warnings by kind: `fit` 28, `glossary` 4. The 50 suppressed warnings are `LVL 1`–`LVL 50` (glossary word nivel). No `stale`, `glyph`, `length`, or `expansion` warnings. `es-identical-ok.json` is empty: `Hangar` is now `Inicio`.
 
@@ -20,21 +20,21 @@ The visible count is the same as before this pass. Two fit warnings became gloss
 
 Measured with the kit width estimate (font size × average advance). The card title is narrower than the captured header box, so the daily title was shortened well past that box.
 
-| English | Before | After | Fit |
-| --- | --- | --- | --- |
-| `DAILY OPERATIONS` | `OPERACIONES DIARIAS` | `TURNOS DE HOY` | 158px over a 156px header, and the card ellipsized to `OPERACIONES DIARI…` at the 72% floor. After: 103px in the 156px header. |
-| `Try Again` | `Intenta` | `Otra vez` | 45px in a 55px box. Same word as `Play Again`. |
-| `PLAY` | `JUEGA` | `JUGAR` | 38px in a 42px box. Same width. |
-| `PLAY MISSION` | `JUEGA MISIÓN` | `JUGAR MISIÓN` | 110px in a 133px box. Same width. |
-| `Claim +100` | `Toma +100` | `Gana +100` | 49px in a 59px box. `Reclama +100` is 67px. |
-| `Claim +300` | `Toma +300` | `Gana +300` | 51px in a 62px box. |
-| `Close` | `Cierra` | `Cerrar` | 39px in a 32px box, under the 45px floor. Same width as `Cierra`. |
-| `Donut Rings` | `Anillos` | `Donas` | 30px in a 65px box. The donut is the tab. |
-| `SECTOR` | `Sector` | `Zona` | 20px in a 42px box. The chip was uppercased to `SECTOR`. |
-| `Hangar` | `Hangar` | `Inicio` | 36px in a 43px box. Defeat home button. |
-| `DAILY` | `Diario` | `Día` | 17px in a 32px box. Was 33px. |
-| `TROPHY ROOM` | `SALA DE TROFEOS` | `TROFEOS` | 60px in a 123px box. Was 120px and painted at 0.78. |
-| `RESET ALL PROGRESS?` | `¿BORRAR TODO EL PROGRESO?` | `¿BORRAR TODO?` | 101px in a 196px box. Was 195px and painted at 0.76. |
+| English               | Before                      | After           | Fit                                                                                                                            |
+| --------------------- | --------------------------- | --------------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| `DAILY OPERATIONS`    | `OPERACIONES DIARIAS`       | `TURNOS DE HOY` | 158px over a 156px header, and the card ellipsized to `OPERACIONES DIARI…` at the 72% floor. After: 103px in the 156px header. |
+| `Try Again`           | `Intenta`                   | `Otra vez`      | 45px in a 55px box. Same word as `Play Again`.                                                                                 |
+| `PLAY`                | `JUEGA`                     | `JUGAR`         | 38px in a 42px box. Same width.                                                                                                |
+| `PLAY MISSION`        | `JUEGA MISIÓN`              | `JUGAR MISIÓN`  | 110px in a 133px box. Same width.                                                                                              |
+| `Claim +100`          | `Toma +100`                 | `Gana +100`     | 49px in a 59px box. `Reclama +100` is 67px.                                                                                    |
+| `Claim +300`          | `Toma +300`                 | `Gana +300`     | 51px in a 62px box.                                                                                                            |
+| `Close`               | `Cierra`                    | `Cerrar`        | 39px in a 32px box, under the 45px floor. Same width as `Cierra`.                                                              |
+| `Donut Rings`         | `Anillos`                   | `Donas`         | 30px in a 65px box. The donut is the tab.                                                                                      |
+| `SECTOR`              | `Sector`                    | `Zona`          | 20px in a 42px box. The chip was uppercased to `SECTOR`.                                                                       |
+| `Hangar`              | `Hangar`                    | `Inicio`        | 36px in a 43px box. Defeat home button.                                                                                        |
+| `DAILY`               | `Diario`                    | `Día`           | 17px in a 32px box. Was 33px.                                                                                                  |
+| `TROPHY ROOM`         | `SALA DE TROFEOS`           | `TROFEOS`       | 60px in a 123px box. Was 120px and painted at 0.78.                                                                            |
+| `RESET ALL PROGRESS?` | `¿BORRAR TODO EL PROGRESO?` | `¿BORRAR TODO?` | 101px in a 196px box. Was 195px and painted at 0.76.                                                                           |
 
 `Gana` is also on `gift.button.claim`, the claimed state (`Ganado hoy`, `GANADO ✓`), and the two claim toasts. Longer lines still say `reclama` where `reclamar` fits.
 
@@ -47,22 +47,22 @@ Measured with the kit width estimate (font size × average advance). The card ti
 
 ## Warnings still left
 
-| Keys | Why it stays |
-| --- | --- |
-| `Cancel` | `Cancelar` is 48px in a 37px box, under the 51px floor. `Anular` fits and can be read as wipe. |
-| `Close` | `Cerrar` is 39px in a 32px box, under the 45px floor. No shorter close-verb. |
-| `Cyber Orbit 1`–`10` | `Órbita ciber` is about 6px over. `Ronda` fits and means a round, not an orbit. |
-| `DAILY OPERATIONS` | `TURNOS DE HOY` drops `operaciones diarias` so the card can stop ellipsizing. |
-| `FREE` | `GRATIS` is 27px in a 23px box, under the 32px floor. `Libre` means available, not free of charge. |
-| `Horizon Sector 1`–`9` | `Sector horizonte` is about 12px over. `sector` is required. |
-| `Kessler Hero` | `Héroe Kessler` is 88px in an 81px box, under the 112px floor. |
+| Keys                            | Why it stays                                                                                                            |
+| ------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| `Cancel`                        | `Cancelar` is 48px in a 37px box, under the 51px floor. `Anular` fits and can be read as wipe.                          |
+| `Close`                         | `Cerrar` is 39px in a 32px box, under the 45px floor. No shorter close-verb.                                            |
+| `Cyber Orbit 1`–`10`            | `Órbita ciber` is about 6px over. `Ronda` fits and means a round, not an orbit.                                         |
+| `DAILY OPERATIONS`              | `TURNOS DE HOY` drops `operaciones diarias` so the card can stop ellipsizing.                                           |
+| `FREE`                          | `GRATIS` is 27px in a 23px box, under the 32px floor. `Libre` means available, not free of charge.                      |
+| `Horizon Sector 1`–`9`          | `Sector horizonte` is about 12px over. `sector` is required.                                                            |
+| `Kessler Hero`                  | `Héroe Kessler` is 88px in an 81px box, under the 112px floor.                                                          |
 | `Launch Backup Pod (+8 Scrap!)` | `Cápsula de reserva (+8 chatarra)` is 192px in a 182px box, under the 253px floor. Both glossary words are in the line. |
-| `Nibbles Hats` | `Gorros Nibbles` is 81px in a 69px box, under the 96px floor. `gorros de Nibbles` crosses that floor. |
-| `Prize` | `Premio` is 39px in a 34px box, under the 47px floor. |
-| `SECTOR` | `Zona` does not contain `sector`. The uppercased chip was the English lookalike. |
-| `SHOP` | `Tienda` is 33px in a 30px box, under the 41px floor. Same word as the shop header. |
-| `TOY SHOP` | `TIENDA` does not contain `tienda de juguetes`. The sentence does. |
-| `Wear` | `Poner` is 30px in a 29px box, under the 40px floor. Glossary verb. |
+| `Nibbles Hats`                  | `Gorros Nibbles` is 81px in a 69px box, under the 96px floor. `gorros de Nibbles` crosses that floor.                   |
+| `Prize`                         | `Premio` is 39px in a 34px box, under the 47px floor.                                                                   |
+| `SECTOR`                        | `Zona` does not contain `sector`. The uppercased chip was the English lookalike.                                        |
+| `SHOP`                          | `Tienda` is 33px in a 30px box, under the 41px floor. Same word as the shop header.                                     |
+| `TOY SHOP`                      | `TIENDA` does not contain `tienda de juguetes`. The sentence does.                                                      |
+| `Wear`                          | `Poner` is 30px in a 29px box, under the 40px floor. Glossary verb.                                                     |
 
 ## Twelve least-sure keys
 

@@ -110,19 +110,19 @@ The lead writes the Translation Verification Report when the gates below pass. S
 ## Coverage
 
 | Locale | Strings | Translated | Errors | Stale | Glyph | Review |
-| --- | ---: | --- | ---: | ---: | ---: | --- |
-| de | 355 | 355 | 0 | 0 | 0 | done |
+| ------ | ------: | ---------- | -----: | ----: | ----: | ------ |
+| de     |     355 | 355        |      0 |     0 |     0 | done   |
 
 ## Automated QA
 
-| Check | Result |
-| --- | --- |
-| Placeholder integrity | pass / fail |
-| Missing and extra keys | pass / fail |
-| Untranslated copies | pass / fail |
-| Glyph check | pass / fail / pending font |
-| Pseudo-locale audit hard | 0 |
-| Real-table audit hard | 0 |
+| Check                    | Result                     |
+| ------------------------ | -------------------------- |
+| Placeholder integrity    | pass / fail                |
+| Missing and extra keys   | pass / fail                |
+| Untranslated copies      | pass / fail                |
+| Glyph check              | pass / fail / pending font |
+| Pseudo-locale audit hard | 0                          |
+| Real-table audit hard    | 0                          |
 
 ## Glossary and tone
 
@@ -139,15 +139,15 @@ Linguist attestation stays blank until a native reviewer has signed the notes. A
 
 All of these, or the TVR stays blocked:
 
-| Gate | Rule |
-| --- | --- |
-| Coverage | 100% of `spec` and `str` keys. No missing, empty, or untranslated strings outside the do-not-translate list. |
+| Gate      | Rule                                                                                                                                                 |
+| --------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Coverage  | 100% of `spec` and `str` keys. No missing, empty, or untranslated strings outside the do-not-translate list.                                         |
 | Validator | 0 errors. Fit warnings in `notes/<code>-fit-exceptions.json` and identical copies in `notes/<code>-identical-ok.json` are accepted and do not count. |
-| Glyphs | 0 `glyph` errors. A `font-pending` warning is allowed only for a language whose chain is still pending, and it is written in the TVR. |
-| Audit | Hard findings 0 on `qps` and on the real table. |
-| Stale | 0 `stale` warnings, or one waiver per key in the notes. |
-| Review | The 30-key sample is marked done by the user. |
-| Glossary | Warnings are triaged in the notes. They do not fail the exit code. An accepted exception is listed in the TVR. |
+| Glyphs    | 0 `glyph` errors. A `font-pending` warning is allowed only for a language whose chain is still pending, and it is written in the TVR.                |
+| Audit     | Hard findings 0 on `qps` and on the real table.                                                                                                      |
+| Stale     | 0 `stale` warnings, or one waiver per key in the notes.                                                                                              |
+| Review    | The 30-key sample is marked done by the user.                                                                                                        |
+| Glossary  | Warnings are triaged in the notes. They do not fail the exit code. An accepted exception is listed in the TVR.                                       |
 
 LQA severities from the skill, mapped onto this kit: a broken placeholder, an offensive line, or a wrong meaning is Critical (block). A glossary miss the lead does not accept, or a grammar error a player will see, is Major (fix before the TVR). A punctuation nit is Minor (next pass). A nicer synonym is a suggestion.
 

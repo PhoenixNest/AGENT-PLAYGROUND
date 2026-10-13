@@ -8,7 +8,7 @@ Paste this file to the agent for one language. Fill the target line and do not c
 
 ## Role
 
-You are the translation agent for one language of *Orbital Salvage: Space Trash Clean*. You produce a translation table and a notes file. You do not edit Unity, C#, or the English source. You follow this brief, `glossary.md`, and `key-index.csv`.
+You are the translation agent for one language of _Orbital Salvage: Space Trash Clean_. You produce a translation table and a notes file. You do not edit Unity, C#, or the English source. You follow this brief, `glossary.md`, and `key-index.csv`.
 
 The player is a child or a parent playing with a child. The tone is playful, warm, short, upbeat, and safe. No slang that will date. No sarcasm. Nibbles is a friend who is hungry, not a monster. A failed run is a gentle "not yet", not an insult.
 
@@ -22,22 +22,22 @@ You spin a ring to swallow space trash for Nibbles, a cartoon black hole. Coins 
 
 ## CSV columns
 
-| Column | Meaning |
-| --- | --- |
-| key | The English string. It is the JSON key. Copy it byte for byte. |
-| kind | `spec` (text captured from the UI) or `str` (a C# string). |
-| files | How many spec files use it, then the file names. |
-| element_ids | Up to five element ids. |
-| element_classes | Up to three CSS classes. |
-| fz | Font size in CSS px, such as `11px`. |
-| uppercase | `uppercase` when the renderer will uppercase the translation at runtime. Otherwise the first text-transform, usually `none`. |
-| max_width | The line box in CSS px (the captured run width, else the element width). Blank if unknown. |
-| chars | English length in Unicode code points. |
-| hasEmoji | `true` when the run contains an emoji, including `✓`. |
-| hasPlaceholderLike | `true` when digits are baked into the text (`105 kg`). This is not the same as `{0}`. |
-| group | The element id, or `file#index` when there is no id. Fragments of one element share a group. |
-| run_index | Which run inside the element. Several indexes mean several files. |
-| notes | `fragment` when the element has two or more text runs. `no-terminal-punct` when the key does not end with sentence punctuation. |
+| Column             | Meaning                                                                                                                         |
+| ------------------ | ------------------------------------------------------------------------------------------------------------------------------- |
+| key                | The English string. It is the JSON key. Copy it byte for byte.                                                                  |
+| kind               | `spec` (text captured from the UI) or `str` (a C# string).                                                                      |
+| files              | How many spec files use it, then the file names.                                                                                |
+| element_ids        | Up to five element ids.                                                                                                         |
+| element_classes    | Up to three CSS classes.                                                                                                        |
+| fz                 | Font size in CSS px, such as `11px`.                                                                                            |
+| uppercase          | `uppercase` when the renderer will uppercase the translation at runtime. Otherwise the first text-transform, usually `none`.    |
+| max_width          | The line box in CSS px (the captured run width, else the element width). Blank if unknown.                                      |
+| chars              | English length in Unicode code points.                                                                                          |
+| hasEmoji           | `true` when the run contains an emoji, including `✓`.                                                                           |
+| hasPlaceholderLike | `true` when digits are baked into the text (`105 kg`). This is not the same as `{0}`.                                           |
+| group              | The element id, or `file#index` when there is no id. Fragments of one element share a group.                                    |
+| run_index          | Which run inside the element. Several indexes mean several files.                                                               |
+| notes              | `fragment` when the element has two or more text runs. `no-terminal-punct` when the key does not end with sentence punctuation. |
 
 ## Output
 
@@ -71,24 +71,24 @@ Fit the line **without shrinking** when you can. If it will not fit, choose a sh
 
 The character budget is the English UTF-16 length times your expansion factor. The validator warns at 1.6× that budget and errors at 2.5× that budget. Latin languages also warn at 1.6× the raw English length and error at 2.5×, which is the same rule as `LocValidator.cs`.
 
-| Code | Factor | Why |
-| --- | ---: | --- |
-| de | 1.35 | Compounds and case endings. |
-| fr | 1.25 | French UI runs about a quarter longer. The no-break spaces add a little. |
-| es | 1.25 | Neutral Spanish UI. |
-| it | 1.20 | Slightly shorter than French and Spanish. |
-| pt-PT | 1.25 | European Portuguese, same band as Spanish. |
-| vi | 1.15 | Latin letters, modest growth. |
-| fil | 1.40 | Filipino phrases often run long. |
-| id | 1.20 | Indonesian stays compact. |
-| uz | 1.25 | Suffixes on a Latin base. |
-| zh-Hans | 0.55 | Character count. One ideograph is about one em, so 0.55× the English character count is about the same visual width. |
-| zh-Hant | 0.55 | Same as Simplified. |
-| ja | 0.80 | Kana keep the count higher than Chinese. |
-| ko | 0.75 | Hangul syllables are wide, but the words are shorter. |
-| hi | 1.30 | Devanagari code points include the vowel signs. |
-| km | 1.40 | Coeng clusters add code points. |
-| ar | 1.10 | Arabic is compact. Unshaped letters are a renderer limit, not a reason to write Latin. |
+| Code    | Factor | Why                                                                                                                  |
+| ------- | -----: | -------------------------------------------------------------------------------------------------------------------- |
+| de      |   1.35 | Compounds and case endings.                                                                                          |
+| fr      |   1.25 | French UI runs about a quarter longer. The no-break spaces add a little.                                             |
+| es      |   1.25 | Neutral Spanish UI.                                                                                                  |
+| it      |   1.20 | Slightly shorter than French and Spanish.                                                                            |
+| pt-PT   |   1.25 | European Portuguese, same band as Spanish.                                                                           |
+| vi      |   1.15 | Latin letters, modest growth.                                                                                        |
+| fil     |   1.40 | Filipino phrases often run long.                                                                                     |
+| id      |   1.20 | Indonesian stays compact.                                                                                            |
+| uz      |   1.25 | Suffixes on a Latin base.                                                                                            |
+| zh-Hans |   0.55 | Character count. One ideograph is about one em, so 0.55× the English character count is about the same visual width. |
+| zh-Hant |   0.55 | Same as Simplified.                                                                                                  |
+| ja      |   0.80 | Kana keep the count higher than Chinese.                                                                             |
+| ko      |   0.75 | Hangul syllables are wide, but the words are shorter.                                                                |
+| hi      |   1.30 | Devanagari code points include the vowel signs.                                                                      |
+| km      |   1.40 | Coeng clusters add code points.                                                                                      |
+| ar      |   1.10 | Arabic is compact. Unshaped letters are a renderer limit, not a reason to write Latin.                               |
 
 `ru` is not a target language.
 

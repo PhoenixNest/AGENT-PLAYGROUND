@@ -4,16 +4,16 @@ Release device build of `integration/i18n` at `10de22f`, checked on the USB iPho
 
 ## Build
 
-| | |
-| --- | --- |
-| Device | iphonex, iPhone10,3, iOS 16.7.10, udid `e881fa63cc3f392e4c7c0a79c65536daf00e711b` |
-| Phone language | `Language: en-US`, `Locale: en_US` (`ideviceinfo -q com.apple.international`) |
-| Export | `[IosExport] result=Succeeded sdk=DeviceSDK arch=unchanged frameTiming=1 output=.../output/maze-puzzle` |
-| Compile | no `error CS` |
-| Sign | `** BUILD SUCCEEDED **`. Manual, team `XS55JWXZMN`, identity Apple Development, profile `com.curiomatch.test` |
-| Install | `ideviceinstaller install` → `Install: Complete`. Listed as `com.curiomatch.test`, `1.0`, `maze-puzzle` |
-| Project bundle id | left `io.dev.maze`. Only the exported `project.pbxproj` was switched to `com.curiomatch.test` |
-| ProjectSettings | `ProjectSettings.asset` hash unchanged after the Unity export |
+|                   |                                                                                                               |
+| ----------------- | ------------------------------------------------------------------------------------------------------------- |
+| Device            | iphonex, iPhone10,3, iOS 16.7.10, udid `e881fa63cc3f392e4c7c0a79c65536daf00e711b`                             |
+| Phone language    | `Language: en-US`, `Locale: en_US` (`ideviceinfo -q com.apple.international`)                                 |
+| Export            | `[IosExport] result=Succeeded sdk=DeviceSDK arch=unchanged frameTiming=1 output=.../output/maze-puzzle`       |
+| Compile           | no `error CS`                                                                                                 |
+| Sign              | `** BUILD SUCCEEDED **`. Manual, team `XS55JWXZMN`, identity Apple Development, profile `com.curiomatch.test` |
+| Install           | `ideviceinstaller install` → `Install: Complete`. Listed as `com.curiomatch.test`, `1.0`, `maze-puzzle`       |
+| Project bundle id | left `io.dev.maze`. Only the exported `project.pbxproj` was switched to `com.curiomatch.test`                 |
+| ProjectSettings   | `ProjectSettings.asset` hash unchanged after the Unity export                                                 |
 
 The old `com.curiomatch.test` 1.0 was uninstalled first. Each language pass uninstalled and reinstalled again, so saved progress is gone.
 

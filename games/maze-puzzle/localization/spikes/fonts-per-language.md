@@ -4,11 +4,11 @@ Unity outline text can only draw **static TrueType `glyf`**. Every face below wa
 
 **Ship one new file per script, not per language.** Ten Latin languages share Fredoka + Nunito (already in the app) plus one Baloo 2 for Vietnamese, Uzbek, and Hindi. CJK is one face used for both display and body.
 
-| Plan | What it is | Added `.ttf` | gzip-9 |
-| --- | --- | ---: | ---: |
-| Low | ~800-glyph CJK, Do Hyeon, Huninn, shared Baloo 2 | 1.26 MB | 0.66 MB |
-| High, tighter | Safe sets, Noto TC instead of Huninn, Do Hyeon instead of Jua | 4.4 MB | 2.6 MB |
-| High, roundest | Safe sets, Huninn + Jua | 5.7 MB | 3.0 MB |
+| Plan           | What it is                                                    | Added `.ttf` |  gzip-9 |
+| -------------- | ------------------------------------------------------------- | -----------: | ------: |
+| Low            | ~800-glyph CJK, Do Hyeon, Huninn, shared Baloo 2              |      1.26 MB | 0.66 MB |
+| High, tighter  | Safe sets, Noto TC instead of Huninn, Do Hyeon instead of Jua |       4.4 MB |  2.6 MB |
+| High, roundest | Safe sets, Huninn + Jua                                       |       5.7 MB |  3.0 MB |
 
 "Added" does not include Fredoka, Nunito, or the two Noto symbol fonts already shipped. iPhone X is capped at raster scale 2 (`QualityGovernor.LowRamMb` = 3500).
 
@@ -16,18 +16,18 @@ Unity outline text can only draw **static TrueType `glyf`**. Every face below wa
 
 Evidence is `Assets/Scripts/Render/TrueTypeFont.cs` unless noted.
 
-| Feature | Supported? | Evidence |
-| --- | --- | --- |
-| TrueType `glyf` + `loca` (simple glyphs) | Yes, required. Missing `glyf` throws. | Constructor comment lines 19–21; `Table("glyf")` at line 69 |
-| CFF / CFF2 / OTTO `.otf` | No. The sfnt magic is not checked (table count is read at offset 4, line 46), then `glyf` is required. | line 69 |
-| Variable fonts (`fvar` / `gvar` / `CFF2`) | No. Nothing reads `fvar`. A variable file would draw the default master only, which is often weight 100 or 400, not bold. | no `fvar` references in the file |
-| cmap | Format **4 and 12 only**, Unicode platform 0, or platform 3 encoding 1 or 10. Format 12 is preferred, then format 4. Format 14 (UVS) is ignored. | lines 78–81, 108–110 |
-| Composite glyphs | Yes, to depth 6, including uniform scale, xy scale, and a 2×2. | lines 174–177, 224–253 |
-| Point-attached composites (`ARGS_ARE_XY_VALUES` clear) | No. Offsets become 0. | lines 232 and 237 |
-| GSUB | Only scripts `latn` then `DFLT`, default language. Features `ccmp` and `liga` only. Lookup types 4 (ligature) and 2 (multiple), plus extension type 7. Types 1, 3, and 6 are not applied. | lines 263–269, 398–401 |
-| GPOS | Only `kern` on `latn`/`DFLT`. Lookup type 2 formats 1 and 2, extension type 9. No mark, cursive, or kern-table. | lines 83–84, 329–348 |
-| Hinting, `name`, bitmap, SVG, COLR, TTC collections | Not read. A `.ttc` header is not parsed. | table load list lines 52–69 |
-| OS/2 | Optional. `sTypoAscender` / `sTypoDescender` at offsets 68 and 70 drive top/middle/bottom baselines. If the table is absent, hhea metrics are used. | lines 60–64; baselines in `Canvas2D.OutlineText.cs` lines 176–180 |
+| Feature                                                | Supported?                                                                                                                                                                                | Evidence                                                          |
+| ------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------- |
+| TrueType `glyf` + `loca` (simple glyphs)               | Yes, required. Missing `glyf` throws.                                                                                                                                                     | Constructor comment lines 19–21; `Table("glyf")` at line 69       |
+| CFF / CFF2 / OTTO `.otf`                               | No. The sfnt magic is not checked (table count is read at offset 4, line 46), then `glyf` is required.                                                                                    | line 69                                                           |
+| Variable fonts (`fvar` / `gvar` / `CFF2`)              | No. Nothing reads `fvar`. A variable file would draw the default master only, which is often weight 100 or 400, not bold.                                                                 | no `fvar` references in the file                                  |
+| cmap                                                   | Format **4 and 12 only**, Unicode platform 0, or platform 3 encoding 1 or 10. Format 12 is preferred, then format 4. Format 14 (UVS) is ignored.                                          | lines 78–81, 108–110                                              |
+| Composite glyphs                                       | Yes, to depth 6, including uniform scale, xy scale, and a 2×2.                                                                                                                            | lines 174–177, 224–253                                            |
+| Point-attached composites (`ARGS_ARE_XY_VALUES` clear) | No. Offsets become 0.                                                                                                                                                                     | lines 232 and 237                                                 |
+| GSUB                                                   | Only scripts `latn` then `DFLT`, default language. Features `ccmp` and `liga` only. Lookup types 4 (ligature) and 2 (multiple), plus extension type 7. Types 1, 3, and 6 are not applied. | lines 263–269, 398–401                                            |
+| GPOS                                                   | Only `kern` on `latn`/`DFLT`. Lookup type 2 formats 1 and 2, extension type 9. No mark, cursive, or kern-table.                                                                           | lines 83–84, 329–348                                              |
+| Hinting, `name`, bitmap, SVG, COLR, TTC collections    | Not read. A `.ttc` header is not parsed.                                                                                                                                                  | table load list lines 52–69                                       |
+| OS/2                                                   | Optional. `sTypoAscender` / `sTypoDescender` at offsets 68 and 70 drive top/middle/bottom baselines. If the table is absent, hhea metrics are used.                                       | lines 60–64; baselines in `Canvas2D.OutlineText.cs` lines 176–180 |
 
 Chain, today (`OutlineFonts.cs` lines 47–61, `Canvas2D.OutlineText.cs` lines 95–101):
 
@@ -48,20 +48,20 @@ All files below are `glyf` TrueType (variable fonts included). None of the recom
 
 Source root: `https://github.com/google/fonts/tree/main/`.
 
-| Group | Primary | Fallback | Weights | Licence preamble | Download |
-| --- | --- | --- | --- | --- | --- |
-| Latin display (vi, uz, and Hindi) | **Baloo 2** | Nunito (already shipped) | axis 400–800. Ship 700. No 900. | Copyright 2019 The Baloo 2 Project Authors (https://github.com/EkType/Baloo2). OFL 1.1. | `ofl/baloo2/Baloo2[wght].ttf` |
-| Latin body, all Latin languages | **Nunito** (keep) | symbols | 700/800/900 already shipped. The repo `Nunito-700.ttf` is the full 1103-glyph face and already contains `ơ ư ă đ`. | already `Nunito-OFL.txt` | no new file |
-| Western Latin display | **Fredoka** (keep) | Nunito | 400/600/700. Full Google Fonts variable is only 335 glyphs. | already `Fredoka-OFL.txt` | no new file |
-| Cyrillic (not a target) | Nunito | none of Fredoka or Baloo 2 | Nunito covers Russian-range Cyrillic; 165 of 892 assigned block letters are missing (extensions). | same | — |
-| Simplified Chinese | **ZCOOL KuaiLe** | Noto Sans SC | One file, OS/2 weight **400**. No bold master. Covers all 3755 GB2312 level-1 hanzi. | Copyright 2018 The ZCOOL KuaiLe Project Authors (https://github.com/googlefonts/zcool-kuaile). OFL. | `ofl/zcoolkuaile/ZCOOLKuaiLe-Regular.ttf` (1.5 MB full) |
-| Traditional Chinese | **Huninn** | Noto Sans TC | One file, weight **400**. Rounded. Misses 48 of 5401 Big5 frequent hanzi (4 of those sit in the first 800 of that order). | Copyright 2025 The Huninn Project Authors (https://github.com/justfont/Huninn). OFL. `ofl/huninn/` | `ofl/huninn/Huninn-Regular.ttf` (4.7 MB full) |
-| Japanese | **M PLUS Rounded 1c Bold** | Zen Maru Gothic Bold | Real weight **700**. ExtraBold 800 and Black 900 exist as sibling files (not sized). Covers all 2136 jōyō including `𠮟` U+20B9F. | OFL stated in the font (name IDs 0 and 13) and in `METADATA.pb` (`license: "OFL"`). **`OFL.txt` is missing** from `ofl/mplusrounded1c/`. Copyright 2016 The Rounded M+ Project Authors. | `ofl/mplusrounded1c/MPLUSRounded1c-Bold.ttf` (3.5 MB full) |
-| Japanese fallback | Zen Maru Gothic Bold | Noto Sans JP | Weight 700. Black 900 exists. Misses 4 jōyō: `塡剝頰` and `𠮟`. | Copyright 2021 The Zen Maru Gothic Project Authors. OFL file is present. | `ofl/zenmarugothic/ZenMaruGothic-Bold.ttf` |
-| Korean | **Jua** for the look, **Do Hyeon** if the safe set must be small | the other one | Both are a single weight-400 file. Both contain all 2350 KS X 1001 syllables. Jua is rounder and much heavier in bytes and contour points. | Jua: Copyright 2018 The Jua Project Authors. Do Hyeon: Copyright 2018 The Do Hyeon Project Authors. Both OFL. | `ofl/jua/Jua-Regular.ttf`, `ofl/dohyeon/DoHyeon-Regular.ttf` |
-| Hindi | **Baloo 2** (same file as Latin) | Noto Sans Devanagari | Baloo 2 GSUB/GPOS scripts include `deva` and `dev2`. Core alphabet `अ`–`ह` plus matras is present. | same Baloo 2 OFL. Noto: Copyright 2022 The Noto Project Authors (https://github.com/notofonts/devanagari). | Noto: `ofl/notosansdevanagari/NotoSansDevanagari[wdth,wght].ttf` |
-| Khmer | **Kantumruy Pro** | Battambang Bold | Axis 100–700. GSUB/GPOS script `khmr`. Core letters present. Battambang also has Black 900; its GPOS is only `DFLT`. | Copyright 2022 The Kantumruy Pro Project Authors (https://github.com/googlefonts/kantumruy). Battambang: Copyright 2019 The Battambang Project Authors. | `ofl/kantumruypro/KantumruyPro[wght].ttf` |
-| Arabic | **Cairo** | Baloo Bhaijaan 2 | Cairo axis weight 200–1000, slant −11–11 (pin slant to 0). GSUB/GPOS scripts `arab` and `latn`. Core letters `ا`–`ي` present. | Copyright 2009 The Cairo Project Authors (https://github.com/Gue3bara/Cairo). Bhaijaan: Copyright 2019 The Baloo 2 Project Authors. | `ofl/cairo/Cairo[slnt,wght].ttf` |
+| Group                             | Primary                                                          | Fallback                   | Weights                                                                                                                                    | Licence preamble                                                                                                                                                                        | Download                                                         |
+| --------------------------------- | ---------------------------------------------------------------- | -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------- |
+| Latin display (vi, uz, and Hindi) | **Baloo 2**                                                      | Nunito (already shipped)   | axis 400–800. Ship 700. No 900.                                                                                                            | Copyright 2019 The Baloo 2 Project Authors (https://github.com/EkType/Baloo2). OFL 1.1.                                                                                                 | `ofl/baloo2/Baloo2[wght].ttf`                                    |
+| Latin body, all Latin languages   | **Nunito** (keep)                                                | symbols                    | 700/800/900 already shipped. The repo `Nunito-700.ttf` is the full 1103-glyph face and already contains `ơ ư ă đ`.                         | already `Nunito-OFL.txt`                                                                                                                                                                | no new file                                                      |
+| Western Latin display             | **Fredoka** (keep)                                               | Nunito                     | 400/600/700. Full Google Fonts variable is only 335 glyphs.                                                                                | already `Fredoka-OFL.txt`                                                                                                                                                               | no new file                                                      |
+| Cyrillic (not a target)           | Nunito                                                           | none of Fredoka or Baloo 2 | Nunito covers Russian-range Cyrillic; 165 of 892 assigned block letters are missing (extensions).                                          | same                                                                                                                                                                                    | —                                                                |
+| Simplified Chinese                | **ZCOOL KuaiLe**                                                 | Noto Sans SC               | One file, OS/2 weight **400**. No bold master. Covers all 3755 GB2312 level-1 hanzi.                                                       | Copyright 2018 The ZCOOL KuaiLe Project Authors (https://github.com/googlefonts/zcool-kuaile). OFL.                                                                                     | `ofl/zcoolkuaile/ZCOOLKuaiLe-Regular.ttf` (1.5 MB full)          |
+| Traditional Chinese               | **Huninn**                                                       | Noto Sans TC               | One file, weight **400**. Rounded. Misses 48 of 5401 Big5 frequent hanzi (4 of those sit in the first 800 of that order).                  | Copyright 2025 The Huninn Project Authors (https://github.com/justfont/Huninn). OFL. `ofl/huninn/`                                                                                      | `ofl/huninn/Huninn-Regular.ttf` (4.7 MB full)                    |
+| Japanese                          | **M PLUS Rounded 1c Bold**                                       | Zen Maru Gothic Bold       | Real weight **700**. ExtraBold 800 and Black 900 exist as sibling files (not sized). Covers all 2136 jōyō including `𠮟` U+20B9F.          | OFL stated in the font (name IDs 0 and 13) and in `METADATA.pb` (`license: "OFL"`). **`OFL.txt` is missing** from `ofl/mplusrounded1c/`. Copyright 2016 The Rounded M+ Project Authors. | `ofl/mplusrounded1c/MPLUSRounded1c-Bold.ttf` (3.5 MB full)       |
+| Japanese fallback                 | Zen Maru Gothic Bold                                             | Noto Sans JP               | Weight 700. Black 900 exists. Misses 4 jōyō: `塡剝頰` and `𠮟`.                                                                            | Copyright 2021 The Zen Maru Gothic Project Authors. OFL file is present.                                                                                                                | `ofl/zenmarugothic/ZenMaruGothic-Bold.ttf`                       |
+| Korean                            | **Jua** for the look, **Do Hyeon** if the safe set must be small | the other one              | Both are a single weight-400 file. Both contain all 2350 KS X 1001 syllables. Jua is rounder and much heavier in bytes and contour points. | Jua: Copyright 2018 The Jua Project Authors. Do Hyeon: Copyright 2018 The Do Hyeon Project Authors. Both OFL.                                                                           | `ofl/jua/Jua-Regular.ttf`, `ofl/dohyeon/DoHyeon-Regular.ttf`     |
+| Hindi                             | **Baloo 2** (same file as Latin)                                 | Noto Sans Devanagari       | Baloo 2 GSUB/GPOS scripts include `deva` and `dev2`. Core alphabet `अ`–`ह` plus matras is present.                                         | same Baloo 2 OFL. Noto: Copyright 2022 The Noto Project Authors (https://github.com/notofonts/devanagari).                                                                              | Noto: `ofl/notosansdevanagari/NotoSansDevanagari[wdth,wght].ttf` |
+| Khmer                             | **Kantumruy Pro**                                                | Battambang Bold            | Axis 100–700. GSUB/GPOS script `khmr`. Core letters present. Battambang also has Black 900; its GPOS is only `DFLT`.                       | Copyright 2022 The Kantumruy Pro Project Authors (https://github.com/googlefonts/kantumruy). Battambang: Copyright 2019 The Battambang Project Authors.                                 | `ofl/kantumruypro/KantumruyPro[wght].ttf`                        |
+| Arabic                            | **Cairo**                                                        | Baloo Bhaijaan 2           | Cairo axis weight 200–1000, slant −11–11 (pin slant to 0). GSUB/GPOS scripts `arab` and `latn`. Core letters `ا`–`ي` present.              | Copyright 2009 The Cairo Project Authors (https://github.com/Gue3bara/Cairo). Bhaijaan: Copyright 2019 The Baloo 2 Project Authors.                                                     | `ofl/cairo/Cairo[slnt,wght].ttf`                                 |
 
 Rejected or demoted:
 
@@ -89,22 +89,22 @@ Bytes are the subset with hinting off, `name` / `post` / OS/2 dropped, cmap form
 
 ### Latin, Hindi, Arabic, Khmer
 
-| Face | Set | Glyphs | Assigned missing | `.ttf` | gzip-9 |
-| --- | --- | ---: | ---: | ---: | ---: |
-| Fredoka 700 | Latin blocks above | 218 | 382 (no Vietnamese) | 22.9 KiB | 14.1 KiB |
-| Nunito 700, layout dropped | Latin + Extended-B | 665 | horn letters present | 42.4 KiB | 20.9 KiB |
-| Nunito 700, **layout kept** | same | 758 | same | 60.8 KiB | 29.1 KiB |
-| Baloo 2 700, layout dropped | Latin + Extended-B | 611 | horn letters present | 47.1 KiB | 23.1 KiB |
-| Baloo 2 700, **layout kept** | Latin + Devanagari blocks | 1481 | core `deva` present | **378.8 KiB** | **142.3 KiB** |
-| Noto Sans Devanagari 700 | Devanagari block, layout kept | 841 | 5 | 175.7 KiB | 72.3 KiB |
-| Cairo 700 (slant 0) | Arabic blocks, layout kept | 525 | core letters present | **51.8 KiB** | **26.1 KiB** |
-| Cairo 900 | same | 525 | same | 51.8 KiB | 26.2 KiB |
-| Baloo Bhaijaan 2 700 | same | 640 | core letters present | 78.5 KiB | 40.3 KiB |
-| Tajawal Bold | same | 293 | core letters present | 35.1 KiB | 17.6 KiB |
-| Noto Sans Arabic 700 | same | 820 | 3 (the UI arrows) | 87.7 KiB | 46.8 KiB |
-| Kantumruy Pro 700 | Khmer blocks, layout kept | 376 | core letters present | **64.8 KiB** | **28.1 KiB** |
-| Battambang Bold | same | 352 | core letters present | 55.9 KiB | 24.9 KiB |
-| Noto Sans Khmer 700 | same | 441 | 3 | 78.4 KiB | 30.0 KiB |
+| Face                         | Set                           | Glyphs |     Assigned missing |        `.ttf` |        gzip-9 |
+| ---------------------------- | ----------------------------- | -----: | -------------------: | ------------: | ------------: |
+| Fredoka 700                  | Latin blocks above            |    218 |  382 (no Vietnamese) |      22.9 KiB |      14.1 KiB |
+| Nunito 700, layout dropped   | Latin + Extended-B            |    665 | horn letters present |      42.4 KiB |      20.9 KiB |
+| Nunito 700, **layout kept**  | same                          |    758 |                 same |      60.8 KiB |      29.1 KiB |
+| Baloo 2 700, layout dropped  | Latin + Extended-B            |    611 | horn letters present |      47.1 KiB |      23.1 KiB |
+| Baloo 2 700, **layout kept** | Latin + Devanagari blocks     |   1481 |  core `deva` present | **378.8 KiB** | **142.3 KiB** |
+| Noto Sans Devanagari 700     | Devanagari block, layout kept |    841 |                    5 |     175.7 KiB |      72.3 KiB |
+| Cairo 700 (slant 0)          | Arabic blocks, layout kept    |    525 | core letters present |  **51.8 KiB** |  **26.1 KiB** |
+| Cairo 900                    | same                          |    525 |                 same |      51.8 KiB |      26.2 KiB |
+| Baloo Bhaijaan 2 700         | same                          |    640 | core letters present |      78.5 KiB |      40.3 KiB |
+| Tajawal Bold                 | same                          |    293 | core letters present |      35.1 KiB |      17.6 KiB |
+| Noto Sans Arabic 700         | same                          |    820 |    3 (the UI arrows) |      87.7 KiB |      46.8 KiB |
+| Kantumruy Pro 700            | Khmer blocks, layout kept     |    376 | core letters present |  **64.8 KiB** |  **28.1 KiB** |
+| Battambang Bold              | same                          |    352 | core letters present |      55.9 KiB |      24.9 KiB |
+| Noto Sans Khmer 700          | same                          |    441 |                    3 |      78.4 KiB |      30.0 KiB |
 
 Nunito with layout kept is **smaller** than the shipped `Nunito-700.ttf` (129.2 KiB × 3 weights). Re-subsetting is optional and is not required for Vietnamese body text.
 
@@ -112,35 +112,35 @@ Keeping Latin `latn` GSUB/GPOS matters: the loader applies `ccmp`, `liga`, and `
 
 ### CJK
 
-| Face | Set | Glyphs | Assigned missing | `.ttf` | gzip-9 |
-| --- | --- | ---: | ---: | ---: | ---: |
-| ZCOOL KuaiLe | GB2312 level 1 (3755) | 3969 | 0 hanzi (51 are punctuation/arrows) | **739.1 KiB** | **554.8 KiB** |
-| ZCOOL KuaiLe | first 800 + punctuation | 1014 | same punctuation | 167.9 KiB | 127.1 KiB |
-| Noto Sans SC 700 | GB2312 level 1 | 4018 | 0 | 1092.9 KiB | 730.1 KiB |
-| Noto Sans SC 700 | first 800 | 1063 | 0 | 255.8 KiB | 176.0 KiB |
-| Huninn | Big5 frequent (5401) | 5578 | 48 hanzi | **2193.1 KiB** | **1371.7 KiB** |
-| Huninn | first 800 | 1021 | 4 of those hanzi, plus punctuation | 225.4 KiB | 147.3 KiB |
-| Noto Sans TC 700 | Big5 frequent | 5664 | 0 | 1806.8 KiB | 1163.7 KiB |
-| Noto Sans TC 700 | first 800 | 1063 | 0 | 185.0 KiB | 127.7 KiB |
-| M PLUS Rounded 1c Bold | 2136 jōyō + kana | 2567 | 0 kanji (cmap **4 and 12**) | **1157.7 KiB** | **594.8 KiB** |
-| M PLUS Rounded 1c Bold | ~800-glyph probe | 823 | 0 of that probe | 307.2 KiB | 167.0 KiB |
-| Zen Maru Gothic Bold | jōyō + kana | 2538 | 4 (`塡剝頰𠮟`) | 1012.5 KiB | 607.2 KiB |
-| Kosugi Maru | jōyō + kana | 2526 | same 4 | 974.3 KiB | 588.7 KiB |
-| Noto Sans JP 700 | jōyō + kana | 2589 | 0 (cmap 4 and 12) | 683.0 KiB | 433.8 KiB |
-| Jua | 2350 KS X 1001 | 2445 | 0 syllables (punctuation holes) | **1281.9 KiB** | **353.4 KiB** |
-| Jua | first 800 syllables | 895 | 0 syllables | 437.1 KiB | 130.7 KiB |
-| Do Hyeon | 2350 KS X 1001 | 2544 | 0 syllables | **298.0 KiB** | **121.1 KiB** |
-| Do Hyeon | first 800 syllables | 994 | 0 syllables | 98.0 KiB | 42.4 KiB |
-| Noto Sans KR 700 | 2350 KS X 1001 | 2614 | 0 | 427.7 KiB | 201.9 KiB |
+| Face                   | Set                     | Glyphs |                    Assigned missing |         `.ttf` |         gzip-9 |
+| ---------------------- | ----------------------- | -----: | ----------------------------------: | -------------: | -------------: |
+| ZCOOL KuaiLe           | GB2312 level 1 (3755)   |   3969 | 0 hanzi (51 are punctuation/arrows) |  **739.1 KiB** |  **554.8 KiB** |
+| ZCOOL KuaiLe           | first 800 + punctuation |   1014 |                    same punctuation |      167.9 KiB |      127.1 KiB |
+| Noto Sans SC 700       | GB2312 level 1          |   4018 |                                   0 |     1092.9 KiB |      730.1 KiB |
+| Noto Sans SC 700       | first 800               |   1063 |                                   0 |      255.8 KiB |      176.0 KiB |
+| Huninn                 | Big5 frequent (5401)    |   5578 |                            48 hanzi | **2193.1 KiB** | **1371.7 KiB** |
+| Huninn                 | first 800               |   1021 |  4 of those hanzi, plus punctuation |      225.4 KiB |      147.3 KiB |
+| Noto Sans TC 700       | Big5 frequent           |   5664 |                                   0 |     1806.8 KiB |     1163.7 KiB |
+| Noto Sans TC 700       | first 800               |   1063 |                                   0 |      185.0 KiB |      127.7 KiB |
+| M PLUS Rounded 1c Bold | 2136 jōyō + kana        |   2567 |         0 kanji (cmap **4 and 12**) | **1157.7 KiB** |  **594.8 KiB** |
+| M PLUS Rounded 1c Bold | ~800-glyph probe        |    823 |                     0 of that probe |      307.2 KiB |      167.0 KiB |
+| Zen Maru Gothic Bold   | jōyō + kana             |   2538 |                      4 (`塡剝頰𠮟`) |     1012.5 KiB |      607.2 KiB |
+| Kosugi Maru            | jōyō + kana             |   2526 |                              same 4 |      974.3 KiB |      588.7 KiB |
+| Noto Sans JP 700       | jōyō + kana             |   2589 |                   0 (cmap 4 and 12) |      683.0 KiB |      433.8 KiB |
+| Jua                    | 2350 KS X 1001          |   2445 |     0 syllables (punctuation holes) | **1281.9 KiB** |  **353.4 KiB** |
+| Jua                    | first 800 syllables     |    895 |                         0 syllables |      437.1 KiB |      130.7 KiB |
+| Do Hyeon               | 2350 KS X 1001          |   2544 |                         0 syllables |  **298.0 KiB** |  **121.1 KiB** |
+| Do Hyeon               | first 800 syllables     |    994 |                         0 syllables |       98.0 KiB |       42.4 KiB |
+| Noto Sans KR 700       | 2350 KS X 1001          |   2614 |                                   0 |      427.7 KiB |      201.9 KiB |
 
 `--retain-gids` keeps source glyph ids. Useful only if something bakes ids from the **unsubsetted** font. If HarfBuzz shapes against the subset, it is pure overhead:
 
-| Face | Without | With `--retain-gids` | Glyph slots |
-| --- | ---: | ---: | --- |
-| Tajawal Bold | 35.1 KiB | 36.1 KiB | 293 → 474 |
-| Noto Sans Arabic 700 | 87.7 KiB | 93.4 KiB | 820 → 1705 |
-| ZCOOL, 800 set | 167.9 KiB | 215.1 KiB | 1014 → 7050 (the source font's gid space) |
-| M PLUS, 800 set | 307.2 KiB | 364.2 KiB | 823 → 7937 |
+| Face                 |   Without | With `--retain-gids` | Glyph slots                               |
+| -------------------- | --------: | -------------------: | ----------------------------------------- |
+| Tajawal Bold         |  35.1 KiB |             36.1 KiB | 293 → 474                                 |
+| Noto Sans Arabic 700 |  87.7 KiB |             93.4 KiB | 820 → 1705                                |
+| ZCOOL, 800 set       | 167.9 KiB |            215.1 KiB | 1014 → 7050 (the source font's gid space) |
+| M PLUS, 800 set      | 307.2 KiB |            364.2 KiB | 823 → 7937                                |
 
 Do not pass `--retain-gids`. Pre-shape against the subset file.
 
@@ -148,17 +148,17 @@ Do not pass `--retain-gids`. Pre-shape against the subset file.
 
 Fallback chain is the order to implement. It is **not** what `OutlineFonts.Primary` does today.
 
-| Languages | Display | Body | Chain | New file |
-| --- | --- | --- | --- | --- |
-| en, de, fr, es, it, pt-PT, fil, id | Fredoka 600/700 (existing) | Nunito 700/800/900 (existing) | Fredoka → Nunito → Symbols2 → Symbols | none |
-| vi, uz | Baloo 2 **700** | Nunito (existing; already has Vietnamese) | Baloo 2 → Nunito → Symbols2 → Symbols | Baloo 2 |
-| hi | Baloo 2 **700** | Baloo 2 **700** | Baloo 2 → Nunito → Symbols2 → Symbols | same Baloo 2 file |
-| zh-Hans | ZCOOL KuaiLe | same | ZCOOL → Nunito → Symbols2 → Symbols | ZCOOL |
-| zh-Hant | Huninn | same | Huninn → Nunito → Symbols2 → Symbols | Huninn |
-| ja | M PLUS Rounded 1c **700** | same | M PLUS → Nunito → Symbols2 → Symbols | M PLUS Bold |
-| ko | Jua (or Do Hyeon) | same | Jua → Nunito → Symbols2 → Symbols | one Korean file |
-| km | Kantumruy Pro **700** | same | Kantumruy → Nunito → Symbols2 → Symbols | Kantumruy |
-| ar | Cairo **700**, slant 0 | same | Cairo → Nunito → Symbols2 → Symbols | Cairo |
+| Languages                          | Display                    | Body                                      | Chain                                   | New file          |
+| ---------------------------------- | -------------------------- | ----------------------------------------- | --------------------------------------- | ----------------- |
+| en, de, fr, es, it, pt-PT, fil, id | Fredoka 600/700 (existing) | Nunito 700/800/900 (existing)             | Fredoka → Nunito → Symbols2 → Symbols   | none              |
+| vi, uz                             | Baloo 2 **700**            | Nunito (existing; already has Vietnamese) | Baloo 2 → Nunito → Symbols2 → Symbols   | Baloo 2           |
+| hi                                 | Baloo 2 **700**            | Baloo 2 **700**                           | Baloo 2 → Nunito → Symbols2 → Symbols   | same Baloo 2 file |
+| zh-Hans                            | ZCOOL KuaiLe               | same                                      | ZCOOL → Nunito → Symbols2 → Symbols     | ZCOOL             |
+| zh-Hant                            | Huninn                     | same                                      | Huninn → Nunito → Symbols2 → Symbols    | Huninn            |
+| ja                                 | M PLUS Rounded 1c **700**  | same                                      | M PLUS → Nunito → Symbols2 → Symbols    | M PLUS Bold       |
+| ko                                 | Jua (or Do Hyeon)          | same                                      | Jua → Nunito → Symbols2 → Symbols       | one Korean file   |
+| km                                 | Kantumruy Pro **700**      | same                                      | Kantumruy → Nunito → Symbols2 → Symbols | Kantumruy         |
+| ar                                 | Cairo **700**, slant 0     | same                                      | Cairo → Nunito → Symbols2 → Symbols     | Cairo             |
 
 CSS weight once those faces exist: register only the shipped weight. `ResolveWeight` will map every CSS weight onto that single face (for a lone 700, CSS 400 and CSS 900 both become 700). That matches Fredoka, where 800/900 already become 700. There is still no synthetic bold, so a weight-400 design stays at that outline.
 
@@ -194,14 +194,14 @@ Every output above has `glyf`, no `fvar`, and cmap format 4. M PLUS and Noto JP 
 
 Sample of 80 BMP hanzi/hangul from the subsets, outline points before flattening:
 
-| Face | Contours p50 / p90 | Points p50 / p90 | Composites in the sample |
-| --- | --- | --- | --- |
-| Noto Sans SC 700 | 5 / 8 | 53 / 81 | 0 |
-| ZCOOL KuaiLe | 2 / 3 | 24 / 39 | 0 |
-| Huninn | 2 / 5 | 71 / 107 | 0 |
-| M PLUS Rounded Bold | 2 / 5 | 103 / 136 | 0 |
-| Jua | 3 / 4 | 181 / 213 | 0 |
-| Noto Sans KR 700 | 7 / 8 | 39 / 59 | 0 |
+| Face                | Contours p50 / p90 | Points p50 / p90 | Composites in the sample |
+| ------------------- | ------------------ | ---------------- | ------------------------ |
+| Noto Sans SC 700    | 5 / 8              | 53 / 81          | 0                        |
+| ZCOOL KuaiLe        | 2 / 3              | 24 / 39          | 0                        |
+| Huninn              | 2 / 5              | 71 / 107         | 0                        |
+| M PLUS Rounded Bold | 2 / 5              | 103 / 136        | 0                        |
+| Jua                 | 3 / 4              | 181 / 213        | 0                        |
+| Noto Sans KR 700    | 7 / 8              | 39 / 59          | 0                        |
 
 At iPhone X's cap of scale 2, tolerance is 0.01 CSS px, so rounded curves subdivide further (the flattener caps a quadratic at 64 segments). A rough ceiling for 100 glyphs is on the order of 100 × 200 points × a small curve factor, about 20–40k edges. `RenderShape` emits those edges once per text run, not once per glyph, then one fill. The edge buffer doubles from 4096, so 40k edges is a memory bump, not a new draw-call storm. Shadow text emits the edges again and then blurs. **That blur, and redrawing the whole canvas every frame, is the more likely cost.** ZCOOL is cheaper than Noto SC. Jua is the outlier. This was not timed on a device, and Unity was not launched.
 
@@ -209,16 +209,16 @@ At iPhone X's cap of scale 2, tolerance is 0.01 CSS px, so rounded curves subdiv
 
 Match the existing `Assets/Fonts/Fredoka-OFL.txt` pattern. Subsetting is a modification; the OFL still requires the copyright notice beside the font, and this spike drops the `name` table, so the sidecar is the only notice.
 
-| File to add | When |
-| --- | --- |
-| `Baloo2-OFL.txt` | vi / uz / hi |
-| `ZCOOLKuaiLe-OFL.txt` | zh-Hans |
-| `Huninn-OFL.txt` | zh-Hant |
-| `MPLUSRounded1c-OFL.txt` | ja — **write this from name ID 0 + the standard OFL 1.1 text; the Google Fonts folder does not contain one** |
-| `Jua-OFL.txt` or `DoHyeon-OFL.txt` | ko |
-| `KantumruyPro-OFL.txt` | km |
-| `Cairo-OFL.txt` | ar |
-| `NotoSansSC-OFL.txt` (and TC/JP/KR) | only if that Noto face is actually bundled. Reserved Font Name is **Source**, not Noto. |
+| File to add                         | When                                                                                                         |
+| ----------------------------------- | ------------------------------------------------------------------------------------------------------------ |
+| `Baloo2-OFL.txt`                    | vi / uz / hi                                                                                                 |
+| `ZCOOLKuaiLe-OFL.txt`               | zh-Hans                                                                                                      |
+| `Huninn-OFL.txt`                    | zh-Hant                                                                                                      |
+| `MPLUSRounded1c-OFL.txt`            | ja — **write this from name ID 0 + the standard OFL 1.1 text; the Google Fonts folder does not contain one** |
+| `Jua-OFL.txt` or `DoHyeon-OFL.txt`  | ko                                                                                                           |
+| `KantumruyPro-OFL.txt`              | km                                                                                                           |
+| `Cairo-OFL.txt`                     | ar                                                                                                           |
+| `NotoSansSC-OFL.txt` (and TC/JP/KR) | only if that Noto face is actually bundled. Reserved Font Name is **Source**, not Noto.                      |
 
 Nunito and Fredoka OFL files are already in `Assets/Fonts/`. Kosugi Maru, if ever used, needs the Apache-2.0 `LICENSE.txt`, not an OFL.
 

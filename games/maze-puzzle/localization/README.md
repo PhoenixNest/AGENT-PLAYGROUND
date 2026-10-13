@@ -125,18 +125,18 @@ Overflow audit: menu `Orbital Salvage/Tools/Localization Overflow Audit`, or bat
 
 A face lists the CSS weights it serves. One weight is used for every other CSS weight. There is no synthetic bold. Fredoka still resolves 800 and 900 to 700. Nunito still resolves 400 to 700. An unknown family still resolves to Nunito 700, matching `OutlineFonts.Primary`.
 
-| Group | Display / body | Chain |
-| --- | --- | --- |
-| en | Fredoka 400/600/700, Nunito 700/800/900 | primary, NotoSansSymbols2, NotoSansSymbols |
-| de, fr, es, it, pt-PT, fil, id, vi, qps | same faces | primary, Nunito at the same CSS weight when the family is Fredoka, then the two symbol fonts |
-| uz (`latin-uz`) | same faces, plus `Nunito-uz-patch` first | patch at the Fredoka face weight for display (600 or 700) and at the Nunito face weight for body (700, 800, 900), then the Latin chain. Other Latin languages do not load the patch |
-| cjk-sc | ZCOOL KuaiLe, one master (OS/2 400), every CSS weight including 900 | ZCOOLKuaiLe-sc, Nunito, symbols |
-| cjk-tc | Huninn, one regular master (OS/2 400), every CSS weight including 900 | Huninn-tc, Nunito, symbols |
-| cjk-jp | M PLUS Rounded 1c Bold (700) for CSS 400, 600, 700, 800, and 900 | MPLUSRounded1c-700, Nunito, symbols |
-| cjk-kr | Jua, one master (OS/2 400), every CSS weight including 900 | Jua-kr, Nunito, symbols |
-| devanagari | Baloo 2 Bold (700), not shipped | Baloo 2, Nunito, symbols, or the Latin chain when the file is missing |
-| khmer | Kantumruy Pro Bold (700), not shipped | same shape |
-| arabic | Cairo Bold, slant 0 (700), not shipped | same shape |
+| Group                                   | Display / body                                                        | Chain                                                                                                                                                                               |
+| --------------------------------------- | --------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| en                                      | Fredoka 400/600/700, Nunito 700/800/900                               | primary, NotoSansSymbols2, NotoSansSymbols                                                                                                                                          |
+| de, fr, es, it, pt-PT, fil, id, vi, qps | same faces                                                            | primary, Nunito at the same CSS weight when the family is Fredoka, then the two symbol fonts                                                                                        |
+| uz (`latin-uz`)                         | same faces, plus `Nunito-uz-patch` first                              | patch at the Fredoka face weight for display (600 or 700) and at the Nunito face weight for body (700, 800, 900), then the Latin chain. Other Latin languages do not load the patch |
+| cjk-sc                                  | ZCOOL KuaiLe, one master (OS/2 400), every CSS weight including 900   | ZCOOLKuaiLe-sc, Nunito, symbols                                                                                                                                                     |
+| cjk-tc                                  | Huninn, one regular master (OS/2 400), every CSS weight including 900 | Huninn-tc, Nunito, symbols                                                                                                                                                          |
+| cjk-jp                                  | M PLUS Rounded 1c Bold (700) for CSS 400, 600, 700, 800, and 900      | MPLUSRounded1c-700, Nunito, symbols                                                                                                                                                 |
+| cjk-kr                                  | Jua, one master (OS/2 400), every CSS weight including 900            | Jua-kr, Nunito, symbols                                                                                                                                                             |
+| devanagari                              | Baloo 2 Bold (700), not shipped                                       | Baloo 2, Nunito, symbols, or the Latin chain when the file is missing                                                                                                               |
+| khmer                                   | Kantumruy Pro Bold (700), not shipped                                 | same shape                                                                                                                                                                          |
+| arabic                                  | Cairo Bold, slant 0 (700), not shipped                                | same shape                                                                                                                                                                          |
 
 English paint does not call `LocFonts`. `HomeChrome.PaintRuns` takes the captured loop when `Loc.EnglishActive` is set and `TextLangOverrides` is empty.
 
@@ -154,20 +154,20 @@ ZCOOL KuaiLe and Jua are display drawings and the only master, so CSS 900 uses t
 
 Holes the source face does not have fall through the chain. `←` (U+2190) is missing from ZCOOL and Jua and is in `NotoSansSymbols-Regular`. `…` `×` `·` `—` and U+0060 are in Nunito, so Jua falls through. Jua has no U+0060 and almost no CJK punctuation (U+3000 and above). Korean copy uses spaces and ASCII punctuation. `々` (U+3005) is in Huninn and M PLUS. It is not in ZCOOL, Nunito, or either symbol font, so a Simplified string that uses `々` is `missing-glyph`. Huninn's safety list skipped 11 rare characters the face does not contain: 琌硂璶穦碞眔筁秨痷翴瞷. The OFL text stays beside the font.
 
-| File | Bytes | Licence |
-| --- | ---: | --- |
-| `ZCOOLKuaiLe-sc.ttf` / `.bytes` | 134392 | OFL 1.1, Copyright 2018 The ZCOOL KuaiLe Project Authors. `ZCOOLKuaiLe-OFL.txt` |
-| `Huninn-tc.ttf` / `.bytes` | 297972 | OFL 1.1, Copyright 2025 The Huninn Project Authors. `Huninn-OFL.txt` |
+| File                                |  Bytes | Licence                                                                                                                                                             |
+| ----------------------------------- | -----: | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `ZCOOLKuaiLe-sc.ttf` / `.bytes`     | 134392 | OFL 1.1, Copyright 2018 The ZCOOL KuaiLe Project Authors. `ZCOOLKuaiLe-OFL.txt`                                                                                     |
+| `Huninn-tc.ttf` / `.bytes`          | 297972 | OFL 1.1, Copyright 2025 The Huninn Project Authors. `Huninn-OFL.txt`                                                                                                |
 | `MPLUSRounded1c-700.ttf` / `.bytes` | 301324 | OFL 1.1, Copyright 2016 The Rounded M+ Project Authors. `MPLUSRounded1c-OFL.txt`. Upstream has no `OFL.txt`; the sidecar is name IDs 0 and 13 plus the OFL 1.1 text |
-| `Jua-kr.ttf` / `.bytes` | 313780 | OFL 1.1, Copyright 2018 The Jua Project Authors. `Jua-OFL.txt` |
+| `Jua-kr.ttf` / `.bytes`             | 313780 | OFL 1.1, Copyright 2018 The Jua Project Authors. `Jua-OFL.txt`                                                                                                      |
 
 Fredoka, Nunito, and the two Noto symbol fonts are unchanged. Their OFL files were already in `Assets/Fonts`.
 
 Uzbek `oʻ` / `gʻ` is U+02BB. Fredoka does not contain it, and Nunito's glyph has advance 500 with side bearings near 180 and no GPOS pair. The renderer only kerns glyphs from the same font, so the mark was a detached apostrophe. `latin-uz` puts a one-character patch first. `localization/tools/patch_uz_modifier.py`, called from `make_fonts.sh`, instances `Nunito[wght].ttf` at 600, 700, 800, and 900, subsets to U+02BB, shifts the outline to a left side bearing of 24, and sets the advance to the ink plus a short right bearing (under 40% of the neighbouring `o`). Rebuild with `make_fonts.sh`.
 
-| File | Bytes | Licence |
-| --- | ---: | --- |
-| `Nunito-uz-patch-600.ttf` / `.bytes` | 880 | OFL 1.1, same as Nunito. `Nunito-uz-patch-OFL.txt` (4385) |
-| `Nunito-uz-patch-700.ttf` / `.bytes` | 880 | same |
-| `Nunito-uz-patch-800.ttf` / `.bytes` | 880 | same |
-| `Nunito-uz-patch-900.ttf` / `.bytes` | 876 | same |
+| File                                 | Bytes | Licence                                                   |
+| ------------------------------------ | ----: | --------------------------------------------------------- |
+| `Nunito-uz-patch-600.ttf` / `.bytes` |   880 | OFL 1.1, same as Nunito. `Nunito-uz-patch-OFL.txt` (4385) |
+| `Nunito-uz-patch-700.ttf` / `.bytes` |   880 | same                                                      |
+| `Nunito-uz-patch-800.ttf` / `.bytes` |   880 | same                                                      |
+| `Nunito-uz-patch-900.ttf` / `.bytes` |   876 | same                                                      |

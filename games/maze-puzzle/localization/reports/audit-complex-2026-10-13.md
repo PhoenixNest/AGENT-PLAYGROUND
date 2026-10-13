@@ -8,11 +8,11 @@ Full stills: `/tmp/maze-i18n/audit-all/<code>/stills/`. Overflow text: `/tmp/maz
 
 `LocLanguageAuditTests` and `LocLanguageStillTests` ran for `ar`, `hi`, and `km` (90 spec files each, zero and iPhone). All six tests passed.
 
-| language | hard | soft shrink | soft ellipsis | left English (spec+str identical) |
-| --- | ---: | ---: | ---: | --- |
-| ar | 0 | 4 | 4 | brand, kg lines, gate emoji templates |
-| hi | 0 | 4 | 4 | same set |
-| km | 0 | 34 | 4 | same set |
+| language | hard | soft shrink | soft ellipsis | left English (spec+str identical)     |
+| -------- | ---: | ----------: | ------------: | ------------------------------------- |
+| ar       |    0 |           4 |             4 | brand, kg lines, gate emoji templates |
+| hi       |    0 |           4 |             4 | same set                              |
+| km       |    0 |          34 |             4 | same set                              |
 
 Hard is outside, overlap, band, wider, wrapped-in-control, missing-glyph, and icon-overlap. All of those are 0. The 4 ellipses in each language are the two privacy bodies, on zero and on iPhone. That is the same pair every Latin table already ellipsizes. The 0.72 shrinks are on `settings_modal_privacy` and the audit could not tie them to one run (the version line `Orbital Salvage • Space Trash Clean v1.2.0` is still English). Khmer's extra shrinks are 0.78 on the daily medal chips and the reset line, ten pages, and they still fit.
 
@@ -36,12 +36,12 @@ These fit after shrink or ellipsis. Hard wider is 0. I did not change the tables
 
 The audit records a scale, not a pixel width. 0.72 means the unscaled line was about 1.4 times the box. 0.78 is about 1.3 times. Hard wider is 0 after that shrink.
 
-| key | language | English | translation | measured | suggestion |
-| --- | --- | --- | --- | --- | --- |
-| spec privacy-by-design paragraph | ar, hi, km | Orbital Salvage is built with strict privacy-by-design. … | each table's privacy paragraph | ellipsis, same two pages as every Latin table | shorter paragraph, or a taller card |
-| spec localStorage paragraph | ar, hi, km | All game progression, gold coins, and cosmetic unlocks… | each table's localStorage paragraph | ellipsis | same |
-| `BRONZE` / `SILVER` / `GOLD` | km | BRONZE / SILVER / GOLD | សំរឹទ្ធ / ប្រាក់ / មាស | scale 0.78, still inside the chip | shorter medal names if the chip must stay at the English size |
-| `daily.countdown` | km | Resets in {0}h {1}m | ឡើងវិញ {0}h {1}m | scale 0.78, still inside the chip | a shorter lead-in |
+| key                              | language   | English                                                   | translation                         | measured                                      | suggestion                                                    |
+| -------------------------------- | ---------- | --------------------------------------------------------- | ----------------------------------- | --------------------------------------------- | ------------------------------------------------------------- |
+| spec privacy-by-design paragraph | ar, hi, km | Orbital Salvage is built with strict privacy-by-design. … | each table's privacy paragraph      | ellipsis, same two pages as every Latin table | shorter paragraph, or a taller card                           |
+| spec localStorage paragraph      | ar, hi, km | All game progression, gold coins, and cosmetic unlocks…   | each table's localStorage paragraph | ellipsis                                      | same                                                          |
+| `BRONZE` / `SILVER` / `GOLD`     | km         | BRONZE / SILVER / GOLD                                    | សំរឹទ្ធ / ប្រាក់ / មាស              | scale 0.78, still inside the chip             | shorter medal names if the chip must stay at the English size |
+| `daily.countdown`                | km         | Resets in {0}h {1}m                                       | ឡើងវិញ {0}h {1}m                    | scale 0.78, still inside the chip             | a shorter lead-in                                             |
 
 If the privacy paragraphs must show in full, they need a shorter translation or a taller card. The card-grow path is still English-only.
 
