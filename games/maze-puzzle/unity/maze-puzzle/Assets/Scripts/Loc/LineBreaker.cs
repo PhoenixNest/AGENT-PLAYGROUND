@@ -29,7 +29,8 @@ namespace OrbitalSalvage.Loc
                 case LineBreakKind.Cjk: return Cjk;
                 case LineBreakKind.Korean: return Korean;
                 case LineBreakKind.Complex:
-                    // TODO: Khmer, Arabic, and Hindi wrap on shaped clusters. Latin spaces are a stand-in.
+                    // Baked ar/hi/km strings wrap in ShapedText from the stored break flags.
+                    // A string that is not in the table still uses the Latin space break.
                     return Latin;
                 default: return Latin;
             }

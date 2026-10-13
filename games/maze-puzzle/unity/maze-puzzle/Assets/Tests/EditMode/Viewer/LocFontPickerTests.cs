@@ -42,9 +42,9 @@ namespace OrbitalSalvage.Viewer.Tests
             AssertCovered("zh-Hant", "繁體中文");
             AssertCovered("ja", "日本語");
             AssertCovered("ko", "한국어");
-            AssertHasHole("km", "ភាសាខ្មែរ");
-            AssertHasHole("hi", "हिन्दी");
-            AssertHasHole("ar", "العربية");
+            AssertCovered("km", "ភាសាខ្មែរ");
+            AssertCovered("hi", "हिन्दी");
+            AssertCovered("ar", "العربية");
 
             Assert.IsTrue(Loc.SetLanguage("uz"), "uz.json did not load");
             OutlineFonts.Clear();
