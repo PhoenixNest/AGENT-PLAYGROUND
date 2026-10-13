@@ -42,9 +42,14 @@ namespace OrbitalSalvage.Viewer.Tests
         [TestCase("fil")]
         [TestCase("id")]
         [TestCase("uz")]
+        [TestCase("ar")]
+        [TestCase("hi")]
+        [TestCase("km")]
         [Timeout(1500000)]
         public void Language_PaintsEveryZeroAndIphonePage(string code)
         {
+            string table = Path.Combine(Application.dataPath, "Resources", "Localization", code + ".json");
+            if (!File.Exists(table)) Assert.Ignore(code + ".json is not in Resources yet");
             string dir = Path.Combine(Root, code, "stills");
             Directory.CreateDirectory(dir);
             Loc.SetLoader(new ResourcesLocTableLoader());

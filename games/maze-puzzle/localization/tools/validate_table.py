@@ -438,7 +438,13 @@ def advance_of(cp: int) -> float:
     return ADVANCE_EM["other"]
 
 
-def estimate_px(text: str, font_px: float) -> float:
+def estimate_px(text: str, font_px: float, lang: str | None = None) -> float:
+    if lang in ("ar", "hi", "km"):
+        from shaped_advances import estimate
+
+        shaped = estimate(text, lang, font_px)
+        if shaped is not None:
+            return shaped
     return font_px * sum(advance_of(ord(ch)) for ch in text)
 
 
@@ -831,7 +837,7 @@ def check_pair(
                 )
 
     if index_row and isinstance(target, str):
-        check_fit(index_row, source, target, ident, findings)
+        check_fit(index_row, source, target, ident, findings, lang)
         if (index_row.get("uppercase") or "") == "uppercase":
             letters = [ch for ch in target if "A" <= ch <= "Z" or "a" <= ch <= "z"]
             if len(letters) >= 4 and all("A" <= ch <= "Z" for ch in letters):
@@ -941,13 +947,13 @@ def check_script(lang, target, ident, findings, table_flags):
             )
 
 
-def check_fit(index_row, source, target, ident, findings):
+def check_fit(index_row, source, target, ident, findings, lang=None):
     font_px = parse_px(index_row.get("fz") or "")
     box = parse_px(index_row.get("max_width") or "")
     if font_px is None or box is None or font_px <= 0 or box <= 0:
         return
     english_px = estimate_px(source, font_px)
-    target_px = estimate_px(target, font_px)
+    target_px = estimate_px(target, font_px, lang)
     budget = max(box, english_px)
     if target_px > budget / SHRINK_FLOOR:
         add(

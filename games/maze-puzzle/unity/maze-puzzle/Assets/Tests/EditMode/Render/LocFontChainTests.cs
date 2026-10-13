@@ -174,12 +174,17 @@ namespace OrbitalSalvage.Render.Tests
         }
 
         [Test]
-        public void MissingScriptFace_IsSkipped_AndDoesNotThrow()
+        public void ScriptFace_LoadsTheShipped700Instance()
         {
             TrueTypeFont[] hi = OutlineFonts.ChainFor("hi", "Fredoka", 800);
-            TrueTypeFont[] de = OutlineFonts.ChainFor("de", "Fredoka", 800);
-            Assert.AreEqual(de.Length, hi.Length);
-            for (int i = 0; i < de.Length; i++) Assert.AreSame(de[i], hi[i], hi[i].name);
+            Assert.AreEqual("Baloo2-700", hi[0].name);
+            Assert.AreNotEqual(0, hi[0].GlyphIndex(0x0939));
+            TrueTypeFont[] km = OutlineFonts.ChainFor("km", "Fredoka", 800);
+            Assert.AreEqual("KantumruyPro-700", km[0].name);
+            Assert.AreNotEqual(0, km[0].GlyphIndex(0x1781));
+            TrueTypeFont[] ar = OutlineFonts.ChainFor("ar", "Fredoka", 800);
+            Assert.AreEqual("Cairo-700", ar[0].name);
+            Assert.AreNotEqual(0, ar[0].GlyphIndex(0x0643));
             TrueTypeFont[] ja = OutlineFonts.ChainFor("ja", "Fredoka", 800);
             Assert.AreEqual("MPLUSRounded1c-endonym", ja[0].name);
             Assert.AreNotEqual(0, ja[0].GlyphIndex(0x65E5));

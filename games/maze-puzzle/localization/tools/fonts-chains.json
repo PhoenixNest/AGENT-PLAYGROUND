@@ -82,20 +82,20 @@
     "hi": {
       "fontGroup": "devanagari",
       "expansion": 1.3,
-      "chain": [],
-      "pending": ["Baloo2-700.ttf"]
+      "chain": ["Baloo2-700.ttf", "Nunito-700.ttf", "Nunito-800.ttf", "Nunito-900.ttf", "NotoSansSymbols2-Regular.ttf", "NotoSansSymbols-Regular.ttf"],
+      "pending": []
     },
     "km": {
       "fontGroup": "khmer",
       "expansion": 1.40,
-      "chain": [],
-      "pending": ["KantumruyPro-700.ttf"]
+      "chain": ["KantumruyPro-700.ttf", "Nunito-700.ttf", "Nunito-800.ttf", "Nunito-900.ttf", "NotoSansSymbols2-Regular.ttf", "NotoSansSymbols-Regular.ttf"],
+      "pending": []
     },
     "ar": {
       "fontGroup": "arabic",
       "expansion": 1.1,
-      "chain": [],
-      "pending": ["Cairo-700.ttf"]
+      "chain": ["Cairo-700.ttf", "Nunito-700.ttf", "Nunito-800.ttf", "Nunito-900.ttf", "NotoSansSymbols2-Regular.ttf", "NotoSansSymbols-Regular.ttf"],
+      "pending": []
     }
   }
 }
