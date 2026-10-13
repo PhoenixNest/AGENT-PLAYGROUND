@@ -197,7 +197,7 @@ Status: built in the Unity port. The web prototype has no infinite mode.
 3. **Entry:** there is no new button or screen. Winning level 50 once all 50 levels are done (including the first time), and then pressing Next, starts round 1. Home → Play does the same when all 50 are done. After that, Home → Play continues infinite mode. Opening a level from level select goes back to normal campaign play.
 4. **Picking:** `InfiniteMode.NextLevel` uses its own random source, never the shared game random, so existing game behaviour is not changed. The same level may come twice in a row.
 5. **Rounds:** the profile stores `infiniteRound` (the round being played, starting at 1) and `infiniteBest` (the highest round reached). Both are left out of the save file until infinite mode starts. A win adds 1 to the round. There are no lives: a failed round is retried with the normal retry button. If the player quits, Home → Play resumes at the saved round with a new random level.
-6. **Feedback:** when a round starts, a toast reads "Round N, best M! 🚀". There is no new trophy, and the shop still uses gold coins only.
+6. **Feedback:** when a round starts, a toast reads "Round N, best M! 🚀". Once all 50 levels are done, the Home mission card shows "Infinite Mode", "Round N" and "Best: M" instead of a level. During a round, the top label and the pause screen also show "Round N" instead of the level code. There is no new trophy, and the shop still uses gold coins only.
 7. **Not covered:** nothing proves that every level from 30 to 50 can be beaten by a child. The tests only check that they build and run without errors.
 
 ---
