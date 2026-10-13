@@ -14,5 +14,21 @@
   {
     "key": "BRONZE ✓",
     "reason": "Same French word as BRONZE, plus the cleared mark. Identical spelling is correct."
+  },
+  {
+    "key": "1 NEW",
+    "reason": "Recognised loanword. The daily pill is the width of English 3 NEW. NOUVEAU paints as 3 NOUVE. NEUF also means nine. No other natural French word for new fits with 10% headroom. NEW does not change between one item and several."
+  },
+  {
+    "key": "2 NEW",
+    "reason": "Same loanword as 1 NEW. The pill cannot hold a plural French adjective."
+  },
+  {
+    "key": "3 NEW",
+    "reason": "Same loanword as 1 NEW. 3 NOUVEAU is 38px against a 30px pill and is clipped to 3 NOUVE."
+  },
+  {
+    "key": "dock.daily.new",
+    "reason": "One template for every count. NEW stays the same for 1 and for several, so the badge does not need a singular and a plural."
   }
 ]
