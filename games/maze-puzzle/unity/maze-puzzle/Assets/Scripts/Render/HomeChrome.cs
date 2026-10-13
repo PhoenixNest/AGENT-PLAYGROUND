@@ -2910,15 +2910,33 @@ namespace OrbitalSalvage.Render
             if (ShapedText.IsComplex(shapeLang)
                 && ShapedText.TryFit(canvas, display, shapeLang, plan.Available, plan.FontPx, plan.LetterSpacing, plan.Action, plan.MaxLines, out ShapedText.Fit shaped))
             {
-                if (shaped.RightAlign && lay.Anchor == TextFit.Anchor.Left) lay.Anchor = TextFit.Anchor.Right;
-                lay.Lines = shaped.Texts;
-                lay.Widths = shaped.Widths;
-                lay.Shaped = shaped.Lines;
-                lay.Ellipsis = shaped.Ellipsis;
-                lay.ExtraWrap = shaped.Extra;
-                if (lay.Lines.Length == 1 && plan.IconIndex < 0 && !plan.KeepX)
-                    lay.SingleX = TextFit.PlaceX(lay.Anchor, er[0], er[2], lay.Widths.Length > 0 ? lay.Widths[0] : 0, plan.Left, plan.Right);
-                return lay;
+                double box = input.RunH > 1 ? input.RunH : input.ElH;
+                int used = shaped.Lines == null ? 1 : shaped.Lines.Length;
+                double fittedPx = ShapedText.PxForBox(shapeLang, plan.FontPx, box, used);
+                if (fittedPx < plan.FontPx - 0.2)
+                {
+                    lay.FontPx = fittedPx;
+                    lay.DrawFont = FontSized(font, fittedPx);
+                    lay.Letter = plan.LetterSpacing * (fittedPx / plan.FontPx);
+                    canvas.Font = lay.DrawFont;
+                    canvas.LetterSpacing = lay.Letter;
+                    if (!ShapedText.TryFit(canvas, display, shapeLang, plan.Available, fittedPx, lay.Letter, plan.Action, plan.MaxLines, out shaped))
+                        shaped = null;
+                }
+                if (shaped != null && shaped.Lines != null)
+                {
+                    if (shaped.RightAlign && lay.Anchor == TextFit.Anchor.Left) lay.Anchor = TextFit.Anchor.Right;
+                    lay.Lines = shaped.Texts;
+                    lay.Widths = shaped.Widths;
+                    lay.Shaped = shaped.Lines;
+                    lay.Ellipsis = shaped.Ellipsis;
+                    lay.ExtraWrap = shaped.Extra;
+                    int drawn = shaped.Lines.Length;
+                    if (drawn > 1 && box > 1) lay.LinePitch = box / drawn;
+                    if (lay.Lines.Length == 1 && plan.IconIndex < 0 && !plan.KeepX)
+                        lay.SingleX = TextFit.PlaceX(lay.Anchor, er[0], er[2], lay.Widths.Length > 0 ? lay.Widths[0] : 0, plan.Left, plan.Right);
+                    return lay;
+                }
             }
             Func<string, double> measureLine = s =>
             {

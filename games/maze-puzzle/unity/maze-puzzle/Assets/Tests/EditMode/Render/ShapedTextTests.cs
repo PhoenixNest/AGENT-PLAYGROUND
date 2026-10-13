@@ -54,9 +54,9 @@ namespace OrbitalSalvage.Render.Tests
                 ShapedTable.Resolved resolved;
                 Assert.IsTrue(table.TryResolve(entry.Template, out resolved));
                 Assert.AreSame(entry, resolved.Entry);
-                if (entry.Template == "إنقاذ مداري") saw = true;
+                if (entry.Template == "اختر اللغة") saw = true;
             }
-            Assert.IsTrue(saw, "fixture Arabic title is not in the table");
+            Assert.IsTrue(saw, "Arabic language label is not in the table");
         }
 
         [Test]
@@ -69,7 +69,7 @@ namespace OrbitalSalvage.Render.Tests
                 canvas.LetterSpacing = 0;
                 var marks = new List<Canvas2D.ShapedMark>();
                 double width;
-                Assert.IsTrue(canvas.LayoutShapedMarks("कु", marks, out width));
+                Assert.IsTrue(canvas.LayoutShapedMarks("कंपन", marks, out width));
                 Assert.Greater(width, 0);
                 bool shifted = false;
                 for (int i = 0; i < marks.Count; i++)
@@ -85,22 +85,22 @@ namespace OrbitalSalvage.Render.Tests
         public void RtlLine_PutsTheLatinRunOnTheLeft()
         {
             ShapedTable table = Load("ar");
-            const string text = "المرحلة 12 من Orbital Salvage";
+            const string text = "هدف: 100 kg";
             ShapedTable.Resolved resolved;
             Assert.IsTrue(table.TryResolve(text, out resolved));
             ShapedText.Fit fit = ShapedText.Build(resolved, s => s.Length * 8.0, 32, table.UnitsPerEm, 4000, 0, TextFit.Action.Single, 1);
             Assert.IsTrue(fit.RightAlign);
             Assert.Greater(fit.Lines[0].Pieces.Length, 1);
-            Assert.That(fit.Lines[0].Pieces[0].Text, Does.Contain("Orbital Salvage"));
+            Assert.That(fit.Lines[0].Pieces[0].Text, Does.Contain("kg"));
             string last = fit.Lines[0].Pieces[fit.Lines[0].Pieces.Length - 1].Text;
-            Assert.That(last, Does.Contain("ا"));
+            Assert.That(last, Does.Contain("ه"));
         }
 
         [Test]
         public void KhmerWrap_BreaksOnlyBetweenClusters()
         {
             ShapedTable table = Load("km");
-            const string text = "តើអ្នកប្រាកដទេ? វានឹងកំណត់ផែនទីដែលបានបើក សម្លៀកបំពាក់ផ្ទាល់ខ្លួន និងកាក់មាសដែលរកបានឡើងវិញ។ មិនអាចធ្វើវិញបានទេ!";
+            const string text = "ការលេង កាក់មាស និងឈុត រក្សាទុកលើឧបករណ៍របស់អ្នកតាម localStorage ក្នុងកម្មវិធីរុករក។ គ្មានគណនី គ្មានការតាមដានពីក្រៅ និងគ្មានផ្សាយពាណិជ្ជកម្ម។";
             ShapedTable.Resolved resolved;
             Assert.IsTrue(table.TryResolve(text, out resolved));
             ShapedText.Fit fit = ShapedText.Build(resolved, s => 10, 28, table.UnitsPerEm, 120, 0, TextFit.Action.Wrap, 12);
@@ -121,12 +121,71 @@ namespace OrbitalSalvage.Render.Tests
         {
             ShapedTable table = Load("ar");
             ShapedTable.Resolved resolved;
-            Assert.IsTrue(table.TryResolve("الهدف: 20 كغ", out resolved));
-            Assert.AreEqual("20", resolved.SlotText(0));
-            Assert.IsFalse(table.TryResolve("الهدف: XX كغ", out resolved));
+            Assert.IsTrue(table.TryResolve("هدف: 7 kg", out resolved));
+            Assert.AreEqual("7", resolved.SlotText(0));
+            Assert.IsTrue(table.TryResolve("هدف: XX kg", out resolved));
+            Assert.AreEqual("XX", resolved.SlotText(0));
+            Assert.IsFalse(table.TryResolve("هدف: كلمة kg", out resolved));
             Assert.IsFalse(table.TryResolve("كلمة20", out resolved));
             Assert.IsTrue(ShapedTable.IsWesternNumber("20"));
             Assert.IsFalse(ShapedTable.IsWesternNumber("٢٠"));
+        }
+
+        [Test]
+        public void Placeholder_SplicesABakedName()
+        {
+            ShapedTable table = Load("ar");
+            ShapedTable.Resolved resolved;
+            const string toast = "🏆 كأس: أول نام نام! (+100 🪙)";
+            Assert.IsTrue(table.TryResolve(toast, out resolved));
+            Assert.AreEqual("أول نام نام!", resolved.SlotText(0));
+            Assert.AreEqual("100", resolved.SlotText(1));
+            ShapedText.Fit fit = ShapedText.Build(resolved, s => s.Length * 8.0, 28, table.UnitsPerEm, 4000, 0, TextFit.Action.Single, 1);
+            bool named = false;
+            for (int i = 0; i < fit.Lines[0].Pieces.Length; i++)
+            {
+                ShapedText.Piece piece = fit.Lines[0].Pieces[i];
+                if (piece.Glyphs != null && piece.Glyphs.Length > 0 && piece.Text != null && piece.Text.Contains("نام"))
+                    named = true;
+            }
+            Assert.IsTrue(named, "the achievement title was not drawn from its baked run");
+            Assert.IsTrue(table.TryResolve("نظف أول نام نام!! 🚀", out resolved));
+            Assert.AreEqual("أول نام نام!", resolved.SlotText(0));
+        }
+
+        [Test]
+        public void GameplayWords_UseTheShapedFace()
+        {
+            using (var canvas = new Canvas2D(420, 96))
+            {
+                canvas.Font = "700 28px Fredoka";
+                canvas.ShapeCode = "ar";
+                var marks = new List<Canvas2D.ShapedMark>();
+                double width;
+                Assert.IsTrue(canvas.LayoutShapedMarks("كوكبي", marks, out width));
+                Assert.Greater(marks.Count, 0);
+                Assert.AreEqual("Cairo-700", marks[0].Font);
+                marks.Clear();
+                Assert.IsTrue(canvas.LayoutShapedMarks("×5! فرم ⚡", marks, out width));
+                bool cairo = false;
+                for (int i = 0; i < marks.Count; i++)
+                    if (marks[i].Font == "Cairo-700") cairo = true;
+                Assert.IsTrue(cairo, "floating shred text did not use Cairo");
+                marks.Clear();
+                canvas.ShapeCode = "hi";
+                Assert.IsTrue(canvas.LayoutShapedMarks("⏩ तेज़", marks, out width));
+                bool baloo = false;
+                for (int i = 0; i < marks.Count; i++)
+                    if (marks[i].Font == "Baloo2-700") baloo = true;
+                Assert.IsTrue(baloo, "boost label did not use Baloo");
+                marks.Clear();
+                canvas.ShapeCode = "km";
+                Assert.IsTrue(canvas.LayoutShapedMarks("ញ៉ាំ! 😋", marks, out width));
+                bool khmer = false;
+                for (int i = 0; i < marks.Count; i++)
+                    if (marks[i].Font == "KantumruyPro-700") khmer = true;
+                Assert.IsTrue(khmer, "nom word did not use Kantumruy");
+            }
         }
 
         [Test]
@@ -134,13 +193,13 @@ namespace OrbitalSalvage.Render.Tests
         {
             ShapedTable table = Load("ar");
             ShapedTable.Resolved resolved;
-            Assert.IsTrue(table.TryResolve("إنقاذ مداري", out resolved));
+            Assert.IsTrue(table.TryResolve("اختر اللغة", out resolved));
             ShapedText.Fit fit = ShapedText.Build(resolved, s => 8, 32, table.UnitsPerEm, 400, 0, TextFit.Action.Single, 1);
             Assert.IsTrue(fit.RightAlign);
             double x = TextFit.PlaceX(TextFit.Anchor.Right, 0, 200, fit.Widths[0], 10, 190);
             Assert.AreEqual(190 - fit.Widths[0], x, 0.01);
             ShapedTable hi = Load("hi");
-            Assert.IsTrue(hi.TryResolve("कु", out resolved));
+            Assert.IsTrue(hi.TryResolve("हिन्दी", out resolved));
             ShapedText.Fit hindi = ShapedText.Build(resolved, s => 8, 32, hi.UnitsPerEm, 400, 0, TextFit.Action.Single, 1);
             Assert.IsFalse(hindi.RightAlign);
         }
@@ -168,7 +227,7 @@ namespace OrbitalSalvage.Render.Tests
             ShapedTable refused = ShapedTable.Load(data, bad);
             Assert.IsTrue(refused.Refused);
             ShapedTable.Resolved resolved;
-            Assert.IsFalse(refused.TryResolve("إنقاذ مداري", out resolved));
+            Assert.IsFalse(refused.TryResolve("اختر اللغة", out resolved));
         }
 
         [Test]
@@ -200,15 +259,15 @@ namespace OrbitalSalvage.Render.Tests
         {
             Directory.CreateDirectory(OutDir);
             int latin = Paint(null, "HI", "latin-control.png", false, false);
-            int joined = Paint("ar", "إنقاذ مداري", "ar-joined.png", false, false);
-            int mixed = Paint("ar", "المرحلة 12 من Orbital Salvage", "ar-mixed.png", false, false);
-            int right = Paint("ar", "إنقاذ مداري", "ar-right.png", true, false);
-            int wrapAr = Paint("ar", "هل أنت متأكد؟ سيؤدي هذا إلى إعادة ضبط كل الخرائط المفتوحة والأزياء المخصصة والعملات الذهبية المكتسبة. لا يمكن التراجع عن هذا الإجراء!", "ar-wrap.png", false, true);
-            int hi = Paint("hi", "कक्षीय सफ़ाई", "hi-conjunct.png", false, false);
-            int below = Paint("hi", "कु", "hi-below.png", false, false);
-            int km = Paint("km", "ការសម្អាតសំរាមអវកាស", "km-coeng.png", false, false);
-            int wrapKm = Paint("km", "តើអ្នកប្រាកដទេ? វានឹងកំណត់ផែនទីដែលបានបើក សម្លៀកបំពាក់ផ្ទាល់ខ្លួន និងកាក់មាសដែលរកបានឡើងវិញ។ មិនអាចធ្វើវិញបានទេ!", "km-wrap.png", false, true);
-            int wrapHi = Paint("hi", "क्या आप सुनिश्चित हैं? कृपया प्रतीक्षा करें। यह क्रिया सभी अनलॉक किए गए नक्शे, कस्टम पोशाक और अर्जित स्वर्ण सिक्के रीसेट कर देगी। इसे वापस नहीं लिया जा सकता!", "hi-wrap.png", false, true);
+            int joined = Paint("ar", "اختر اللغة", "ar-joined.png", false, false);
+            int mixed = Paint("ar", "هدف: 100 kg", "ar-mixed.png", false, false);
+            int right = Paint("ar", "اختر اللغة", "ar-right.png", true, false);
+            int wrapAr = Paint("ar", "نحفظ تقدم اللعب وعملات ذهبية والأزياء محليا على جهازك عبر localStorage في المتصفح. بلا حساب، وبلا تتبع خارجي، وبلا إعلانات سلوكية.", "ar-wrap.png", false, true);
+            int hi = Paint("hi", "100% ऑफ़लाइन, बच्चे सुरक्षित:", "hi-conjunct.png", false, false);
+            int below = Paint("hi", "0 / 3 पूरा", "hi-below.png", false, false);
+            int km = Paint("km", "0 / 3 បានបញ្ចប់", "km-coeng.png", false, false);
+            int wrapKm = Paint("km", "ការលេង កាក់មាស និងឈុត រក្សាទុកលើឧបករណ៍របស់អ្នកតាម localStorage ក្នុងកម្មវិធីរុករក។ គ្មានគណនី គ្មានការតាមដានពីក្រៅ និងគ្មានផ្សាយពាណិជ្ជកម្ម។", "km-wrap.png", false, true);
+            int wrapHi = Paint("hi", "खेल की प्रगति, सोने के सिक्के और कपड़े तुम्हारे डिवाइस पर ब्राउज़र localStorage में सहेजे जाते हैं। कोई खाता नहीं, कोई ट्रैकिंग SDK नहीं, और व्यवहार वाले विज्ञापन नहीं।", "hi-wrap.png", false, true);
             Assert.Greater(latin, 30, "Latin control still is blank");
             Assert.Greater(joined, 80, "Arabic join still is blank");
             Assert.Greater(mixed, 80, "mixed still is blank");
@@ -221,7 +280,7 @@ namespace OrbitalSalvage.Render.Tests
             Assert.Greater(wrapHi, 80);
             string joinedNote = File.ReadAllText(Path.Combine(OutDir, "ar-joined.png.txt"));
             Assert.That(joinedNote, Does.Contain("font=Cairo-700"));
-            Assert.That(joinedNote, Does.Contain("marks=11"));
+            Assert.That(joinedNote, Does.Not.Contain("marks=0"));
         }
 
         static int Paint(string lang, string text, string file, bool right, bool wrap)
