@@ -69,3 +69,4 @@ No Han character is outside the Big5 frequent set. No Han character is missing f
 Huninn has no glyph for `✓`, `▶`, or the emoji copied from English (`⏩✨🧲💥⚡🍬🍩🦆⚙️🐱💨😋⭐⏪🪙🎉🎁🥰💤🍓🔇🔊🚀🏆🧹`, plus U+FE0F on the gear). Those are already in the English table. The CJK chain is still pending, so the validator does not fail them.
 
 toast.infinite.round: agent draft, no native review
+home.infinite.world/title/best: agent draft, no native review

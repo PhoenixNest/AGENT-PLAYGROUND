@@ -141,3 +141,4 @@ by-kind: fit=2, glossary=1, font-pending=1
 `ar-fit-exceptions.json` hides `LVL 1`–`LVL 50`. `--show-suppressed` prints them. No identical-ok file.
 
 toast.infinite.round: agent draft, no native review
+home.infinite.world/title/best: agent draft, no native review
