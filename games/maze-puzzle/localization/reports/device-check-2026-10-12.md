@@ -1,3 +1,5 @@
+Note: this work is now on branch `maze-puzzle`. `integration/i18n` was fast-forwarded into it (tip `d1c79a9`).
+
 # Device check — iPhone X — 2026-10-13
 
 Release device build of `integration/i18n` at `10de22f`, checked on the USB iPhone X. Home only. No translation, spec, or C# edits.

@@ -1,3 +1,5 @@
+Note: this work is now on branch `maze-puzzle`. `integration/i18n` was fast-forwarded into it (tip `d1c79a9`).
+
 # Device check — full language set — 2026-10-13
 
 Second pass, after the phone was unlocked. Same Release build as the locked attempt (`12b9605`, no re-export). `dvt launch` succeeded on the first try for every language. `PasswordProtected` was false and the screen was the Home Screen.
