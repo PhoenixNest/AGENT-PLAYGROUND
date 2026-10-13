@@ -1,0 +1,37 @@
+# Review sample — hi
+
+Thirty keys (or fewer): placeholder-heavy, then longest, then the first keys of each screen area.
+Ratio is UTF-16 length of the translation divided by the English length.
+
+| Area | English | Translation | Ratio | Why |
+| --- | --- | --- | ---: | --- |
+| other | Goal: Feed Nibbles {0} kg ({1}/{0} kg eaten) | लक्ष्य: Nibbles को {0} kg खिलाओ ({1}/{0} kg खाया) | 1.114 | placeholders |
+| other | Resets in {0}h {1}m | {0}h {1}m में रीसेट | 1 | placeholders |
+| other | {0} • {1} | {0} • {1} | 1 | placeholders |
+| other | 🏆 Trophy: {0} (+{1} 🪙) | 🏆 ट्रॉफी: {0} (+{1} 🪙) | 1 | placeholders |
+| other | {0} / {1} kg | {0} / {1} kg | 1 | placeholders |
+| trophies | All game progression, gold coins, and cosmetic unlocks are saved locally on your device via standard browser localStorage. No account creation, no external tracking SDKs, and zero behavioral ads. | खेल की प्रगति, सोने के सिक्के और कपड़े तुम्हारे डिवाइस पर ब्राउज़र localStorage में सहेजे जाते हैं। कोई खाता नहीं, कोई ट्रैकिंग SDK नहीं, और व्यवहार वाले विज्ञापन नहीं। | 0.862 | longest |
+| trophies | Orbital Salvage is built with strict privacy-by-design. We do not collect, store, sell, or transmit any personally identifiable information, cookies, device identifiers, or location data. | Orbital Salvage शुरू से निजता के साथ बना है। हम कोई निजी जानकारी, कुकी, डिवाइस की पहचान या जगह का डेटा न जमा करते, न रखते, न बेचते, न भेजते। | 0.749 | longest |
+| trophies | Are you sure? This will reset all your unlocked maps, custom costumes, and earned gold coins. This cannot be undone! | पक्का? इससे खुले नक्शे, कपड़े और कमाए सोने के सिक्के मिट जाएँगे। वापस नहीं होगा! | 0.69 | longest |
+| trophies | All items in the Toy Shop are earned through in-game gameplay coins. There are no real-money in-app purchases. | खिलौना दुकान की हर चीज़ खेल के सोने के सिक्के से मिलती है। असली पैसे नहीं लगते। | 0.718 | longest |
+| daily | Cosmic Vortex Overdrive: High-density debris cloud & dual shredder gates! | कॉस्मिक बवंडर: घना कबाड़ और दो काटने वाले गेट! | 0.63 | longest |
+| shop | Squeaky bright yellow bath duck with cute orange beak and water bubbles! | चीं-चीं करती चमकीली पीली बत्तख, नारंगी चोंच और पानी के बुलबुले! | 0.875 | longest |
+| shop | The hungriest, cutest cartoon black hole with big anime eyes! Nom nom! | सबसे भूखा, सबसे प्यारा कार्टून ब्लैक होल, बड़ी गोल आँखें! नम नम! | 0.914 | longest |
+| shop | Fluffy pastel indigo and magenta clouds with sparkling star smileys. | नरम हल्के नीले और गुलाबी बादल, चमकते तारे मुस्का रहे हैं। | 0.838 | longest |
+| daily | Calm Orbit Sweep: Gentle centrifugal speed, wide gates & easy flow. | शांत कक्षा: धीमा घुमाव, चौड़े गेट, आसान रास्ता। | 0.701 | longest |
+| trophies | 100% Free • Unlock cute costumes with your earned recycling coins! | 100% मुफ़्त • कमाए सोने के सिक्के से प्यारे कपड़े खोलो! | 0.833 | longest |
+| maps | 0 / 105 kg | 0 / 105 kg | 1 | area |
+| trophies | 0 / 20 kg | 0 / 20 kg | 1 | area |
+| debrief | 0 / 210 kg | 0 / 210 kg | 1 | area |
+| daily | 0 / 26 kg | 0 / 26 kg | 1 | area |
+| defeat | 15 / 20 kg | 15 / 20 kg | 1 | area |
+| shop | A happy cartoon moon made of Swiss cheese floating in twilight. | खुश कार्टून चाँद, छेद वाली स्विस चीज़, शाम की रोशनी में तैर रहा है। | 1.063 | area |
+| settings | Change | बदलो | 0.667 | area |
+| pause | Goal: Feed Nibbles 20 kg (0/20 kg eaten) | लक्ष्य: Nibbles को 20 kg खिलाओ (0/20 kg खाया) | 1.125 | area |
+| other | Waking up Nibbles for breakfast... | Nibbles नाश्ते के लिए जाग रहा है… | 0.971 | area |
+| maps | 0 / 132 kg | 0 / 132 kg | 1 | area |
+| trophies | 1,000 items recycled! You are the ultimate cosmic cleaner! | 1,000 चीज़ें साफ! तुम सबसे बड़े अंतरिक्ष सफाईकर्मी हो! | 0.931 | area |
+| debrief | 105 kg | 105 kg | 1 | area |
+| daily | 0 / 3 CLEARED | 0 / 3 पूरा | 0.769 | area |
+| defeat | 5 / 20 kg | 5 / 20 kg | 1 | area |
+| shop | A sleepy pastel blue cloud that yawns and gulps down space junk! | उनींदा हल्का नीला बादल जम्हाई लेता है और अंतरिक्ष कचरा गटकता है! | 1 | area |

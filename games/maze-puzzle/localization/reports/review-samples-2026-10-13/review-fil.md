@@ -1,0 +1,37 @@
+# Review sample — fil
+
+Thirty keys (or fewer): placeholder-heavy, then longest, then the first keys of each screen area.
+Ratio is UTF-16 length of the translation divided by the English length.
+
+| Area | English | Translation | Ratio | Why |
+| --- | --- | --- | ---: | --- |
+| other | Goal: Feed Nibbles {0} kg ({1}/{0} kg eaten) | Layon: pakainin si Nibbles ng {0} kg ({1}/{0} kg kinain) | 1.273 | placeholders |
+| other | Resets in {0}h {1}m | Uulit sa {0}h {1}m | 0.947 | placeholders |
+| other | {0} • {1} | {0} • {1} | 1 | placeholders |
+| other | 🏆 Trophy: {0} (+{1} 🪙) | 🏆 Tropeo: {0} (+{1} 🪙) | 1 | placeholders |
+| other | {0} / {1} kg | {0} / {1} kg | 1 | placeholders |
+| trophies | All game progression, gold coins, and cosmetic unlocks are saved locally on your device via standard browser localStorage. No account creation, no external tracking SDKs, and zero behavioral ads. | Naka-save sa aparato mo, sa localStorage, ang progreso, gintong barya, at mga kasuotan. Hindi kailangan magparehistro, walang pagsubaybay, at walang patalastas. | 0.821 | longest |
+| trophies | Orbital Salvage is built with strict privacy-by-design. We do not collect, store, sell, or transmit any personally identifiable information, cookies, device identifiers, or location data. | Ang Orbital Salvage ay ginawa para ligtas. Hindi kami kumukuha, nagtatago, nagbebenta, o nagpapadala ng pribadong datos, cookies, pantukoy, o lokasyon. | 0.807 | longest |
+| trophies | Are you sure? This will reset all your unlocked maps, custom costumes, and earned gold coins. This cannot be undone! | Mabubura ang mapa, kasuotan, at gintong barya. Hindi na maibabalik! | 0.578 | longest |
+| trophies | All items in the Toy Shop are earned through in-game gameplay coins. There are no real-money in-app purchases. | Lahat sa tindahan ng laruan ay nakuha sa laro gamit ang gintong barya. Walang tunay na bayad. | 0.845 | longest |
+| daily | Cosmic Vortex Overdrive: High-density debris cloud & dual shredder gates! | Ipoipong kosmiko: siksik na basura at dalawang hiwa! | 0.712 | longest |
+| shop | Squeaky bright yellow bath duck with cute orange beak and water bubbles! | Dilaw na bibeng may kahel na tuka at mga bula ng tubig! | 0.764 | longest |
+| shop | The hungriest, cutest cartoon black hole with big anime eyes! Nom nom! | Pinakagutom, pinakyut na itim na butas, may malaking mata! Nyam nyam! | 0.986 | longest |
+| shop | Fluffy pastel indigo and magenta clouds with sparkling star smileys. | Malambot na lila at rosas na ulap, may ngiting bituin. | 0.794 | longest |
+| daily | Calm Orbit Sweep: Gentle centrifugal speed, wide gates & easy flow. | Kalmadong orbit: banayad, malapad na daan, madaling daloy. | 0.866 | longest |
+| trophies | 100% Free • Unlock cute costumes with your earned recycling coins! | 100% Libre • Kyut na kasuotan kapalit ng gintong barya mo! | 0.879 | longest |
+| maps | 0 / 105 kg | 0 / 105 kg | 1 | area |
+| trophies | 0 / 20 kg | 0 / 20 kg | 1 | area |
+| debrief | 0 / 210 kg | 0 / 210 kg | 1 | area |
+| daily | 0 / 26 kg | 0 / 26 kg | 1 | area |
+| defeat | 15 / 20 kg | 15 / 20 kg | 1 | area |
+| shop | A happy cartoon moon made of Swiss cheese floating in twilight. | Masayang kartung buwang keso, lumulutang sa takipsilim. | 0.873 | area |
+| settings | Change | Palit | 0.833 | area |
+| pause | Goal: Feed Nibbles 20 kg (0/20 kg eaten) | Layon: Nibbles 20 kg (0/20 kg kinain) | 0.925 | area |
+| other | Waking up Nibbles for breakfast... | Gisingin si Nibbles para kumain... | 1 | area |
+| maps | 0 / 132 kg | 0 / 132 kg | 1 | area |
+| trophies | 1,000 items recycled! You are the ultimate cosmic cleaner! | 1,000 piraso na! Pinakamagaling kang tagalinis! | 0.81 | area |
+| debrief | 105 kg | 105 kg | 1 | area |
+| daily | 0 / 3 CLEARED | 0 / 3 TAPOS | 0.846 | area |
+| defeat | 5 / 20 kg | 5 / 20 kg | 1 | area |
+| shop | A sleepy pastel blue cloud that yawns and gulps down space junk! | Inaantok na ulap na lumulunok ng basura sa kalawakan! | 0.828 | area |

@@ -1,0 +1,37 @@
+# Review sample — ar
+
+Thirty keys (or fewer): placeholder-heavy, then longest, then the first keys of each screen area.
+Ratio is UTF-16 length of the translation divided by the English length.
+
+| Area | English | Translation | Ratio | Why |
+| --- | --- | --- | ---: | --- |
+| other | Goal: Feed Nibbles {0} kg ({1}/{0} kg eaten) | هدف: أطعم Nibbles {0} kg ({1}/{0} kg مأكول) | 0.977 | placeholders |
+| other | Resets in {0}h {1}m | بعد {0} س {1} د | 0.789 | placeholders |
+| other | {0} • {1} | {0} • {1} | 1 | placeholders |
+| other | 🏆 Trophy: {0} (+{1} 🪙) | 🏆 كأس: {0} (+{1} 🪙) | 0.875 | placeholders |
+| other | {0} / {1} kg | {0} / {1} kg | 1 | placeholders |
+| trophies | All game progression, gold coins, and cosmetic unlocks are saved locally on your device via standard browser localStorage. No account creation, no external tracking SDKs, and zero behavioral ads. | نحفظ تقدم اللعب وعملات ذهبية والأزياء محليا على جهازك عبر localStorage في المتصفح. بلا حساب، وبلا تتبع خارجي، وبلا إعلانات سلوكية. | 0.667 | longest |
+| trophies | Orbital Salvage is built with strict privacy-by-design. We do not collect, store, sell, or transmit any personally identifiable information, cookies, device identifiers, or location data. | Orbital Salvage مبني بخصوصية صارمة منذ البداية. لا نجمع ولا نخزن ولا نبيع ولا نرسل أي معلومة شخصية أو ملفات تعريف الارتباط أو معرفات جهاز أو بيانات موقع. | 0.818 | longest |
+| trophies | Are you sure? This will reset all your unlocked maps, custom costumes, and earned gold coins. This cannot be undone! | هل أنت متأكد؟ هذا يمسح كل خريطة مفتوحة والأزياء وعملات ذهبية. لا يمكن التراجع! | 0.672 | longest |
+| trophies | All items in the Toy Shop are earned through in-game gameplay coins. There are no real-money in-app purchases. | كل ما في متجر الألعاب تكسبه بعملات ذهبية من اللعب. لا شراء بمال حقيقي. | 0.636 | longest |
+| daily | Cosmic Vortex Overdrive: High-density debris cloud & dual shredder gates! | دوامة كونية قصوى: سحابة خردة كثيفة وبوابتان للفرم! | 0.685 | longest |
+| shop | Squeaky bright yellow bath duck with cute orange beak and water bubbles! | بطة حمام صفراء زاهية تصر، بمنقار برتقالي لطيف وفقاعات! | 0.75 | longest |
+| shop | The hungriest, cutest cartoon black hole with big anime eyes! Nom nom! | أظرف ثقب أسود كرتوني وأكثره جوعا بعيون أنمي كبيرة! نام نام! | 0.843 | longest |
+| shop | Fluffy pastel indigo and magenta clouds with sparkling star smileys. | غيوم قطنية فاتحة بلون نيلي ووردي مع نجوم ضاحكة لامعة. | 0.779 | longest |
+| daily | Calm Orbit Sweep: Gentle centrifugal speed, wide gates & easy flow. | كنس مدار هادئ: دوران لطيف وبوابات واسعة وتدفق سهل. | 0.746 | longest |
+| trophies | 100% Free • Unlock cute costumes with your earned recycling coins! | 100% مجاني • افتح أزياء لطيفة بعملات ذهبية جمعتها! | 0.758 | longest |
+| maps | 0 / 105 kg | 0 / 105 kg | 1 | area |
+| trophies | 0 / 20 kg | 0 / 20 kg | 1 | area |
+| debrief | 0 / 210 kg | 0 / 210 kg | 1 | area |
+| daily | 0 / 26 kg | 0 / 26 kg | 1 | area |
+| defeat | 15 / 20 kg | 15 / 20 kg | 1 | area |
+| shop | A happy cartoon moon made of Swiss cheese floating in twilight. | قمر كرتوني سعيد من جبن سويسري يطفو في الغسق. | 0.698 | area |
+| settings | Change | تغيير | 0.833 | area |
+| pause | Goal: Feed Nibbles 20 kg (0/20 kg eaten) | هدف: أطعم Nibbles 20 kg (0/20 kg مأكول) | 0.975 | area |
+| other | Waking up Nibbles for breakfast... | إيقاظ Nibbles للفطور... | 0.676 | area |
+| maps | 0 / 132 kg | 0 / 132 kg | 1 | area |
+| trophies | 1,000 items recycled! You are the ultimate cosmic cleaner! | 1,000 قطعة معاد تدويرها! أنت أفضل منظف كوني! | 0.759 | area |
+| debrief | 105 kg | 105 kg | 1 | area |
+| daily | 0 / 3 CLEARED | 0 / 3 تم | 0.615 | area |
+| defeat | 5 / 20 kg | 5 / 20 kg | 1 | area |
+| shop | A sleepy pastel blue cloud that yawns and gulps down space junk! | غيمة زرقاء فاتحة ناعسة تتثاءب وتبتلع نفايات الفضاء! | 0.797 | area |

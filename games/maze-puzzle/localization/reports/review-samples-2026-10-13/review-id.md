@@ -1,0 +1,37 @@
+# Review sample — id
+
+Thirty keys (or fewer): placeholder-heavy, then longest, then the first keys of each screen area.
+Ratio is UTF-16 length of the translation divided by the English length.
+
+| Area | English | Translation | Ratio | Why |
+| --- | --- | --- | ---: | --- |
+| other | Goal: Feed Nibbles {0} kg ({1}/{0} kg eaten) | Misi: Beri Nibbles {0} kg ({1}/{0} kg dimakan) | 1.045 | placeholders |
+| other | Resets in {0}h {1}m | Ulang {0}j {1}mnt | 0.895 | placeholders |
+| other | {0} • {1} | {0} • {1} | 1 | placeholders |
+| other | 🏆 Trophy: {0} (+{1} 🪙) | 🏆 Trofi: {0} (+{1} 🪙) | 0.958 | placeholders |
+| other | {0} / {1} kg | {0} / {1} kg | 1 | placeholders |
+| trophies | All game progression, gold coins, and cosmetic unlocks are saved locally on your device via standard browser localStorage. No account creation, no external tracking SDKs, and zero behavioral ads. | Progres, koin emas, dan kostum tersimpan di perangkat kamu lewat localStorage. Tanpa akun, pelacak, atau iklan. | 0.569 | longest |
+| trophies | Orbital Salvage is built with strict privacy-by-design. We do not collect, store, sell, or transmit any personally identifiable information, cookies, device identifiers, or location data. | Orbital Salvage menjaga privasi. Kami tidak mengumpulkan, menyimpan, menjual, atau mengirim data pribadi, kuki, identitas perangkat, atau lokasi. | 0.775 | longest |
+| trophies | Are you sure? This will reset all your unlocked maps, custom costumes, and earned gold coins. This cannot be undone! | Kamu yakin? Hapus peta, kostum, dan koin emas. Tidak bisa kembali! | 0.569 | longest |
+| trophies | All items in the Toy Shop are earned through in-game gameplay coins. There are no real-money in-app purchases. | Semua barang di toko mainan dibeli dengan koin emas dari permainan. Tidak ada uang asli. | 0.8 | longest |
+| daily | Cosmic Vortex Overdrive: High-density debris cloud & dual shredder gates! | Pusaran kosmik kencang: awan rongsokan padat dan dua gerbang pencacah! | 0.959 | longest |
+| shop | Squeaky bright yellow bath duck with cute orange beak and water bubbles! | Bebek mandi kuning yang mencicit, paruh jingga, dan gelembung air! | 0.917 | longest |
+| shop | The hungriest, cutest cartoon black hole with big anime eyes! Nom nom! | Lubang hitam paling lapar dan lucu, bermata besar! Nyam nyam! | 0.871 | longest |
+| shop | Fluffy pastel indigo and magenta clouds with sparkling star smileys. | Awan ungu dan merah jambu dengan bintang tersenyum. | 0.75 | longest |
+| daily | Calm Orbit Sweep: Gentle centrifugal speed, wide gates & easy flow. | Sapu orbit tenang: putaran pelan, gerbang lebar, dan alur mudah. | 0.955 | longest |
+| trophies | 100% Free • Unlock cute costumes with your earned recycling coins! | 100% gratis • Buka kostum lucu dengan koin emas yang kamu kumpulkan! | 1.03 | longest |
+| maps | 0 / 105 kg | 0 / 105 kg | 1 | area |
+| trophies | 0 / 20 kg | 0 / 20 kg | 1 | area |
+| debrief | 0 / 210 kg | 0 / 210 kg | 1 | area |
+| daily | 0 / 26 kg | 0 / 26 kg | 1 | area |
+| defeat | 15 / 20 kg | 15 / 20 kg | 1 | area |
+| shop | A happy cartoon moon made of Swiss cheese floating in twilight. | Bulan keju berlubang yang tersenyum, mengambang di senja. | 0.905 | area |
+| settings | Change | Ganti | 0.833 | area |
+| pause | Goal: Feed Nibbles 20 kg (0/20 kg eaten) | Misi: Beri Nibbles 20 kg (0/20 kg dimakan) | 1.05 | area |
+| other | Waking up Nibbles for breakfast... | Nibbles bangun untuk sarapan... | 0.912 | area |
+| maps | 0 / 132 kg | 0 / 132 kg | 1 | area |
+| trophies | 1,000 items recycled! You are the ultimate cosmic cleaner! | 1,000 barang didaur ulang! Kamu jago bersih-bersih kosmik! | 1 | area |
+| debrief | 105 kg | 105 kg | 1 | area |
+| daily | 0 / 3 CLEARED | 0 / 3 SELESAI | 1 | area |
+| defeat | 5 / 20 kg | 5 / 20 kg | 1 | area |
+| shop | A sleepy pastel blue cloud that yawns and gulps down space junk! | Awan mengantuk yang menelan sampah luar angkasa! | 0.75 | area |
