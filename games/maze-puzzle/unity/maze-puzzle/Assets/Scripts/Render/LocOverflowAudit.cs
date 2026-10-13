@@ -174,6 +174,23 @@ namespace OrbitalSalvage.Render
             NoteMissingGlyphs(file, id, shown, font, report);
             TextFit.Layout plan = TextFit.Plan(input, (px, spacing) => Measure(canvas, font, shown, px, spacing));
             string fitLang = FitLang(id);
+            double box = rr[3] > 1 ? rr[3] : er[3];
+            if (ShapedText.IsComplex(fitLang))
+            {
+                canvas.Font = FontSized(font, plan.FontPx);
+                canvas.LetterSpacing = plan.LetterSpacing;
+                ShapedText.Fit probe;
+                if (ShapedText.TryFit(canvas, shown, fitLang, plan.Available, plan.FontPx, plan.LetterSpacing, plan.Action, plan.MaxLines, out probe)
+                    && probe.Lines != null)
+                {
+                    double fittedPx = ShapedText.PxForBox(fitLang, plan.FontPx, box, probe.Lines.Length);
+                    if (fittedPx < plan.FontPx - 0.2)
+                    {
+                        plan.LetterSpacing = plan.LetterSpacing * (fittedPx / plan.FontPx);
+                        plan.FontPx = fittedPx;
+                    }
+                }
+            }
             canvas.Font = FontSized(font, plan.FontPx);
             canvas.LetterSpacing = plan.LetterSpacing;
             ShapedText.Fit shaped = null;

@@ -187,6 +187,15 @@ namespace OrbitalSalvage.Render
         /// </summary>
         TrueTypeFont AscentFace(string family, int weight)
         {
+            if (ShapedText.IsComplex(ShapeCode))
+            {
+                var table = ShapedText.Table(ShapeCode);
+                if (table != null && !table.Refused)
+                {
+                    TrueTypeFont script = ScriptFace(ShapeCode, table.FontName);
+                    if (script != null) return script;
+                }
+            }
             if (TextChain != null && TextChain.Length > 0 && !LatinStrut(TextChain[0]))
                 return OutlineFonts.Primary(family, weight);
             if (TextChain != null && TextChain.Length > 0) return TextChain[0];
