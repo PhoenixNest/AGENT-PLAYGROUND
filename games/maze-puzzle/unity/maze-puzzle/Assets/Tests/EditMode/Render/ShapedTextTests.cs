@@ -129,6 +129,11 @@ namespace OrbitalSalvage.Render.Tests
             Assert.IsFalse(table.TryResolve("كلمة20", out resolved));
             Assert.IsTrue(ShapedTable.IsWesternNumber("20"));
             Assert.IsFalse(ShapedTable.IsWesternNumber("٢٠"));
+            Assert.IsTrue(table.TryResolve("12 / 20 kg", out resolved));
+            Assert.IsFalse(resolved.RightAlign, "a Latin-only quota is not an Arabic paragraph");
+            ShapedText.Fit quota = ShapedText.Build(resolved, s => s.Length * 8.0, 28, table.UnitsPerEm, 4000, 0, TextFit.Action.Single, 1);
+            Assert.IsTrue(quota.Lines[0].Text.StartsWith("12"), quota.Lines[0].Text);
+            Assert.IsTrue(quota.Lines[0].Pieces[0].Text.StartsWith("12"), quota.Lines[0].Pieces[0].Text);
         }
 
         [Test]
