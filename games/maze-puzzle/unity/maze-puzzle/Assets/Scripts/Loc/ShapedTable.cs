@@ -26,6 +26,7 @@ namespace OrbitalSalvage.Loc
 
         readonly Entry[] entries;
         readonly Dictionary<ulong, int> byHash;
+        readonly Dictionary<ulong, Entry> emojiTail;
         readonly int[] slotted;
         readonly Dictionary<string, Resolved> cache = new Dictionary<string, Resolved>();
 
@@ -41,6 +42,41 @@ namespace OrbitalSalvage.Loc
             for (int i = 0; i < this.entries.Length; i++)
                 byHash[this.entries[i].Hash] = i;
             this.slotted = slotted ?? Array.Empty<int>();
+            emojiTail = BuildEmojiTails(this.entries, byHash);
+        }
+
+        /// <summary>
+        /// Home drops a leading emoji when the spec already draws it as a child image.
+        /// The cut keeps the space that belonged to the next run, so the lookup string
+        /// is not a table key. The remaining runs of that entry are the label.
+        /// </summary>
+        static Dictionary<ulong, Entry> BuildEmojiTails(Entry[] entries, Dictionary<ulong, int> byHash)
+        {
+            var tails = new Dictionary<ulong, Entry>();
+            if (entries == null) return tails;
+            for (int i = 0; i < entries.Length; i++)
+            {
+                Entry entry = entries[i];
+                if (entry == null || entry.Runs == null || entry.Runs.Length < 2) continue;
+                if (entry.Runs[0].Kind != KindEmoji) continue;
+                string prefix = entry.Runs[0].Text;
+                if (string.IsNullOrEmpty(prefix) || entry.Template == null || !entry.Template.StartsWith(prefix, StringComparison.Ordinal)) continue;
+                string suffix = entry.Template.Substring(prefix.Length);
+                if (suffix.Length == 0) continue;
+                ulong hash = Hash(suffix);
+                if (byHash.ContainsKey(hash) || tails.ContainsKey(hash)) continue;
+                var runs = new Run[entry.Runs.Length - 1];
+                Array.Copy(entry.Runs, 1, runs, 0, runs.Length);
+                tails[hash] = new Entry
+                {
+                    Hash = hash,
+                    BaseLevel = entry.BaseLevel,
+                    Runs = runs,
+                    Template = suffix,
+                    HasSlot = false
+                };
+            }
+            return tails;
         }
 
         public static ShapedTable Empty(string fontName)
@@ -125,6 +161,13 @@ namespace OrbitalSalvage.Loc
             if (byHash.TryGetValue(hash, out index))
             {
                 resolved = new Resolved(entries[index], Array.Empty<string>(), this);
+                cache[text] = resolved;
+                return true;
+            }
+            Entry tail;
+            if (emojiTail != null && emojiTail.TryGetValue(hash, out tail))
+            {
+                resolved = new Resolved(tail, Array.Empty<string>(), this);
                 cache[text] = resolved;
                 return true;
             }
