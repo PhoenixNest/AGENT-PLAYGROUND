@@ -9,11 +9,11 @@
 | spec keys | 355 |
 | str keys | 81 |
 | validator errors | 0 |
-| visible warnings | 145 |
+| visible warnings | 187 |
 | suppressed fit warnings | 0 |
 | accepted identical copies | 0 |
 
-Visible warnings by kind: `fit` 93, `glossary` 51, `font-pending` 1. The 51 glossary warnings are the 50 `LVL` chips (they say `LvN`; sentences still say `レベル`) and `TOY SHOP` (`おもちゃや`). There is no `ja-identical-ok.json`.
+Visible warnings by kind: `fit` 136, `glossary` 51. The 51 glossary warnings are the 50 `LVL` chips (they say `LvN`; sentences still say `レベル`) and `TOY SHOP` (`おもちゃや`). There is no `ja-identical-ok.json`.
 
 ## Level chips
 
@@ -62,6 +62,19 @@ ASCII `(` `)` stay, including the cut-off `Unlock (` and trophy fragments. A kat
 
 `おもちゃやさん` is still `おもちゃや` on the `TOY SHOP` header (119px against a 116px floor). The sentence about the shop uses `おもちゃやさん`.
 
+## Two labels that ellipsized
+
+Measured on `Assets/Fonts/MPLUSRounded1c-700.ttf` (upem 1000, kana and kanji 1.00em). Every character in these two strings is in that subset. The sparkle on the shop title is the English emoji, drawn as a sprite.
+
+| English | New | Width | Box | Floor | Under the floor |
+| --- | --- | ---: | ---: | ---: | ---: |
+| `GOLD` | `金` | 10.0px at 10px | 33.1px | 46.0px | 78% |
+| `Allowance Claimed!` | `おこづかいゲット！` | 121.5px at 13.5px | 128.3px | 178.1px | 32% |
+
+`金` is the one-character gold-medal label. `ゴールド` was 40px and the daily chip painted `ゴー…`. `GOLD ✓` stays `ゴールド✓` because that wider chip already fits. `ゴールドコイン` and `ゴールドシフト` are unchanged.
+
+The claim title fits the 128px box at full size. The shop string `gift.title.claimed` is the same words plus `✨` (about 135px if the sparkle is 1em). That is a small shrink, still about 32% above the 72% floor, so it does not ellipsize. The banner sentences stay `まいにち・+100のおこづかい。` and `あしたも・+100のケアパッケージ！`.
+
 ## English source
 
 - `Unlock (1200` and the other `Unlock (` lines, and `Trophy: Daily Duty Star (+500`, are cut off. The translations stay open.
@@ -79,7 +92,6 @@ These lines are within 5% of the shrink floor on `mplus-ja-joyo.ttf`, or past it
 | `Clean up Bronze Shift • Cadet Sweep!` | 280 | 271 | 1.03 |
 | `Nibbles is still hungry! Out of orbital scrap!` | 387 | 389 | 1.00 |
 | black-hole blurb (`お腹`) | 468 | 475 | 0.99 |
-| `Allowance Claimed!` | 176 | 178 | 0.99 |
 | `Nibbles Hats` | 92 | 94 | 0.97 |
 | vibration sublabel | 275 | 285 | 0.96 |
 
@@ -87,4 +99,4 @@ The two privacy paragraphs, the reset confirmation, and the toy-shop money sente
 
 ## Validator
 
-`validate_table.py --lang ja` on `ja.json`: 0 errors, 145 warnings, 0 suppressed. Warnings are 93 `fit`, 51 `glossary`, and 1 `font-pending` (`MPLUSRounded1c-Bold.ttf`).
+`validate_table.py --lang ja` on `ja.json`: 0 errors, 187 warnings, 0 suppressed. Warnings are 136 `fit` and 51 `glossary`. The shipped face is `MPLUSRounded1c-700.ttf`, so the old `font-pending` warning is gone. The fit count rose because the estimator now uses that face's advances.
