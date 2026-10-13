@@ -905,7 +905,9 @@ def check_script(lang, target, ident, findings, table_flags):
     if lang == "ja":
         if flags["hangul"] or flags["deva"] or flags["khmer"] or flags["arab"]:
             add(findings, "error", "script", ident, "Japanese translation contains another script")
-        if not (flags["kana"] or flags["han"]):
+        # Lv1–Lv50 chips. レベル misses the real-font shrink floor on the tight
+        # chips, and Latin Lv is the compact form used on those chips only.
+        if not (flags["kana"] or flags["han"]) and not re.fullmatch(r"Lv\d{1,2}", target):
             add(findings, "error", "script", ident, "Japanese translation has no kana or kanji")
         return
     if lang == "ko":
