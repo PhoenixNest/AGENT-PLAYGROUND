@@ -1,5 +1,5 @@
 {
-  "note": "File names are looked up in --fonts-dir (default Assets/Fonts). pending faces are not shipped yet; the glyph check skips a language whose chain is empty and warns font-pending. vi and uz keep the shipped Latin faces so the cmap check runs today; Baloo 2 is still pending for display.",
+  "note": "File names are looked up in --fonts-dir (default Assets/Fonts). An empty chain with a pending list skips the glyph check and warns font-pending. A non-empty chain is checked, and a pending list also warns. vi and uz use the shipped Latin faces (Fredoka, Nunito, and the symbol fonts). Baloo 2 is the Devanagari face for hi, not a display face for vi or uz.",
   "languages": {
     "de": {
       "fontGroup": "latin",
@@ -47,13 +47,13 @@
       "fontGroup": "latin-vi",
       "expansion": 1.15,
       "chain": ["Fredoka-400.ttf", "Fredoka-600.ttf", "Fredoka-700.ttf", "Nunito-700.ttf", "Nunito-800.ttf", "Nunito-900.ttf", "NotoSansSymbols2-Regular.ttf", "NotoSansSymbols-Regular.ttf"],
-      "pending": ["Baloo2-700.ttf"]
+      "pending": []
     },
     "uz": {
       "fontGroup": "latin",
       "expansion": 1.25,
       "chain": ["Fredoka-400.ttf", "Fredoka-600.ttf", "Fredoka-700.ttf", "Nunito-700.ttf", "Nunito-800.ttf", "Nunito-900.ttf", "NotoSansSymbols2-Regular.ttf", "NotoSansSymbols-Regular.ttf"],
-      "pending": ["Baloo2-700.ttf"]
+      "pending": []
     },
     "zh-Hans": {
       "fontGroup": "cjk-sc",
