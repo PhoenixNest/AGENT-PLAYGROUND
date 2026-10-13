@@ -18,25 +18,30 @@ Hard is outside, overlap, band, wider, wrapped-in-control, missing-glyph, and ic
 
 ## What the stills show
 
-The wordmark `ORBITAL` / `SALVAGE` / `SPACE TRASH CLEAN` stays English on Home in all three. That string is identical in the tables.
+I read Home, Settings (the page and the language picker), Shop, Daily, Maps, Trophies, Pause, Defeat, and Win for `ar`, `hi`, and `km`. I do not read these scripts. Spelling below is from the table or the picker marker. Where I only describe the picture, I am not claiming the letters spell the table.
 
-Arabic Home keeps the English page order. The world chip stays on the left, the goal pill stays on the right, the play ▶ stays on the left of the green button, and the close and pause icons stay where English put them. The goal pill reads with `20` and `kg` in the Latin face and the Arabic word on the right of that pill. The play label sits to the right of the triangle. Dock labels sit under the four icons and are not blank. The language row draws `العربية` in Cairo with the check on the right of the word (`✓ العربية` in logical order). Joins on that word are connected. I did not see a gap inside the word.
+The wordmark stays English. Page chrome is not mirrored: the back arrow stays on the left and still points left, the gear stays left of the settings title, the close × stays on the right of Pause, and the play ▶ stays on the left of the green Home button and on the left of the yellow resume button.
 
-Hindi Home draws the world chip, the goal pill (`20 kg`), the level line, the play label, and the dock in Baloo 2. The level line is one headline; the headstroke looks continuous at this size, and the matras are inside the chips rather than cut off by the pill edge. The Hindi picker row is `✓ हिन्दी` with the check on the left. The i-matra is visible above the line.
+Arabic text is joined. `العربية` on the marked picker is one connected word, and the check sits on the right (`✓ العربية` in the marker). Home, Settings, Shop, Maps, Trophies, Pause, Defeat, and Win all draw Cairo rather than boxes. Mixed lines keep Western digits and `kg` / `Nibbles` in the Latin face. The goal pill puts the Arabic word on the right and `20 kg` toward the left of that pill. Settings rows are right-aligned: the speaker icon stays on the left, the yellow section title sits on the right, and the toggle and sliders stay on the right. Shop tabs, the gift button, and the skybox card are filled. Maps level cards keep the play triangle on the right of the card and the stage chip on the left. Trophy titles and the green unlocked mark are on the card; the mark is on the right. Defeat and Win banners are centred in the coloured strip, with the emoji on the left of the Arabic words. I did not see a letter colliding with an icon.
 
-Khmer Home and Daily draw Kantumruy, not boxes. The goal pill keeps `20 kg`. The play ▶ stays on the left. Daily shows a countdown with Western `14h 59m`, three medal words, and a two-line task. Subscript and vowel marks are visible on the title and the body; I did not see a coeng sliced off by the pill, or a line colliding with the next. The picker row is `✓` then the Khmer endonym, check on the left. At 14px the clusters are small. I would not call the Khmer print-sharp, and I cannot vouch for the spelling from the pixels. The marker file records the drawn string as `✓ ភាសាខ្មែរ`.
+Hindi uses Baloo 2. The Home level line is one headline and the headstroke looks continuous inside the card. Matras on the dock labels and the play button sit inside the chips; I did not see one sliced off at the top. The marked picker draws `✓ हिन्दी` with the check on the left, and the same picker also draws `ភាសាខ្មែរ` and `العربية` (marker files: `✓ ភាសាខ្មែរ`, `العربية` without a check on that row). Settings, Shop, Daily, Maps, Trophies, Pause, Defeat, and Win are filled. Daily shows `14h 59m` and `0 / 3` in Latin order. Stat chips read `20 kg` and `12 / 20 kg`.
 
-Pause (Arabic): the title is centred, the pause icon stays on the left, the close button stays on the right.
+Khmer uses Kantumruy. Home, Daily, Maps, and the picker are not tofu. The marked picker is `✓` then the Khmer endonym, check on the left. The marker records `✓ ភាសាខ្មែរ`. Daily keeps `14h 59m` and `0 / 3`, three short medal words, and a two-line task. Subscript clusters are visible under the title and the body; I did not see a coeng cut off by the pill or a line sitting on the next line. At this size the clusters are small, and I would not call them print-sharp. Defeat and Win banners and the stat chips (`20 kg`, `12 / 20 kg`, `4 kg`) are drawn. Pause buttons are filled, with the icons on the left of the label.
+
+One Arabic direction bug was in those stills. `unit.quota` is the English string `{0} / {1} kg`, and the win total is `{0} kg`. Both were baked as Arabic paragraphs, so the chips painted `kg 20 / 12` and `kg 20`. Hindi and Khmer painted `12 / 20 kg` and `20 kg`. A string with no Arabic letter is now a left-to-right paragraph. The stills above were read before that rebake. `LatinOnlyQuota_StaysLeftToRight` locks the new order. A mixed line that does contain Arabic, such as the goal pill, stays right-to-left.
 
 ## Too wide, not edited
 
 These fit after shrink or ellipsis. Hard wider is 0. I did not change the tables.
 
-| language | where | English | translation | what the fitter did |
-| --- | --- | --- | --- | --- |
-| ar, hi, km | privacy body | Orbital Salvage is built with strict privacy-by-design. … | the long privacy paragraph in each table | ellipsis, same as the Latin tables |
-| ar, hi, km | privacy body | All game progression, gold coins, and cosmetic unlocks… | the localStorage paragraph | ellipsis |
-| km | daily medals and reset | `BRONZE` / `SILVER` / `GOLD`, `Resets in 14h 59m` | `សំរឹទ្ធ` / `ប្រាក់` / `មាស`, `ឡើងវិញ 14h 59m` | scale 0.78, still inside the chip |
+The audit records a scale, not a pixel width. 0.72 means the unscaled line was about 1.4 times the box. 0.78 is about 1.3 times. Hard wider is 0 after that shrink.
+
+| key | language | English | translation | measured | suggestion |
+| --- | --- | --- | --- | --- | --- |
+| spec privacy-by-design paragraph | ar, hi, km | Orbital Salvage is built with strict privacy-by-design. … | each table's privacy paragraph | ellipsis, same two pages as every Latin table | shorter paragraph, or a taller card |
+| spec localStorage paragraph | ar, hi, km | All game progression, gold coins, and cosmetic unlocks… | each table's localStorage paragraph | ellipsis | same |
+| `BRONZE` / `SILVER` / `GOLD` | km | BRONZE / SILVER / GOLD | សំរឹទ្ធ / ប្រាក់ / មាស | scale 0.78, still inside the chip | shorter medal names if the chip must stay at the English size |
+| `daily.countdown` | km | Resets in {0}h {1}m | ឡើងវិញ {0}h {1}m | scale 0.78, still inside the chip | a shorter lead-in |
 
 If the privacy paragraphs must show in full, they need a shorter translation or a taller card. The card-grow path is still English-only.
 

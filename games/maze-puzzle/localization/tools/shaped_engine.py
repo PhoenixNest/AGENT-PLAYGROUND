@@ -373,10 +373,24 @@ def _level_at(levels: list[int], index: int) -> int:
     return levels[index]
 
 
+def paragraph_dir(face: Face, text: str) -> str:
+    """Arabic is RTL only when the string itself has an Arabic letter.
+
+    A Latin-only value such as ``12 / 20 kg`` stays left to right. Forcing
+    the Arabic paragraph direction on it paints ``kg 20 / 12``.
+    """
+    if face.base_dir != "R":
+        return face.base_dir
+    for ch in text:
+        if _is_script(ord(ch), "ar"):
+            return "R"
+    return "L"
+
+
 def shape_string(face: Face, text: str) -> dict:
     text = unicodedata.normalize("NFC", text)
     check_placeholders(text)
-    base, levels = bidi_levels(text, face.base_dir)
+    base, levels = bidi_levels(text, paragraph_dir(face, text))
     u16 = _utf16_map(text)
     atoms = _merge(_atoms(text, face.lang))
     runs = []
@@ -520,7 +534,7 @@ def level_runs(levels: list[int]) -> list[tuple[int, int, int]]:
 def hb_visual(face: Face, text: str) -> list[dict]:
     """Shape the whole string with one face, including digits. Proof helper."""
     text = unicodedata.normalize("NFC", text)
-    _base, levels = bidi_levels(text, face.base_dir)
+    _base, levels = bidi_levels(text, paragraph_dir(face, text))
     parts = []
     for start, end, level in level_runs(levels):
         glyphs = face.shape_slice(text[start:end], level)
@@ -549,11 +563,11 @@ def stitch_match(face: Face, template: str, number: str) -> bool:
         if part == "":
             continue
         glyphs = hb_visual(face, part)
-        if face.base_dir == "R":
+        if paragraph_dir(face, template) == "R":
             level = 2 if part == number else 1
             glyphs = [dict(g, level=level) for g in glyphs]
         parts.append(glyphs)
-    stitched = _reorder_parts(parts) if face.base_dir == "R" else [g for part in parts for g in part]
+    stitched = _reorder_parts(parts) if paragraph_dir(face, template) == "R" else [g for part in parts for g in part]
     full_ids = [(g["gid"], g["dx"], g["dy"]) for g in full]
     stitch_ids = [(g["gid"], g["dx"], g["dy"]) for g in stitched]
     return full_ids == stitch_ids
