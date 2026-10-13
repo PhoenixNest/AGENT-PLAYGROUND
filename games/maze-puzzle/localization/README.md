@@ -156,10 +156,10 @@ Holes the source face does not have fall through the chain. `←` (U+2190) is mi
 
 | File | Bytes | Licence |
 | --- | ---: | --- |
-| `ZCOOLKuaiLe-sc.ttf` / `.bytes` | 91184 | OFL 1.1, Copyright 2018 The ZCOOL KuaiLe Project Authors. `ZCOOLKuaiLe-OFL.txt` |
-| `Huninn-tc.ttf` / `.bytes` | 202064 | OFL 1.1, Copyright 2025 The Huninn Project Authors. `Huninn-OFL.txt` |
-| `MPLUSRounded1c-700.ttf` / `.bytes` | 292120 | OFL 1.1, Copyright 2016 The Rounded M+ Project Authors. `MPLUSRounded1c-OFL.txt`. Upstream has no `OFL.txt`; the sidecar is name IDs 0 and 13 plus the OFL 1.1 text |
-| `Jua-kr.ttf` / `.bytes` | 270856 | OFL 1.1, Copyright 2018 The Jua Project Authors. `Jua-OFL.txt` |
+| `ZCOOLKuaiLe-sc.ttf` / `.bytes` | 134392 | OFL 1.1, Copyright 2018 The ZCOOL KuaiLe Project Authors. `ZCOOLKuaiLe-OFL.txt` |
+| `Huninn-tc.ttf` / `.bytes` | 297972 | OFL 1.1, Copyright 2025 The Huninn Project Authors. `Huninn-OFL.txt` |
+| `MPLUSRounded1c-700.ttf` / `.bytes` | 301324 | OFL 1.1, Copyright 2016 The Rounded M+ Project Authors. `MPLUSRounded1c-OFL.txt`. Upstream has no `OFL.txt`; the sidecar is name IDs 0 and 13 plus the OFL 1.1 text |
+| `Jua-kr.ttf` / `.bytes` | 313780 | OFL 1.1, Copyright 2018 The Jua Project Authors. `Jua-OFL.txt` |
 
 Fredoka, Nunito, and the two Noto symbol fonts are unchanged. Their OFL files were already in `Assets/Fonts`.
 
