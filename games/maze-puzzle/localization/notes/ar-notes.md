@@ -9,19 +9,18 @@ Modern Standard Arabic, 2026-10-13. Masculine-neutral singular where a verb is n
 | spec keys | 355 |
 | str keys | 81 |
 | validator errors | 0 |
-| visible warnings | 3 |
+| visible warnings | 4 |
 | suppressed fit warnings | 50 |
 | accepted identical copies | 0 |
 
-Visible warnings by kind: `fit` 1 (`Nibbles Hats`), `glossary` 1 (`TOY SHOP`), `font-pending` 1 (Cairo chain). The 50 suppressed warnings are `LVL 1`–`LVL 50` in `ar-fit-exceptions.json`. Brand lines, `kg` strings, and emoji-only strings stay identical because the validator already allows them. They are not listed in an identical-ok file.
+Visible warnings by kind: `fit` 2 (`Nibbles Hats`, `Bronze Shift • Cadet Sweep`), `glossary` 1 (`TOY SHOP`), `font-pending` 1 (Cairo chain). The 50 suppressed warnings are `LVL 1`–`LVL 50` in `ar-fit-exceptions.json`. Brand lines, `kg` strings, and emoji-only strings stay identical because the validator already allows them. They are not listed in an identical-ok file.
 
 ## Doubtful lines
 
 | English | Choice | Alternative |
 | --- | --- | --- |
-| `Cancel` | `ألغ` | `إلغاء` (the usual button noun; the unvowelled imperative is short and a bit bare) |
 | `Nebula Pinball` | `دبابيس السديم` | `كرة الدبابيس` (longer; Latin pinball is not allowed) |
-| `Bronze Shift • Cadet Sweep` | `وردية برونزية • جولة الطالب` | `كنس الطالب` (closer to sweep, easier to misread) |
+| `Bronze Shift • Cadet Sweep` | `وردية برونزية • جولة المتدرب` | `جولة متدرب` (fits the 176px card; the form with `ال` is 181px) |
 | `Cyber Orbit 1` | `مدار سيبر 1` | `مدار إلكتروني 1` (clearer, wider on the 71px card) |
 | `The Kessler Singularity` | `تفرد كيسلر` | `نقطة كيسلر` (kids may not know `تفرد`; the glossary word is `تفرد`) |
 | `Skies` | `سماء` | `سماوات` (glossary plural; about 35px in a 28px tab) |
@@ -35,6 +34,39 @@ Visible warnings by kind: `fit` 1 (`Nibbles Hats`), `glossary` 1 (`TOY SHOP`), `
 
 `Nibbles Hats` stays `قبعات Nibbles` (glossary). The estimator says 74px in a 69px tab, above the 72% shrink floor, so it should still paint in full.
 
+## Button labels
+
+`Cancel` is `إلغاء`. It is 29px in a 37px box. It does not overflow.
+
+The same test on the other bare imperatives:
+
+| English | Now | Why |
+| --- | --- | --- |
+| `Close` | `إغلاق` | Standard close label. 31px in a 32px box. |
+| `View` | `عرض` | Standard view label. 17px in a 26px box. `اقرأ` was "read". |
+| `Restart Sector` | `إعادة القطاع` | Same verbal noun as `Reset` → `إعادة`. 67px in an 82px box. |
+| `RESUME PLAY` | `متابعة اللعب` | 89px in a 109px box. |
+| `Launch Backup Pod (+8 Scrap!)` | `إطلاق حجرة احتياط (+8 خردة!)` | 159px in a 182px box. |
+| `Wear` | `ارتد` (unchanged) | `ارتداء` is 35px in a 29px box (warning, under the 40px floor). |
+| `Play Again` | `أعد اللعب` (unchanged) | `إعادة اللعب` is 61px in a 58px box. |
+| `Try Again` | `جرب ثانية` (unchanged) | `إعادة المحاولة` is 78px, past the 76px shrink floor. |
+| `Return to Home` | `عد إلى الرئيسية` (unchanged) | `العودة إلى الرئيسية` is 105px in an 88px box. |
+| `← Back`, `PLAY`, unlock, `Claim`, `Start Shift` | `ارجع`, `العب`, `افتح`, `اجمع`, `ابدأ` | These stay imperatives. That is the normal game label. |
+
+`Choose Language` is a modal title and stays `اختر اللغة`. `Clear unlocked levels...` is a settings subtitle, not a button, and stays `امسح...`.
+
+## Cadet
+
+`طالب` means student. Cadet is `متدرب`.
+
+| English | Now |
+| --- | --- |
+| `Bronze Shift • Cadet Sweep` | `وردية برونزية • جولة المتدرب` |
+| `Clean up Bronze Shift • Cadet Sweep!` | `نظف وردية برونزية • جولة المتدرب!` |
+| `Tidy Space Cadet` | `متدرب فضاء مرتب` |
+
+`جولة المتدرب` on the shift card is 181px in a 176px box (floor 244px). It stays the glossary-style phrase with `ال`. The cleanup line is 189px in a 195px box. Silver is `خطر القطاع` and gold is `قمة دوامة`. Neither used a person-word the way `طالب` did.
+
 ## Glossary terms not used as written
 
 Checked terms are used except the shop header.
@@ -47,6 +79,7 @@ Checked terms are used except the shop header.
 | `trophy` → `كأس` | `TROPHIES`, `TROPHY ROOM` | `كأس`, `غرفة الكأس` | `كؤوس` does not contain `كأس`. |
 | `shift` → `وردية` | `All 3 shifts`, the daily toasts | `كل وردية من 3` | `الورديات` does not contain `وردية`. The number stays. Agreement is stiff. |
 | `ring` → `حلقة` | plural labels | `حلقات` where the English is plural | `حلقات` does not contain `حلقة`. Check is no. `Donut Rings` is the glossary phrase `حلقات دونات`. |
+| `cadet` → `طالب` | shift name and `Tidy Space Cadet` | `متدرب` | `طالب` means student. Check is no. |
 
 `برونزية` / `فضية` / `ذهبية` are the feminine forms next to `وردية`. They still contain `برونزي` / `فضي` / `ذهبي`.
 
@@ -100,9 +133,9 @@ Not in Cairo or Noto Sans Arabic, and not changed: `✓` U+2713, `←` U+2190, `
 
 ```text
 errors: 0
-warnings: 3
+warnings: 4
 suppressed fit: 50
-by-kind: fit=1, glossary=1, font-pending=1
+by-kind: fit=2, glossary=1, font-pending=1
 ```
 
 `ar-fit-exceptions.json` hides `LVL 1`–`LVL 50`. `--show-suppressed` prints them. No identical-ok file.
