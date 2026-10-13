@@ -424,6 +424,7 @@ toast.daily.all_clear,str,,,,,,,64,true,true,,,Toast when all three daily shifts
 toast.daily.master_claimed,str,,,,,,,36,true,true,,,Toast after the daily master bonus pays 300 coins. Keep the trophy and coin emoji.,0,
 toast.gift.already,str,,,,,,,36,true,false,,,Toast when the daily gift button is pressed again. Keep the gift emoji.,0,
 toast.gift.claimed,str,,,,,,,33,true,true,,,Toast after the daily gift pays 100 coins. Keep the gift and coin emoji.,0,
+toast.infinite.round,str,,,,,,,22,true,true,,,"Toast when an infinite-mode round starts, after all 50 levels are done. {0} is the round number, {1} is the best round reached. Keep the rocket.",2,
 toast.progress.reset,str,,,,,,,26,true,true,,,Toast after Tools → Reset Saved Profile. Keep the broom emoji.,0,
 toast.sector.cleanup,str,,,,,,,15,true,true,,,Toast when a level loads. {0} is the level or daily-shift name passed through Loc.TrName (may be long). Keep the rocket.,1,
 toast.shop.equipped,str,,,,,,,16,true,false,,,Toast after equipping an owned item. Keep the sparkles.,0,

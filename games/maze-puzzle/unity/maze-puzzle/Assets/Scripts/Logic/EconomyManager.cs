@@ -129,6 +129,23 @@ namespace OrbitalSalvage.Logic
             }
         }
 
+        /// <summary>Starts (or resumes) the saved infinite round. A new player starts at round 1. Returns the round number.</summary>
+        public double BeginInfiniteRound()
+        {
+            if (Profile.InfiniteRound < 1) Profile.InfiniteRound = 1;
+            if (Profile.InfiniteBest < Profile.InfiniteRound) Profile.InfiniteBest = Profile.InfiniteRound;
+            SaveProfile();
+            return Profile.InfiniteRound;
+        }
+
+        /// <summary>Called when an infinite round is won. The next round number is saved.</summary>
+        public void CompleteInfiniteRound()
+        {
+            Profile.InfiniteRound = Math.Max(1, Profile.InfiniteRound) + 1;
+            if (Profile.InfiniteBest < Profile.InfiniteRound) Profile.InfiniteBest = Profile.InfiniteRound;
+            SaveProfile();
+        }
+
         public void SaveProfile()
         {
             try

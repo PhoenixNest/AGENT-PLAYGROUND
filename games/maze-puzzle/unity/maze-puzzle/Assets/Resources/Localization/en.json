@@ -433,6 +433,7 @@
     "toast.daily.master_claimed": "🏆 Claimed +300 🪙 Daily Master Bonus!",
     "toast.gift.already": "🎁 Claimed today. Come back tomorrow!",
     "toast.gift.claimed": "🎁 Claimed +100 🪙 Janitor Stipend!",
+    "toast.infinite.round": "Round {0}, best {1}! 🚀",
     "toast.progress.reset": "Progress Reset to Day 1! 🧹",
     "toast.sector.cleanup": "Clean up {0}! 🚀",
     "toast.shop.equipped": "Item Equipped! ✨",
