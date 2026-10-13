@@ -11,6 +11,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 Paths written as `tools/parity/...` in entries dated before 2026-10-08 are the location on that day. Those files now live under `games/maze-puzzle/tools/parity/...`. Entries that name `tools/parity/unity/*.ps1` or `canvas-conformance/run-unity.ps1` record the path used that day. Those Windows wrappers now live under `games/maze-puzzle/tools/parity/windows/`.
 
+- iPhone X (iOS 16.7.10, language en-US) ran the Release device build and reached Home in the phone language and in de, fr, es, it, pt-PT, vi, fil, id, uz, and qps. Notes: `localization/reports/device-check-2026-10-12.md`.
+
 ### Fixed
 
 #### Uzbek modifier letter sat away from the letter (2026-10-12)
