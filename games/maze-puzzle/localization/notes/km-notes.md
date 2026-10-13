@@ -166,3 +166,5 @@ Gift fragments, read in order: `ទទួលឥតថ្លៃប្រចាំ
 | `Tidy Space Cadet`                     | 113px vs 110px | `អ្នកហ្វឹកហាត់អវកាស`. Floor is 152px.                                  |
 
 None of these cross the 72% shrink floor. `LVL 11` did, until the space before the digits was removed.
+
+toast.infinite.round: agent draft, no native review

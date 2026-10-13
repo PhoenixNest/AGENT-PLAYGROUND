@@ -127,3 +127,5 @@ Checked terms that the line can hold are used: `temir parcha`, `sektor`, `dunyo`
 - `str` rows have no line box, so toast width is not fit-checked.
 - `🍩 DONUT 🍩` stays identical because `donut` is the glossary loanword. No `uz-identical-ok.json` entry was needed.
 - Privacy copy was left as it was. The audit ellipsized those bodies in every language.
+
+toast.infinite.round: agent draft, no native review

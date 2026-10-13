@@ -68,3 +68,5 @@ No `check: yes` warnings. Terms not used as the full glossary word:
 ## Validator
 
 `validate_table.py --lang ko` on this table: errors 0, warnings 1 (`font-pending`), suppressed 48. Glyph check does not run while the chain is pending. The manual cmap check against `jua-kr-ks.ttf` found no missing Hangul.
+
+toast.infinite.round: agent draft, no native review

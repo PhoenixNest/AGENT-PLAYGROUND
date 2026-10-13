@@ -89,3 +89,5 @@ The iPhone stills have no control ellipsis. The only ellipses are the two privac
 | Toy Shop sentence      |        1 glossary | Same word as the header: `Spielladen`.                                             |
 | `allowance.`           |                 1 | Glossary `Taschengeld.`, 64px vs 55px.                                             |
 | `← Back`               |                 1 | `← Zurück`, 49px vs 44px. No shorter word.                                         |
+
+toast.infinite.round: agent draft, no native review

@@ -146,3 +146,5 @@ Checked terms that did fit, and are used: `ferraille`, `pièces d'or`, `secteur`
 - The glossary check wants the whole recommended phrase as a substring. `d'or` satisfies `or`. `Étape` cannot satisfy `niveau`. `Chapeaux Nibbles` cannot satisfy `chapeaux de Nibbles`.
 - `str` rows have no line box, so toast width is not fit-checked. `fx.hub.mint` is a length warning instead.
 - The 30-key sample spends several slots on `kg` strings because those keys sort first in the area. That is a picker quirk, not a translation gap.
+
+toast.infinite.round: agent draft, no native review
