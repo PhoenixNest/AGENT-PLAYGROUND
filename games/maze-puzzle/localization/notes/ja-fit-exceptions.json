@@ -1,5 +1,5 @@
 {
-  "reason": "Glossary word is レベル. The LVL chip is narrower than that word, so the fit warning is accepted. LVL 11 is not in this list: レベル11 is past that chip's shrink floor, and the table uses 11面 there.",
+  "reason": "Level chips are Lv1–Lv50. Sentences and mission titles still use レベル. Measured with mplus-ja-joyo.ttf at 11px (kana and kanji 1.00em, L 0.599em, v 0.540em, digits 0.640em). レベル plus a number is 40.04px for one digit and 47.08px for two. The safe line is captured width / 0.72 × 0.97. レベル misses that line on 26 chips: LVL 2–19, 25, 31, 35, 45, 46, 47, 49, 50. Tightest is LVL 11: box 31.453px, floor 43.68px, 3% line 42.37px, レベル11 is 47.08px. Lv is 19.57px for one digit and 26.61px for two, and clears every chip (LVL 11 is 26.61px, 39% under its floor). These keys do not fit-warn, because Lv is narrower than the English chip. The ja script check allows this Lv-plus-digits form only.",
   "keys": [
     "spec:LVL 1",
     "spec:LVL 2",
@@ -11,6 +11,7 @@
     "spec:LVL 8",
     "spec:LVL 9",
     "spec:LVL 10",
+    "spec:LVL 11",
     "spec:LVL 12",
     "spec:LVL 13",
     "spec:LVL 14",
