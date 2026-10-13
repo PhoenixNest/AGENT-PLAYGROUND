@@ -206,6 +206,46 @@ namespace OrbitalSalvage.App.Tests
         }
 
         [Test]
+        public void GameTop_And_Pause_ShowRound_NotTheLevel()
+        {
+            AppController app = NewApp();
+            CompleteLevels(app, 50);
+            app.Click("btn-home-play");
+            Assert.AreEqual("\u2B50 Round 1", app.Model.Elements["hud-sector-code"].Text);
+            Assert.AreEqual("Round 1", app.PauseName);
+
+            // winning does not change the label until the next round starts
+            app.ForceVictory(app.ActiveSector.Quota);
+            Assert.AreEqual(2, app.Economy.Profile.InfiniteRound);
+            Assert.AreEqual("\u2B50 Round 1", app.Model.Elements["hud-sector-code"].Text);
+
+            app.Click("btn-debrief-next");
+            Assert.AreEqual("\u2B50 Round 2", app.Model.Elements["hud-sector-code"].Text);
+            Assert.AreEqual("Round 2", app.PauseName);
+        }
+
+        [Test]
+        public void Restart_InInfinite_ShowsRoundToast_NotLevelName()
+        {
+            AppController app = NewApp();
+            CompleteLevels(app, 50);
+            app.Click("btn-home-play");
+            app.RestartSector();
+            Assert.IsTrue(HasToast(app, "Round 1, best 1! " + Rocket), string.Join(" | ", app.ToastTexts()));
+            foreach (string t in app.ToastTexts()) StringAssert.DoesNotContain("Clean up", t);
+            Assert.AreEqual("\u2B50 Round 1", app.Model.Elements["hud-sector-code"].Text);
+        }
+
+        [Test]
+        public void GameTop_ShowsLevel_InCampaign()
+        {
+            AppController app = NewApp();
+            app.Click("btn-home-play");
+            Assert.AreEqual("\u2B50 LVL 1", app.Model.Elements["hud-sector-code"].Text);
+            Assert.AreEqual("LVL 1 \u2022 Bubblegum Chute 1", app.PauseName);
+        }
+
+        [Test]
         public void Home_ShowsLevelCard_WhenNotAllDone()
         {
             AppController app = NewApp();
