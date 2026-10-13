@@ -82,7 +82,7 @@ namespace OrbitalSalvage.Loc
                         continue;
                     }
                     split = true;
-                    BreakSyllables(lines[i], width, measure, extra);
+                    BreakPieces(lines[i], width, measure, extra);
                 }
                 if (!split) return;
                 lines.Clear();
@@ -90,14 +90,52 @@ namespace OrbitalSalvage.Loc
                 if (lines.Count == 0) lines.Add(text ?? "");
             }
 
-            static void BreakSyllables(string word, double width, Func<string, double> measure, List<string> dest)
+            /// <summary>
+            /// A single space-delimited word that is wider than the line. Hangul breaks per syllable.
+            /// A number or a Latin word stays whole unless that token alone is wider than the line.
+            /// </summary>
+            static void BreakPieces(string word, double width, Func<string, double> measure, List<string> dest)
+            {
+                var pieces = new List<Piece>();
+                Collect(word, pieces);
+                if (pieces.Count == 0)
+                {
+                    dest.Add(word ?? "");
+                    return;
+                }
+                string cur = "";
+                for (int i = 0; i < pieces.Count; i++)
+                {
+                    string atom = pieces[i].Text;
+                    if (measure(atom) > width + 0.5)
+                    {
+                        if (cur.Length > 0)
+                        {
+                            dest.Add(cur);
+                            cur = "";
+                        }
+                        SplitChars(atom, width, measure, dest);
+                        continue;
+                    }
+                    string trial = cur.Length == 0 ? atom : (pieces[i].SpaceBefore ? cur + " " + atom : cur + atom);
+                    if (cur.Length > 0 && measure(trial) > width + 0.5)
+                    {
+                        dest.Add(cur);
+                        cur = atom;
+                    }
+                    else cur = trial;
+                }
+                if (cur.Length > 0) dest.Add(cur);
+            }
+
+            static void SplitChars(string atom, double width, Func<string, double> measure, List<string> dest)
             {
                 string cur = "";
                 int i = 0;
-                while (i < word.Length)
+                while (i < atom.Length)
                 {
-                    int n = CharLen(word, i);
-                    string cp = word.Substring(i, n);
+                    int n = CharLen(atom, i);
+                    string cp = atom.Substring(i, n);
                     string trial = cur.Length == 0 ? cp : cur + cp;
                     if (cur.Length > 0 && measure(trial) > width + 0.5)
                     {
@@ -113,135 +151,213 @@ namespace OrbitalSalvage.Loc
 
         sealed class CjkBreaker : ILineBreaker
         {
-            // No line start: closing punctuation, small kana, long-vowel mark.
-            const string NoStart = "、。，．：；！？）」』】》〉」,.!?:;)]}»”’ゃゅょっぁぃぅぇぉャュョッァィゥェォー";
-            // No line end: opening punctuation.
-            const string NoEnd = "（「『【《〈([{«“‘";
-
             public void Wrap(string text, double width, double slack, Func<string, double> measure, List<string> lines)
             {
                 lines.Clear();
                 if (text == null) text = "";
                 if (text.Length == 0 || measure(text) <= width + slack) { lines.Add(text); return; }
-                var atoms = new List<string>();
-                Tokenize(text, atoms);
-                string cur = "";
-                bool pendingSpace = false;
-                for (int i = 0; i < atoms.Count; i++)
-                {
-                    string atom = atoms[i];
-                    if (atom == " ")
-                    {
-                        if (cur.Length > 0) pendingSpace = true;
-                        continue;
-                    }
-                    string trial = cur.Length == 0 ? atom : (pendingSpace ? cur + " " + atom : cur + atom);
-                    pendingSpace = false;
-                    if (cur.Length > 0 && measure(trial) > width + 0.5)
-                    {
-                        lines.Add(cur);
-                        cur = atom;
-                    }
-                    else cur = trial;
-                }
-                if (cur.Length > 0) lines.Add(cur);
-                if (lines.Count == 0) lines.Add(text);
-                ApplyKinsoku(lines);
-            }
-
-            static void Tokenize(string text, List<string> atoms)
-            {
+                var pieces = new List<Piece>();
+                Collect(text, pieces);
+                if (pieces.Count == 0) { lines.Add(text); return; }
                 int i = 0;
-                while (i < text.Length)
+                while (i < pieces.Count)
                 {
-                    char c = text[i];
-                    if (c == ' ' || c == '\n' || c == '\t')
+                    int best = i;
+                    string built = pieces[i].Text;
+                    int k = i + 1;
+                    while (k < pieces.Count)
                     {
-                        atoms.Add(" ");
-                        i++;
-                        continue;
+                        string trial = built + (pieces[k].SpaceBefore ? " " : "") + pieces[k].Text;
+                        if (measure(trial) > width + 0.5) break;
+                        built = trial;
+                        best = k;
+                        k++;
                     }
-                    if (IsDigit(c))
+                    int next = best + 1;
+                    if (next < pieces.Count && !CanBreak(pieces[best], pieces[next]))
                     {
-                        int j = ConsumeNumber(text, i);
-                        atoms.Add(text.Substring(i, j - i));
-                        i = j;
-                        continue;
+                        int cut = best;
+                        bool found = false;
+                        while (cut > i)
+                        {
+                            if (CanBreak(pieces[cut - 1], pieces[cut]))
+                            {
+                                best = cut - 1;
+                                built = Join(pieces, i, best);
+                                found = true;
+                                break;
+                            }
+                            cut--;
+                        }
+                        if (!found)
+                        {
+                            while (next < pieces.Count && !CanBreak(pieces[best], pieces[next]))
+                            {
+                                built += (pieces[next].SpaceBefore ? " " : "") + pieces[next].Text;
+                                best = next;
+                                next++;
+                            }
+                        }
                     }
-                    if (IsLatinLetter(c))
-                    {
-                        int j = i + 1;
-                        while (j < text.Length && IsLatinLetter(text[j])) j++;
-                        atoms.Add(text.Substring(i, j - i));
-                        i = j;
-                        continue;
-                    }
-                    int n = CharLen(text, i);
-                    atoms.Add(text.Substring(i, n));
-                    i += n;
+                    lines.Add(built);
+                    i = best + 1;
                 }
+                if (lines.Count == 0) lines.Add(text);
             }
+        }
 
-            static int ConsumeNumber(string text, int i)
+        // Closing punctuation, the ellipsis, the long-vowel mark, small kana, and 々
+        // may not start a line. Opening brackets may not end a line.
+        const string NoStart = "，。、．！？：；）」』】》〉…ーぁぃぅぇぉっゃゅょゎァィゥェォッャュョヮ々";
+        const string NoEnd = "（「『【《〈";
+
+        struct Piece
+        {
+            public string Text;
+            public bool SpaceBefore;
+            public Piece(string text, bool spaceBefore)
             {
-                int j = i;
-                while (j < text.Length && IsDigit(text[j])) j++;
-                if (j + 1 < text.Length && (text[j] == '.' || text[j] == ',') && IsDigit(text[j + 1]))
+                Text = text;
+                SpaceBefore = spaceBefore;
+            }
+        }
+
+        static void Collect(string text, List<Piece> dest)
+        {
+            var atoms = new List<string>();
+            Tokenize(text, atoms);
+            bool started = false;
+            bool space = false;
+            for (int i = 0; i < atoms.Count; i++)
+            {
+                if (atoms[i] == " ")
                 {
-                    j++;
+                    if (started) space = true;
+                    continue;
+                }
+                dest.Add(new Piece(atoms[i], space && started));
+                space = false;
+                started = true;
+            }
+        }
+
+        static void Tokenize(string text, List<string> atoms)
+        {
+            int i = 0;
+            while (i < text.Length)
+            {
+                char c = text[i];
+                if (c == ' ' || c == '\n' || c == '\t' || c == '\u3000')
+                {
+                    atoms.Add(" ");
+                    i++;
+                    continue;
+                }
+                if (c == '{' && i + 2 < text.Length && IsDigit(text[i + 1]))
+                {
+                    int j = i + 1;
                     while (j < text.Length && IsDigit(text[j])) j++;
-                }
-                int u = j;
-                if (u < text.Length && text[u] == ' ' && u + 1 < text.Length && IsLatinLetter(text[u + 1])) u++;
-                if (u < text.Length && IsLatinLetter(text[u]))
-                {
-                    while (u < text.Length && IsLatinLetter(text[u])) u++;
-                    j = u;
-                }
-                return j;
-            }
-
-            static void ApplyKinsoku(List<string> lines)
-            {
-                for (int pass = 0; pass < 8; pass++)
-                {
-                    bool changed = false;
-                    for (int i = 1; i < lines.Count; i++)
+                    if (j < text.Length && text[j] == '}')
                     {
-                        if (lines[i].Length == 0) continue;
-                        if (lines[i - 1].Length > 0 && NoEnd.IndexOf(LastChar(lines[i - 1])) >= 0)
-                        {
-                            string ch = LastChar(lines[i - 1]);
-                            lines[i - 1] = lines[i - 1].Substring(0, lines[i - 1].Length - ch.Length);
-                            lines[i] = ch + lines[i];
-                            changed = true;
-                        }
-                        if (lines[i].Length > 0 && NoStart.IndexOf(FirstChar(lines[i])) >= 0 && lines[i - 1].Length > 0)
-                        {
-                            string ch = FirstChar(lines[i]);
-                            lines[i - 1] = lines[i - 1] + ch;
-                            lines[i] = lines[i].Substring(ch.Length);
-                            changed = true;
-                        }
+                        atoms.Add(text.Substring(i, j + 1 - i));
+                        i = j + 1;
+                        continue;
                     }
-                    for (int i = lines.Count - 1; i >= 0; i--)
-                        if (lines[i].Length == 0) lines.RemoveAt(i);
-                    if (!changed) break;
                 }
-                if (lines.Count == 0) lines.Add("");
+                if (c == '\u2026' && i + 1 < text.Length && text[i + 1] == '\u2026')
+                {
+                    atoms.Add(text.Substring(i, 2));
+                    i += 2;
+                    continue;
+                }
+                if (c == '\u2014' && i + 1 < text.Length && text[i + 1] == '\u2014')
+                {
+                    atoms.Add(text.Substring(i, 2));
+                    i += 2;
+                    continue;
+                }
+                if (IsDigit(c))
+                {
+                    int j = ConsumeNumber(text, i);
+                    atoms.Add(text.Substring(i, j - i));
+                    i = j;
+                    continue;
+                }
+                if (IsLatinLetter(c))
+                {
+                    int j = i + 1;
+                    while (j < text.Length && IsLatinLetter(text[j])) j++;
+                    atoms.Add(text.Substring(i, j - i));
+                    i = j;
+                    continue;
+                }
+                int n = CharLen(text, i);
+                atoms.Add(text.Substring(i, n));
+                i += n;
             }
+        }
 
-            static string FirstChar(string s)
+        /// <summary>Western digits, grouped with <c>,</c> <c>.</c> and a trailing <c>%</c>, plus a following Latin unit.</summary>
+        static int ConsumeNumber(string text, int i)
+        {
+            int j = i;
+            while (j < text.Length && IsDigit(text[j])) j++;
+            while (j + 1 < text.Length && (text[j] == '.' || text[j] == ',') && IsDigit(text[j + 1]))
             {
-                return s.Substring(0, CharLen(s, 0));
+                j++;
+                while (j < text.Length && IsDigit(text[j])) j++;
             }
+            if (j < text.Length && text[j] == '%') j++;
+            int u = j;
+            if (u < text.Length && text[u] == ' ' && u + 1 < text.Length && IsLatinLetter(text[u + 1])) u++;
+            if (u < text.Length && IsLatinLetter(text[u]) && (u == j || text[j] == ' '))
+            {
+                while (u < text.Length && IsLatinLetter(text[u])) u++;
+                j = u;
+            }
+            return j;
+        }
 
-            static string LastChar(string s)
+        static bool CanBreak(Piece left, Piece right)
+        {
+            if (EndsForbidden(left.Text)) return false;
+            if (StartsForbidden(right.Text)) return false;
+            return true;
+        }
+
+        static bool StartsForbidden(string text)
+        {
+            if (string.IsNullOrEmpty(text)) return false;
+            return NoStart.IndexOf(FirstChar(text), StringComparison.Ordinal) >= 0;
+        }
+
+        static bool EndsForbidden(string text)
+        {
+            if (string.IsNullOrEmpty(text)) return false;
+            return NoEnd.IndexOf(LastChar(text), StringComparison.Ordinal) >= 0;
+        }
+
+        static string Join(List<Piece> pieces, int from, int to)
+        {
+            string s = "";
+            for (int i = from; i <= to; i++)
             {
-                if (s.Length >= 2 && char.IsLowSurrogate(s[s.Length - 1]) && char.IsHighSurrogate(s[s.Length - 2]))
-                    return s.Substring(s.Length - 2, 2);
-                return s.Substring(s.Length - 1, 1);
+                if (i > from && pieces[i].SpaceBefore) s += " ";
+                s += pieces[i].Text;
             }
+            return s;
+        }
+
+        static string FirstChar(string s)
+        {
+            return s.Substring(0, CharLen(s, 0));
+        }
+
+        static string LastChar(string s)
+        {
+            if (s.Length >= 2 && char.IsLowSurrogate(s[s.Length - 1]) && char.IsHighSurrogate(s[s.Length - 2]))
+                return s.Substring(s.Length - 2, 2);
+            return s.Substring(s.Length - 1, 1);
         }
 
         static int CharLen(string s, int i)
