@@ -1,8 +1,7 @@
 #!/usr/bin/env bash
 # Rebuild the outline faces shipped for the font registry.
 # Downloads live in /tmp/maze-i18n/fonts/dl (see localization/spikes/fonts-per-language.md).
-# CJK files here are temporary endonym subsets. A later wave replaces the file bytes
-# (or the manifest filename) for the same FontGroup. Do not commit variable fonts.
+# CJK subsets are make_cjk_fonts.py (table + safety set). Do not commit variable fonts.
 set -euo pipefail
 
 HERE="$(cd "$(dirname "$0")" && pwd)"
@@ -20,21 +19,9 @@ if [[ ! -x "$PY" ]]; then
   exit 1
 fi
 
-# Printable ASCII (digits, punctuation, and letters) plus one endonym.
-# Letters are included so a Latin token in the same run still has a glyph.
-ascii="$(python3 -c 'print("".join(chr(c) for c in range(0x20, 0x7F)))')"
-
-subset() {
-  local src="$1" extra="$2" dest="$3"
-  printf '%s%s' "$ascii" "$extra" > "$WORK/chars.txt"
-  echo "subset $dest"
-  "$PY" "$SUB" --font "$src" --text-file "$WORK/chars.txt" --keep-os2 --out "$dest"
-}
-
-subset "$DL/ZCOOLKuaiLe-Regular.ttf" "简体中文" "$FONTS/ZCOOLKuaiLe-endonym.ttf"
-subset "$DL/Huninn-Regular.ttf" "繁體中文" "$FONTS/Huninn-endonym.ttf"
-subset "$DL/MPLUSRounded1c-Bold.ttf" "日本語" "$FONTS/MPLUSRounded1c-endonym.ttf"
-subset "$DL/Jua-Regular.ttf" "한국어" "$FONTS/Jua-endonym.ttf"
+# CJK subsets: table characters (if the json exists) plus ASCII, punctuation,
+# the endonym, and cjk_safety.json. A missing translation table is fine.
+"$PY" "$HERE/make_cjk_fonts.py"
 
 cp -f "$DL/licenses/ZCOOLKuaiLe-OFL.txt" "$FONTS/ZCOOLKuaiLe-OFL.txt"
 cp -f "$DL/licenses/Huninn-OFL.txt" "$FONTS/Huninn-OFL.txt"
@@ -59,32 +46,6 @@ header = (
 pathlib.Path(dest).write_text(header + body, encoding="utf-8")
 PY
 
-mkdir -p "$BYTES"
-for name in ZCOOLKuaiLe-endonym Huninn-endonym MPLUSRounded1c-endonym Jua-endonym; do
-  cp -f "$FONTS/$name.ttf" "$BYTES/$name.bytes"
-done
-
-"$PY" - "$FONTS" << 'PY'
-import sys
-from pathlib import Path
-from fontTools.ttLib import TTFont
-root = Path(sys.argv[1])
-need = {
-    "ZCOOLKuaiLe-endonym.ttf": "简体中文",
-    "Huninn-endonym.ttf": "繁體中文",
-    "MPLUSRounded1c-endonym.ttf": "日本語",
-    "Jua-endonym.ttf": "한국어",
-}
-for name, text in need.items():
-    path = root / name
-    font = TTFont(path)
-    cmap = font.getBestCmap() or {}
-    missing = [ch for ch in text if ord(ch) not in cmap]
-    print(f"{name}\t{path.stat().st_size}\tglyf={'glyf' in font}\tfvar={'fvar' in font}\tmissing={''.join(missing)}")
-    if missing or "glyf" not in font or "fvar" in font:
-        raise SystemExit("bad subset " + name)
-    font.close()
-PY
 # Uzbek modifier. Fredoka has no U+02BB. Nunito's glyph is advance 500 with
 # ~180 side bearings and no kern pair, so oʻ / gʻ draws as a detached apostrophe.
 # These four files contain only the corrected mark. latin-uz puts the matching

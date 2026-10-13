@@ -181,7 +181,7 @@ namespace OrbitalSalvage.Render.Tests
             Assert.AreEqual(de.Length, hi.Length);
             for (int i = 0; i < de.Length; i++) Assert.AreSame(de[i], hi[i], hi[i].name);
             TrueTypeFont[] ja = OutlineFonts.ChainFor("ja", "Fredoka", 800);
-            Assert.AreEqual("MPLUSRounded1c-endonym", ja[0].name);
+            Assert.AreEqual("MPLUSRounded1c-700", ja[0].name);
             Assert.AreNotEqual(0, ja[0].GlyphIndex(0x65E5));
             Assert.AreNotEqual(0, OutlineFonts.ChainFor("zh-Hans", "Fredoka", 800)[0].GlyphIndex(0x7B80));
             Assert.AreNotEqual(0, OutlineFonts.ChainFor("zh-Hant", "Fredoka", 800)[0].GlyphIndex(0x9AD4));
@@ -200,7 +200,7 @@ namespace OrbitalSalvage.Render.Tests
                 chrome.ApplyPickerFontOverrides();
                 Assert.IsTrue(Loc.EnglishActive);
                 TrueTypeFont[] ja = chrome.ResolveRunChain("btn-lang-ja", "800 14px Fredoka");
-                Assert.AreEqual("MPLUSRounded1c-endonym", ja[0].name);
+                Assert.AreEqual("MPLUSRounded1c-700", ja[0].name);
                 TrueTypeFont[] title = chrome.ResolveRunChain("language-modal-title", "800 17px Fredoka");
                 Assert.AreEqual("Fredoka-700", title[0].name);
                 Assert.AreEqual(3, title.Length, "English title stays on the shipped chain");
@@ -208,7 +208,7 @@ namespace OrbitalSalvage.Render.Tests
                 Assert.IsTrue(Loc.SetLanguage("de"));
                 Assert.IsFalse(Loc.EnglishActive);
                 TrueTypeFont[] jaDe = chrome.ResolveRunChain("btn-lang-ja", "800 14px Fredoka");
-                Assert.AreEqual("MPLUSRounded1c-endonym", jaDe[0].name);
+                Assert.AreEqual("MPLUSRounded1c-700", jaDe[0].name);
                 TrueTypeFont[] deTitle = chrome.ResolveRunChain("language-modal-title", "800 17px Fredoka");
                 Assert.AreEqual("Fredoka-700", deTitle[0].name);
                 Assert.AreEqual("Nunito-800", deTitle[1].name);

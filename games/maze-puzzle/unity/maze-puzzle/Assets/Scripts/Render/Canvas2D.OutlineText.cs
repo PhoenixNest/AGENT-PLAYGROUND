@@ -171,8 +171,30 @@ namespace OrbitalSalvage.Render
         public double FontAscent()
         {
             var spec = ParseFont(state.font);
-            var primary = TextChain != null && TextChain.Length > 0 ? TextChain[0] : OutlineFonts.Primary(spec.family, spec.weight);
+            var primary = AscentFace(spec.family, spec.weight);
             return RoundHalfUp(primary.ascender * spec.px / primary.unitsPerEm);
+        }
+
+        /// <summary>
+        /// The captured line box was measured with Fredoka or Nunito. A CJK primary has a
+        /// different em box, so the baseline stays on the Latin face and the ideograph
+        /// sits on the same alphabetic line as the English caps. Fredoka, Nunito (including
+        /// the Uzbek patch), and the symbol fonts keep their own ascent.
+        /// </summary>
+        TrueTypeFont AscentFace(string family, int weight)
+        {
+            if (TextChain != null && TextChain.Length > 0 && !LatinStrut(TextChain[0]))
+                return OutlineFonts.Primary(family, weight);
+            if (TextChain != null && TextChain.Length > 0) return TextChain[0];
+            return OutlineFonts.Primary(family, weight);
+        }
+
+        static bool LatinStrut(TrueTypeFont font)
+        {
+            if (font == null || string.IsNullOrEmpty(font.name)) return false;
+            return font.name.StartsWith("Fredoka", StringComparison.Ordinal)
+                || font.name.StartsWith("Nunito", StringComparison.Ordinal)
+                || font.name.StartsWith("NotoSans", StringComparison.Ordinal);
         }
 
         static double RoundHalfUp(double v) => Math.Floor(v + 0.5);

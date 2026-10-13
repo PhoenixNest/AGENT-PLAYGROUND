@@ -13,6 +13,17 @@ Paths written as `tools/parity/...` in entries dated before 2026-10-08 are the l
 
 - iPhone X (iOS 16.7.10, language en-US) ran the Release device build and reached Home in the phone language and in de, fr, es, it, pt-PT, vi, fil, id, uz, and qps. Notes: `localization/reports/device-check-2026-10-12.md`.
 
+### Added
+
+#### CJK font subsets and line breaking (2026-10-13)
+
+- `cjk-sc`, `cjk-tc`, `cjk-jp`, and `cjk-kr` now load real glyf subsets instead of the endonym-only files. `ZCOOLKuaiLe-sc` is 91184 bytes, `Huninn-tc` is 202064, `MPLUSRounded1c-700` is 292120, `Jua-kr` is 270856. Each is under 1.5 MB, cmap format 4, no `fvar`. Rebuild after the translation tables land with `/tmp/maze-i18n/kit-venv/bin/python games/maze-puzzle/localization/tools/make_cjk_fonts.py`. A missing table builds from `cjk_safety.json` only.
+- ZCOOL, Huninn, and Jua are one master, so CSS 400, 600, 700, 800, and 900 all use that file. M PLUS is Bold 700 for every CSS weight, including 900. Black is not shipped because the same file paints body text.
+- `zh-Hans`, `zh-Hant`, and `ja` break between characters. A line does not start with `，。、．！？：；）」』】》〉…ー`, small kana, or `々`, and does not end with `（「『【《〈`. `……` and `——` stay together. A Western number (digits, `,`, `.`, `%`) and a Latin word stay whole, including `{0}`. Korean still breaks on U+0020, and splits a word only when that word is wider than the line. Latin wrap is unchanged.
+- CJK letter-spacing is 0. The baseline uses the Latin face ascent so ideographs sit on the English line. A multi-line CJK paragraph uses the captured run height divided by the English line count. `LocCase.Upper` still returns a CJK string unchanged, so `kg` and `Nibbles` are not uppercased.
+- `fonts-chains.json` lists the four subset files, so `font-pending` is gone for those languages. `validate_table.py` measures fit from the subset `hmtx` when fontTools can open the file, and falls back to 1.00 em otherwise. `LocLanguageAuditTests` and `LocLanguageStillTests` include the four codes and ignore the case while `<code>.json` is absent.
+- `python selftest_kit.py`: 19 groups, all passed. Focused EditMode (`CjkRenderTests|LineBreakerTests|LocCaseTests|LocTextStyleTests|LocFontRegistryTests|LocFontChainTests`): 29 passed, 0 failed. Results `/tmp/maze-i18n/cjk-core/focused.xml`, log `/tmp/maze-i18n/cjk-core/focused.log`. Full EditMode: 557 passed, 83 failed, 11 skipped, 651 total, exit 2. Results `/tmp/maze-i18n/cjk-core/full.xml`, log `/tmp/maze-i18n/cjk-core/full.log`. The 83 are the known set (`ReferenceComparisonTests` 73, `ReferenceGateTests` 9, `QuotaAndModalTests.GameAndPauseStills_MatchKnownHashes`). Eight of the skips are the four CJK tables, which are not in Resources yet (`LocLanguageAuditTests` 4, `LocLanguageStillTests` 4). The other three skips are unchanged.
+
 ### Fixed
 
 #### Uzbek modifier letter sat away from the letter (2026-10-12)

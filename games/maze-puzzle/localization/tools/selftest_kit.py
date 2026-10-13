@@ -282,6 +282,45 @@ def test_glyphs_and_pending():
     assert not kinds(arabic, "glyph")
 
 
+def test_cjk_chains_and_advances():
+    import make_cjk_fonts
+
+    chains = kit.load_chains(kit.DEFAULT_CHAINS)
+    faces = {
+        "zh-Hans": "ZCOOLKuaiLe-sc.ttf",
+        "zh-Hant": "Huninn-tc.ttf",
+        "ja": "MPLUSRounded1c-700.ttf",
+        "ko": "Jua-kr.ttf",
+    }
+    for lang, face in faces.items():
+        info = chains[lang]
+        assert info["pending"] == [], info
+        assert info["chain"][0] == face, info
+        pending = []
+        covered = kit.prepare_fonts(
+            lang,
+            {"chains": chains, "fonts_dir": kit.DEFAULT_FONTS, "skip_glyphs": False},
+            pending,
+        )
+        assert covered, lang
+        assert not any(item.kind == "font-pending" for item in pending), pending
+
+    options = {"chains": chains, "fonts_dir": kit.DEFAULT_FONTS}
+    advances = kit.load_cjk_advances("zh-Hans", options)
+    assert advances, "ZCOOL subset advances did not load"
+    assert 0x7684 in advances
+    measured = kit.estimate_px("\u7684", 1000, advances)
+    fallback = kit.estimate_px("\u7684", 1000, None)
+    assert measured != fallback, (measured, fallback)
+    assert abs(measured - advances[0x7684] * 1000) < 0.01
+    assert kit.load_cjk_advances("de", options) is None
+    assert kit.load_cjk_advances("zh-Hans", {"chains": chains, "fonts_dir": "/tmp/maze-i18n/no-such-fonts"}) is None
+
+    text = make_cjk_fonts.collect("zh-Hans")
+    for ch in "\u7b80\u4f53\u4e2d\u6587\u2026\u00d7":
+        assert ch in text, hex(ord(ch))
+
+
 def test_stubs_merge_sample_glossary():
     terms = kit.parse_glossary(kit.DEFAULT_GLOSSARY)
     assert 40 <= len(terms) <= 60, len(terms)
@@ -779,6 +818,7 @@ def main() -> int:
         test_script_and_orthography,
         test_numbers_glossary_uppercase_fit_stale,
         test_glyphs_and_pending,
+        test_cjk_chains_and_advances,
         test_stubs_merge_sample_glossary,
         test_real_german_stub,
         test_unit_token_not_substring,
