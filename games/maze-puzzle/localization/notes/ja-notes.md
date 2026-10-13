@@ -102,3 +102,4 @@ The two privacy paragraphs, the reset confirmation, and the toy-shop money sente
 `validate_table.py --lang ja` on `ja.json`: 0 errors, 187 warnings, 0 suppressed. Warnings are 136 `fit` and 51 `glossary`. The shipped face is `MPLUSRounded1c-700.ttf`, so the old `font-pending` warning is gone. The fit count rose because the estimator now uses that face's advances.
 
 toast.infinite.round: agent draft, no native review
+home.infinite.world/title/best: agent draft, no native review

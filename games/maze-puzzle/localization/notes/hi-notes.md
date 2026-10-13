@@ -102,3 +102,4 @@ Checked with fontTools against `/tmp/maze-i18n/fonts/dl/Baloo2[wght].ttf`, `font
 Not in Baloo, and not in Noto Sans Devanagari either: the emoji, `✓` (U+2713), `⏩` `⏪`, `⚡`, `✨`, `⭐`, `⚙`, and U+FE0F. Noto Sans Devanagari also lacks `←` and `▶`. Those symbols are the same ones the English table already uses. The validator still warns `font-pending` because `fonts-chains.json` has an empty chain for hi.
 
 toast.infinite.round: agent draft, no native review
+home.infinite.world/title/best: agent draft, no native review

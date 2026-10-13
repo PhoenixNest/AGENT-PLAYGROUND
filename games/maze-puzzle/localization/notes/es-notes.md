@@ -86,3 +86,4 @@ Measured with the kit width estimate (font size × average advance). The card ti
 Still short of the glossary string, on purpose: `operaciones diarias` (title), `sector` (the uppercased chip only), `gorros de Nibbles`, `tienda de juguetes` (header and dock), `tobogán` (`rampa` on every chute), `superado` (`hecho`), `desbloquear` (`abre` on price buttons), `dinero de bolsillo` (`bolsillo` on the gift line), `cielos` (`cielo`).
 
 toast.infinite.round: agent draft, no native review
+home.infinite.world/title/best: agent draft, no native review
