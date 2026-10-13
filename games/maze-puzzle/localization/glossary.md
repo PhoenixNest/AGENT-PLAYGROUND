@@ -58,7 +58,7 @@ Checked against Fredoka, Nunito, and the two Noto symbol fonts on 2026-10-12.
 - Italian: « ».
 - Chinese and Japanese: full-width `。！？、` for CJK clauses, and no space before them. Half-width for digits, kg, and Latin names. Those full-width marks are not in the Latin fonts; they belong to the pending CJK faces. The glyph check does not run for zh/ja until those faces ship.
 - Korean: half-width `. ! ?` with no space before them.
-- Arabic: Arabic comma U+060C and question mark U+061F. Those marks are not in the Latin fonts; Cairo is still pending, so write them anyway.
+- Arabic: Arabic comma U+060C and question mark U+061F. Those marks are not in the Latin fonts. They are in the shipped Cairo face. Write them.
 - Capitals: translate in normal casing. German nouns stay capitalised. When the CSV says `uppercase`, the renderer uppercases Latin at runtime (`ß` becomes `SS`). Do not pre-uppercase. Caseless scripts ignore that transform, so a Latin token such as kg stays as written. When the English key is already all caps but `uppercase` is `none` (BRONZE, PLAY), the table text is what the player sees: write the case you want on screen.
 - Do not abbreviate with a period to save space. Pick a shorter word.
 

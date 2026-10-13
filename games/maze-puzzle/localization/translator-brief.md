@@ -170,7 +170,7 @@ python3 validate_table.py --lang <code> \
 
 `--show-suppressed` prints fit warnings hidden by the allowlist. `--ignore-fit-keys` adds keys for that run. `--register-check` adds one warning that imperative and telegraphic style is not scored. It does not judge buttons.
 
-Fix every error. Read every warning. Glyph errors mean a character is not in the shipped font chain. `zh-Hans`, `zh-Hant`, `ja`, and `ko` are checked against their subset plus Nunito and the Noto symbol fonts. `hi`, `km`, and `ar` still have an empty chain, so they warn `font-pending` and do not fail the glyph check yet. vi and uz are checked against Fredoka, Nunito, and the Noto symbol fonts; Baloo 2 is still pending.
+Fix every error. Read every warning. Glyph errors mean a character is not in the shipped font chain. `zh-Hans`, `zh-Hant`, `ja`, and `ko` are checked against their subset plus Nunito and the Noto symbol fonts. `hi`, `km`, and `ar` are checked against Baloo 2, Kantumruy Pro, and Cairo, plus Nunito and the Noto symbol fonts. vi and uz are checked against Fredoka, Nunito, and the Noto symbol fonts. Baloo 2 is the Hindi face, not the Vietnamese or Uzbek display face.
 
 ## What you return
 
