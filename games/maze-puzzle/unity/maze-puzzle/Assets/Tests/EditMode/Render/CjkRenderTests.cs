@@ -1,5 +1,7 @@
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
+using System.Reflection;
 using NUnit.Framework;
 using OrbitalSalvage.Loc;
 using UnityEngine;
@@ -154,6 +156,60 @@ namespace OrbitalSalvage.Render.Tests
             // Uppercase is a no-op for CJK, so kg and Nibbles stay as the fixture wrote them.
             Assert.AreEqual(table["Goal: Feed Nibbles 20 kg space snacks"],
                 LocCase.Upper(table["Goal: Feed Nibbles 20 kg space snacks"], code));
+        }
+
+        [TestCase("zh-Hans", "ZCOOLKuaiLe")]
+        [TestCase("zh-Hant", "Huninn")]
+        [TestCase("ja", "MPLUSRounded1c")]
+        [TestCase("ko", "Jua")]
+        public void GameplayText_UsesTheCjkFace_EnglishStaysOnFredoka(string code, string facePrefix)
+        {
+            Loc.Reset(new ResourcesLocTableLoader());
+            Assert.IsTrue(Loc.SetLanguage(code), code);
+            var labels = new GameplayLabels();
+            string emoji;
+            string sub;
+            labels.Hub("ring_donut", false, out emoji, out sub);
+            Assert.AreNotEqual("SWEET RIG", sub, code);
+            AssertFace(facePrefix, "bold 13px Fredoka, sans-serif", sub);
+            AssertFace(facePrefix, "11px Nunito, sans-serif", sub);
+            Assert.IsTrue(Loc.SetLanguage("en"));
+            Assert.IsTrue(Loc.EnglishActive);
+            string english = FirstFace("bold 10px Fredoka, sans-serif", "BOOST");
+            Assert.IsTrue(english.StartsWith("Fredoka"), english);
+        }
+
+        static void AssertFace(string facePrefix, string font, string text)
+        {
+            string seen = FirstFace(font, text);
+            Assert.IsTrue(seen.StartsWith(facePrefix), font + " drew " + text + " with " + seen);
+            Assert.IsFalse(seen.StartsWith("Fredoka"), text);
+        }
+
+        static string FirstFace(string font, string text)
+        {
+            using (var canvas = new Canvas2D(160, 64))
+            {
+                canvas.Font = font;
+                canvas.TextBaseline = "middle";
+                canvas.FillText(text, 4, 24);
+                FieldInfo field = typeof(Canvas2D).GetField("laid", BindingFlags.NonPublic | BindingFlags.Instance);
+                Assert.IsNotNull(field);
+                var list = (IList)field.GetValue(canvas);
+                Assert.Greater(list.Count, 0, text);
+                string name = null;
+                for (int i = 0; i < list.Count; i++)
+                {
+                    object glyph = list[i];
+                    FieldInfo fontField = glyph.GetType().GetField("font");
+                    FieldInfo gidField = glyph.GetType().GetField("gid");
+                    var face = (TrueTypeFont)fontField.GetValue(glyph);
+                    int gid = (int)gidField.GetValue(glyph);
+                    Assert.AreNotEqual(0, gid, text + " " + face.name);
+                    if (name == null) name = face.name;
+                }
+                return name;
+            }
         }
 
         static void Expect(string code, string face, string endonym)
