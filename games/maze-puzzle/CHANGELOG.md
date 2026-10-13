@@ -67,6 +67,22 @@ Paths written as `tools/parity/...` in entries dated before 2026-10-08 are the l
 
 ### Added
 
+#### Shaped-run bake for Arabic, Hindi, and Khmer (2026-10-13)
+
+- Offline HarfBuzz bake for the three complex scripts. `localization/tools/bake_shaped.py` writes a compact `OSB1` table to `Assets/Resources/Localization/shaped/<code>.bytes`, keyed by the translation string. Glyph ids match the shipped subset (`--retain-gids`). The header stores the font file's SHA-256; a mismatched font is refused and not drawn.
+- One weight-700 instance each. Baloo 2 has no 900 and Kantumruy Pro stops at 700. Cairo can go higher, but CSS 600–900 already collapse onto Fredoka 700, so button, title, and combat text share that one instance. Files: Baloo 2 330740 bytes, Kantumruy Pro 67916 bytes, Cairo 58640 bytes, all glyf, OFL sidecars beside them. Hindi is shaped as `dev2`; `deva` on this Baloo 2 file does not form `क्ष`.
+- Placeholders must sit on a space or digit boundary. A `{0}` glued to a joining letter fails the bake. Symbols and arrows stay out of the script face so they are not `.notdef` boxes.
+- Fixture strings used to develop the bake live in `localization/tools/fixtures/shaped-ui.json`. They are not translation tables. Rebuild fonts with `build_shaped_fonts.py`. Bake a real table, once it exists, with `bake_shaped.py --lang ar` (and `hi`, `km`).
+
+#### Shaped text at runtime for Arabic, Hindi, and Khmer (2026-10-13)
+
+- `ShapedTable` reads the `OSB1` bake. `ShapedText` turns a hit into glyph runs: stored advance times `px / unitsPerEm`, HarfBuzz dx/dy with y flipped into canvas space, and CSS letter-spacing once between clusters (not between a base and its mark). Latin, digits, arrows, and emoji in the same string stay on Fredoka or Nunito plus the symbol faces.
+- A wrapped line is a slice of those glyphs, not a `Substring`. Khmer breaks on the baked cluster flags. Hindi and Arabic break on the baked space flags. An RTL paragraph whose English anchor was left is drawn right-aligned in that same rect. Centred text stays centred. Icons are not mirrored.
+- `FillText` uses the bake when the active language is `ar`, `hi`, or `km`, including gate labels, the ring hub, NOM words, and floating combat text. English never enters it. A complex-script string with no bake, or a font hash that does not match, is drawn as nothing (width 0), not as unshaped letters or `.notdef`.
+- The language picker sets a per-run shape code so the Arabic, Hindi, and Khmer endonyms shape while English is still the active language. `text-transform: uppercase` is still skipped for those three.
+- `fonts-chains.json` lists the three 700 faces. The fit estimate sums `hmtx` advances from those files. It is wider than real Arabic shaping. The audit treats a complex-script string that is not in the bake as `missing-glyph`. `ar`/`hi`/`km` audit and still tests ignore themselves until `<code>.json` exists.
+- Proof, Unity 6000.4.0f1 EditMode, batchmode without `-nographics` (that flag forces the null device, so readback is a flat grey and is not a picture). `ShapedTextTests` 11 passed. Stills under `/tmp/maze-i18n/shaping-core/`: joined Arabic (`إنقاذ مداري` uses the presentation-form glyphs), mixed `Orbital Salvage` on the left and `المرحلة` on the right, the same Arabic phrase right-aligned, Devanagari `कक्षीय सफ़ाई` on one headline, `कु` with the u-matra about 11px below the baseline, Khmer `ការសម្អាតសំរាមអវកាស` with the coeng about 9px below the baseline, and a wrapped paragraph for each language (Arabic 4 lines, Hindi 4, Khmer 3). `क्ष` is ka plus a virama shifted by dx=-269 plus ssa, not one ligature outline. Full EditMode: 555 passed, 83 failed, 9 skipped, 647 total, exit 2. Results `/tmp/maze-i18n/shaping-core/full.xml`, log `/tmp/maze-i18n/shaping-core/full.log`. The 83 are the known set (`ReferenceComparisonTests` 73, `ReferenceGateTests` 9, `QuotaAndModalTests.GameAndPauseStills_MatchKnownHashes`). The six extra skips are `ar`/`hi`/`km` audit and still tests waiting on the translation json. Python: `selftest_shaping.py` 6 groups, `selftest_kit.py` 18 groups.
+
 #### German translation table (2026-10-12)
 
 - German translation table (de): 355 spec + 81 str keys, validator errors 0.

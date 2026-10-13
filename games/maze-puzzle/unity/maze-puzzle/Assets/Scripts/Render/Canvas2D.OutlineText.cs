@@ -11,6 +11,8 @@ namespace OrbitalSalvage.Render
             public TrueTypeFont font;
             public int gid;
             public double pen; // CSS px from the start of the string
+            public double dx, dy; // HarfBuzz offsets, canvas y down. Zero on the cmap path.
+            public int cluster;
         }
 
         readonly struct LayoutKey : IEquatable<LayoutKey>
@@ -69,8 +71,10 @@ namespace OrbitalSalvage.Render
         /// <summary>Width of <paramref name="text"/> as the web wrapper computes it (SPEC 6.2 step 2): text runs measured, emoji = fontPx.</summary>
         public double MeasureText(string text)
         {
-            if (string.IsNullOrEmpty(text)) return 0;
+            if (string.IsNullOrEmpty(text) && PreparedLine == null) return 0;
             var spec = ParseFont(state.font);
+            if (TryConsumeShaped(text, spec.px, true, out double shapedWidth)) return shapedWidth;
+            if (string.IsNullOrEmpty(text)) return 0;
             if (TextChain == null || TextChain.Length == 0)
             {
                 var primary = OutlineFonts.Primary(spec.family, spec.weight);
@@ -209,7 +213,13 @@ namespace OrbitalSalvage.Render
             TrueTypeFont primary;
             double px = spec.px;
             double total;
-            if (TextChain == null || TextChain.Length == 0)
+            if (TryConsumeShaped(text, px, false, out total))
+            {
+                if (shapedFace != null) primary = shapedFace;
+                else if (TextChain != null && TextChain.Length > 0) primary = TextChain[0];
+                else primary = OutlineFonts.Primary(spec.family, spec.weight);
+            }
+            else if (TextChain == null || TextChain.Length == 0)
             {
                 primary = OutlineFonts.Primary(spec.family, spec.weight);
                 total = Layout(text, px, primary, null, false);
@@ -270,7 +280,7 @@ namespace OrbitalSalvage.Render
                 PaintProfile.Glyphs++;
                 var fg = OutlineFonts.Flat(g.font, g.gid, px, devScale);
                 if (fg.contourCount == 0) continue;
-                var o = ctm.Apply(startX + g.pen, baseline);
+                var o = ctm.Apply(startX + g.pen + g.dx, baseline + g.dy);
                 double ox = o.x, oy = o.y;
                 if (SnapGlyphs && axisAligned)
                 {

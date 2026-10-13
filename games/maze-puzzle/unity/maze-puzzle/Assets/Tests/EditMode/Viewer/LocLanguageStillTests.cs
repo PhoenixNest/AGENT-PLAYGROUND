@@ -46,6 +46,9 @@ namespace OrbitalSalvage.Viewer.Tests
         [TestCase("zh-Hant")]
         [TestCase("ja")]
         [TestCase("ko")]
+        [TestCase("ar")]
+        [TestCase("hi")]
+        [TestCase("km")]
         [Timeout(1500000)]
         public void Language_PaintsEveryZeroAndIphonePage(string code)
         {

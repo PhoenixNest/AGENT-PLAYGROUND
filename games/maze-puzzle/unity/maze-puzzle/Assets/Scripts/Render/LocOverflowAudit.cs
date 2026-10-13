@@ -173,11 +173,24 @@ namespace OrbitalSalvage.Render
             if (trailSpaces.Length > 0) input.TrailPad = Measure(canvas, font, trailSpaces, fontPx, ls);
             NoteMissingGlyphs(file, id, shown, font, report);
             TextFit.Layout plan = TextFit.Plan(input, (px, spacing) => Measure(canvas, font, shown, px, spacing));
+            string fitLang = FitLang(id);
+            canvas.Font = FontSized(font, plan.FontPx);
+            canvas.LetterSpacing = plan.LetterSpacing;
+            ShapedText.Fit shaped = null;
+            bool baked = ShapedText.IsComplex(fitLang) && ShapedText.TryFit(canvas, shown, fitLang, plan.Available, plan.FontPx, plan.LetterSpacing, plan.Action, plan.MaxLines, out shaped);
+            if (baked && shaped.RightAlign && plan.Anchor == TextFit.Anchor.Left) plan.Anchor = TextFit.Anchor.Right;
             var lines = new List<string>();
             Func<string, double> measureLine = s => Measure(canvas, font, s, plan.FontPx, plan.LetterSpacing);
             bool ellipsis = plan.Action == TextFit.Action.Ellipsis;
             bool extra = false;
-            if (plan.Action == TextFit.Action.Wrap)
+            if (baked)
+            {
+                if (shaped.Texts != null)
+                    for (int i = 0; i < shaped.Texts.Length; i++) lines.Add(shaped.Texts[i] ?? "");
+                ellipsis = shaped.Ellipsis;
+                extra = shaped.Extra;
+            }
+            else if (plan.Action == TextFit.Action.Wrap)
             {
                 LineBreaker.For(Loc.CurrentLanguage).Wrap(shown, plan.Available, 0.5, measureLine, lines);
                 int max = plan.MaxLines < 1 ? 1 : plan.MaxLines;
@@ -232,7 +245,9 @@ namespace OrbitalSalvage.Render
             double inkH = fontPx > 0 ? Math.Min(pitch, fontPx * 1.2) : pitch;
             for (int i = 0; i < lines.Count; i++)
             {
-                double tw = Measure(canvas, font, lines[i], plan.FontPx, plan.LetterSpacing);
+                double tw = baked && shaped.Widths != null && i < shaped.Widths.Length
+                    ? shaped.Widths[i]
+                    : Measure(canvas, font, lines[i], plan.FontPx, plan.LetterSpacing);
                 double x = TextFit.PlaceX(plan.Anchor, er[0], er[2], tw, plan.Left, plan.Right);
                 if (lines.Count == 1 && (plan.IconIndex >= 0 || plan.KeepX)) x = plan.X;
                 double top = drawY + i * pitch;
@@ -313,6 +328,56 @@ namespace OrbitalSalvage.Render
                 report.HardMissing++;
                 Add(report, file, id, "missing-glyph", "U+" + missing[i].ToString("X4", CultureInfo.InvariantCulture));
             }
+            if (!ShapedText.IsComplex(lang) || !ShapedTable.ContainsScript(shown, lang)) return;
+            ShapedTable.Resolved resolved;
+            if (!ShapedText.TryResolved(lang, shown, out resolved))
+            {
+                report.HardMissing++;
+                Add(report, file, id, "missing-glyph", "unbaked");
+                return;
+            }
+            ShapedTable table = ShapedText.Table(lang);
+            TrueTypeFont face = null;
+            try
+            {
+                if (table != null && !string.IsNullOrEmpty(table.FontName)) face = OutlineFonts.Load(table.FontName);
+            }
+            catch (InvalidOperationException)
+            {
+                face = null;
+            }
+            if (face == null)
+            {
+                report.HardMissing++;
+                Add(report, file, id, "missing-glyph", "font");
+                return;
+            }
+            var seenGid = new HashSet<int>();
+            ShapedTable.Run[] runs = resolved.Entry.Runs;
+            for (int r = 0; r < runs.Length; r++)
+            {
+                ShapedTable.Glyph[] glyphs = runs[r].Glyphs;
+                if (glyphs == null) continue;
+                for (int g = 0; g < glyphs.Length; g++)
+                {
+                    int gid = glyphs[g].Gid;
+                    if (gid > 0 && gid < face.numGlyphs) continue;
+                    if (!seenGid.Add(gid)) continue;
+                    report.HardMissing++;
+                    Add(report, file, id, "missing-glyph", "gid=" + gid.ToString(CultureInfo.InvariantCulture));
+                }
+            }
+        }
+
+        static string FitLang(string id)
+        {
+            string lang = Loc.CurrentLanguage;
+            if (!string.IsNullOrEmpty(id) && id.StartsWith(LanguageMarker.ButtonPrefix, StringComparison.Ordinal))
+            {
+                string code = id.Substring(LanguageMarker.ButtonPrefix.Length);
+                if (LanguageRegistry.IsSupported(code)) return code;
+            }
+            return lang;
         }
 
         static double Measure(Canvas2D canvas, string font, string text, double px, double ls)

@@ -136,6 +136,7 @@ namespace OrbitalSalvage.Render
             Fonts.Clear(); Ids.Clear(); Chains.Clear(); ChainStamps.Clear(); MissingFiles.Clear();
             Cache.Clear(); Raw.Clear();
             nextStamp = 1;
+            ShapedText.Clear();
         }
 
         static void EnsureManifestLoader()

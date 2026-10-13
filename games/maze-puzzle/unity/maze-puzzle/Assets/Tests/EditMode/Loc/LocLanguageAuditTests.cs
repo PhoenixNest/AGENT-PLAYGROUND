@@ -71,6 +71,9 @@ namespace OrbitalSalvage.Loc.Tests
         [TestCase("zh-Hant")]
         [TestCase("ja")]
         [TestCase("ko")]
+        [TestCase("ar")]
+        [TestCase("hi")]
+        [TestCase("km")]
         [Timeout(1200000)]
         public void Language_HardFindingsFail_AndEnglishPaintStaysPut(string code)
         {
