@@ -4,6 +4,8 @@ English is the source language. Missing keys fall back to English. This folder i
 
 Runtime code is `OrbitalSalvage.Loc` (no UnityEngine, so Logic and App can reference it). `OrbitalSalvage.Loc.Unity` holds the Resources loader and the device-locale provider.
 
+For the full system reference (architecture, fitting rules, fonts, shaping, workflow, and open items), see [`../12_LOCALIZATION_I18N_SYSTEM.md`](../12_LOCALIZATION_I18N_SYSTEM.md).
+
 ## Languages
 
 | Code    | English name          | Endonym          | Script | RTL | Font group |
