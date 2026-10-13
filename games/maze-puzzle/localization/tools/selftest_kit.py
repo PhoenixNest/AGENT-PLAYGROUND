@@ -276,10 +276,22 @@ def test_glyphs_and_pending():
         {"chains": chains, "fonts_dir": kit.DEFAULT_FONTS, "skip_glyphs": False},
         pending,
     )
-    assert none_covered is None
-    assert any(item.kind == "font-pending" for item in pending), pending
-    arabic = check(english, make("ar", {"Hi": "مرحبا", "Wide": "عالم"}), "ar", covered=none_covered)
-    assert not kinds(arabic, "glyph")
+    assert none_covered is not None, pending
+    arabic = check(english, make("ar", {"Hi": "مرحبا", "Wide": "عالم"}), "ar", covered=none_covered, chains=chains)
+    assert not kinds(arabic, "glyph"), arabic
+
+    held = {code: dict(info) for code, info in chains.items()}
+    held["ar"] = dict(held["ar"])
+    held["ar"]["chain"] = []
+    held["ar"]["pending"] = ["Cairo-700.ttf"]
+    pending_findings = []
+    still_pending = kit.prepare_fonts(
+        "ar",
+        {"chains": held, "fonts_dir": kit.DEFAULT_FONTS, "skip_glyphs": False},
+        pending_findings,
+    )
+    assert still_pending is None
+    assert any(item.kind == "font-pending" for item in pending_findings), pending_findings
 
 
 def test_cjk_chains_and_advances():

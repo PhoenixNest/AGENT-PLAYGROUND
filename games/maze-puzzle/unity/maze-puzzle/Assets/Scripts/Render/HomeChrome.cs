@@ -171,6 +171,7 @@ namespace OrbitalSalvage.Render
             public double SingleX;
             public double YShift, Incoming, Ceiling;
             public bool Ellipsis, ExtraWrap, SoftShrink, KeepX;
+            public ShapedText.Line[] Shaped;
         }
         FitLay[] fitLay;
         double[] locIconShift;
@@ -2656,12 +2657,15 @@ namespace OrbitalSalvage.Render
             OutlineFonts.SplitCssFont(font, out weight, out family);
             canvas.TextChain = OutlineFonts.ChainFor(lang, family, weight);
             canvas.TextChainStamp = OutlineFonts.ChainStamp(lang, family, weight);
+            canvas.ShapeCode = ShapedText.IsComplex(lang) ? lang : null;
         }
 
         void DisarmRunChain()
         {
             canvas.TextChain = null;
             canvas.TextChainStamp = 0;
+            canvas.ShapeCode = null;
+            canvas.PreparedLine = null;
         }
 
         void PaintCapturedRun(Dictionary<string, object> e, int k, int ri, Dictionary<string, object> run,
@@ -2819,7 +2823,9 @@ namespace OrbitalSalvage.Render
                     : TextFit.PlaceX(lay.Anchor, er[0], er[2], tw, left, right);
                 double top = runY + i * lay.LinePitch;
                 double baseline = top + canvas.FontAscent();
+                canvas.PreparedLine = lay.Shaped != null && i < lay.Shaped.Length ? lay.Shaped[i] : null;
                 CssBox.DrawText(canvas, lay.Lines[i], x, baseline, color, shadows, alpha);
+                canvas.PreparedLine = null;
                 if (RecordRuns) NoteRun(textId, lay.Lines[i], x, top, tw, lay.Lines.Length > 1 ? lay.LinePitch : runH);
                 DrawnRuns++;
             }
@@ -2900,6 +2906,20 @@ namespace OrbitalSalvage.Render
             };
             canvas.Font = lay.DrawFont;
             canvas.LetterSpacing = lay.Letter;
+            string shapeLang = ShapedText.IsComplex(canvas.ShapeCode) ? canvas.ShapeCode : Loc.CurrentLanguage;
+            if (ShapedText.IsComplex(shapeLang)
+                && ShapedText.TryFit(canvas, display, shapeLang, plan.Available, plan.FontPx, plan.LetterSpacing, plan.Action, plan.MaxLines, out ShapedText.Fit shaped))
+            {
+                if (shaped.RightAlign && lay.Anchor == TextFit.Anchor.Left) lay.Anchor = TextFit.Anchor.Right;
+                lay.Lines = shaped.Texts;
+                lay.Widths = shaped.Widths;
+                lay.Shaped = shaped.Lines;
+                lay.Ellipsis = shaped.Ellipsis;
+                lay.ExtraWrap = shaped.Extra;
+                if (lay.Lines.Length == 1 && plan.IconIndex < 0 && !plan.KeepX)
+                    lay.SingleX = TextFit.PlaceX(lay.Anchor, er[0], er[2], lay.Widths.Length > 0 ? lay.Widths[0] : 0, plan.Left, plan.Right);
+                return lay;
+            }
             Func<string, double> measureLine = s =>
             {
                 canvas.Font = lay.DrawFont;
