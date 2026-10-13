@@ -67,6 +67,13 @@ namespace OrbitalSalvage.App
         string _faceHold;
         double _faceHoldUntil = -1;
         bool _dockGift = true;
+        bool _infinite;
+
+        /// <summary>True while an infinite-mode round is the active level.</summary>
+        public bool InfiniteActive { get { return _infinite; } }
+
+        /// <summary>Random source for infinite mode. Not <c>JsRandom.Global</c>. Tests replace it. Returns a number in [0, max).</summary>
+        public Func<int, int> InfiniteRandom = max => InfiniteMode.DefaultRandom.Next(max);
 
         sealed class Timer
         {
@@ -242,7 +249,12 @@ namespace OrbitalSalvage.App
         {
             if (Sectors.Count == 0) return;
             int idx = FirstUncompletedIndex();
-            if (idx < 0) idx = 0;
+            if (idx < 0)
+            {
+                // All 50 levels are done: Play continues in infinite mode. A running infinite round is kept.
+                if (!_infinite || ActiveSector == null) LoadInfiniteRound(false);
+                return;
+            }
             if (SectorIndex == idx && ActiveSector != null && ActiveSector.Id == Sectors[idx].Id) return;
             SectorIndex = idx;
             LoadSector(Sectors[idx], false);
@@ -384,6 +396,7 @@ namespace OrbitalSalvage.App
                     TouchAudio();
                     ResumeCurrentSector();
                     ShowPage("game");
+                    if (_infinite) ShowInfiniteToast();
                     break;
                 case "btn-open-maps-page":
                     TouchAudio();
@@ -685,6 +698,7 @@ namespace OrbitalSalvage.App
         {
             CollectedMass = collectedMass;
             IsLevelCleared = true;
+            if (_infinite) Economy.CompleteInfiniteRound();
             DebriefMass = Loc.Tr("unit.kg", collectedMass);
             DebriefCredits = Loc.Tr("unit.plus_coins", payout);
             ShowToastsFor(unlocked);
@@ -731,8 +745,30 @@ namespace OrbitalSalvage.App
             Rebuild();
         }
 
+        /// <summary>
+        /// Infinite mode: load a random level from the pool (levels 30 to 50) and play it as is.
+        /// The same level may repeat. The round number is read from the profile, so quitting and coming back resumes it.
+        /// </summary>
+        public void LoadInfiniteRound(bool toast)
+        {
+            int level = InfiniteMode.NextLevel(InfiniteRandom);
+            if (Sectors.Count == 0) return;
+            int idx = Math.Min(Math.Max(level - 1, 0), Sectors.Count - 1);
+            Economy.BeginInfiniteRound();
+            LoadSector(Sectors[idx], false);
+            _infinite = true;
+            if (toast) ShowInfiniteToast();
+        }
+
+        void ShowInfiniteToast()
+        {
+            ShowToast(Loc.Tr("toast.infinite.round", Economy.Profile.InfiniteRound, Economy.Profile.InfiniteBest));
+            Rebuild();
+        }
+
         public void LoadSector(SectorConfig sector, bool toast)
         {
+            _infinite = false;
             ActiveSector = sector;
             CollectedMass = 0;
             SpilledMass = 0;
@@ -760,11 +796,18 @@ namespace OrbitalSalvage.App
 
         public void RestartSector()
         {
+            bool infinite = _infinite;
             if (ActiveSector != null) LoadSector(ActiveSector, true);
+            _infinite = infinite && ActiveSector != null;
         }
 
         public void NextSector()
         {
+            if (_infinite || (ActiveSector != null && ActiveSector.IsDaily != true && ActiveSector.LevelNumber == 50 && FirstUncompletedIndex() < 0))
+            {
+                LoadInfiniteRound(true);
+                return;
+            }
             if (ActiveSector != null && ActiveSector.IsDaily == true)
             {
                 var shifts = Economy.GetDailyShifts();
@@ -834,6 +877,7 @@ namespace OrbitalSalvage.App
             RefreshCredits();
             if (ActiveSector != null && ActiveSector.IsDaily != true && !string.IsNullOrEmpty(ActiveSector.Id))
                 Economy.RecordSectorCompleted(ActiveSector.Id);
+            if (_infinite) Economy.CompleteInfiniteRound();
             bool daily = ActiveSector != null && ActiveSector.IsDaily == true;
             string tier = ActiveSector != null && !string.IsNullOrEmpty(ActiveSector.DailyTier) ? ActiveSector.DailyTier : "silver";
             var unlocked = Economy.RecordContractComplete(daily, tier);

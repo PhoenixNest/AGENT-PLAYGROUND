@@ -26,6 +26,7 @@ namespace OrbitalSalvage.Loc
             Def("toast.trophy", "\U0001F3C6 Trophy: {0} (+{1} \U0001FA99)", "Toast when an achievement unlocks. {0} is the achievement title passed through Loc.TrName, {1} is the coin reward. Keep the trophy and coin emoji."),
             Def("toast.daily.all_clear", "\U0001F389 All 3 Daily Shifts Cleared! Claim Master Bonus in Daily Tab! \U0001F3C6", "Toast when all three daily shifts are done and the master bonus is unclaimed. Keep both emoji."),
             Def("toast.sector.cleanup", "Clean up {0}! \U0001F680", "Toast when a level loads. {0} is the level or daily-shift name passed through Loc.TrName (may be long). Keep the rocket."),
+            Def("toast.infinite.round", "Round {0}, best {1}! \U0001F680", "Toast when an infinite-mode round starts, after all 50 levels are done. {0} is the round number, {1} is the best round reached. Keep the rocket."),
             Def("toast.backup.deployed", "\U0001F680 Auxiliary Scrap Pod Deployed! (+8 Scrap)", "Toast when the backup pod fires. The 8 is fixed. Keep the rocket."),
             Def("toast.gift.already", "\U0001F381 Claimed today. Come back tomorrow!", "Toast when the daily gift button is pressed again. Keep the gift emoji."),
             Def("toast.gift.claimed", "\U0001F381 Claimed +100 \U0001FA99 Janitor Stipend!", "Toast after the daily gift pays 100 coins. Keep the gift and coin emoji."),
