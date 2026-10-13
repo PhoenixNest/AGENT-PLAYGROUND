@@ -178,6 +178,45 @@ namespace OrbitalSalvage.App.Tests
         }
 
         [Test]
+        public void Home_ShowsInfiniteCard_WhenAllLevelsDone()
+        {
+            AppController app = NewApp();
+            CompleteLevels(app, 50);
+            app.Click("btn-home-play");
+            app.ShowPage("home");
+            Assert.AreEqual("Round 1", app.MissionName);
+            Assert.AreEqual("Best: 1", app.MissionGoal);
+            Assert.AreEqual("Infinite Mode", app.MissionWorld);
+
+            app.ForceVictory(app.ActiveSector.Quota);
+            app.ShowPage("home");
+            Assert.AreEqual("Round 2", app.MissionName);
+            Assert.AreEqual("Best: 2", app.MissionGoal);
+        }
+
+        [Test]
+        public void Home_ShowsInfiniteCard_EvenAfterReplayingACampaignLevel()
+        {
+            AppController app = NewApp();
+            CompleteLevels(app, 50);
+            app.LoadSector(app.Sectors[4], false);
+            app.ShowPage("home");
+            Assert.AreEqual("Round 1", app.MissionName);
+            Assert.AreEqual("Infinite Mode", app.MissionWorld);
+        }
+
+        [Test]
+        public void Home_ShowsLevelCard_WhenNotAllDone()
+        {
+            AppController app = NewApp();
+            CompleteLevels(app, 49);
+            app.ShowPage("home");
+            StringAssert.StartsWith("LVL ", app.MissionName);
+            StringAssert.StartsWith("Goal: ", app.MissionGoal);
+            Assert.AreNotEqual("Infinite Mode", app.MissionWorld);
+        }
+
+        [Test]
         public void Pick_DoesNotUseGlobalRandom()
         {
             JsRandom.Global.Reset(JsRandom.DefaultSeed);
