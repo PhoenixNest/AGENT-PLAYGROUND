@@ -15,6 +15,13 @@ Paths written as `tools/parity/...` in entries dated before 2026-10-08 are the l
 
 ### Added
 
+#### Real Arabic, Hindi, and Khmer tables (2026-10-13)
+
+- `bake_shaped.py` packed every spec and str key. Failures: 0. Unique strings in the bake: Arabic 431 (84937 bytes), Hindi 432 (96826), Khmer 431 (88170). The fixture bytes are gone. Font files are unchanged in size: Baloo 2 330740, Kantumruy Pro 67916, Cairo 58640. `…` and `⏪` are symbol runs. A `{0}` next to punctuation or a Latin token bakes; a `{0}` glued to an Arabic, Devanagari, or Khmer letter still fails.
+- A toast that inserts a translated name splices that name's baked runs. A Western number stays on Fredoka. A script string that is not itself a table value still paints nothing. Letter-spacing for these three languages is 0, and two adjacent shaped glyphs get no extra gap, so an Arabic join and the Devanagari headline are not split. The script face sets the ascent, and the size is scaled so that em fits the captured line box.
+- Audit, 90 files and 2006 runs each: Arabic hard 0, soft 8 (shrink 4, ellipsis 4). Hindi the same. Khmer hard 0, soft 38 (shrink 34, ellipsis 4). The ellipses are the two privacy bodies. Khmer's extra shrinks are the daily medal chips and the reset line at 0.78. Stills: `localization/reports/audit-complex-2026-10-13.md`.
+- `selftest_shaping.py` 6 groups, `selftest_kit.py` 19 groups. `ShapedTextTests` 13 passed, and the six `ar`/`hi`/`km` audit and still tests passed. Full EditMode: 580 passed, 87 failed, 3 skipped, 670 total, exit 2. Results `/tmp/maze-i18n/shaping-core/full.xml`, log `/tmp/maze-i18n/shaping-core/full.log`. 83 of the failures are the known set (`ReferenceComparisonTests` 73, `ReferenceGateTests` 9, `QuotaAndModalTests.GameAndPauseStills_MatchKnownHashes`). The other four are `LocLanguageAuditTests` for `zh-Hans`, `zh-Hant`, `ja`, and `ko`, all `missing-glyph` on the CJK subsets already in this tree. Those fonts were not changed here.
+
 #### CJK font subsets and line breaking (2026-10-13)
 
 - `cjk-sc`, `cjk-tc`, `cjk-jp`, and `cjk-kr` now load real glyf subsets instead of the endonym-only files. `ZCOOLKuaiLe-sc` is 91184 bytes, `Huninn-tc` is 202064, `MPLUSRounded1c-700` is 292120, `Jua-kr` is 270856. Each is under 1.5 MB, cmap format 4, no `fvar`. Rebuild after the translation tables land with `/tmp/maze-i18n/kit-venv/bin/python games/maze-puzzle/localization/tools/make_cjk_fonts.py`. A missing table builds from `cjk_safety.json` only.
