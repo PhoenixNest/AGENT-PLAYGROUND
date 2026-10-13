@@ -88,7 +88,7 @@ The user marks the sample done in the language notes. That mark is a TVR input. 
 
 `qps` is the pseudo-locale. It is not a language and it is not saved. It is built in memory from `en.json`: Latin-1 look-alikes, padded about 40% with `~`, wrapped in `[` `]`. Digits, placeholders, emoji, `/`, `×`, and `▶` stay put. Set PlayerPrefs `os.parity.lang` to `qps` or a registry code before launch.
 
-The overflow audit walks the spec files without painting. Hard findings are text outside the element, overlap with a sibling icon, text past the home-indicator band, and a wrap inside a single-line control. Shrink, ellipsis, and a line that is still wider than the box are soft. Single-line controls shrink to 72% and then ellipsize. They never wrap.
+The overflow audit walks the spec files without painting. Hard findings are text outside the element, overlap with a sibling icon, text past the home-indicator band, a wrap inside a single-line control, and a line that is still wider than the box (`hard-wider`). Shrink and ellipsis are soft. Single-line controls shrink to 72% and then ellipsize. They never wrap.
 
 Run the audit on `qps` first (expansion), then on the real table. Hard count must be 0 before the TVR.
 
@@ -153,4 +153,4 @@ LQA severities from the skill, mapped onto this kit: a broken placeholder, an of
 
 ## What this kit does not do
 
-It does not run Unity, or shape Arabic, Hindi, or Khmer. Baloo 2, Kantumruy Pro, and Cairo are still pending. The CJK subsets (ZCOOL KuaiLe, Huninn, M PLUS Rounded 1c, Jua) are shipped. It does not decide the app name. Logo strings stay in English until that decision.
+It does not run Unity, or shape Arabic, Hindi, or Khmer. Baloo 2 (`Baloo2-700`), Kantumruy Pro (`KantumruyPro-700`), and Cairo (`Cairo-700`) are shipped for Hindi, Khmer, and Arabic, in `Assets/Fonts` and `Resources/Fonts/Ttf`. Vietnamese and Uzbek stay on Fredoka and Nunito. The CJK subsets (ZCOOL KuaiLe, Huninn, M PLUS Rounded 1c, Jua) are shipped. It does not decide the app name. Logo strings stay in English until that decision.
