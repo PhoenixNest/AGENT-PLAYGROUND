@@ -11,6 +11,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 Paths written as `tools/parity/...` in entries dated before 2026-10-08 are the location on that day. Those files now live under `games/maze-puzzle/tools/parity/...`. Entries that name `tools/parity/unity/*.ps1` or `canvas-conformance/run-unity.ps1` record the path used that day. Those Windows wrappers now live under `games/maze-puzzle/tools/parity/windows/`.
 
+- The overflow audit `hard` total counts an icon overlap once (`hard_overlap` stays its own column). Vietnamese and Uzbek no longer list Baloo 2 as a pending face. `zh-Hans`, `ko`, and `km` now store `meta.sourceHashes`. `ja` does not: `merge_table.py` would also insert `doNotTranslate`. Focused EditMode (`LocLanguageAuditTests|PseudoAudit_HasNoUnlistedHardViolations`): 17 passed, 0 failed. Full EditMode: 590 passed, 83 failed, 3 skipped, 676 total, exit 2. Results `/tmp/maze-i18n/loc-consistency/full.xml`, log `/tmp/maze-i18n/loc-consistency/full.log`. The 83 are the known set (`ReferenceComparisonTests` 73, `ReferenceGateTests` 9, `QuotaAndModalTests.GameAndPauseStills_MatchKnownHashes`).
+
 - iPhone X (iOS 16.7.10, language en-US) ran the Release device build and reached Home in the phone language and in de, fr, es, it, pt-PT, vi, fil, id, uz, and qps. Notes: `localization/reports/device-check-2026-10-12.md`.
 
 ### Added
