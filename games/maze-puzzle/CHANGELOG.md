@@ -17,6 +17,10 @@ Paths written as `tools/parity/...` in entries dated before 2026-10-08 are the l
 
 ### Added
 
+#### Infinite mode (2026-10-13)
+
+- Logic piece: `InfiniteMode.NextLevel` picks a random level from 30 to 50 with its own random source (not `JsRandom.Global`). The same level may come twice in a row. `Profile` has `InfiniteRound` and `InfiniteBest`, saved as `infiniteRound` / `infiniteBest` only when not 0, so a default profile text is unchanged and old saves load as 0. New tests: 7 passed, 0 failed. Related profile and economy tests: 17 passed, 0 failed.
+
 #### App Store metadata and submission manual (2026-10-13)
 
 - New `13_APP_STORE_METADATA_AND_SUBMISSION_MANUAL.md`: paste-ready English store listing (name options within 30 characters, subtitle, promotional text, description, keywords, review notes), App Privacy and age-rating answers, a draft privacy policy, a status table of what is ready and missing, a step-by-step guide from Apple account to "Waiting for Review", a pre-flight checklist, and an open-items list. Translated store listings were not written. Apple limits and forms are from memory and marked "check Apple".

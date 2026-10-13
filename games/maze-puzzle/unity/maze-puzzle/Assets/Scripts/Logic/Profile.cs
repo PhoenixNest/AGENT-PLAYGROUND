@@ -23,6 +23,8 @@ namespace OrbitalSalvage.Logic
         public double Credits = 250;
         public double CareerDebris;
         public double CareerContracts;
+        public double InfiniteRound;
+        public double InfiniteBest;
         public OrderedMap<string> Equipped = new OrderedMap<string>();
         public OrderedMap<List<string>> Unlocked = new OrderedMap<List<string>>();
         public ProfileSettings Settings = new ProfileSettings();
@@ -61,6 +63,8 @@ namespace OrbitalSalvage.Logic
             o.Set("credits", Credits);
             o.Set("careerDebris", CareerDebris);
             o.Set("careerContracts", CareerContracts);
+            if (InfiniteRound != 0) o.Set("infiniteRound", InfiniteRound);
+            if (InfiniteBest != 0) o.Set("infiniteBest", InfiniteBest);
 
             JsonValue eq = JsonValue.NewObject();
             foreach (string k in Equipped.Keys) eq.Set(k, Equipped.Get(k));
@@ -125,7 +129,7 @@ namespace OrbitalSalvage.Logic
             {
                 "version", "credits", "careerDebris", "careerContracts", "equipped", "unlocked", "settings", "achievements",
                 "completedSectors", "dailyShiftCompletedToday", "lastDailyShiftDate", "completedDailyTiers",
-                "dailyMasterClaimedDate", "lastDailyGiftDate",
+                "dailyMasterClaimedDate", "lastDailyGiftDate", "infiniteRound", "infiniteBest",
             };
 
             bool hasSettings = Truthy(parsed.Get("settings"));
@@ -138,6 +142,8 @@ namespace OrbitalSalvage.Logic
             if ((v = parsed.Get("credits")) != null && v.Kind == JsonKind.Number) p.Credits = v.Number;
             if ((v = parsed.Get("careerDebris")) != null && v.Kind == JsonKind.Number) p.CareerDebris = v.Number;
             if ((v = parsed.Get("careerContracts")) != null && v.Kind == JsonKind.Number) p.CareerContracts = v.Number;
+            if ((v = parsed.Get("infiniteRound")) != null && v.Kind == JsonKind.Number) p.InfiniteRound = v.Number;
+            if ((v = parsed.Get("infiniteBest")) != null && v.Kind == JsonKind.Number) p.InfiniteBest = v.Number;
 
             if ((v = parsed.Get("equipped")) != null && v.Kind == JsonKind.Object)
             {
