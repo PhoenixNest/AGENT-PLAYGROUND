@@ -38,7 +38,9 @@ namespace OrbitalSalvage.Render
 
             public int Hard
             {
-                get { return HardOutside + HardOverlap + HardBand + HardWider + HardWrapped + HardMissing + HardIconOverlap; }
+                // HardOverlap is the same icon crossing when the run is not kept in place.
+                // The hard_overlap column stays. Adding it here would count that finding twice.
+                get { return HardOutside + HardBand + HardWider + HardWrapped + HardMissing + HardIconOverlap; }
             }
 
             public int Soft
