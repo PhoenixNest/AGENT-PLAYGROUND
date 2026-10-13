@@ -17,6 +17,10 @@ Paths written as `tools/parity/...` in entries dated before 2026-10-08 are the l
 
 ### Added
 
+#### App Store metadata and submission manual (2026-10-13)
+
+- New `13_APP_STORE_METADATA_AND_SUBMISSION_MANUAL.md`: paste-ready English store listing (name options within 30 characters, subtitle, promotional text, description, keywords, review notes), App Privacy and age-rating answers, a draft privacy policy, a status table of what is ready and missing, a step-by-step guide from Apple account to "Waiting for Review", a pre-flight checklist, and an open-items list. Translated store listings were not written. Apple limits and forms are from memory and marked "check Apple".
+
 #### Localisation: 17 languages (2026-10-13)
 
 - The Unity app now ships English plus 16 translations: de, fr, es, it, pt-PT, vi, fil, id, uz (Latin), zh-Hans, zh-Hant, ja, ko (CJK), and hi, km, ar (offline-shaped). The default follows the device language, with a manual Language row in Settings and an English fallback. Every translation is an agent draft with no native-speaker review. Samples for a reviewer: `localization/reports/review-samples-2026-10-13/`. Device checks: `localization/reports/device-check-2026-10-12.md` and `device-check-2026-10-13.md`. Known limits: Arabic is right-aligned text only (the layout is not mirrored); Khmer wraps between clusters; the privacy and `localStorage` paragraphs ellipsize in some languages and are not reachable in the app; Settings, Shop and Daily were not opened on a phone.
