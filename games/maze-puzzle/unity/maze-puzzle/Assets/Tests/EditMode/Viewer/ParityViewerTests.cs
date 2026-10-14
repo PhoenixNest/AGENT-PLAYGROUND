@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.IO;
 using NUnit.Framework;
+using OrbitalSalvage.Render;
 using UnityEngine;
 
 namespace OrbitalSalvage.Viewer.Tests
@@ -90,6 +91,25 @@ namespace OrbitalSalvage.Viewer.Tests
             Assert.IsTrue(lru.Contains("c"));
             Assert.IsTrue(lru.Contains("d"));
             Assert.AreEqual(3, lru.Count);
+        }
+
+        [Test]
+        public void PlayDrag_PassesTheVerticalPosition()
+        {
+            var session = LiveGameSession.CreatePlay(ParityPages.CssWidth, ParityPages.CssHeight, 1);
+            try
+            {
+                double cx = session.Physics.Center.X;
+                double cy = session.Physics.Center.Y;
+                session.NowMs = () => 8000;
+                ParityViewer.DispatchPlayPointer(session, cx, cy + 120, true, false, false);
+                ParityViewer.DispatchPlayPointer(session, cx - 30, cy + 120, false, true, false);
+                Assert.Greater(session.Physics.AngularVelocity, 0, "a left drag on the bottom is clockwise only when Y is used");
+            }
+            finally
+            {
+                session.Renderer.Dispose();
+            }
         }
 
         static string Hit(string stateId, double x, double y)
