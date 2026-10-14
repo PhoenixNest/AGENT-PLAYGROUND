@@ -230,8 +230,9 @@ flowchart TD
 - **Mouth Half-Width:** $95\text{px}$ at aperture ($y \approx 499$).
 - **Base Half-Width:** $46\text{px}$ at Nibbles ($y \approx 708$).
 - **Aperture Dampers:** Upon exit, horizontal velocity is clamped by $65\%$ (`d.vx *= 0.35`) and downward momentum is ensured (`d.vy = Math.max(d.vy, 95)`).
-- **Centering Tractor Beam:**
-  $$a_x = (\text{bh.x} - d.x) \times 16$$
+- **Centering spring** (critically damped): $k = 15$, $c = 2\sqrt{15}$.
+  $$v_x \mathrel{+}= \big((\text{bh.x} - d.x) \times 15 - v_x \times 2\sqrt{15}\big) \times dt$$
+  A still ring does not spill. A hard spin can.
 - **Off-Screen Despawn:** Particles past $y > \text{bh.y} + 140$ are cleanly despawned and tallied via `onDebrisSpilled`.
 
 ---

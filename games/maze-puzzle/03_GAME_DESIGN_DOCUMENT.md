@@ -152,7 +152,7 @@ To ensure clear mechanical superiority over generic clones:
 2. **Containment Field Mechanics:**
    - **Inertial Dampers:** Scrap passing through the exit aperture is smoothly stabilized, dampening excessive horizontal momentum while ensuring positive downward velocity toward Nibbles.
    - **Magnetic Guide Rails:** Luminous physical guide rails gently channel falling debris from the ring exit down into Nibbles' collection radius, reflecting stray scrap inward.
-   - **Centering Tractor Force:** Nibbles generates an active inward magnetic attraction along the central axis, drawing falling scrap smoothly into the mouth.
+   - **Centering Tractor Force:** Nibbles pulls falling scrap toward the centre line. Scrap in a still ring falls into the mouth. A hard spin can throw a piece out past the rails, and that miss is an expected way to fail.
    - **Neon Visual Guidance:** Animated cyan/indigo dashed guide rails, emitter pylons, and downward magnetic chevrons clearly communicate the safe collection corridor to the player.
 
 > [!NOTE]
