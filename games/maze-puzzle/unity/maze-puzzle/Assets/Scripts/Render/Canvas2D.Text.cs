@@ -311,7 +311,7 @@ namespace OrbitalSalvage.Render
                 prm[pb + IdxImgC] = new Vector4((float)TextBias, 0, 0, 0);
                 prm[pb + IdxText] = new Vector4(stroke ? 1f : 0f, (float)hw, (float)TextGamma, (float)(2 * SdfRange * devPerTexel));
                 SetRect(pb, 0, 0, Width, Height);
-                cmd.SetRenderTarget(target);
+                SetTarget(target);
                 cmd.SetGlobalTexture(IdAtlas, font.atlasTexture);
                 Draw(matText, 0, 6 * n, pb);
                 i = j;

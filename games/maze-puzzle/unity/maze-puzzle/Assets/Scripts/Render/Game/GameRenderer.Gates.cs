@@ -321,11 +321,14 @@ namespace OrbitalSalvage.Render
         void RenderCartoonDebris(Canvas2D ctx, List<Debris> debrisList)
         {
             ctx.Save();
+            // Phone path: put the transform back by hand. Save cloned a state object per piece.
+            bool phone = RenderOpts.FastShape;
+            Matrix2D keep = ctx.CurrentTransform;
             for (int i = 0; i < debrisList.Count; i++)
             {
                 var d = debrisList[i];
                 if (d.State == DebrisState.Removed) continue;
-                ctx.Save();
+                if (!phone) ctx.Save();
                 ctx.Translate(d.X, d.Y);
                 if (d.Type == "solar")
                 {
@@ -375,15 +378,30 @@ namespace OrbitalSalvage.Render
                     ctx.Fill();
                     ctx.Stroke();
                     ctx.FillStyle = "#1e1b4b";
-                    ctx.BeginPath();
-                    ctx.Arc(-2, -1, 1.2, 0, JsMath.PI * 2);
-                    ctx.Arc(2, -1, 1.2, 0, JsMath.PI * 2);
-                    ctx.Fill();
+                    if (RenderOpts.FastShape)
+                    {
+                        // Phone path: one circle per fill. A two-circle path cannot use the analytic fast fill, and every
+                        // piece in a big pile paid a full-size target switch for it. The eyes do not overlap, so the picture is the same.
+                        ctx.BeginPath();
+                        ctx.Arc(-2, -1, 1.2, 0, JsMath.PI * 2);
+                        ctx.Fill();
+                        ctx.BeginPath();
+                        ctx.Arc(2, -1, 1.2, 0, JsMath.PI * 2);
+                        ctx.Fill();
+                    }
+                    else
+                    {
+                        ctx.BeginPath();
+                        ctx.Arc(-2, -1, 1.2, 0, JsMath.PI * 2);
+                        ctx.Arc(2, -1, 1.2, 0, JsMath.PI * 2);
+                        ctx.Fill();
+                    }
                     ctx.BeginPath();
                     ctx.Arc(0, 1.5, 2, 0, JsMath.PI);
                     ctx.Stroke();
                 }
-                ctx.Restore();
+                if (phone) ctx.SetTransform(keep.a, keep.b, keep.c, keep.d, keep.e, keep.f);
+                else ctx.Restore();
             }
             ctx.Restore();
         }
