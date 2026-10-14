@@ -321,11 +321,14 @@ namespace OrbitalSalvage.Render
         void RenderCartoonDebris(Canvas2D ctx, List<Debris> debrisList)
         {
             ctx.Save();
+            // Phone path: put the transform back by hand. Save cloned a state object per piece.
+            bool phone = RenderOpts.FastShape;
+            Matrix2D keep = ctx.CurrentTransform;
             for (int i = 0; i < debrisList.Count; i++)
             {
                 var d = debrisList[i];
                 if (d.State == DebrisState.Removed) continue;
-                ctx.Save();
+                if (!phone) ctx.Save();
                 ctx.Translate(d.X, d.Y);
                 if (d.Type == "solar")
                 {
@@ -397,7 +400,8 @@ namespace OrbitalSalvage.Render
                     ctx.Arc(0, 1.5, 2, 0, JsMath.PI);
                     ctx.Stroke();
                 }
-                ctx.Restore();
+                if (phone) ctx.SetTransform(keep.a, keep.b, keep.c, keep.d, keep.e, keep.f);
+                else ctx.Restore();
             }
             ctx.Restore();
         }
