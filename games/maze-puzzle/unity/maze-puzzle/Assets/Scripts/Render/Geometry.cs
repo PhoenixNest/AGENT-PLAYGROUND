@@ -97,15 +97,43 @@ namespace OrbitalSalvage.Render
         public double SimR0, SimR1, SimR2, SimR3;
         public double SimA0, SimSweep;
 
+        /// <summary>
+        /// A lone circle, ellipse, or fast arc whose polyline is built only if a consumer reads it.
+        /// The analytic fill and stroke ignore the points, so the phone path skips the trig.
+        /// </summary>
+        bool pendingFlat;
+        Matrix2D flatM;
+        double flatCx, flatCy, flatRx, flatRy, flatRot, flatA0, flatSweep;
+        int flatN;
+        bool flatFull;
+
         public void ClearSimple() { Simple = 0; }
 
         public int Count => subpaths.Count;
-        public Subpath this[int i] => subpaths[i];
+        public Subpath this[int i] { get { Materialize(); return subpaths[i]; } }
         public bool HasCurrent => cur != null && cur.pts.Count > 0 && !needMove;
-        public Vec2d LastDevice => cur.pts[cur.pts.Count - 1];
+        public Vec2d LastDevice { get { Materialize(); return cur.pts[cur.pts.Count - 1]; } }
+
+        /// <summary>Build the deferred ellipse polyline. No-op once the points exist or nothing was deferred.</summary>
+        public void Materialize()
+        {
+            if (!pendingFlat) return;
+            pendingFlat = false;
+            double cr = Math.Cos(flatRot), sr = Math.Sin(flatRot);
+            for (int i = 1; i <= flatN; i++)
+            {
+                double ang = flatA0 + flatSweep * i / flatN;
+                double ex = flatRx * Math.Cos(ang), ey = flatRy * Math.Sin(ang);
+                double ux = flatCx + ex * cr - ey * sr;
+                double uy = flatCy + ex * sr + ey * cr;
+                cur.pts.Add(flatM.Apply(ux, uy));
+            }
+            if (flatFull) cur.pts.RemoveAt(cur.pts.Count - 1);
+        }
 
         public void Reset()
         {
+            pendingFlat = false;
             foreach (var s in subpaths) { s.Clear(); pool.Push(s); }
             subpaths.Clear();
             cur = null;
@@ -124,6 +152,7 @@ namespace OrbitalSalvage.Render
 
         public void MoveTo(Matrix2D m, double x, double y)
         {
+            Materialize();
             if (!IsFinite(x, y)) return;
             ClearSimple();
             var s = NewSubpath();
@@ -136,6 +165,7 @@ namespace OrbitalSalvage.Render
 
         public void LineTo(Matrix2D m, double x, double y)
         {
+            Materialize();
             if (!IsFinite(x, y)) return;
             ClearSimple();
             if (!PrepareConnect(m, x, y)) return;
@@ -160,6 +190,7 @@ namespace OrbitalSalvage.Render
 
         public void ClosePath()
         {
+            Materialize();
             ClearSimple();
             if (cur == null || needMove && cur.closed) return;
             if (cur.pts.Count == 0) return;
@@ -171,6 +202,7 @@ namespace OrbitalSalvage.Render
 
         public void Rect(Matrix2D m, double x, double y, double w, double h)
         {
+            Materialize();
             if (!IsFinite(x, y) || !IsFinite(w, h)) return;
             MoveTo(m, x, y);
             cur.pts.Add(m.Apply(x + w, y));
@@ -193,6 +225,7 @@ namespace OrbitalSalvage.Render
 
         public void QuadTo(Matrix2D m, double cx, double cy, double x, double y)
         {
+            Materialize();
             if (!IsFinite(cx, cy) || !IsFinite(x, y)) return;
             ClearSimple();
             PrepareConnect(m, cx, cy);
@@ -212,6 +245,7 @@ namespace OrbitalSalvage.Render
 
         public void BezierTo(Matrix2D m, double c1x, double c1y, double c2x, double c2y, double x, double y)
         {
+            Materialize();
             if (!IsFinite(c1x, c1y) || !IsFinite(c2x, c2y) || !IsFinite(x, y)) return;
             ClearSimple();
             PrepareConnect(m, c1x, c1y);
@@ -235,6 +269,7 @@ namespace OrbitalSalvage.Render
 
         public void Ellipse(Matrix2D m, double cx, double cy, double rx, double ry, double rotation, double a0, double a1, bool ccw)
         {
+            Materialize();
             if (!IsFinite(cx, cy) || !IsFinite(rx, ry) || !IsFinite(rotation) || !IsFinite(a0, a1)) return;
             if (rx < 0 || ry < 0) return;
             const double TwoPi = Math.PI * 2;
@@ -267,16 +302,38 @@ namespace OrbitalSalvage.Render
             double step = rmax < 1e-6 ? Math.PI : 2 * Math.Acos(Math.Max(0, 1 - tol / Math.Max(rmax, tol * 1.0001)));
             step = Math.Min(step, Math.PI / 4);
             int n = Math.Max(1, (int)Math.Ceiling(Math.Abs(sweep) / step));
-            for (int i = 1; i <= n; i++)
+            bool lone = !connected && subpaths.Count == 1;
+            bool circle = Math.Abs(rx - ry) < 1e-6 && Math.Abs(rotation) < 1e-6;
+            bool defer = lone && ((full && (RenderOpts.FastShape || RenderOpts.FastArc))
+                || (!full && RenderOpts.FastArc && circle
+                    && Math.Abs(sweep) > 1e-4 && Math.Abs(sweep) < TwoPi - 1e-3));
+            if (!defer)
             {
-                double ang = a0 + sweep * i / n;
-                cur.pts.Add(m.Apply(Pt(ang)));
+                for (int i = 1; i <= n; i++)
+                {
+                    double ang = a0 + sweep * i / n;
+                    cur.pts.Add(m.Apply(Pt(ang)));
+                }
+            }
+            else
+            {
+                pendingFlat = true;
+                flatM = m;
+                flatCx = cx;
+                flatCy = cy;
+                flatRx = rx;
+                flatRy = ry;
+                flatRot = rotation;
+                flatA0 = a0;
+                flatSweep = sweep;
+                flatN = n;
+                flatFull = full;
             }
             var end = Pt(a0 + sweep);
             lastUser = end;
             if (full && !connected)
             {
-                cur.pts.RemoveAt(cur.pts.Count - 1);
+                if (!defer) cur.pts.RemoveAt(cur.pts.Count - 1);
                 cur.closed = true;
                 cur.explicitClose = false;
                 needMove = true;
@@ -315,6 +372,7 @@ namespace OrbitalSalvage.Render
 
         public void ArcTo(Matrix2D m, double x1, double y1, double x2, double y2, double r)
         {
+            Materialize();
             if (!IsFinite(x1, y1) || !IsFinite(x2, y2) || !IsFinite(r) || r < 0) return;
             ClearSimple();
             if (!PrepareConnect(m, x1, y1)) return;
@@ -352,6 +410,7 @@ namespace OrbitalSalvage.Render
 
         public void RoundRect(Matrix2D m, double x, double y, double w, double h, Vec2d[] radii)
         {
+            Materialize();
             if (!IsFinite(x, y) || !IsFinite(w, h)) return;
             if (w < 0) { x += w; w = -w; }
             if (h < 0) { y += h; h = -h; }
@@ -393,6 +452,7 @@ namespace OrbitalSalvage.Render
 
         public bool GetBounds(out double minX, out double minY, out double maxX, out double maxY)
         {
+            Materialize();
             minX = minY = double.MaxValue;
             maxX = maxY = double.MinValue;
             bool any = false;
