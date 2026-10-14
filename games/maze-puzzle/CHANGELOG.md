@@ -17,6 +17,13 @@ Paths written as `tools/parity/...` in entries dated before 2026-10-08 are the l
 
 ### Changed
 
+#### Weaker capture net (2026-10-14)
+
+- Deliberate balance change. The funnel centering spring is now `k = 15`, `c = 2 * sqrt(15)` (still critically damped) in `web/engine/physics.js` and `PhysicsEngine.ResolveMagneticFunnel`. Rails stay 95 px down to 46 px, bounce 0.45. Aperture dampers, black-hole gravity, quotas, and the defeat rule are unchanged. A still ring does not spill. A hard spin can throw a piece out, which is an expected miss.
+- Headless bots, 8 levels (1, 5, 10, 15, 21, 31, 40, 50), 6 seeds, up to 240 s. Baseline `k = 16`, `c = 8`: idle spilled 0/48; steady spin averaged 12.1 kg and spilled in 13/48 runs (levels 1, 5, 10, 15, and 40 never spilled); random swipe averaged about 0 kg (1/48); flicks averaged 0.6 kg. Steady-spin wins stayed 6/6 on every measured level. `k = 15`: idle still 0/48, including levels 5 and 31; steady spin averaged 15.8 kg and spilled in 27/48 runs, including levels 1 (4/6, usually one or two pieces), 5 (5/6), and 10 (5/6); steady-spin wins stayed 6/6. `k = 14` spilled more (spin average 21.6 kg). `k = 13` dropped level 21 steady-spin wins from 6/6 to 4/6. No run was a defeat, because defeat still requires an empty ring.
+- Golden physics fixtures were regenerated with Chromium 153.0.8010.12. Maze, economy, and `fixtures/engine.txt` did not change. No hash literal in the Unity tests changed. `GameSyncHashTests` still expects `afda801ca49be31c`.
+- EditMode: 738 total, 652 passed, 83 failed, 3 skipped, exit 2. Results `/tmp/maze-weaker-net/editmode.xml`, log `/tmp/maze-weaker-net/editmode.log`. The 83 are the known set (`ReferenceComparisonTests` 73, `ReferenceGateTests` 9, `QuotaAndModalTests.GameAndPauseStills_MatchKnownHashes`). `FunnelIdleTests` 2 passed, `PhysicsGoldenTests` 85 passed, `GameSyncHashTests` 1 passed, `MazeGoldenTests` 4 passed, `EconomyGoldenTests` 6 passed. The batch run that wrote this XML did not pass `-nographics`.
+
 #### Settings page credits footer removed (2026-10-14)
 
 - The two grey lines under the Game Data card are gone: `Orbital Salvage • Space Trash Clean v1.2.0` and `Pure Gesture Mobile Web Puzzle`. The title, Audio, Gameplay, Language, Privacy & Safety, and Game Data sections are unchanged. The web prototype `web/index.html` no longer has that block, so a later capture does not put it back. The twelve committed settings specs (six states, zero and iPhone) drop the footer element and its line break. The scroll body stays the viewport height, because that height was not taken from the footer. The Game Data card is the last block.
