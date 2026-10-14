@@ -31,6 +31,12 @@ namespace OrbitalSalvage.Render
         public const double DoubleTapMs = 280;
         public const double DoubleTapPx = 45;
 
+        /// <summary>
+        /// Page pixels from the ring centre. A drag that starts or ends inside this
+        /// distance uses sideways movement only, so the hub does not divide by a tiny radius.
+        /// </summary>
+        public const double MinGrabRadius = 40;
+
         static readonly string[] NomKeys = { "fx.swallow.nom", "fx.swallow.yum", "fx.swallow.gulp", "fx.swallow.tasty" };
 
         /// <summary>When true, the physics step and <see cref="Present"/> record Stopwatch ticks. Default false, so play and stills are unchanged.</summary>
@@ -97,6 +103,8 @@ namespace OrbitalSalvage.Render
 
         bool _dragging;
         double _lastPointerX;
+        double _lastPointerY;
+        double _tapPageWidth;
         double _lastTapTime;
         double _lastTapX;
         LocMemo _quotaLabel;
@@ -211,6 +219,7 @@ namespace OrbitalSalvage.Render
 
         public void ApplyLayout(double w, double h)
         {
+            _tapPageWidth = w;
             Renderer.Resize(w, h);
             double centerX = w * 0.5;
             double centerY = JsMath.Max(175, h * 0.38);
@@ -376,12 +385,54 @@ namespace OrbitalSalvage.Render
             _lastTapX = clientX;
         }
 
+        /// <summary>
+        /// Playfield press in page pixels. Stores both axes for <see cref="PointerMove(double, double)"/>.
+        /// A double tap still splits the laid-out page width at the left edge, which is what the viewer passed before.
+        /// </summary>
+        public void PointerDown(double clientX, double clientY)
+        {
+            PointerDown(clientX, 0, _tapPageWidth);
+            _lastPointerY = clientY;
+        }
+
         public void PointerMove(double clientX)
         {
             if (!_dragging) return;
             double delta = clientX - _lastPointerX;
             _lastPointerX = clientX;
             Physics.ApplyInputDrag(delta * 1.3);
+        }
+
+        /// <summary>
+        /// Moves the ring with the finger. The tangential distance, in page pixels, is passed to
+        /// <see cref="PhysicsEngine.ApplyInputDrag"/> with the same 1.3 gain as a sideways drag.
+        /// Positive is clockwise on screen (Y grows downward), matching <see cref="PhysicsEngine.RingAngle"/>.
+        /// </summary>
+        public void PointerMove(double clientX, double clientY)
+        {
+            double previousX = _lastPointerX;
+            double previousY = _lastPointerY;
+            _lastPointerX = clientX;
+            _lastPointerY = clientY;
+            if (!_dragging) return;
+            Physics.ApplyInputDrag(GrabPixels(previousX, previousY, clientX, clientY) * 1.3);
+        }
+
+        double GrabPixels(double x0, double y0, double x1, double y1)
+        {
+            double cx = Physics.Center.X;
+            double cy = Physics.Center.Y;
+            double v0x = x0 - cx;
+            double v0y = y0 - cy;
+            double v1x = x1 - cx;
+            double v1y = y1 - cy;
+            double r0 = Math.Sqrt(v0x * v0x + v0y * v0y);
+            double r1 = Math.Sqrt(v1x * v1x + v1y * v1y);
+            if (r0 < MinGrabRadius || r1 < MinGrabRadius) return x1 - x0;
+            double cross = v0x * v1y - v0y * v1x;
+            double dot = v0x * v1x + v0y * v1y;
+            double dTheta = Math.Atan2(cross, dot);
+            return dTheta * (r0 + r1) * 0.5;
         }
 
         public void PointerUp()
