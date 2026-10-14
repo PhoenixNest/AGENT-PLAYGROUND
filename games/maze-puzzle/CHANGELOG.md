@@ -15,6 +15,13 @@ Paths written as `tools/parity/...` in entries dated before 2026-10-08 are the l
 
 - iPhone X (iOS 16.7.10, language en-US) ran the Release device build and reached Home in the phone language and in de, fr, es, it, pt-PT, vi, fil, id, uz, and qps. Notes: `localization/reports/device-check-2026-10-12.md`.
 
+### Changed
+
+#### Ring follows the finger (2026-10-14)
+
+- A drag on the playfield grabs the ring. The part of the ring under the finger moves with the finger, and the ring still keeps its inertia after the finger lifts. Inside 40 page pixels of the centre, a drag still uses sideways movement only. On gear levels 21–30 and 41–50 the inner ring still turns the opposite way by design. The web prototype is unchanged and still treats every drag as sideways movement only. `PhysicsEngine.ApplyInputDrag` is unchanged. The old one-argument `PointerMove` and the three-argument `PointerDown` stay as they were, including the perf scripts that call them. `ParityViewer.HandlePlayPointer` now passes both page coordinates.
+- EditMode: `RingFollowsFingerTests` 8 passed, `LiveGameSessionTests` 10 passed (including `DragClampsAngularVelocityToTwelve`), `ParityViewerTests` 7 passed (including `PlayDrag_PassesTheVerticalPosition`). `PhysicsGoldenTests` 85 passed, `GameSyncHashTests` 1 passed, `MazeGoldenTests` 4 passed, `FunnelIdleTests` 2 passed, `InfiniteFlowTests` 18 passed. Full EditMode: 731 total, 645 passed, 83 failed, 3 skipped, exit 2. Results `/tmp/maze-infinite/finger-3.xml`, log `/tmp/maze-infinite/finger-3.log`. The 83 are the known set (`ReferenceComparisonTests` 73, `ReferenceGateTests` 9, `QuotaAndModalTests.GameAndPauseStills_MatchKnownHashes`). The base at `fd06479` was 722 total, 636 passed, 83 failed, 3 skipped. The 9 new tests are the extra passes. Nothing was tried on a phone.
+
 ### Added
 
 #### Infinite mode (2026-10-13)

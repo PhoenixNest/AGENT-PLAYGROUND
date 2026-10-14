@@ -76,7 +76,7 @@ flowchart LR
 
 ### 3.1 Gameplay Flow & Pure Gesture Controls (Mobile-First)
 
-1. **Full-Screen Tactile Swipe:** Continuous horizontal or circular touch drag anywhere on the screen rotates the centrifuge ring with 1:1 tactile responsiveness and physical inertia.
+1. **Full-Screen Tactile Swipe:** A drag grabs the centrifuge ring. The part of the ring under the finger moves with the finger, and the ring still carries its inertia after the finger lifts. On gear levels 21–30 and 41–50 the inner ring turns the opposite way from the outer ring by design. This is a deliberate difference from the web prototype, which still treats every drag as sideways movement only.
 2. **Double-Tap Spin Boost:** Quick double-tapping on the left or right side of the screen triggers an instant rotational whoosh burst (dislodging stubborn debris without requiring static UI buttons).
 3. **Kinematic Inertia:** The ring exhibits realistic mass inertia—flicking the screen lets the ring continue rotating smoothly with dampening.
 4. **Nibbles' Gravitational Well:** As debris exits through the bottom aperture, Nibbles' gravity well pulls the falling scrap inwards toward his mouth with expressive tracking eyes and chewing animations.
