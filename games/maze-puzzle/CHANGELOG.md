@@ -17,6 +17,12 @@ Paths written as `tools/parity/...` in entries dated before 2026-10-08 are the l
 
 ### Changed
 
+#### Settings page credits footer removed (2026-10-14)
+
+- The two grey lines under the Game Data card are gone: `Orbital Salvage • Space Trash Clean v1.2.0` and `Pure Gesture Mobile Web Puzzle`. The title, Audio, Gameplay, Language, Privacy & Safety, and Game Data sections are unchanged. The web prototype `web/index.html` no longer has that block, so a later capture does not put it back. The twelve committed settings specs (six states, zero and iPhone) drop the footer element and its line break. The scroll body stays the viewport height, because that height was not taken from the footer. The Game Data card is the last block.
+- The two strings stay in all 17 language tables. Other page specs still contain the hidden settings page, so the extractor still sees the keys. `key-index.csv` now lists 38 zero-spec files for each key, and the measured width is blank, because only the visible settings specs had a non-zero run width.
+- EditMode: `SettingsFooterTests.SettingsSpecs_OmitTheCreditsFooter` passed. Focused run (`SettingsFooterTests`, `SpecExtractorTests`, `IphoneSafeAreaTests`, `SettingsLanguageFlowTests`, `PagePreviewTests`, `LocFontPickerTests`, `LocPseudoStillTests`): 18 total, 17 passed, 0 failed, 1 skipped. Full EditMode: 732 total, 646 passed, 83 failed, 3 skipped, exit 2. Results `/tmp/maze-infinite/footer-2.xml`, log `/tmp/maze-infinite/footer-2.log`. The 83 are the known set (`ReferenceComparisonTests` 73, `ReferenceGateTests` 9, `QuotaAndModalTests.GameAndPauseStills_MatchKnownHashes`). The base at `4b7aaa7` was 731 total, 645 passed, 83 failed, 3 skipped. The extra pass is the new footer test. No pinned screenshot hash was changed.
+
 #### Ring follows the finger (2026-10-14)
 
 - A drag on the playfield grabs the ring. The part of the ring under the finger moves with the finger, and the ring still keeps its inertia after the finger lifts. Inside 40 page pixels of the centre, a drag still uses sideways movement only. On gear levels 21–30 and 41–50 the inner ring still turns the opposite way by design. The web prototype is unchanged and still treats every drag as sideways movement only. `PhysicsEngine.ApplyInputDrag` is unchanged. The old one-argument `PointerMove` and the three-argument `PointerDown` stay as they were, including the perf scripts that call them. `ParityViewer.HandlePlayPointer` now passes both page coordinates.
