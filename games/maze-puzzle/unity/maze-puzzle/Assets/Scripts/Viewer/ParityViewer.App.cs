@@ -383,7 +383,7 @@ namespace OrbitalSalvage.Viewer
             };
         }
 
-        static void StampShop(HomeChrome chrome, string kinds)
+        public static void StampShop(HomeChrome chrome, string kinds)
         {
             var heights = HomeChrome.ShopCardHeights(kinds, chrome.Profile);
             if (heights == null) return;
@@ -709,12 +709,18 @@ namespace OrbitalSalvage.Viewer
         {
             if (currentId == null) return;
             string spec = Spec(currentId);
-            if (ParityPages.TryPressAt(spec, cssX, cssY, out int index, out string transform))
+            var painted = PaintedElements();
+            bool pressed = painted != null
+                ? ParityPages.TryPressAt(painted, cssX, cssY, out int index, out string transform)
+                : ParityPages.TryPressAt(spec, cssX, cssY, out index, out transform);
+            if (pressed)
             {
                 pressIndex = index;
                 pressCss = transform;
             }
-            armedControl = ParityPages.TryHitControl(spec, cssX, cssY, out armedHit);
+            armedControl = painted != null
+                ? ParityPages.TryHitControl(painted, cssX, cssY, out armedHit)
+                : ParityPages.TryHitControl(spec, cssX, cssY, out armedHit);
             armedEdge = null;
             Release();
             SyncApp(true);
@@ -936,10 +942,17 @@ namespace OrbitalSalvage.Viewer
             try
             {
                 string spec = Spec(currentId);
+                var painted = PaintedElements();
                 double x, y;
-                bool found = id != null
-                    ? ParityPages.TryCenter(spec, id, out x, out y)
-                    : ParityPages.TryClassCenter(spec, token, index, out x, out y);
+                bool found;
+                if (painted != null)
+                    found = id != null
+                        ? ParityPages.TryCenter(painted, id, out x, out y)
+                        : ParityPages.TryClassCenter(painted, token, index, out x, out y);
+                else
+                    found = id != null
+                        ? ParityPages.TryCenter(spec, id, out x, out y)
+                        : ParityPages.TryClassCenter(spec, token, index, out x, out y);
                 if (!found) return "no control " + (id ?? token) + " on " + currentId;
                 ClickCss(x, y);
                 return null;

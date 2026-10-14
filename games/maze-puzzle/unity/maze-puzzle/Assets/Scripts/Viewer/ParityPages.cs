@@ -416,9 +416,19 @@ namespace OrbitalSalvage.Viewer
         /// <summary>Topmost control under the point that has a CSS <c>:active</c> press transform.</summary>
         public static bool TryPressAt(string specJson, double cssX, double cssY, out int index, out string transform)
         {
+            return TryPressAt(Parse(specJson), cssX, cssY, out index, out transform);
+        }
+
+        /// <summary>Same as the string overload, for elements that were edited after loading (stamped shop cards).</summary>
+        public static bool TryPressAt(IReadOnlyList<Dictionary<string, object>> elements, double cssX, double cssY, out int index, out string transform)
+        {
+            return TryPressAt(Parse(elements), cssX, cssY, out index, out transform);
+        }
+
+        static bool TryPressAt(List<El> els, double cssX, double cssY, out int index, out string transform)
+        {
             index = -1;
             transform = null;
-            var els = Parse(specJson);
             int hit = Topmost(els, cssX, cssY);
             if (hit < 0) return false;
             for (int i = hit; i >= 0; i = els[i].Parent)
@@ -463,8 +473,21 @@ namespace OrbitalSalvage.Viewer
         /// <summary>Topmost interactive control under the point. The viewer dispatches this to <c>AppController</c>.</summary>
         public static bool TryHitControl(string specJson, double cssX, double cssY, out ControlHit hit)
         {
+            return TryHitControl(Parse(specJson), cssX, cssY, out hit);
+        }
+
+        /// <summary>
+        /// Same as the string overload, for elements that were edited after loading. Shop pages swap their cards
+        /// (<c>CardStamp</c>), so the buttons on screen are not where the captured file puts them.
+        /// </summary>
+        public static bool TryHitControl(IReadOnlyList<Dictionary<string, object>> elements, double cssX, double cssY, out ControlHit hit)
+        {
+            return TryHitControl(Parse(elements), cssX, cssY, out hit);
+        }
+
+        static bool TryHitControl(List<El> els, double cssX, double cssY, out ControlHit hit)
+        {
             hit = default;
-            var els = Parse(specJson);
             int top = Topmost(els, cssX, cssY);
             if (top < 0) return false;
             for (int i = top; i >= 0; i = els[i].Parent)
@@ -496,10 +519,23 @@ namespace OrbitalSalvage.Viewer
             return true;
         }
 
+        public static bool TryCenter(IReadOnlyList<Dictionary<string, object>> elements, string id, out double cssX, out double cssY)
+        {
+            cssX = cssY = 0;
+            if (!TryRect(Parse(elements), id, out double x, out double y, out double w, out double h)) return false;
+            cssX = x + w * 0.5;
+            cssY = y + h * 0.5;
+            return true;
+        }
+
         public static bool TryRect(string specJson, string id, out double x, out double y, out double w, out double h)
         {
+            return TryRect(Parse(specJson), id, out x, out y, out w, out h);
+        }
+
+        static bool TryRect(List<El> els, string id, out double x, out double y, out double w, out double h)
+        {
             x = y = w = h = 0;
-            var els = Parse(specJson);
             for (int i = 0; i < els.Count; i++)
             {
                 if (els[i].Id != id || !els[i].Hittable) continue;
@@ -524,8 +560,17 @@ namespace OrbitalSalvage.Viewer
 
         public static bool TryClassCenter(string specJson, string token, int index, out double cssX, out double cssY)
         {
+            return TryClassCenter(Parse(specJson), token, index, out cssX, out cssY);
+        }
+
+        public static bool TryClassCenter(IReadOnlyList<Dictionary<string, object>> elements, string token, int index, out double cssX, out double cssY)
+        {
+            return TryClassCenter(Parse(elements), token, index, out cssX, out cssY);
+        }
+
+        static bool TryClassCenter(List<El> els, string token, int index, out double cssX, out double cssY)
+        {
             cssX = cssY = 0;
-            var els = Parse(specJson);
             int seen = 0;
             for (int i = 0; i < els.Count; i++)
             {
@@ -608,11 +653,18 @@ namespace OrbitalSalvage.Viewer
         {
             var root = (Dictionary<string, object>)OrbitalSalvage.Render.MiniJson.Parse(specJson);
             var raw = (List<object>)root["elements"];
+            var list = new List<Dictionary<string, object>>(raw.Count);
+            for (int k = 0; k < raw.Count; k++) list.Add((Dictionary<string, object>)raw[k]);
+            return Parse(list);
+        }
+
+        static List<El> Parse(IReadOnlyList<Dictionary<string, object>> raw)
+        {
             var els = new List<El>(raw.Count);
             var byI = new Dictionary<int, int>();
             for (int k = 0; k < raw.Count; k++)
             {
-                var e = (Dictionary<string, object>)raw[k];
+                var e = raw[k];
                 var el = new El
                 {
                     Id = Str(e, "id"),
@@ -633,7 +685,7 @@ namespace OrbitalSalvage.Viewer
             var eff = new double[els.Count];
             for (int k = 0; k < raw.Count; k++)
             {
-                var e = (Dictionary<string, object>)raw[k];
+                var e = raw[k];
                 int parentI = (int)Num(e, "p", -1);
                 int pk = parentI >= 0 && byI.TryGetValue(parentI, out var found) ? found : -1;
                 els[k].Parent = pk;
