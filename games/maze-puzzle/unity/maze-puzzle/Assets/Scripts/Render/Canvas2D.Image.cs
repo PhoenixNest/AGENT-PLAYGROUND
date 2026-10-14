@@ -54,7 +54,7 @@ namespace OrbitalSalvage.Render
             prm[pb + IdxImgC] = new Vector4((float)sx, (float)sy, (float)sw, (float)sh);
             prm[pb + IdxImgD] = new Vector4((float)dx, (float)dy, (float)dw, (float)dh);
             AccumulateTo(pb, rect, ebase, ecount);
-            cmd.SetRenderTarget(target);
+            SetTarget(target);
             cmd.SetGlobalTexture(IdImage, tex);
             Draw(matImage, 0, 6, pb);
         }

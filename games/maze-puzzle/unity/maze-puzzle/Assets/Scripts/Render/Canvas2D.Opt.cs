@@ -46,12 +46,13 @@ namespace OrbitalSalvage.Render
         {
             int pb = NewParams();
             SetRect(pb, x0, y0, x1, y1);
-            cmd.SetRenderTarget(target);
+            SetTarget(target);
             Draw(matAccum, AccClearPass, 6, pb);
         }
 
         void EnableLiveScissor()
         {
+            fastOnCanvas = false;
             if (!ScissorOn || ScissorW <= 0 || ScissorH <= 0) return;
             cmd.EnableScissorRect(new Rect(ScissorX, ScissorY, ScissorW, ScissorH));
             scissorLive = true;
@@ -206,6 +207,7 @@ namespace OrbitalSalvage.Render
                 RenderStats.ShadowMissFmt++;
                 return false;
             }
+            fastOnCanvas = false;
             if (ScissorOn) cmd.DisableScissorRect();
 
             int lb = edgeCount;
@@ -229,11 +231,11 @@ namespace OrbitalSalvage.Render
             cmd.SetGlobalVector(IdTarget, new Vector4(lw, lh, 1f / lw, 1f / lh));
             cmd.SetGlobalVector(IdMaskOrigin, Vector4.zero);
             cmd.SetGlobalTexture(IdAccum, slot.accum);
-            cmd.SetRenderTarget(slot.accum, RenderBufferLoadAction.DontCare, RenderBufferStoreAction.Store);
+            SetTarget(slot.accum, RenderBufferLoadAction.DontCare, RenderBufferStoreAction.Store);
             int pbClear = NewParams();
             SetRect(pbClear, 0, 0, lw, lh);
             Draw(matAccum, AccClearPass, 6, pbClear);
-            cmd.SetRenderTarget(slot.accum, RenderBufferLoadAction.Load, RenderBufferStoreAction.Store);
+            SetTarget(slot.accum, RenderBufferLoadAction.Load, RenderBufferStoreAction.Store);
 
             int pbA = NewParams();
             if (!WritePaint(pbA, stroke, alpha))
@@ -248,14 +250,14 @@ namespace OrbitalSalvage.Render
             prm[pbA + IdxEdge] = new Vector4(lb, lx1, 0, 0);
             Draw(matAccum, AccPass, 6 * lc, pbA);
 
-            cmd.SetRenderTarget(slot.maskA, RenderBufferLoadAction.DontCare, RenderBufferStoreAction.Store);
+            SetTarget(slot.maskA, RenderBufferLoadAction.DontCare, RenderBufferStoreAction.Store);
             Draw(matMask, MaskCoverage, 6, pbA);
 
             int pbH = NewParams();
             SetRect(pbH, 0, 0, lw, lh);
             prm[pbH + IdxMaskRect] = new Vector4(lx0, ly0, lx1, ly1);
             prm[pbH + IdxBlur] = new Vector4(sigmaL, radiusL, 0, 0);
-            cmd.SetRenderTarget(slot.maskB, RenderBufferLoadAction.DontCare, RenderBufferStoreAction.Store);
+            SetTarget(slot.maskB, RenderBufferLoadAction.DontCare, RenderBufferStoreAction.Store);
             cmd.SetGlobalTexture(IdMask, slot.maskA);
             Draw(matMask, MaskBlurH, 6, pbH);
 
@@ -263,7 +265,7 @@ namespace OrbitalSalvage.Render
             SetRect(pbV, 0, 0, lw, lh);
             prm[pbV + IdxMaskRect] = new Vector4(0, 0, lw, lh);
             prm[pbV + IdxBlur] = new Vector4(sigmaL, radiusL, 0, 0);
-            cmd.SetRenderTarget(slot.maskA, RenderBufferLoadAction.DontCare, RenderBufferStoreAction.Store);
+            SetTarget(slot.maskA, RenderBufferLoadAction.DontCare, RenderBufferStoreAction.Store);
             cmd.SetGlobalTexture(IdMask, slot.maskB);
             Draw(matMask, MaskBlurV, 6, pbV);
 
@@ -272,7 +274,7 @@ namespace OrbitalSalvage.Render
                 BindFullTarget();
                 cmd.SetGlobalVector(IdMaskOrigin, new Vector4(big.x0, big.y0, 1f, lh));
                 cmd.SetGlobalTexture(IdMask, slot.maskA);
-                cmd.SetRenderTarget(target);
+                SetTarget(target);
                 if (ScissorOn) EnableLiveScissor();
                 int pbF = NewParams();
                 WritePaint(pbF, stroke, alpha);
@@ -285,7 +287,7 @@ namespace OrbitalSalvage.Render
                 return true;
             }
 
-            cmd.SetRenderTarget(slot.color, RenderBufferLoadAction.DontCare, RenderBufferStoreAction.Store);
+            SetTarget(slot.color, RenderBufferLoadAction.DontCare, RenderBufferStoreAction.Store);
             cmd.SetGlobalTexture(IdMask, slot.maskA);
             int pbT = NewParams();
             WritePaint(pbT, stroke, alpha);
@@ -311,7 +313,7 @@ namespace OrbitalSalvage.Render
             prm[pb + IdxAlpha] = new Vector4(1f, 0, 0, 0);
             cmd.SetGlobalVector(IdTarget, new Vector4(Width, Height, 1f / Width, 1f / Height));
             cmd.SetGlobalVector(IdMaskOrigin, Vector4.zero);
-            cmd.SetRenderTarget(target);
+            SetTarget(target);
             if (ScissorOn) EnableLiveScissor();
             cmd.SetGlobalTexture(IdLayerTex, tex);
             Draw(matShadowBlit, 0, 6, pb);
@@ -400,6 +402,7 @@ namespace OrbitalSalvage.Render
                 }
             }
 
+            fastOnCanvas = false;
             if (ScissorOn) cmd.DisableScissorRect();
             FlushFastBatch();
             BlurPair hi = BlurPairFor(cw, ch);
@@ -415,15 +418,15 @@ namespace OrbitalSalvage.Render
             if (div > 1)
             {
                 EnsureBackdropLo(bw, bh);
-                cmd.Blit(hi.a, backdropLoA);
+                Blit(hi.a, backdropLoA);
                 result = backdropLoA;
                 for (int pass = 0; pass < n; pass++)
                 {
                     matBlur.SetFloat("_Radius", optRadii[pass]);
                     matBlur.SetVector("_Axis", new Vector4(1f, 0f, 0f, 0f));
-                    cmd.Blit(backdropLoA, backdropLoB, matBlur);
+                    Blit(backdropLoA, backdropLoB, matBlur);
                     matBlur.SetVector("_Axis", new Vector4(0f, 1f, 0f, 0f));
-                    cmd.Blit(backdropLoB, backdropLoA, matBlur);
+                    Blit(backdropLoB, backdropLoA, matBlur);
                 }
             }
             else
@@ -432,9 +435,9 @@ namespace OrbitalSalvage.Render
                 {
                     matBlur.SetFloat("_Radius", radii[pass]);
                     matBlur.SetVector("_Axis", new Vector4(1f, 0f, 0f, 0f));
-                    cmd.Blit(hi.a, hi.b, matBlur);
+                    Blit(hi.a, hi.b, matBlur);
                     matBlur.SetVector("_Axis", new Vector4(0f, 1f, 0f, 0f));
-                    cmd.Blit(hi.b, hi.a, matBlur);
+                    Blit(hi.b, hi.a, matBlur);
                 }
             }
             if (ScissorOn) EnableLiveScissor();
@@ -501,6 +504,7 @@ namespace OrbitalSalvage.Render
                 ScissorOn = false;
                 if (scissorLive)
                 {
+                    fastOnCanvas = false;
                     cmd.DisableScissorRect();
                     scissorLive = false;
                 }
@@ -511,6 +515,7 @@ namespace OrbitalSalvage.Render
             ScissorY = Height - y1;
             ScissorW = x1 - x0;
             ScissorH = y1 - y0;
+            fastOnCanvas = false;
             cmd.EnableScissorRect(new Rect(ScissorX, ScissorY, ScissorW, ScissorH));
             scissorLive = true;
         }
@@ -584,7 +589,7 @@ namespace OrbitalSalvage.Render
                 prm[pb + IdxFlags] = new Vector4(0, inset ? 1f : 0f, state.clip != null ? 1f : 0f, 0);
                 if (state.clip != null) cmd.SetGlobalTexture(IdClipTex, state.clip);
             }
-            cmd.SetRenderTarget(target);
+            SetTarget(target);
             if (ScissorOn) EnableLiveScissor();
             Draw(matRound, 0, 6, pb);
             RenderStats.RoundShadow++;
@@ -636,7 +641,7 @@ namespace OrbitalSalvage.Render
             prm[pb + IdxImgB] = new Vector4((float)inv.b, (float)inv.d, (float)inv.f, 0f);
             prm[pb + IdxFlags] = new Vector4(0, inset ? 1f : 0f, state.clip != null ? 1f : 0f, 0);
             if (state.clip != null) cmd.SetGlobalTexture(IdClipTex, state.clip);
-            cmd.SetRenderTarget(target);
+            SetTarget(target);
             if (ScissorOn) EnableLiveScissor();
             Draw(matRound, 0, 6, pb);
             RenderStats.RoundShadow++;
@@ -818,8 +823,7 @@ namespace OrbitalSalvage.Render
                 fastBase[fastN++] = (uint)pb;
                 return;
             }
-            cmd.SetRenderTarget(target);
-            if (ScissorOn) EnableLiveScissor();
+            BindCanvasFast();
             Draw(matFast, 0, 6, pb);
         }
 
@@ -838,7 +842,7 @@ namespace OrbitalSalvage.Render
             // Per-draw uniform on the command buffer. One shared value updated with
             // SetGlobalFloat before execute would still be the last batch's offset.
             cmd.SetGlobalFloat(IdFastOffset, start);
-            cmd.SetRenderTarget(target);
+            SetTarget(target);
             if (ScissorOn) EnableLiveScissor();
             EmitDraw(matFast, 1, 6 * n, 1);
             RenderStats.FastBatch++;
