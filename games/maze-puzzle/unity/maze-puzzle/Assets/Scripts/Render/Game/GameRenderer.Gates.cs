@@ -375,10 +375,24 @@ namespace OrbitalSalvage.Render
                     ctx.Fill();
                     ctx.Stroke();
                     ctx.FillStyle = "#1e1b4b";
-                    ctx.BeginPath();
-                    ctx.Arc(-2, -1, 1.2, 0, JsMath.PI * 2);
-                    ctx.Arc(2, -1, 1.2, 0, JsMath.PI * 2);
-                    ctx.Fill();
+                    if (RenderOpts.FastShape)
+                    {
+                        // Phone path: one circle per fill. A two-circle path cannot use the analytic fast fill, and every
+                        // piece in a big pile paid a full-size target switch for it. The eyes do not overlap, so the picture is the same.
+                        ctx.BeginPath();
+                        ctx.Arc(-2, -1, 1.2, 0, JsMath.PI * 2);
+                        ctx.Fill();
+                        ctx.BeginPath();
+                        ctx.Arc(2, -1, 1.2, 0, JsMath.PI * 2);
+                        ctx.Fill();
+                    }
+                    else
+                    {
+                        ctx.BeginPath();
+                        ctx.Arc(-2, -1, 1.2, 0, JsMath.PI * 2);
+                        ctx.Arc(2, -1, 1.2, 0, JsMath.PI * 2);
+                        ctx.Fill();
+                    }
                     ctx.BeginPath();
                     ctx.Arc(0, 1.5, 2, 0, JsMath.PI);
                     ctx.Stroke();

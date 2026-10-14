@@ -59,6 +59,10 @@ Paths written as `tools/parity/...` in entries dated before 2026-10-08 are the l
 
 ### Fixed
 
+#### Ring lag with many pieces: cheaper pieces on the phone (2026-10-14)
+
+The user reported lag when turning the ring. A screen recording on an iPhone X runs at about 15 pictures per second early and 6–10 once hundreds of pieces have piled up. Ordinary pieces drew both eyes as one two-circle path. The quick circle fill cannot take that path, so each piece switched to the full-size accumulation target (3 draws and 16 edges). With the phone options on (`fastshape`), each eye is now its own circle. The editor path still draws both eyes together, so the pinned screenshots stay on the old picture. Measured on this Mac (Apple M4 Pro, Metal), phone options `rrshadow,rrplus,backdroplow,playhalf,fastshape,fastarc`, titanium pieces, render call including the GPU submit. Level 1, 100/200/320 pieces: 9.23/16.04/26.01 ms before, 6.57/9.25/11.39 ms after. Level 21: 10.40/17.65/29.03 ms before, 10.13/12.54/15.16 ms after. Level 40: 18.70/29.19/42.97 ms before, 13.13/16.72/19.30 ms after. At 320 pieces the debris section went from 1920 draws and 5120 edges to 1600 draws and 0 edges. Level 1 ShapeOther went from 363 to 56. A 9-piece patch differs on 504 of 65536 pixels, at most 55 per channel. A level 21 frame with 320 pieces (645×1398) differs on 8520 of 901710 pixels, at most 35 per channel. Not measured on a phone. The ring's spin was not changed. `DebrisEyeSplitTests`: 3 passed.
+
 #### Home ring name was blank for Hindi, Khmer, and Arabic (2026-10-13)
 
 - The device paints `home-diorama-ring-label` from `Loc.Tr("home.ring.donut")` (`🍩 तैरता डोनट` and the same shape in Khmer and Arabic). The spec already draws that emoji as a child image, so `HomeChrome` drops the emoji and keeps the following space. That cut is not a bake key, and a complex-script string with no bake paints nothing. The sim still substitutes the captured `DONUT FLOAT` run, which is a different string and does draw.
