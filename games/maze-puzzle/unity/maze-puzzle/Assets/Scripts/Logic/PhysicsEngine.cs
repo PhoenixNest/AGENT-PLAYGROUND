@@ -499,13 +499,15 @@ namespace OrbitalSalvage.Logic
                 double halfWidth = 95 * (1 - t) + 46 * t;
                 double centerX = BlackHole.X;
 
-                // Centering spring. k = 16 (omega 4 rad/s) with only the per-step 0.994
-                // drag is underdamped: the half-period matches the fall, so debris that
-                // leave the aperture off-center arrive on the opposite rail (~39 px),
-                // outside the 28 px event horizon, and spill. c = 8 is critical damping
-                // (2*sqrt(16)). Idle then spills nothing; a hard swipe or spin still can.
+                // Centering spring, critically damped: k = 15, c = 2*sqrt(15).
+                // k = 16 (c = 8) stopped idle debris walking off the rail, but a steady
+                // hard spin still spilled nothing on levels 1, 5, 10, and 15. One step
+                // weaker, that spin spills on those levels (often one or two pieces)
+                // while idle on levels 5 and 31 still spills nothing. Rails stay
+                // 95 -> 46 px with a 0.45 bounce. Aperture, gravity, and the black hole
+                // are unchanged.
                 double dx = centerX - d.X;
-                d.Vx += (dx * 16 - d.Vx * 8) * dt;
+                d.Vx += (dx * 15 - d.Vx * (2 * JsMath.Sqrt(15))) * dt;
 
                 double leftRail = centerX - halfWidth + d.Radius;
                 double rightRail = centerX + halfWidth - d.Radius;
