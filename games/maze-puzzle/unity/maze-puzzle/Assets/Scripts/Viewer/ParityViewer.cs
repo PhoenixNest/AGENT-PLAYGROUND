@@ -853,6 +853,17 @@ namespace OrbitalSalvage.Viewer
             Show(edge.TargetId);
         }
 
+        /// <summary>
+        /// Playfield pointer in page pixels. Both axes are passed through, so a drag grabs the ring.
+        /// </summary>
+        public static void DispatchPlayPointer(LiveGameSession session, double cssX, double cssY, bool down, bool held, bool up)
+        {
+            if (session == null) return;
+            if (down) session.PointerDown(cssX, cssY);
+            else if (held) session.PointerMove(cssX, cssY);
+            if (up) session.PointerUp();
+        }
+
         void HandlePlayPointer()
         {
             bool down = false, held = false, up = false;
@@ -887,9 +898,9 @@ namespace OrbitalSalvage.Viewer
                     else if (!string.IsNullOrEmpty(hit.ClassToken)) app.ClickClass(hit.ClassToken, hit.ClassIndex);
                     return;
                 }
-                session.PointerDown(cssX, 0, ParityPages.CssWidth);
+                DispatchPlayPointer(session, cssX, cssY, true, false, false);
             }
-            else if (held) session.PointerMove(cssX);
+            else if (held) DispatchPlayPointer(session, cssX, cssY, false, true, false);
             if (up) session.PointerUp();
         }
 
