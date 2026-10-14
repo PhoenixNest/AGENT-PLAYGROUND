@@ -692,7 +692,7 @@ sequenceDiagram
 
     D->>R: Rolls in chute under Euler angular velocity
     R->>F: Passes exit aperture (Inertial damping: vx *= 0.35, vy >= 95)
-    F->>N: Centering tractor beam pulls debris toward center (Fx = (bh.x - x) * 16)
+    F->>N: Centering spring pulls debris toward center (k = 15, c = 2*sqrt(15))
     N->>N: Within r <= 28px: Trigger Ingestion Spiral
     Note over D,N: Debris spirals inward, scale shrinks 1.0 -> 0, alpha fades to 0
     N->>N: Play bubble gulp + pentatonic chime + punch scale wobble (+0.09)
