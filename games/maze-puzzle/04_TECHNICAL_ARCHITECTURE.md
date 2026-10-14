@@ -87,8 +87,9 @@ flowchart TD
 - **Geometry:** Trapezoidal funnel extending from $topY = \text{center.y} + \text{ringRadius} - 15$ down to $bottomY = \text{blackHole.y}$.
 - **Half-Width Formula:**
   $$halfWidth(y) = 95 \times (1 - t) + 46 \times t, \quad t = \frac{y - topY}{bottomY - topY}$$
-- **Centering Tractor Acceleration:**
-  $$a_x = (\text{blackHole.x} - d.x) \times 16$$
+- **Centering spring** (critically damped, a deliberate balance choice): $k = 15$, $c = 2\sqrt{15}$.
+  $$v_x \mathrel{+}= \big((\text{blackHole.x} - d.x) \times 15 - v_x \times 2\sqrt{15}\big) \times dt$$
+  Idle scrap stays in the funnel. A hard spin can spill a piece. Rails, aperture dampers, gravity, and the black hole are unchanged.
 - **Elastic Wall Collisions:** When $d.x$ breaches the funnel boundaries, it is pushed back inside and its normal velocity is reflected ($v_x = -v_x \times 0.45$).
 - **Boundary Check Gating:** `resolveRingCollisions()` strictly executes only when `d.state === "IN_RING"`, eliminating boundary bounce-back after exit.
 
