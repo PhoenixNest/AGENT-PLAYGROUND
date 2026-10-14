@@ -82,6 +82,67 @@ namespace OrbitalSalvage.Render
         public int ScissorX, ScissorY, ScissorW, ScissorH;
         bool scissorLive;
 
+        /// <summary>
+        /// True only while the colour target is bound for a fast draw and the scissor and clip
+        /// recorded with that bind are still the current ones. SetTarget and Blit clear it.
+        /// </summary>
+        bool fastOnCanvas;
+
+        bool fastScissorOn;
+        int fastSx, fastSy, fastSw, fastSh;
+        RenderTexture fastClip;
+
+        /// <summary>How many times this process actually called CommandBuffer.SetRenderTarget. The scratch harness reads it.</summary>
+        public static int TargetBinds;
+
+        void SetTarget(RenderTexture rt)
+        {
+            TargetBinds++;
+            cmd.SetRenderTarget(rt);
+        }
+
+        void SetTarget(RenderTexture rt, RenderBufferLoadAction load, RenderBufferStoreAction store)
+        {
+            TargetBinds++;
+            cmd.SetRenderTarget(rt, load, store);
+        }
+
+        void Blit(Texture src, RenderTexture dst)
+        {
+            cmd.Blit(src, dst);
+        }
+
+        void Blit(Texture src, RenderTexture dst, Material mat)
+        {
+            cmd.Blit(src, dst, mat);
+        }
+
+        bool FastPassStillCurrent()
+        {
+            if (!fastOnCanvas || fastClip != state.clip || fastScissorOn != ScissorOn) return false;
+            if (!ScissorOn) return true;
+            return fastSx == ScissorX && fastSy == ScissorY && fastSw == ScissorW && fastSh == ScissorH;
+        }
+
+        /// <summary>
+        /// Bind the colour target for one analytic draw, or skip that bind when the previous
+        /// analytic draw already bound it with the same scissor and clip.
+        /// </summary>
+        void BindCanvasFast()
+        {
+            if (FastPassStillCurrent()) return;
+            TargetBinds++;
+            cmd.SetRenderTarget(target);
+            if (ScissorOn) EnableLiveScissor();
+            fastOnCanvas = true;
+            fastClip = state.clip;
+            fastScissorOn = ScissorOn;
+            fastSx = ScissorX;
+            fastSy = ScissorY;
+            fastSw = ScissorW;
+            fastSh = ScissorH;
+        }
+
         /// <summary>Non-zero asks the GPU backdrop path to reuse a cached blur of this element while its rect is unchanged.</summary>
         public int BackdropReuseId;
 
@@ -187,10 +248,11 @@ namespace OrbitalSalvage.Render
             BeginFrameText();
             if (scissorLive)
             {
+                fastOnCanvas = false;
                 cmd.DisableScissorRect();
                 scissorLive = false;
             }
-            cmd.SetRenderTarget(target);
+            SetTarget(target);
             if (!KeepTarget)
                 cmd.ClearRenderTarget(false, true, Color.clear);
             else if (DirtyW > 0 && DirtyH > 0)
@@ -198,6 +260,7 @@ namespace OrbitalSalvage.Render
             KeepTarget = false;
             if (ScissorOn && ScissorW > 0 && ScissorH > 0)
             {
+                fastOnCanvas = false;
                 cmd.EnableScissorRect(new Rect(ScissorX, ScissorY, ScissorW, ScissorH));
                 scissorLive = true;
             }
@@ -220,7 +283,7 @@ namespace OrbitalSalvage.Render
             int pb = NewParams();
             prm[pb + IdxRect] = new Vector4(0, 0, Width, Height);
             prm[pb + IdxAlpha] = new Vector4((float)state.globalAlpha, 0, 0, 0);
-            cmd.SetRenderTarget(target);
+            SetTarget(target);
             if (ScissorOn) EnableLiveScissor();
             cmd.SetGlobalTexture(IdLayerTex, tex);
             Draw(matLayer, 0, 6, pb);
@@ -264,7 +327,7 @@ namespace OrbitalSalvage.Render
             cmd.Clear();
             edgeCount = 0;
             prmCount = 0;
-            cmd.SetRenderTarget(target);
+            SetTarget(target);
         }
 
         /// <summary>
@@ -396,6 +459,7 @@ namespace OrbitalSalvage.Render
             if ((RenderOpts.BackdropLow || RenderOpts.BackdropScope || RenderOpts.BackdropHold) && BackdropOpt(radii, sx, sy, sw, sh, x, y, w, h, cx0, cy0, cw, ch))
                 return;
             bool holdScissor = ScissorOn;
+            fastOnCanvas = false;
             if (holdScissor) cmd.DisableScissorRect();
             FlushFastBatch();
             BlurPair pair = BlurPairFor(cw, ch);
@@ -404,9 +468,9 @@ namespace OrbitalSalvage.Render
             {
                 matBlur.SetFloat("_Radius", radii[pass]);
                 matBlur.SetVector("_Axis", new Vector4(1f, 0f, 0f, 0f));
-                cmd.Blit(pair.a, pair.b, matBlur);
+                Blit(pair.a, pair.b, matBlur);
                 matBlur.SetVector("_Axis", new Vector4(0f, 1f, 0f, 0f));
-                cmd.Blit(pair.b, pair.a, matBlur);
+                Blit(pair.b, pair.a, matBlur);
             }
             bool smooth = state.imageSmoothing;
             state.imageSmoothing = false;
@@ -862,7 +926,7 @@ namespace OrbitalSalvage.Render
             FlushFastBatch();
             SetRect(pb, rect.x0, rect.y0, rect.x1, rect.y1);
             prm[pb + IdxEdge] = new Vector4(ebase, rect.x1, 0, 0);
-            cmd.SetRenderTarget(accum);
+            SetTarget(accum);
             Draw(matAccum, AccClearPass, 6, pb);
             Draw(matAccum, AccPass, 6 * ecount, pb);
         }
@@ -884,7 +948,7 @@ namespace OrbitalSalvage.Render
             BindClip(pb);
             if (glyphMaskFill) WriteGlyphPreblend(pb);
             AccumulateTo(pb, rect, ebase, ecount);
-            cmd.SetRenderTarget(target);
+            SetTarget(target);
             Draw(matFill, FillSourceOver, 6, pb);
             PaintProfile.End(PaintProfile.RenderShape);
         }
@@ -916,6 +980,7 @@ namespace OrbitalSalvage.Render
                 }
             }
             bool resumeScissor = ScissorOn;
+            fastOnCanvas = false;
             if (resumeScissor) cmd.DisableScissorRect();
             var full = new PixelRect(0, 0, Width, Height);
             int pbA = NewParams();
@@ -931,7 +996,7 @@ namespace OrbitalSalvage.Render
             AccumulateTo(pbA, rect, ebase, ecount);
             if (radius == 0)
             {
-                cmd.SetRenderTarget(target);
+                SetTarget(target);
                 if (resumeScissor) EnableLiveScissor();
                 Draw(matFill, FillSourceOver, 6, pbA);
                 PaintProfile.End(PaintProfile.Shadow);
@@ -939,14 +1004,14 @@ namespace OrbitalSalvage.Render
             }
             var big = rect.Expand(radius).Intersect(full);
 
-            cmd.SetRenderTarget(maskA);
+            SetTarget(maskA);
             Draw(matMask, MaskCoverage, 6, pbA);
 
             int pbH = NewParams();
             SetRect(pbH, big.x0, big.y0, big.x1, big.y1);
             prm[pbH + IdxMaskRect] = new Vector4(rect.x0, rect.y0, rect.x1, rect.y1);
             prm[pbH + IdxBlur] = new Vector4((float)sigma, radius, 0, 0);
-            cmd.SetRenderTarget(maskB);
+            SetTarget(maskB);
             cmd.SetGlobalTexture(IdMask, maskA);
             Draw(matMask, MaskBlurH, 6, pbH);
 
@@ -954,7 +1019,7 @@ namespace OrbitalSalvage.Render
             SetRect(pbV, big.x0, big.y0, big.x1, big.y1);
             prm[pbV + IdxMaskRect] = new Vector4(big.x0, big.y0, big.x1, big.y1);
             prm[pbV + IdxBlur] = new Vector4((float)sigma, radius, 0, 0);
-            cmd.SetRenderTarget(maskA);
+            SetTarget(maskA);
             cmd.SetGlobalTexture(IdMask, maskB);
             Draw(matMask, MaskBlurV, 6, pbV);
 
@@ -964,7 +1029,7 @@ namespace OrbitalSalvage.Render
             prm[pbF + IdxFlags] = new Vector4(1, 0, 0, 1);
             prm[pbF + IdxShadow] = prm[pbA + IdxShadow];
             BindClip(pbF);
-            cmd.SetRenderTarget(target);
+            SetTarget(target);
             cmd.SetGlobalTexture(IdMask, maskA);
             if (resumeScissor) EnableLiveScissor();
             Draw(matFill, FillSourceOver, 6, pbF);
@@ -978,7 +1043,7 @@ namespace OrbitalSalvage.Render
             prm[pb + IdxFlags] = new Vector4(0, 0, 0, 0);
             BindClip(pb);
             AccumulateTo(pb, rect, ebase, ecount);
-            cmd.SetRenderTarget(target);
+            SetTarget(target);
             Draw(matFill, FillClear, 6, pb);
         }
 
@@ -995,6 +1060,7 @@ namespace OrbitalSalvage.Render
             bool resumeScissor = ScissorOn;
             if (resumeScissor && scissorLive)
             {
+                fastOnCanvas = false;
                 cmd.DisableScissorRect();
                 scissorLive = false;
             }
@@ -1004,14 +1070,14 @@ namespace OrbitalSalvage.Render
             SetRect(pb, 0, 0, Width, Height);
             bool any = EmitEdges(ps, 0, 0, out var rect, out int ebase, out int ecount, true);
             prm[pb + IdxFlags] = new Vector4(0, evenOdd ? 1 : 0, state.clip != null ? 1f : 0f, 0);
-            cmd.SetRenderTarget(accum);
+            SetTarget(accum);
             cmd.ClearRenderTarget(false, true, Color.clear);
             if (any)
             {
                 int pbA = NewParams();
                 AccumulateTo(pbA, rect, ebase, ecount);
             }
-            cmd.SetRenderTarget(next);
+            SetTarget(next);
             if (state.clip != null) cmd.SetGlobalTexture(IdClipTex, state.clip);
             Draw(matMask, MaskClip, 6, pb);
             state.clip = next;
