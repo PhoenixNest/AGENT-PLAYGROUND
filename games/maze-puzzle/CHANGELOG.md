@@ -24,6 +24,10 @@ Paths written as `tools/parity/...` in entries dated before 2026-10-08 are the l
 
 ### Added
 
+#### App Store Connect images (2026-10-14)
+
+Images for the English store page now exist in `resources/app-store-connect/`. Header: `header-5244x2950.png` and `header-3840x1646.png` (the two sizes ASC lists for the header asset), RGB without transparency, 4.3 MB and 2.7 MB. Screenshots for the 6.3-inch and 6.1-inch iPhone slots: 1206 × 2622 and 1179 × 2556, four screens (home, daily shifts, toy shop, gameplay level 1), each in a `captioned` and a `plain` version, 16 files in all. All 18 files were checked for exact pixel size and RGB mode with a script, and all were looked at by eye. The screenshots come from the web prototype (the four the user chose), not from a device or Simulator capture. The header art was generated at 1280 × 720 and enlarged, so fine star detail is soft, and its pink ring does not match the game's ring exactly. Not uploaded to ASC. `13_APP_STORE_METADATA_AND_SUBMISSION_MANUAL.md` sections 7.2 and 7.2a describe both sets.
+
 #### Infinite mode (2026-10-13)
 
 - After all 50 levels are won, the game continues: each round plays a random level from 30 to 50 as is. No new button or screen: Next after winning level 50 and Home → Play enter it, and the round shows in one toast, "Round N, best M! 🚀" (new key `toast.infinite.round`, 16 translations, agent drafts with no native review, shaped bake redone for `ar`, `hi`, `km`). Quitting resumes at the saved round. Design text is in `03_GAME_DESIGN_DOCUMENT.md` section 3.9. Not proven: that every level 30 to 50 can be beaten by a child; `InfinitePoolLevelsTests` only checks that they build and run 30 seconds without errors or broken positions.

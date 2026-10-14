@@ -357,7 +357,11 @@ Suggested set, in this order:
 
 How to make them without a developer account: run the **Simulator** build (`OrbitalSalvage.Editor.IosExport.ExportSimulator`, see doc 08), open it in Xcode on an **iPhone Pro Max** simulator, and press **Command + S** to save a screenshot to the Desktop. Check the pixel size with the Finder's Get Info. Screenshots in other languages are optional; the store page uses one set for every language you do not replace.
 
-I have **not** made these screenshots yet.
+**Status (2026-10-14).** A first set exists for the "iPhone with Dynamic Island (medium display)" slot, which accepts 1206 × 2622 and 1179 × 2556 (also 2622 × 1206 and 2556 × 1179). It was made from the four web prototype screenshots the user chose (home, daily shifts, toy shop, gameplay level 1), not from a device or Simulator capture. Each screenshot is scaled to about 94% of the canvas width on the game's dark space background, with the phone frame kept as drawn in the source. There are two versions: `captioned` (a short English line above the phone) and `plain` (phone only). Upload one version, in file order `01` to `04`. Files: `resources/app-store-connect/screenshots/` (see the README there). The set shows four of the six screens suggested above. Replace it with Simulator captures before submission if you want Apple's reviewers to see the real build, as the Content row requires.
+
+### 7.2a Header asset (product page header and search results)
+
+ASC "Header and Search Results" tab, "Header" (1 asset). Accepted sizes: 5244 × 2950 px and 3840 × 1646 px. Files: `resources/app-store-connect/header/header-5244x2950.png` and `header-3840x1646.png`, RGB, no transparency. The art is a generated cartoon scene with the title lettering drawn in code. The background was generated at 1280 × 720 and enlarged, so fine star details are soft. Key elements sit in the middle of the image because Apple crops the header by device. The pink ring in the art does not match the game's ring exactly.
 
 ### 7.3 App preview video
 
