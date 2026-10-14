@@ -598,7 +598,11 @@ namespace OrbitalSalvage.Viewer
             var box = PageRect();
             if (!TryCss(box, screen, out double cssX, out double cssY)) return;
             string spec = Spec(currentId);
-            if (ParityPages.TryPressAt(spec, cssX, cssY, out int index, out string transform))
+            var painted = PaintedElements();
+            bool pressed = painted != null
+                ? ParityPages.TryPressAt(painted, cssX, cssY, out int index, out string transform)
+                : ParityPages.TryPressAt(spec, cssX, cssY, out index, out transform);
+            if (pressed)
             {
                 pressIndex = index;
                 pressCss = transform;
@@ -608,7 +612,9 @@ namespace OrbitalSalvage.Viewer
                 armedEdge = ParityPages.HitEdge(currentId, spec, cssX, cssY);
             else
             {
-                armedControl = ParityPages.TryHitControl(spec, cssX, cssY, out armedHit);
+                armedControl = painted != null
+                    ? ParityPages.TryHitControl(painted, cssX, cssY, out armedHit)
+                    : ParityPages.TryHitControl(spec, cssX, cssY, out armedHit);
                 if (armedControl && (armedHit.Id == "settings-sfx-slider" || armedHit.Id == "settings-ambience-slider"))
                 {
                     dragSlider = armedHit.Id;
@@ -674,6 +680,15 @@ namespace OrbitalSalvage.Viewer
             }
             screen = default;
             return false;
+        }
+
+        /// <summary>
+        /// The elements on screen when the shop's cards were swapped for the owned / equipped / locked ones, else null.
+        /// Taps on a stamped page must be matched against these, not against the captured file: the buttons moved.
+        /// </summary>
+        IReadOnlyList<Dictionary<string, object>> PaintedElements()
+        {
+            return current != null && current.ShopStamped ? current.Elements : null;
         }
 
         string Spec(string stateId)

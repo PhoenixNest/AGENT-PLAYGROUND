@@ -50,6 +50,16 @@ namespace OrbitalSalvage.Render
         Canvas2D canvas;
         readonly StreamPlayer playfield;
         readonly List<Dictionary<string, object>> elements;
+
+        /// <summary>
+        /// The painted elements, in document order. Unlike the captured file this includes edits made after loading,
+        /// such as the shop cards that <see cref="StampShopCards"/> swaps in. Hit testing must read this list.
+        /// </summary>
+        public IReadOnlyList<Dictionary<string, object>> Elements => elements;
+
+        /// <summary>True once <see cref="StampShopCards"/> replaced the cards, so the buttons moved away from the captured file.</summary>
+        public bool ShopStamped { get; private set; }
+
         /// <summary>When set, the playfield canvas element is not replayed and full-viewport boxes under it are left transparent.</summary>
         public bool SkipPlayfield;
         /// <summary>Page already drawn underneath a modal. App pages in this spec are skipped so the overlay blurs this texture.</summary>
@@ -589,6 +599,7 @@ namespace OrbitalSalvage.Render
         /// <summary>Replace shop cards with the measured locked / owned / equipped sub-templates, stacked at <paramref name="slotX"/>/<paramref name="slotY"/>.</summary>
         public void StampShopCards(string kinds, double[] slotX, double[] slotY)
         {
+            ShopStamped = true;
             if (IsItemStamp(kinds))
             {
                 CardStamp.ApplyTrees(elements, ItemTrees(kinds, Profile), slotX, slotY);
