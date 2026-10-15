@@ -92,6 +92,55 @@ namespace OrbitalSalvage.Viewer.Editor
             if (Application.isBatchMode) EditorApplication.Exit(0);
         }
 
+        /// <summary>
+        /// The 13 pictures in <c>games/maze-puzzle/unity/screenshots</c>, in the order doc 09 lists them:
+        /// file name, then the spec painted in the capture pose at the spec's own scale (1290 x 2796).
+        /// </summary>
+        public static readonly string[][] DocScreenshots =
+        {
+            new[] { "01_unity_home_screen.png", "home_default" },
+            new[] { "02_unity_maps_screen.png", "maps_world_1_fresh" },
+            new[] { "03_unity_daily_operations.png", "daily_default" },
+            new[] { "04_unity_toy_shop_donuts.png", "shop_rings_default" },
+            new[] { "05_unity_toy_shop_hats.png", "shop_singularities_default" },
+            new[] { "06_unity_toy_shop_skies.png", "shop_skyboxes_default" },
+            new[] { "07_unity_trophy_room.png", "achievements_none" },
+            new[] { "08_unity_settings_screen.png", "settings_default" },
+            new[] { "09_unity_gameplay_sector_1.png", "game_lvl01_t1000ms" },
+            new[] { "10_unity_gameplay_paused.png", "modal_pause" },
+            new[] { "11_unity_victory_debrief.png", "modal_debrief_exact" },
+            new[] { "12_unity_defeat_modal.png", "modal_defeat_12_of_20" },
+            new[] { "13_unity_loading_screen.png", "loading_t0500" }
+        };
+
+        /// <summary>
+        /// Repaints the 13 doc screenshots. Batch:
+        /// <c>-executeMethod OrbitalSalvage.Viewer.Editor.PagePreviewPainter.DumpDocScreenshotsBatch -docShotDir &lt;folder&gt;</c>.
+        /// Without <c>-docShotDir</c> the files go to <c>games/maze-puzzle/unity/screenshots</c>.
+        /// Needs a graphics device, so do not pass <c>-nographics</c>.
+        /// </summary>
+        public static void DumpDocScreenshotsBatch()
+        {
+            string dir = null;
+            var args = Environment.GetCommandLineArgs();
+            for (int i = 0; i < args.Length - 1; i++)
+                if (args[i] == "-docShotDir") dir = args[i + 1];
+            if (string.IsNullOrEmpty(dir))
+            {
+                string project = Directory.GetParent(Application.dataPath).FullName;
+                dir = Path.GetFullPath(Path.Combine(project, "..", "screenshots"));
+            }
+            Directory.CreateDirectory(dir);
+            foreach (var item in DocScreenshots)
+            {
+                // The parity player starts with empty glyph outlines; a dirty cache moves a few edge pixels.
+                OutlineFonts.Clear();
+                WriteShot(dir, item[0], item[1], "zero", null);
+            }
+            Debug.Log("[DocShots] wrote " + DocScreenshots.Length + " files to " + dir);
+            if (Application.isBatchMode) EditorApplication.Exit(0);
+        }
+
         static void MarkJapanese(HomeChrome chrome)
         {
             chrome.TextOverrides["settings-language-value"] = "日本語";

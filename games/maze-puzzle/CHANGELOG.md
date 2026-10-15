@@ -17,6 +17,10 @@ Paths written as `tools/parity/...` in entries dated before 2026-10-08 are the l
 
 ### Changed
 
+#### Unity doc screenshots repainted (2026-10-15)
+
+- All 13 files in `unity/screenshots/` were repainted from the current page specs with the new batch method `PagePreviewPainter.DumpDocScreenshotsBatch` (Unity 6000.4.0f1, Metal, 1290 × 2796). Compared with the old files, 8 of 13 (01 to 06, 09, 13) differ by at most 4 levels per colour channel, which is renderer rounding. Two changed visibly: 07 trophy room (nothing unlocked now) and 08 settings (Language and Privacy rows added, credits footer gone). The modals 10 to 12 differ only in small spots: 11 and 12 in one 46-pixel text band near the bottom, 10 by at most 81 levels on few pixels. I did not find out what changed in those bands. The 2026-10-04 files came from a different renderer, so a byte comparison of the unchanged ones is not meaningful. Doc 09's score table was not re-scored. The game page (09) shows the recorded playfield from the spec, not a live level.
+
 #### Documents brought up to date (2026-10-15)
 
 - `README.md` and `unity/maze-puzzle/README.md` named Unity `6000.4.6f1`; the project is on `6000.4.0f1` (`ProjectSettings/ProjectVersion.txt`).

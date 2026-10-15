@@ -83,3 +83,14 @@ Measured on a Mac (Apple M4 Pro, Metal) with 320 pieces, render call including t
 ## Tapping the shop
 
 The shop page is a captured page whose cards are swapped for owned, equipped, or locked ones (`CardStamp`, `HomeChrome.StampShopCards`) when no captured page has the player's inventory. After that swap the buttons are not where the captured file puts them. `HomeChrome.ShopStamped` is true and `HomeChrome.Elements` holds what is painted. `ParityViewer` hit-tests against `Elements` on a stamped page, through the `IReadOnlyList` overloads of `ParityPages.TryHitControl`, `TryPressAt`, `TryCenter`, and `TryClassCenter`. Every other page still uses the captured file. A new page whose elements change after loading must do the same, or its buttons will not answer. `ShopEquipHitTests` covers Wear and Buy on a stamped shop.
+
+## Doc screenshots
+
+`games/maze-puzzle/unity/screenshots/` holds the 13 pictures that doc 09 links, each 1290 x 2796 (the 430 x 932 page at 3x). `PagePreviewPainter.DocScreenshots` lists the spec behind each file. Repaint them with this project closed in the Editor and a graphics device (no `-nographics`):
+
+```bash
+Unity -batchmode -quit -projectPath games/maze-puzzle/unity/maze-puzzle \
+  -executeMethod OrbitalSalvage.Viewer.Editor.PagePreviewPainter.DumpDocScreenshotsBatch
+```
+
+`-docShotDir <folder>` writes somewhere else. These are the stored page specs painted in the capture pose, so the game page shows the recorded playfield, not a live level. Restore `ProjectSettings/ProjectSettings.asset` with `git checkout` after a batch run if Unity changed it.
