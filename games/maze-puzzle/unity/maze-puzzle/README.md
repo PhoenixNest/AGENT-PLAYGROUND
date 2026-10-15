@@ -1,6 +1,6 @@
 # maze-puzzle Unity project
 
-Unity 6000.4.6f1 project for Orbital Salvage. Open this folder in the Editor. The scene is `Assets/Scenes/MainGameScene.unity`.
+Unity 6000.4.0f1 project for Orbital Salvage. Open this folder in the Editor. The scene is `Assets/Scenes/MainGameScene.unity`.
 
 Play mode boots `ParityViewer`. The Editor menu below is for preview, builds, and saved-profile tools. It does not replace Play mode.
 
@@ -69,3 +69,17 @@ Batch entry points, from this project:
 The Windows wrapper is `games/maze-puzzle/tools/parity/windows/unity/build-play.ps1`.
 
 After every iOS export, a post-process step sets the Xcode target `GameAssembly` to bundle id `com.unity3d.gameassembly`. The app id stays `io.dev.maze`. `UnityFramework` keeps `com.unity3d.framework`. This step is untested against a real Unity-generated Xcode project: this machine has no iOS Build Support module. On a Mac, run an export and look for `[IosExport] GameAssembly bundle id set to com.unity3d.gameassembly`. If the console warns `target GameAssembly not found`, send the target names from that line.
+
+## Phone drawing path
+
+An iOS or Android player starts from `GpuOpt.MobileDefaults` (`rrshadow,rrplus,backdroplow,playhalf,fastshape,fastarc`) when the `os.parity.opt` pref is empty. The Editor, the stills tooling, and the hash tests use `GpuOpt.Defaults`, which is empty, so their pictures stay pinned. A saved pref replaces the set entirely; `none` and `default` turn every option off for an on-device A/B. `playbatch` is a pref token that stays off the default: it corrupted the frame on an iPhone X.
+
+- `rrshadow` draws a rounded-rectangle shadow in one quad instead of a blurred mask. `playhalf` draws the playfield at half size.
+- `fastshape` takes the quick fill and stroke path for the many small pieces. Each piece's two eyes are separate circles on that path (`RenderOpts.FastShape`); the Editor path still draws both eyes as one path. The render target is bound once per run of pieces, and a piece's ellipse points are only built when a path needs them.
+- `rrplus`, `backdroplow`, and `fastarc` are described, with their measurements, in `CHANGELOG.md`.
+
+Measured on a Mac (Apple M4 Pro, Metal) with 320 pieces, render call including the GPU submit: level 1 went from 26.0 to 9.5 ms, level 21 from 29.0 to 15.8 ms, level 40 from 43.0 to 16.8 ms. Not measured on a phone. The ring's physics is unchanged. Tests: `DebrisEyeSplitTests`, `FastDebrisDrawTests`.
+
+## Tapping the shop
+
+The shop page is a captured page whose cards are swapped for owned, equipped, or locked ones (`CardStamp`, `HomeChrome.StampShopCards`) when no captured page has the player's inventory. After that swap the buttons are not where the captured file puts them. `HomeChrome.ShopStamped` is true and `HomeChrome.Elements` holds what is painted. `ParityViewer` hit-tests against `Elements` on a stamped page, through the `IReadOnlyList` overloads of `ParityPages.TryHitControl`, `TryPressAt`, `TryCenter`, and `TryClassCenter`. Every other page still uses the captured file. A new page whose elements change after loading must do the same, or its buttons will not answer. `ShopEquipHitTests` covers Wear and Buy on a stamped shop.

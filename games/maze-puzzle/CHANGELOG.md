@@ -17,6 +17,14 @@ Paths written as `tools/parity/...` in entries dated before 2026-10-08 are the l
 
 ### Changed
 
+#### Documents brought up to date (2026-10-15)
+
+- `README.md` and `unity/maze-puzzle/README.md` named Unity `6000.4.6f1`; the project is on `6000.4.0f1` (`ProjectSettings/ProjectVersion.txt`).
+- `06_GAMEPLAY_SYSTEMS_AND_LEVEL_DESIGN.md` section 1.1 and the `04_TECHNICAL_ARCHITECTURE.md` diagram now say that in Unity the drag reaches `ApplyInputDrag` as distance along the ring under the finger. `09_VISUAL_PARITY_AND_SCREENSHOT_COMPARISON.md` section A lists that as a deliberate difference from the web prototype.
+- `05_GAME_UI_UX_DESIGN_SPECIFICATION.md` shop cards: the button reads "Wear" and a purchase equips the new item.
+- `unity/maze-puzzle/README.md` has two new sections: the phone drawing path and how taps are matched on a stamped shop page.
+- Not changed: `09` section A still names `CentrifugeController.cs` (the retired uGUI shell) in its Unity bullet; a note beside it says so.
+
 #### Weaker capture net (2026-10-14)
 
 - Deliberate balance change. The funnel centering spring is now `k = 15`, `c = 2 * sqrt(15)` (still critically damped) in `web/engine/physics.js` and `PhysicsEngine.ResolveMagneticFunnel`. Rails stay 95 px down to 46 px, bounce 0.45. Aperture dampers, black-hole gravity, quotas, and the defeat rule are unchanged. A still ring does not spill. A hard spin can throw a piece out, which is an expected miss.
