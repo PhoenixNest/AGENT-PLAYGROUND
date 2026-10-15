@@ -55,7 +55,7 @@ graph TD
 ```mermaid
 flowchart TD
     subgraph Ring Kinematics
-        R1[Touch Drag / Swipe Delta] --> R2[Apply Angular Velocity Drag]
+        R1[Touch Drag / Swipe Delta<br/>Unity: distance along the ring under the finger] --> R2[Apply Angular Velocity Drag]
         R3[Double-Tap Burst] --> R4[Attitude Thruster Impulse]
         R2 & R4 --> R5[Euler Integration: ringAngle += omega * dt]
         R5 --> R6[Friction Damping: omega *= 0.94]

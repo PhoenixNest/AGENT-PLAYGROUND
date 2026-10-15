@@ -65,6 +65,8 @@ Using Antigravity's built-in browser engine, 13 full-resolution reference screen
 - **Web (`web/engine/physics.js`):** damping $0.94$; RCS burst $\pm 3.8\text{ rad/s}$; drag clamp $\omega \in [-12, 12]$.
 - **Unity (`CentrifugeController.cs`):** damping $0.94$; `thrusterBurstImpulse = 4.0`; `maxAngularVelocity = 25`.
 - These are **not** 1:1. Treat thruster impulse and max $\omega$ as known divergences pending a fidelity decision.
+- **Deliberate divergence (2026-10-14), drag mapping:** the web prototype turns the ring by the sideways finger movement only. The Unity game (`LiveGameSession.GrabPixels`) makes the part of the ring under the finger follow the finger. `PhysicsEngine.ApplyInputDrag` and every physics golden are unchanged. Design record: GDD section 3.1.
+- **Note:** the Unity bullet above names `CentrifugeController.cs`, the retired uGUI shell. The product physics is `Assets/Scripts/Logic/PhysicsEngine.cs`, which matches the web values for damping, burst and clamp.
 
 ### B. Sector Maze Geometry & Topology — **known divergence**
 

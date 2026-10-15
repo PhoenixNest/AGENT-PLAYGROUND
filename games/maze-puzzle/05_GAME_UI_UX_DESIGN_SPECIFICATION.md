@@ -150,7 +150,7 @@ graph TD
   - Hero gift banner granting $+100$ Gold Coins every 24 hours with zero ads or paywalls.
   - Dynamically switches to a claimed state once collected.
 - **Cosmetic Category Tabs:** **Hats** (`🎩`), **Rings** (`🍩`), **Singularities** (`🌀`), and **Skies** (`🌌`).
-- **Item Cards:** 3D item cards displaying item icon, preview box, status pill (`EQUIPPED`, `EQUIP`, or `BUY 🪙 500`), and interactive buy/equip actions.
+- **Item Cards:** 3D item cards displaying item icon, preview box, status pill (`EQUIPPED ✨`, `Wear`, or `BUY 🪙 500`), and interactive buy/wear actions. In the Unity game a successful purchase equips the new item at once (toast "Item Unlocked & Equipped!"). Every other owned item shows `Wear`, and tapping it equips that item again (toast "Item Equipped!"). A card that is neither owned nor equipped shows its price.
 
 ### 4.6 Screen 6: Dedicated Trophies Page (`#page-achievements`)
 

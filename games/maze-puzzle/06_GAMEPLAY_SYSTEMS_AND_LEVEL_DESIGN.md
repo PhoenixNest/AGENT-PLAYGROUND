@@ -43,6 +43,8 @@ graph LR
 1. **Drag Sensitivity:** Touch movement across the screen applies angular velocity:
    $$\Delta \omega = \Delta x \times 0.005$$
    capped between $[-12.0, 12.0]\text{ rad/s}$.
+
+   This is the rule the web prototype uses, and `PhysicsEngine.ApplyInputDrag` in Unity is the same. In the Unity game the $\Delta x$ that reaches it is not the raw sideways finger movement. `LiveGameSession.GrabPixels` turns the finger movement into the distance along the ring under the finger (angle swept around the ring centre times the mean radius), so the part of the ring under the finger follows the finger. Inside 40 page pixels of the centre it falls back to sideways movement only. The result is multiplied by 1.3 first, as before. See GDD section 3.1.
 2. **Kinematic Integration & Friction Damping:**
    $$\theta_{ring}(t + \Delta t) = \theta_{ring}(t) + \omega(t) \cdot \Delta t$$
    $$\omega(t + \Delta t) = \omega(t) \times (0.94)^{\Delta t \times 60}$$
