@@ -1,0 +1,128 @@
+SOURCE-AVAILABLE NON-COMMERCIAL SOFTWARE LICENSE AND NON-DISCLOSURE AGREEMENT
+Version 1.0
+
+Copyright (c) 2026 Peter Chen
+All Rights Reserved (Except as Expressly Granted Herein).
+
+IMPORTANT — READ CAREFULLY:
+This License and Non-Disclosure Agreement ("Agreement") governs the access, inspection,
+reproduction, modification, and use of all materials, source code, scripts, configurations,
+agent skills, documentation, and data originating in this workspace, across the primary
+codebase and all corresponding branches ("Software and Materials").
+
+================================================================================
+1. DEFINITIONS AND AUTHOR INFORMATION
+================================================================================
+
+"Licensor" and "Author" means Peter Chen, the sole copyright holder and owner
+of the Software and Materials originating within this workspace.
+
+"Licensee" (or "You") means any individual or legal entity accessing, viewing,
+cloning, downloading, or exercising any permissions regarding the Software and Materials.
+
+"Workspace and Branches" includes all content, directories, files, configurations,
+skills, prompts, revisions, git commits, metadata, and all corresponding branches
+(including but not limited to main/master, development, feature, staging, experimental,
+and archived branches).
+
+"Commercial Use" means any use of the Software and Materials, in whole or in part,
+directly or indirectly, for commercial advantage, monetary gain, revenue generation,
+or business activities. This includes, without limitation:
+  (a) Incorporating the Software and Materials into any commercial product, service,
+      or internal company workflow;
+  (b) Providing the Software and Materials as a hosted service, Software-as-a-Service
+      (SaaS), cloud service, or API for a fee;
+  (c) Deploying or using the Software and Materials within or on behalf of any
+      for-profit organization or enterprise;
+  (d) Sublicensing, distributing, selling, or charging fees for access to the
+      Software and Materials or derivatives thereof.
+
+"Non-Commercial Use" means strictly personal, educational, academic, or non-profit
+evaluation purposes with zero direct or indirect financial compensation or business benefit.
+
+================================================================================
+2. SCOPE OF LICENSE AND STRICT COMMERCIAL PROHIBITION
+================================================================================
+
+2.1 Non-Commercial License Grant:
+    Subject to strict adherence to all terms in this Agreement, Licensor grants You
+    a limited, non-exclusive, revocable, royalty-free license solely for Non-Commercial
+    Use. You may inspect, download, and test the Software and Materials for personal
+    evaluation only.
+
+2.2 Absolute Commercial Prohibition:
+    ALL CONTENT WITHIN THIS WORKSPACE—INCLUDING ANY AND ALL CORRESPONDING BRANCHES—IS
+    STRICTLY NOT TO BE USED FOR ANY COMMERCIAL PURPOSES. Any commercial utilization,
+    deployment, or exploitation without the prior express written authorization and
+    commercial license executed directly by Peter Chen is strictly prohibited.
+
+2.3 Legal Infringement Acknowledgement:
+    Licensee expressly acknowledges and agrees that ANY UNAUTHORIZED COMMERCIAL USE
+    CONSTITUTES SEVERE LEGAL INFRINGEMENT, including willful copyright infringement,
+    breach of contract, and violation of trade secret/proprietary protections under
+    all applicable domestic and international laws.
+
+================================================================================
+3. CONFIDENTIALITY AND NON-DISCLOSURE OF BRANCHES
+================================================================================
+
+3.1 Non-Disclosure Obligation:
+    Licensee agrees to maintain strict confidentiality regarding all branches of
+    this workspace. Licensee shall NOT disclose, publish, publicize, leak, forward,
+    stream, or disseminate any information, source code, commit history, branch names,
+    architectural designs, or metadata regarding any corresponding branches (whether
+    active, developmental, private, or experimental) to any third party, public forum,
+    or social platform without prior express written permission from Peter Chen.
+
+3.2 Protection of Proprietary Branch Information:
+    All branch structures, internal workflows, and developmental milestones are
+    the proprietary and confidential assets of Peter Chen. Licensee agrees to exercise
+    at least reasonable care to prevent unauthorized access or disclosure of such
+    branch information.
+
+================================================================================
+4. LEGAL RECOURSE, ENFORCEMENT, AND REMEDIES
+================================================================================
+
+4.1 Immediate Termination:
+    Any breach of this Agreement—including unauthorized commercial use or unauthorized
+    disclosure of branch information—shall automatically and immediately revoke and
+    terminate all permissions granted herein. Upon termination, You must immediately
+    destroy all copies, forks, clones, and records of the Software and Materials in
+    Your possession.
+
+4.2 Remedies and Damages:
+    In the event of unauthorized commercial use, breach of confidentiality, or legal
+    infringement, Peter Chen reserves the full right to pursue all available legal
+    and equitable remedies, including:
+      (a) Immediate temporary, preliminary, and permanent injunctive relief without
+          the necessity of posting bond;
+      (b) Statutory damages and actual damages incurred;
+      (c) Disgorgement of all revenues, profits, and commercial advantages derived
+          directly or indirectly from the unauthorized use or disclosure;
+      (d) Full recovery of all legal fees, expert witness costs, and litigation
+          expenses incurred in enforcing this Agreement.
+
+================================================================================
+5. THIRD-PARTY COMPONENTS CARVE-OUT
+================================================================================
+
+This repository may contain third-party software vendored for interoperability.
+Specifically:
+  - Third-party code located in `mcp-servers/blender_mcp/` is authored by Blender Lab
+    and distributed under the GNU General Public License v3.0 or later (GPL-3.0-or-later).
+
+Such third-party components remain governed exclusively by their upstream licenses.
+Nothing in this Agreement alters or restricts the specific permissions granted by
+such upstream licenses for those distinct components. This Agreement applies to all
+original code, branch configurations, prompts, and materials authored by Peter Chen.
+
+================================================================================
+6. DISCLAIMER OF WARRANTIES
+================================================================================
+
+THE SOFTWARE AND MATERIALS ARE PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE, AND NON-INFRINGEMENT. IN NO EVENT SHALL PETER CHEN
+BE LIABLE FOR ANY CLAIM, DAMAGES, OR OTHER LIABILITY ARISING FROM THE USE OR INABILITY
+TO USE THE SOFTWARE AND MATERIALS.
