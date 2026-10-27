@@ -93,16 +93,27 @@
               </div>
 
               <!-- Interactive Character Diorama Stage -->
-              <div class="mascot-diorama-stage" id="home-mascot-stage" title="Tap Nibbles!">
+              <div
+                class="mascot-diorama-stage"
+                id="home-mascot-stage"
+                title="Tap Nibbles!"
+              >
                 <div class="diorama-sunburst"></div>
                 <div class="diorama-ring-floater" id="home-diorama-ring">
-                  <span class="diorama-ring-label" id="home-diorama-ring-label">🍩 DONUT FLOAT</span>
+                  <span class="diorama-ring-label" id="home-diorama-ring-label"
+                    >🍩 DONUT FLOAT</span
+                  >
                 </div>
                 <div class="diorama-nibbles" id="home-diorama-nibbles">
-                  <div class="diorama-nibbles-face" id="home-diorama-face">😋</div>
+                  <div class="diorama-nibbles-face" id="home-diorama-face">
+                    😋
+                  </div>
                   <div class="diorama-nibbles-cheeks"></div>
                 </div>
-                <div class="diorama-hearts-anchor" id="home-hearts-anchor"></div>
+                <div
+                  class="diorama-hearts-anchor"
+                  id="home-hearts-anchor"
+                ></div>
               </div>
             </div>
 
@@ -112,9 +123,13 @@
                 <div class="console-mission-meta">
                   <div class="console-sector-badge">
                     <span class="console-tag">SECTOR</span>
-                    <span class="console-world" id="home-mission-world">World 1</span>
+                    <span class="console-world" id="home-mission-world"
+                      >World 1</span
+                    >
                   </div>
-                  <span class="console-goal-pill" id="home-mission-goal">Goal: 20 kg</span>
+                  <span class="console-goal-pill" id="home-mission-goal"
+                    >Goal: 20 kg</span
+                  >
                 </div>
                 <div class="console-level-row">
                   <span class="console-level-star">⭐</span>
@@ -133,21 +148,41 @@
 
         <!-- Unified Bottom Arcade Navigation Dock -->
         <nav class="home-arcade-dock" aria-label="Arcade Navigation">
-          <button class="dock-tab-btn" id="btn-open-maps-page" title="50 Level Gauntlets">
+          <button
+            class="dock-tab-btn"
+            id="btn-open-maps-page"
+            title="50 Level Gauntlets"
+          >
             <span class="dock-tab-icon">🗺️</span>
             <span class="dock-tab-label">MAPS</span>
           </button>
-          <button class="dock-tab-btn" id="btn-open-daily-shift" title="Daily Shift Bounty">
+          <button
+            class="dock-tab-btn"
+            id="btn-open-daily-shift"
+            title="Daily Shift Bounty"
+          >
             <span class="dock-tab-icon">📅</span>
             <span class="dock-tab-label">DAILY</span>
-            <span class="dock-badge dock-badge-hot" id="dock-daily-badge">HOT</span>
+            <span class="dock-badge dock-badge-hot" id="dock-daily-badge"
+              >HOT</span
+            >
           </button>
-          <button class="dock-tab-btn" id="btn-open-shop-page" title="Costumes & Hats">
+          <button
+            class="dock-tab-btn"
+            id="btn-open-shop-page"
+            title="Costumes & Hats"
+          >
             <span class="dock-tab-icon">🎁</span>
             <span class="dock-tab-label">SHOP</span>
-            <span class="dock-badge dock-badge-free" id="shop-dock-badge">FREE</span>
+            <span class="dock-badge dock-badge-free" id="shop-dock-badge"
+              >FREE</span
+            >
           </button>
-          <button class="dock-tab-btn" id="btn-open-trophies-page" title="Trophies & Badges">
+          <button
+            class="dock-tab-btn"
+            id="btn-open-trophies-page"
+            title="Trophies & Badges"
+          >
             <span class="dock-tab-icon">🏆</span>
             <span class="dock-tab-label">TROPHIES</span>
           </button>
@@ -162,11 +197,7 @@
 
         <!-- In-Game HUD: Streamlined Top Bar (3 balanced elements) -->
         <header class="hud-top-mobile">
-          <button
-            class="btn-hud-circle"
-            id="btn-game-pause"
-            title="Pause Game"
-          >
+          <button class="btn-hud-circle" id="btn-game-pause" title="Pause Game">
             <span>⏸️</span>
           </button>
 
@@ -176,7 +207,9 @@
               <div class="capsule-bar-track">
                 <div class="capsule-bar-fill" id="hud-quota-bar"></div>
               </div>
-              <span class="capsule-quota-text" id="hud-quota-text">0 / 20 kg</span>
+              <span class="capsule-quota-text" id="hud-quota-text"
+                >0 / 20 kg</span
+              >
             </div>
           </div>
 
@@ -189,10 +222,65 @@
           </button>
         </header>
 
-        <!-- Animated Gesture Tutorial Prompt -->
-        <div id="gesture-hint" class="gesture-hint">
-          <div class="hand-swipe-anim">👆</div>
-          <span class="hint-text">Swipe anywhere to spin!</span>
+        <!-- High-Impact Cosmic Hologram Onboarding HUD -->
+        <div
+          id="tutorial-overlay"
+          class="tutorial-overlay hidden"
+          role="status"
+          aria-live="polite"
+        >
+          <!-- Step 1: Orbit Swipe Arc Visualizer -->
+          <div id="tut-orbit-guide" class="tut-orbit-guide">
+            <div class="tut-orbit-ring"></div>
+            <div class="tut-orbit-finger-track">
+              <div class="tut-orbit-finger">👆</div>
+              <div class="tut-orbit-ripple"></div>
+            </div>
+            <div class="tut-orbit-label">
+              <span class="orbit-icon">↻</span> SWIPE TO ROTATE
+            </div>
+          </div>
+
+          <!-- Step 2: Gate Pulse Beacon Reticle -->
+          <div id="tut-gate-beacon" class="tut-gate-beacon hidden">
+            <div class="gate-beacon-ring"></div>
+            <div class="gate-beacon-core">⚡ ×2 GATE</div>
+            <div class="gate-beacon-arrow">👉</div>
+          </div>
+
+          <!-- Step 3: Gravity Funnel Cascading Chevrons -->
+          <div id="tut-feed-guide" class="tut-feed-guide hidden">
+            <div class="feed-cascade-stream">
+              <span class="feed-chevron chevron-1">▼</span>
+              <span class="feed-chevron chevron-2">▼</span>
+              <span class="feed-chevron chevron-3">▼</span>
+            </div>
+            <div class="feed-target-ring"></div>
+          </div>
+
+          <!-- Main Floating Holographic Mascot Dialogue Pill -->
+          <div id="tut-comms-card" class="tut-comms-card tut-phase-swipe">
+            <div class="tut-mascot-avatar" id="tut-mascot-avatar">
+              <span class="mascot-face" id="tut-mascot-face">😋</span>
+              <span class="mascot-live-dot" title="Live Comms"></span>
+            </div>
+            <div class="tut-comms-body">
+              <div class="tut-comms-header">
+                <span class="tut-sender-tag" id="tut-sender-tag"
+                  >RADIO COMMS • NIBBLES</span
+                >
+                <div class="tut-steps-pills">
+                  <span class="step-pip active" id="tut-pip-1">1. SPIN</span>
+                  <span class="step-pip" id="tut-pip-2">2. MULTIPLY</span>
+                  <span class="step-pip" id="tut-pip-3">3. FEED</span>
+                </div>
+              </div>
+              <div class="tut-comms-text" id="tut-comms-text">
+                Swipe anywhere to spin the orbital ring!
+              </div>
+            </div>
+            <div class="tut-action-glow"></div>
+          </div>
         </div>
       </div>
 
@@ -247,10 +335,17 @@
             </div>
             <div class="gift-banner-info">
               <div class="gift-banner-tag">FREE DAILY STIPEND</div>
-              <div class="gift-banner-title" id="gift-banner-title">Janitor Care Package!</div>
-              <div class="gift-banner-desc" id="gift-banner-desc">Claim your free daily +100 🪙 allowance.</div>
+              <div class="gift-banner-title" id="gift-banner-title">
+                Janitor Care Package!
+              </div>
+              <div class="gift-banner-desc" id="gift-banner-desc">
+                Claim your free daily +100 🪙 allowance.
+              </div>
             </div>
-            <button class="btn-cartoon-primary gift-claim-btn" id="btn-claim-daily-gift">
+            <button
+              class="btn-cartoon-primary gift-claim-btn"
+              id="btn-claim-daily-gift"
+            >
               Claim +100 🪙
             </button>
           </div>
@@ -264,7 +359,8 @@
               letter-spacing: 0.2px;
             "
           >
-            100% Free • Unlock cute costumes with your earned recycling coins! 🪙
+            100% Free • Unlock cute costumes with your earned recycling coins!
+            🪙
           </p>
           <div class="tab-row">
             <button class="tab-btn active" data-tab="rings">Donut Rings</button>
@@ -304,9 +400,7 @@
            ========================================================= -->
       <div id="page-settings" class="app-page page-hidden">
         <div class="page-header-bar">
-          <button class="btn-header-back" id="btn-back-settings">
-            ← Back
-          </button>
+          <button class="btn-header-back" id="btn-back-settings">← Back</button>
           <div class="page-header-title"><span>⚙️</span> GAME SETTINGS</div>
           <div style="width: 48px"></div>
         </div>
@@ -387,7 +481,11 @@
                   >English</span
                 >
               </div>
-              <button class="btn-cartoon-primary" id="btn-open-language" type="button">
+              <button
+                class="btn-cartoon-primary"
+                id="btn-open-language"
+                type="button"
+              >
                 Change
               </button>
             </div>
@@ -403,7 +501,11 @@
                   >100% offline, kid-safe, no trackers</span
                 >
               </div>
-              <button class="btn-cartoon-primary" id="btn-open-privacy" type="button">
+              <button
+                class="btn-cartoon-primary"
+                id="btn-open-privacy"
+                type="button"
+              >
                 View Policy
               </button>
             </div>
@@ -414,7 +516,11 @@
                   >The rules for playing the game</span
                 >
               </div>
-              <button class="btn-cartoon-primary" id="btn-open-user-agreement" type="button">
+              <button
+                class="btn-cartoon-primary"
+                id="btn-open-user-agreement"
+                type="button"
+              >
                 View
               </button>
             </div>
@@ -456,30 +562,80 @@
             <h2 class="modal-title">⏸️ MISSION PAUSED</h2>
             <button class="btn-close" id="btn-close-pause">&times;</button>
           </div>
-          <div class="modal-body" style="align-items: center; gap: 14px; text-align: center;">
+          <div
+            class="modal-body"
+            style="align-items: center; gap: 14px; text-align: center"
+          >
             <div class="pause-level-info">
-              <div id="pause-level-name" style="font-family: var(--font-bubble); font-size: 19px; color: var(--yellow-main); font-weight: 800;">
+              <div
+                id="pause-level-name"
+                style="
+                  font-family: var(--font-bubble);
+                  font-size: 19px;
+                  color: var(--yellow-main);
+                  font-weight: 800;
+                "
+              >
                 LVL 1 • Bubblegum Chute 1
               </div>
-              <div id="pause-level-quota" style="font-size: 13px; color: rgba(255, 255, 255, 0.75); margin-top: 4px;">
+              <div
+                id="pause-level-quota"
+                style="
+                  font-size: 13px;
+                  color: rgba(255, 255, 255, 0.75);
+                  margin-top: 4px;
+                "
+              >
                 Goal: Feed Nibbles 20 kg space snacks
               </div>
             </div>
 
-            <div class="pause-actions-list" style="width: 100%; display: flex; flex-direction: column; gap: 10px;">
-              <button class="btn-cartoon-primary" id="btn-pause-resume" style="width: 100%; padding: 14px; font-size: 16px;">
+            <div
+              class="pause-actions-list"
+              style="
+                width: 100%;
+                display: flex;
+                flex-direction: column;
+                gap: 10px;
+              "
+            >
+              <button
+                class="btn-cartoon-primary"
+                id="btn-pause-resume"
+                style="width: 100%; padding: 14px; font-size: 16px"
+              >
                 <span>▶</span> RESUME PLAY
               </button>
-              <button class="btn-cartoon-secondary" id="btn-pause-restart" style="width: 100%; padding: 12px;">
+              <button
+                class="btn-cartoon-secondary"
+                id="btn-pause-restart"
+                style="width: 100%; padding: 12px"
+              >
                 <span>🔄</span> Restart Sector
               </button>
-              <button class="btn-cartoon-secondary" id="btn-pause-sound" style="width: 100%; padding: 12px;">
+              <button
+                class="btn-cartoon-secondary"
+                id="btn-pause-sound"
+                style="width: 100%; padding: 12px"
+              >
                 <span id="pause-sound-icon">🔊</span> Sound: ON
               </button>
-              <button class="btn-cartoon-secondary" id="btn-pause-maps" style="width: 100%; padding: 12px;">
+              <button
+                class="btn-cartoon-secondary"
+                id="btn-pause-maps"
+                style="width: 100%; padding: 12px"
+              >
                 <span>🗺️</span> Choose Sector
               </button>
-              <button class="btn-cartoon-secondary" id="btn-pause-home" style="width: 100%; padding: 12px; border-color: var(--pink-main);">
+              <button
+                class="btn-cartoon-secondary"
+                id="btn-pause-home"
+                style="
+                  width: 100%;
+                  padding: 12px;
+                  border-color: var(--pink-main);
+                "
+              >
                 <span>🏠</span> Return to Home
               </button>
             </div>
@@ -545,28 +701,169 @@
       <div class="modal-overlay" id="modal-language">
         <div class="modal-card lang-modal-card">
           <div class="modal-header">
-            <h2 class="modal-title" id="language-modal-title">Choose Language</h2>
-            <button class="lang-close" id="btn-close-language" type="button">Close</button>
+            <h2 class="modal-title" id="language-modal-title">
+              Choose Language
+            </h2>
+            <button class="lang-close" id="btn-close-language" type="button">
+              Close
+            </button>
           </div>
           <div class="modal-body lang-modal-body">
             <div class="lang-grid" id="language-grid">
-              <button type="button" class="lang-option" id="btn-lang-en" data-lang="en" lang="en">✓ English</button>
-              <button type="button" class="lang-option" id="btn-lang-zh-Hans" data-lang="zh-Hans" lang="zh-Hans">简体中文</button>
-              <button type="button" class="lang-option" id="btn-lang-zh-Hant" data-lang="zh-Hant" lang="zh-Hant">繁體中文</button>
-              <button type="button" class="lang-option" id="btn-lang-ja" data-lang="ja" lang="ja">日本語</button>
-              <button type="button" class="lang-option" id="btn-lang-ko" data-lang="ko" lang="ko">한국어</button>
-              <button type="button" class="lang-option" id="btn-lang-de" data-lang="de" lang="de">Deutsch</button>
-              <button type="button" class="lang-option" id="btn-lang-fr" data-lang="fr" lang="fr">Français</button>
-              <button type="button" class="lang-option" id="btn-lang-es" data-lang="es" lang="es">Español</button>
-              <button type="button" class="lang-option" id="btn-lang-it" data-lang="it" lang="it">Italiano</button>
-              <button type="button" class="lang-option" id="btn-lang-pt-PT" data-lang="pt-PT" lang="pt-PT">Português</button>
-              <button type="button" class="lang-option" id="btn-lang-vi" data-lang="vi" lang="vi">Tiếng Việt</button>
-              <button type="button" class="lang-option" id="btn-lang-fil" data-lang="fil" lang="fil">Filipino</button>
-              <button type="button" class="lang-option" id="btn-lang-id" data-lang="id" lang="id">Bahasa Indonesia</button>
-              <button type="button" class="lang-option" id="btn-lang-uz" data-lang="uz" lang="uz">Oʻzbekcha</button>
-              <button type="button" class="lang-option" id="btn-lang-km" data-lang="km" lang="km">ភាសាខ្មែរ</button>
-              <button type="button" class="lang-option" id="btn-lang-hi" data-lang="hi" lang="hi">हिन्दी</button>
-              <button type="button" class="lang-option" id="btn-lang-ar" data-lang="ar" lang="ar" dir="rtl">العربية</button>
+              <button
+                type="button"
+                class="lang-option"
+                id="btn-lang-en"
+                data-lang="en"
+                lang="en"
+              >
+                ✓ English
+              </button>
+              <button
+                type="button"
+                class="lang-option"
+                id="btn-lang-zh-Hans"
+                data-lang="zh-Hans"
+                lang="zh-Hans"
+              >
+                简体中文
+              </button>
+              <button
+                type="button"
+                class="lang-option"
+                id="btn-lang-zh-Hant"
+                data-lang="zh-Hant"
+                lang="zh-Hant"
+              >
+                繁體中文
+              </button>
+              <button
+                type="button"
+                class="lang-option"
+                id="btn-lang-ja"
+                data-lang="ja"
+                lang="ja"
+              >
+                日本語
+              </button>
+              <button
+                type="button"
+                class="lang-option"
+                id="btn-lang-ko"
+                data-lang="ko"
+                lang="ko"
+              >
+                한국어
+              </button>
+              <button
+                type="button"
+                class="lang-option"
+                id="btn-lang-de"
+                data-lang="de"
+                lang="de"
+              >
+                Deutsch
+              </button>
+              <button
+                type="button"
+                class="lang-option"
+                id="btn-lang-fr"
+                data-lang="fr"
+                lang="fr"
+              >
+                Français
+              </button>
+              <button
+                type="button"
+                class="lang-option"
+                id="btn-lang-es"
+                data-lang="es"
+                lang="es"
+              >
+                Español
+              </button>
+              <button
+                type="button"
+                class="lang-option"
+                id="btn-lang-it"
+                data-lang="it"
+                lang="it"
+              >
+                Italiano
+              </button>
+              <button
+                type="button"
+                class="lang-option"
+                id="btn-lang-pt-PT"
+                data-lang="pt-PT"
+                lang="pt-PT"
+              >
+                Português
+              </button>
+              <button
+                type="button"
+                class="lang-option"
+                id="btn-lang-vi"
+                data-lang="vi"
+                lang="vi"
+              >
+                Tiếng Việt
+              </button>
+              <button
+                type="button"
+                class="lang-option"
+                id="btn-lang-fil"
+                data-lang="fil"
+                lang="fil"
+              >
+                Filipino
+              </button>
+              <button
+                type="button"
+                class="lang-option"
+                id="btn-lang-id"
+                data-lang="id"
+                lang="id"
+              >
+                Bahasa Indonesia
+              </button>
+              <button
+                type="button"
+                class="lang-option"
+                id="btn-lang-uz"
+                data-lang="uz"
+                lang="uz"
+              >
+                Oʻzbekcha
+              </button>
+              <button
+                type="button"
+                class="lang-option"
+                id="btn-lang-km"
+                data-lang="km"
+                lang="km"
+              >
+                ភាសាខ្មែរ
+              </button>
+              <button
+                type="button"
+                class="lang-option"
+                id="btn-lang-hi"
+                data-lang="hi"
+                lang="hi"
+              >
+                हिन्दी
+              </button>
+              <button
+                type="button"
+                class="lang-option"
+                id="btn-lang-ar"
+                data-lang="ar"
+                lang="ar"
+                dir="rtl"
+              >
+                العربية
+              </button>
             </div>
           </div>
         </div>
@@ -723,7 +1020,10 @@
             </div>
 
             <!-- Optional Tactical Backup Pod: Available if quota was >= 70% -->
-            <div id="defeat-backup-container" style="width: 100%; margin-top: 4px; display: none;">
+            <div
+              id="defeat-backup-container"
+              style="width: 100%; margin-top: 4px; display: none"
+            >
               <button
                 class="btn-cartoon-primary"
                 id="btn-defeat-backup"

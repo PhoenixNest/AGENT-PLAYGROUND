@@ -35,6 +35,7 @@ namespace OrbitalSalvage.Logic
         public List<string> CompletedDailyTiers = new List<string>();
         public string DailyMasterClaimedDate = "";
         public string LastDailyGiftDate = "";
+        public bool IntroSeen;
         public List<KeyValuePair<string, JsonValue>> ExtraKeys = new List<KeyValuePair<string, JsonValue>>();
 
         public static Profile CreateDefault()
@@ -89,6 +90,7 @@ namespace OrbitalSalvage.Logic
             o.Set("completedDailyTiers", StringList(CompletedDailyTiers));
             o.Set("dailyMasterClaimedDate", DailyMasterClaimedDate);
             o.Set("lastDailyGiftDate", LastDailyGiftDate);
+            if (IntroSeen) o.Set("introSeen", true);
             foreach (KeyValuePair<string, JsonValue> kv in ExtraKeys) o.Set(kv.Key, kv.Value);
             return o;
         }
@@ -129,7 +131,7 @@ namespace OrbitalSalvage.Logic
             {
                 "version", "credits", "careerDebris", "careerContracts", "equipped", "unlocked", "settings", "achievements",
                 "completedSectors", "dailyShiftCompletedToday", "lastDailyShiftDate", "completedDailyTiers",
-                "dailyMasterClaimedDate", "lastDailyGiftDate", "infiniteRound", "infiniteBest",
+                "dailyMasterClaimedDate", "lastDailyGiftDate", "infiniteRound", "infiniteBest", "introSeen"
             };
 
             bool hasSettings = Truthy(parsed.Get("settings"));
@@ -183,6 +185,7 @@ namespace OrbitalSalvage.Logic
                 ? parsed.Get("dailyMasterClaimedDate").String
                 : "";
             if ((v = parsed.Get("lastDailyGiftDate")) != null && v.Kind == JsonKind.String) p.LastDailyGiftDate = v.String;
+            if ((v = parsed.Get("introSeen")) != null && v.Kind == JsonKind.Bool) p.IntroSeen = v.Bool;
 
             if (p.LastDailyShiftDate != todayKey)
             {

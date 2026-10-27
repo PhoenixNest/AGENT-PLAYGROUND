@@ -31,7 +31,20 @@ class OrbitalApp {
   constructor() {
     this.frame = document.getElementById("mobile-frame");
     this.canvas = document.getElementById("game-canvas");
-    this.gestureHint = document.getElementById("gesture-hint");
+    this.tutOverlay = document.getElementById("tutorial-overlay");
+    this.tutCommsCard = document.getElementById("tut-comms-card");
+    this.tutMascotFace = document.getElementById("tut-mascot-face");
+    this.tutSenderTag = document.getElementById("tut-sender-tag");
+    this.tutCommsText = document.getElementById("tut-comms-text");
+    this.tutOrbitGuide = document.getElementById("tut-orbit-guide");
+    this.tutGateBeacon = document.getElementById("tut-gate-beacon");
+    this.tutFeedGuide = document.getElementById("tut-feed-guide");
+    this.tutPips = [
+      document.getElementById("tut-pip-1"),
+      document.getElementById("tut-pip-2"),
+      document.getElementById("tut-pip-3"),
+    ];
+    this.tutorialPhase = "NONE";
     this.audio = new AudioEngine();
     this.economy = new EconomyManager();
     this.physics = new PhysicsEngine(this.audio);
@@ -123,8 +136,11 @@ class OrbitalApp {
       this.syncSettingsUI();
     } else if (pageId === "game") {
       this.initLayout();
-      // Dismiss gesture hint after 3.5 seconds automatically
-      setTimeout(() => this.dismissGestureHint(), 3500);
+      if (this.isTutorialEligible()) {
+        this.setTutorialPhase("SWIPE");
+      } else {
+        this.setTutorialPhase("NONE");
+      }
     }
   }
 
@@ -226,8 +242,12 @@ class OrbitalApp {
     if (nameEl) nameEl.textContent = `${sec.code} • ${sec.name}`;
     if (goalEl) goalEl.textContent = `Goal: ${sec.quota} kg`;
     if (worldEl) {
-      const curWorld = this.worlds.find((w) => w.worldIndex === (sec.worldIndex || 1));
-      worldEl.textContent = curWorld ? curWorld.title : `World ${sec.worldIndex || 1}`;
+      const curWorld = this.worlds.find(
+        (w) => w.worldIndex === (sec.worldIndex || 1),
+      );
+      worldEl.textContent = curWorld
+        ? curWorld.title
+        : `World ${sec.worldIndex || 1}`;
     }
 
     // 2. Daily Shift Bounty Preview
@@ -239,7 +259,8 @@ class OrbitalApp {
 
     // 3. Update Mascot Diorama with Equipped Skins
     const equippedRing = this.economy.profile.equipped.ring || "ring_donut";
-    const equippedSingularity = this.economy.profile.equipped.singularity || "singularity_nibbles";
+    const equippedSingularity =
+      this.economy.profile.equipped.singularity || "singularity_nibbles";
 
     const ringEl = document.getElementById("home-diorama-ring");
     const ringLabelEl = document.getElementById("home-diorama-ring-label");
@@ -249,41 +270,49 @@ class OrbitalApp {
     if (ringEl && ringLabelEl) {
       if (equippedRing === "ring_duckie") {
         ringEl.style.borderColor = "#facc15";
-        ringEl.style.boxShadow = "0 0 25px rgba(250, 204, 21, 0.5), inset 0 0 15px rgba(250, 204, 21, 0.3)";
+        ringEl.style.boxShadow =
+          "0 0 25px rgba(250, 204, 21, 0.5), inset 0 0 15px rgba(250, 204, 21, 0.3)";
         ringLabelEl.textContent = "🦆 DUCKIE FLOAT";
       } else if (equippedRing === "ring_candyland") {
         ringEl.style.borderColor = "#ef4444";
-        ringEl.style.boxShadow = "0 0 25px rgba(239, 68, 68, 0.5), inset 0 0 15px rgba(239, 68, 68, 0.3)";
+        ringEl.style.boxShadow =
+          "0 0 25px rgba(239, 68, 68, 0.5), inset 0 0 15px rgba(239, 68, 68, 0.3)";
         ringLabelEl.textContent = "🍬 CANDY RING";
       } else if (equippedRing === "ring_spacecat") {
         ringEl.style.borderColor = "#c084fc";
-        ringEl.style.boxShadow = "0 0 25px rgba(192, 132, 252, 0.5), inset 0 0 15px rgba(192, 132, 252, 0.3)";
+        ringEl.style.boxShadow =
+          "0 0 25px rgba(192, 132, 252, 0.5), inset 0 0 15px rgba(192, 132, 252, 0.3)";
         ringLabelEl.textContent = "🐱 KITTY SAUCER";
       } else {
         ringEl.style.borderColor = "#f472b6";
-        ringEl.style.boxShadow = "0 0 25px rgba(244, 114, 182, 0.5), inset 0 0 15px rgba(244, 114, 182, 0.3)";
+        ringEl.style.boxShadow =
+          "0 0 25px rgba(244, 114, 182, 0.5), inset 0 0 15px rgba(244, 114, 182, 0.3)";
         ringLabelEl.textContent = "🍩 DONUT FLOAT";
       }
     }
 
     if (nibblesEl && faceEl) {
       if (equippedSingularity === "singularity_strawberry") {
-        nibblesEl.style.background = "radial-gradient(circle at 35% 35%, #f43f5e 0%, #881337 75%, #4c0519 100%)";
+        nibblesEl.style.background =
+          "radial-gradient(circle at 35% 35%, #f43f5e 0%, #881337 75%, #4c0519 100%)";
         nibblesEl.style.borderColor = "#fda4af";
         nibblesEl.style.boxShadow = "0 0 22px rgba(244, 63, 94, 0.6)";
         faceEl.textContent = "🍓";
       } else if (equippedSingularity === "singularity_sleepy") {
-        nibblesEl.style.background = "radial-gradient(circle at 35% 35%, #38bdf8 0%, #0369a1 75%, #082f49 100%)";
+        nibblesEl.style.background =
+          "radial-gradient(circle at 35% 35%, #38bdf8 0%, #0369a1 75%, #082f49 100%)";
         nibblesEl.style.borderColor = "#7dd3fc";
         nibblesEl.style.boxShadow = "0 0 22px rgba(56, 189, 248, 0.6)";
         faceEl.textContent = "💤";
       } else if (equippedSingularity === "singularity_confetti") {
-        nibblesEl.style.background = "radial-gradient(circle at 35% 35%, #a855f7 0%, #581c87 75%, #3b0764 100%)";
+        nibblesEl.style.background =
+          "radial-gradient(circle at 35% 35%, #a855f7 0%, #581c87 75%, #3b0764 100%)";
         nibblesEl.style.borderColor = "#facc15";
         nibblesEl.style.boxShadow = "0 0 22px rgba(168, 85, 247, 0.6)";
         faceEl.textContent = "🎉";
       } else {
-        nibblesEl.style.background = "radial-gradient(circle at 35% 35%, #6366f1 0%, #1e1b4b 75%, #0f0c29 100%)";
+        nibblesEl.style.background =
+          "radial-gradient(circle at 35% 35%, #6366f1 0%, #1e1b4b 75%, #0f0c29 100%)";
         nibblesEl.style.borderColor = "#38bdf8";
         nibblesEl.style.boxShadow = "0 0 22px rgba(56, 189, 248, 0.6)";
         faceEl.textContent = "😋";
@@ -355,9 +384,96 @@ class OrbitalApp {
     this.physics.blackHole.y = blackHoleY;
   }
 
+  isTutorialEligible() {
+    return (
+      this.activeSector &&
+      this.activeSector.levelNumber === 1 &&
+      !this.economy.profile.introSeen
+    );
+  }
+
+  setTutorialPhase(phase) {
+    this.tutorialPhase = phase;
+    if (!this.tutOverlay) return;
+
+    if (phase === "NONE" || phase === "DONE") {
+      this.tutOverlay.classList.add("hidden");
+      return;
+    }
+
+    this.tutOverlay.classList.remove("hidden");
+
+    // Hide all guide sub-elements first
+    if (this.tutOrbitGuide) this.tutOrbitGuide.classList.add("hidden");
+    if (this.tutGateBeacon) this.tutGateBeacon.classList.add("hidden");
+    if (this.tutFeedGuide) this.tutFeedGuide.classList.add("hidden");
+
+    if (this.tutCommsCard) {
+      this.tutCommsCard.classList.remove(
+        "tut-phase-swipe",
+        "tut-phase-gate",
+        "tut-phase-feed",
+      );
+    }
+
+    const updatePips = (activeIdx) => {
+      this.tutPips.forEach((pip, idx) => {
+        if (!pip) return;
+        pip.classList.remove("active", "done");
+        if (idx < activeIdx) {
+          pip.classList.add("done");
+        } else if (idx === activeIdx) {
+          pip.classList.add("active");
+        }
+      });
+    };
+
+    if (phase === "SWIPE") {
+      if (this.tutOrbitGuide) this.tutOrbitGuide.classList.remove("hidden");
+      if (this.tutCommsCard) this.tutCommsCard.classList.add("tut-phase-swipe");
+      if (this.tutMascotFace) this.tutMascotFace.textContent = "😋";
+      if (this.tutSenderTag)
+        this.tutSenderTag.textContent = "RADIO COMMS • NIBBLES";
+      if (this.tutCommsText) {
+        this.tutCommsText.textContent =
+          "Swipe anywhere to spin the orbital ring!";
+      }
+      updatePips(0);
+    } else if (phase === "GATE") {
+      if (this.tutGateBeacon) this.tutGateBeacon.classList.remove("hidden");
+      if (this.tutCommsCard) this.tutCommsCard.classList.add("tut-phase-gate");
+      if (this.tutMascotFace) this.tutMascotFace.textContent = "⚡";
+      if (this.tutSenderTag)
+        this.tutSenderTag.textContent = "ENERGY WARNING • MULTIPLIER";
+      if (this.tutCommsText) {
+        this.tutCommsText.textContent =
+          "Pass scrap through the ×2 Shredder to multiply mass!";
+      }
+      updatePips(1);
+    } else if (phase === "FEED") {
+      if (this.tutFeedGuide) this.tutFeedGuide.classList.remove("hidden");
+      if (this.tutCommsCard) this.tutCommsCard.classList.add("tut-phase-feed");
+      if (this.tutMascotFace) this.tutMascotFace.textContent = "😍";
+      if (this.tutSenderTag)
+        this.tutSenderTag.textContent = "HUNGRY VOID • FEED TIME";
+      if (this.tutCommsText) {
+        this.tutCommsText.textContent =
+          "Dump scrap into my mouth to reach the 20 kg quota!";
+      }
+      updatePips(2);
+    }
+  }
+
   dismissGestureHint() {
-    if (this.gestureHint && !this.gestureHint.classList.contains("hidden")) {
-      this.gestureHint.classList.add("hidden");
+    if (
+      this.isTutorialEligible() &&
+      this.tutorialPhase !== "DONE" &&
+      this.tutorialPhase !== "NONE"
+    ) {
+      return;
+    }
+    if (this.tutOverlay && !this.tutOverlay.classList.contains("hidden")) {
+      this.tutOverlay.classList.add("hidden");
     }
   }
 
@@ -425,6 +541,10 @@ class OrbitalApp {
       const deltaX = e.clientX - this.lastPointerX;
       this.lastPointerX = e.clientX;
       this.physics.applyInputDrag(deltaX * 1.3);
+
+      if (this.tutorialPhase === "SWIPE" && Math.abs(deltaX) > 0.5) {
+        this.setTutorialPhase("GATE");
+      }
     });
 
     window.addEventListener("pointerup", () => {
@@ -437,10 +557,13 @@ class OrbitalApp {
       this.dismissGestureHint();
       if (e.key === "a" || e.key === "A" || e.key === "ArrowLeft") {
         this.physics.applyRcsBurst(-1);
+        if (this.tutorialPhase === "SWIPE") this.setTutorialPhase("GATE");
       } else if (e.key === "d" || e.key === "D" || e.key === "ArrowRight") {
         this.physics.applyRcsBurst(1);
+        if (this.tutorialPhase === "SWIPE") this.setTutorialPhase("GATE");
       } else if (e.key === " " || e.code === "Space") {
         this.physics.applyRcsBurst(1);
+        if (this.tutorialPhase === "SWIPE") this.setTutorialPhase("GATE");
       } else if (e.key === "r" || e.key === "R") {
         this.restartSector();
       } else if (e.key === "Escape") {
@@ -465,10 +588,12 @@ class OrbitalApp {
     };
 
     const btnToggleAudio = document.getElementById("btn-toggle-audio");
-    if (btnToggleAudio) btnToggleAudio.addEventListener("click", toggleAudioHandler);
+    if (btnToggleAudio)
+      btnToggleAudio.addEventListener("click", toggleAudioHandler);
 
     const btnHomeAudio = document.getElementById("btn-home-audio");
-    if (btnHomeAudio) btnHomeAudio.addEventListener("click", toggleAudioHandler);
+    if (btnHomeAudio)
+      btnHomeAudio.addEventListener("click", toggleAudioHandler);
 
     // 4. Homepage Navigation Buttons
     document.getElementById("btn-home-play").addEventListener("click", () => {
@@ -476,15 +601,19 @@ class OrbitalApp {
       this.showPage("game");
     });
 
-    document.getElementById("btn-open-maps-page").addEventListener("click", () => {
-      this.audio.publicInit();
-      this.showPage("maps");
-    });
+    document
+      .getElementById("btn-open-maps-page")
+      .addEventListener("click", () => {
+        this.audio.publicInit();
+        this.showPage("maps");
+      });
 
-    document.getElementById("btn-open-shop-page").addEventListener("click", () => {
-      this.audio.publicInit();
-      this.showPage("shop");
-    });
+    document
+      .getElementById("btn-open-shop-page")
+      .addEventListener("click", () => {
+        this.audio.publicInit();
+        this.showPage("shop");
+      });
 
     const btnDailyShift = document.getElementById("btn-open-daily-shift");
     if (btnDailyShift) {
@@ -494,33 +623,41 @@ class OrbitalApp {
       });
     }
 
-    document.getElementById("btn-open-trophies-page").addEventListener("click", () => {
-      this.audio.publicInit();
-      this.showPage("achievements");
-    });
+    document
+      .getElementById("btn-open-trophies-page")
+      .addEventListener("click", () => {
+        this.audio.publicInit();
+        this.showPage("achievements");
+      });
 
     const openSettings = () => {
       this.audio.publicInit();
       this.showPage("settings");
     };
     const btnOpenSettings = document.getElementById("btn-open-settings-page");
-    if (btnOpenSettings) btnOpenSettings.addEventListener("click", openSettings);
+    if (btnOpenSettings)
+      btnOpenSettings.addEventListener("click", openSettings);
     const btnHomeSettings = document.getElementById("btn-home-settings");
-    if (btnHomeSettings) btnHomeSettings.addEventListener("click", openSettings);
+    if (btnHomeSettings)
+      btnHomeSettings.addEventListener("click", openSettings);
 
     // 5. Back to Home Buttons from Sub-Pages
     const backMaps = document.getElementById("btn-back-maps");
-    if (backMaps) backMaps.addEventListener("click", () => this.showPage("home"));
+    if (backMaps)
+      backMaps.addEventListener("click", () => this.showPage("home"));
     const backDaily = document.getElementById("btn-back-daily");
-    if (backDaily) backDaily.addEventListener("click", () => this.showPage("home"));
+    if (backDaily)
+      backDaily.addEventListener("click", () => this.showPage("home"));
     const backShop = document.getElementById("btn-back-shop");
-    if (backShop) backShop.addEventListener("click", () => this.showPage("home"));
+    if (backShop)
+      backShop.addEventListener("click", () => this.showPage("home"));
     const backAch = document.getElementById("btn-back-achievements");
     if (backAch) backAch.addEventListener("click", () => this.showPage("home"));
     const backSet = document.getElementById("btn-back-settings");
     if (backSet) backSet.addEventListener("click", () => this.showPage("home"));
     const btnGameToHome = document.getElementById("btn-game-to-home");
-    if (btnGameToHome) btnGameToHome.addEventListener("click", () => this.showPage("home"));
+    if (btnGameToHome)
+      btnGameToHome.addEventListener("click", () => this.showPage("home"));
 
     const btnRestart = document.getElementById("btn-game-restart");
     if (btnRestart) {
@@ -601,7 +738,9 @@ class OrbitalApp {
     // 6. Toy Shop Tabs
     document.querySelectorAll(".tab-btn").forEach((btn) => {
       btn.addEventListener("click", () => {
-        document.querySelectorAll(".tab-btn").forEach((b) => b.classList.remove("active"));
+        document
+          .querySelectorAll(".tab-btn")
+          .forEach((b) => b.classList.remove("active"));
         btn.classList.add("active");
         this.currentStoreTab = btn.dataset.tab;
         this.renderStorePage();
@@ -609,14 +748,18 @@ class OrbitalApp {
     });
 
     // 7. Debrief Victory Pop-up Buttons
-    document.getElementById("btn-debrief-replay").addEventListener("click", () => {
-      document.getElementById("modal-debrief").classList.remove("active");
-      this.restartSector();
-    });
-    document.getElementById("btn-debrief-next").addEventListener("click", () => {
-      document.getElementById("modal-debrief").classList.remove("active");
-      this.nextSector();
-    });
+    document
+      .getElementById("btn-debrief-replay")
+      .addEventListener("click", () => {
+        document.getElementById("modal-debrief").classList.remove("active");
+        this.restartSector();
+      });
+    document
+      .getElementById("btn-debrief-next")
+      .addEventListener("click", () => {
+        document.getElementById("modal-debrief").classList.remove("active");
+        this.nextSector();
+      });
 
     // Defeat (Shift Incomplete) Buttons
     const modalDefeat = document.getElementById("modal-defeat");
@@ -681,12 +824,26 @@ class OrbitalApp {
         this.showToast(`🏆 Trophy: ${ach.title} (+${ach.reward} 🪙)`);
       });
 
-      if (!this.isLevelCleared && this.collectedMass >= this.activeSector.quota) {
+      if (this.tutorialPhase === "FEED") {
+        const quota = (this.activeSector && this.activeSector.quota) || 20;
+        if (this.collectedMass >= quota * 0.4) {
+          this.setTutorialPhase("DONE");
+        }
+      }
+
+      if (
+        !this.isLevelCleared &&
+        this.collectedMass >= this.activeSector.quota
+      ) {
         this.handleLevelVictory();
       }
     };
 
     this.physics.onGatePassed = (gate) => {
+      if (this.tutorialPhase === "GATE" || this.tutorialPhase === "SWIPE") {
+        this.setTutorialPhase("FEED");
+      }
+
       const rot =
         gate.isInner && this.physics.concentricRings
           ? this.physics.innerRingAngle - this.physics.ringAngle
@@ -774,9 +931,14 @@ class OrbitalApp {
 
     if (ambienceSlider) {
       ambienceSlider.addEventListener("input", (e) => {
-        this.economy.profile.settings.ambientVolume = parseInt(e.target.value, 10);
+        this.economy.profile.settings.ambientVolume = parseInt(
+          e.target.value,
+          10,
+        );
         this.audio.publicInit();
-        this.audio.setAmbienceVolume(this.economy.profile.settings.ambientVolume);
+        this.audio.setAmbienceVolume(
+          this.economy.profile.settings.ambientVolume,
+        );
         this.economy.saveProfile();
       });
     }
@@ -790,28 +952,40 @@ class OrbitalApp {
 
     // Privacy Policy and User Agreement leave the app. The privacy modal markup stays
     // for the captured spec; the button no longer opens it. See openPrivacyModal.
-    document.getElementById("btn-open-privacy").addEventListener("click", () => {
-      this.openExternal(LEGAL_LINKS.privacyPolicy);
-    });
-    document.getElementById("btn-open-user-agreement").addEventListener("click", () => {
-      this.openExternal(LEGAL_LINKS.userAgreement);
-    });
+    document
+      .getElementById("btn-open-privacy")
+      .addEventListener("click", () => {
+        this.openExternal(LEGAL_LINKS.privacyPolicy);
+      });
+    document
+      .getElementById("btn-open-user-agreement")
+      .addEventListener("click", () => {
+        this.openExternal(LEGAL_LINKS.userAgreement);
+      });
     const privacyModal = document.getElementById("modal-privacy");
-    document.getElementById("btn-close-privacy").addEventListener("click", () => {
-      privacyModal.classList.remove("active");
-    });
-    document.getElementById("btn-dismiss-privacy").addEventListener("click", () => {
-      privacyModal.classList.remove("active");
-    });
+    document
+      .getElementById("btn-close-privacy")
+      .addEventListener("click", () => {
+        privacyModal.classList.remove("active");
+      });
+    document
+      .getElementById("btn-dismiss-privacy")
+      .addEventListener("click", () => {
+        privacyModal.classList.remove("active");
+      });
 
     const languageModal = document.getElementById("modal-language");
-    document.getElementById("btn-open-language").addEventListener("click", () => {
-      this.syncLanguageRow();
-      languageModal.classList.add("active");
-    });
-    document.getElementById("btn-close-language").addEventListener("click", () => {
-      languageModal.classList.remove("active");
-    });
+    document
+      .getElementById("btn-open-language")
+      .addEventListener("click", () => {
+        this.syncLanguageRow();
+        languageModal.classList.add("active");
+      });
+    document
+      .getElementById("btn-close-language")
+      .addEventListener("click", () => {
+        languageModal.classList.remove("active");
+      });
     document.querySelectorAll(".lang-option").forEach((btn) => {
       btn.addEventListener("click", () => {
         const code = btn.getAttribute("data-lang");
@@ -826,22 +1000,28 @@ class OrbitalApp {
 
     // Reset Progress Modal
     const resetModal = document.getElementById("modal-reset-confirm");
-    document.getElementById("btn-reset-game-data").addEventListener("click", () => {
-      resetModal.classList.add("active");
-    });
-    document.getElementById("btn-cancel-reset").addEventListener("click", () => {
-      resetModal.classList.remove("active");
-    });
-    document.getElementById("btn-confirm-reset").addEventListener("click", () => {
-      this.economy.resetProfile();
-      resetModal.classList.remove("active");
-      this.loadSector(this.sectors[0], false);
-      this.syncSettingsUI();
-      this.updateAllCreditDisplays();
-      this.updateHomeView();
-      this.showToast("Progress Reset to Day 1! 🧹");
-      this.showPage("home");
-    });
+    document
+      .getElementById("btn-reset-game-data")
+      .addEventListener("click", () => {
+        resetModal.classList.add("active");
+      });
+    document
+      .getElementById("btn-cancel-reset")
+      .addEventListener("click", () => {
+        resetModal.classList.remove("active");
+      });
+    document
+      .getElementById("btn-confirm-reset")
+      .addEventListener("click", () => {
+        this.economy.resetProfile();
+        resetModal.classList.remove("active");
+        this.loadSector(this.sectors[0], false);
+        this.syncSettingsUI();
+        this.updateAllCreditDisplays();
+        this.updateHomeView();
+        this.showToast("Progress Reset to Day 1! 🧹");
+        this.showPage("home");
+      });
   }
 
   syncSettingsUI() {
@@ -857,8 +1037,11 @@ class OrbitalApp {
     const hapticsToggle = document.getElementById("settings-haptics-toggle");
 
     if (soundToggle) soundToggle.checked = !!s.soundEnabled;
-    if (sfxSlider) sfxSlider.value = s.sfxVolume !== undefined ? s.sfxVolume : 80;
-    if (ambienceSlider) ambienceSlider.value = s.ambientVolume !== undefined ? s.ambientVolume : 70;
+    if (sfxSlider)
+      sfxSlider.value = s.sfxVolume !== undefined ? s.sfxVolume : 80;
+    if (ambienceSlider)
+      ambienceSlider.value =
+        s.ambientVolume !== undefined ? s.ambientVolume : 70;
     if (hapticsToggle) hapticsToggle.checked = !!s.hapticsEnabled;
     this.syncLanguageRow();
     this.applyAudioVolumesFromProfile();
@@ -876,14 +1059,18 @@ class OrbitalApp {
   }
 
   syncLanguageRow() {
-    const settings = (this.economy.profile && this.economy.profile.settings) || {};
+    const settings =
+      (this.economy.profile && this.economy.profile.settings) || {};
     const code = settings.language || "en";
     const buttons = document.querySelectorAll(".lang-option");
     let endonym = "English";
     buttons.forEach((btn) => {
       const lang = btn.getAttribute("data-lang");
-      const name = btn.getAttribute("data-endonym") || btn.textContent.replace(/^✓\s*/, "");
-      if (!btn.getAttribute("data-endonym")) btn.setAttribute("data-endonym", name);
+      const name =
+        btn.getAttribute("data-endonym") ||
+        btn.textContent.replace(/^✓\s*/, "");
+      if (!btn.getAttribute("data-endonym"))
+        btn.setAttribute("data-endonym", name);
       const selected = lang === code;
       btn.textContent = (selected ? LANGUAGE_MARKER : "") + name;
       if (selected) endonym = name;
@@ -912,9 +1099,17 @@ class OrbitalApp {
       this.physics.blackHole,
     );
 
-    document.getElementById("hud-sector-code").textContent = `⭐ ${sectorConfig.code}`;
+    document.getElementById("hud-sector-code").textContent =
+      `⭐ ${sectorConfig.code}`;
     this.updateQuotaDisplay();
     this.updateAllCreditDisplays();
+
+    if (sectorConfig.levelNumber === 1 && !this.economy.profile.introSeen) {
+      this.setTutorialPhase("SWIPE");
+    } else {
+      this.setTutorialPhase("NONE");
+    }
+
     if (showToastMsg) {
       this.showToast(`Clean up ${sectorConfig.name}! 🚀`);
     }
@@ -959,13 +1154,27 @@ class OrbitalApp {
     this.economy.addCredits(totalPayout);
     this.updateAllCreditDisplays();
 
-    if (this.activeSector && !this.activeSector.isDaily && this.activeSector.id) {
+    if (
+      this.activeSector &&
+      !this.activeSector.isDaily &&
+      this.activeSector.id
+    ) {
       this.economy.recordSectorCompleted(this.activeSector.id);
     }
 
+    if (this.activeSector && this.activeSector.levelNumber === 1) {
+      this.economy.completeIntro();
+      this.setTutorialPhase("DONE");
+    }
+
     const isDaily = !!(this.activeSector && this.activeSector.isDaily);
-    const dailyTier = this.activeSector ? this.activeSector.dailyTier || "silver" : "silver";
-    const newlyUnlocked = this.economy.recordContractComplete(isDaily, dailyTier);
+    const dailyTier = this.activeSector
+      ? this.activeSector.dailyTier || "silver"
+      : "silver";
+    const newlyUnlocked = this.economy.recordContractComplete(
+      isDaily,
+      dailyTier,
+    );
     newlyUnlocked.forEach((ach) => {
       this.showToast(`🏆 Trophy: ${ach.title} (+${ach.reward} 🪙)`);
     });
@@ -975,13 +1184,17 @@ class OrbitalApp {
       const completedCount = shifts.filter((s) => s.isCompleted).length;
       if (completedCount === 3 && this.economy.canClaimDailyMasterBonus()) {
         setTimeout(() => {
-          this.showToast("🎉 All 3 Daily Shifts Cleared! Claim Master Bonus in Daily Tab! 🏆");
+          this.showToast(
+            "🎉 All 3 Daily Shifts Cleared! Claim Master Bonus in Daily Tab! 🏆",
+          );
         }, 1200);
       }
     }
 
-    document.getElementById("debrief-mass-val").textContent = `${this.collectedMass} kg`;
-    document.getElementById("debrief-credits-val").textContent = `+${totalPayout} 🪙`;
+    document.getElementById("debrief-mass-val").textContent =
+      `${this.collectedMass} kg`;
+    document.getElementById("debrief-credits-val").textContent =
+      `+${totalPayout} 🪙`;
 
     setTimeout(() => {
       document.getElementById("modal-debrief").classList.add("active");
@@ -995,7 +1208,8 @@ class OrbitalApp {
 
     const targetQuota = this.activeSector ? this.activeSector.quota : 30;
     const massEl = document.getElementById("defeat-mass-val");
-    if (massEl) massEl.textContent = `${this.collectedMass} / ${targetQuota} kg`;
+    if (massEl)
+      massEl.textContent = `${this.collectedMass} / ${targetQuota} kg`;
 
     const spilledEl = document.getElementById("defeat-spilled-val");
     if (spilledEl) spilledEl.textContent = `${this.spilledMass} kg`;
@@ -1003,7 +1217,7 @@ class OrbitalApp {
     const backupContainer = document.getElementById("defeat-backup-container");
     const progressRatio = this.collectedMass / Math.max(1, targetQuota);
     if (backupContainer) {
-      if (progressRatio >= 0.70 && !this.usedBackupPod) {
+      if (progressRatio >= 0.7 && !this.usedBackupPod) {
         backupContainer.style.display = "block";
       } else {
         backupContainer.style.display = "none";
@@ -1072,7 +1286,11 @@ class OrbitalApp {
 
     container.appendChild(tabsRow);
 
-    if (typeof this.selectedWorldIndex !== "number" || this.selectedWorldIndex < 1 || this.selectedWorldIndex > 5) {
+    if (
+      typeof this.selectedWorldIndex !== "number" ||
+      this.selectedWorldIndex < 1 ||
+      this.selectedWorldIndex > 5
+    ) {
       this.selectedWorldIndex = 1;
     }
 
@@ -1112,7 +1330,9 @@ class OrbitalApp {
       if (!sec) continue;
 
       const isCurrent = this.activeSector && this.activeSector.id === sec.id;
-      const isCompleted = (this.economy.profile.completedSectors || []).includes(sec.id);
+      const isCompleted = (
+        this.economy.profile.completedSectors || []
+      ).includes(sec.id);
 
       const tile = document.createElement("div");
       tile.className = `level-tile ${isCurrent ? "active-level" : ""}`;
@@ -1174,9 +1394,9 @@ class OrbitalApp {
       </div>
       <div class="daily-progress-container">
         <div style="display:flex; justify-content:space-between; font-size:10px; font-weight:800; color:rgba(255,255,255,0.7); margin-bottom:5px; letter-spacing:0.3px;">
-          <span style="color:${shifts[0].isCompleted ? '#4ade80' : 'rgba(255,255,255,0.7)'}">🥉 BRONZE ${shifts[0].isCompleted ? '✓' : ''}</span>
-          <span style="color:${shifts[1].isCompleted ? '#4ade80' : 'rgba(255,255,255,0.7)'}">🥈 SILVER ${shifts[1].isCompleted ? '✓' : ''}</span>
-          <span style="color:${shifts[2].isCompleted ? '#4ade80' : 'rgba(255,255,255,0.7)'}">🥇 GOLD ${shifts[2].isCompleted ? '✓' : ''}</span>
+          <span style="color:${shifts[0].isCompleted ? "#4ade80" : "rgba(255,255,255,0.7)"}">🥉 BRONZE ${shifts[0].isCompleted ? "✓" : ""}</span>
+          <span style="color:${shifts[1].isCompleted ? "#4ade80" : "rgba(255,255,255,0.7)"}">🥈 SILVER ${shifts[1].isCompleted ? "✓" : ""}</span>
+          <span style="color:${shifts[2].isCompleted ? "#4ade80" : "rgba(255,255,255,0.7)"}">🥇 GOLD ${shifts[2].isCompleted ? "✓" : ""}</span>
         </div>
         <div class="daily-progress-track">
           <div class="daily-progress-fill" style="width: ${(completedCount / 3) * 100}%"></div>
@@ -1192,8 +1412,8 @@ class OrbitalApp {
                 isMasterClaimed
                   ? "Bonus claimed today! Refreshes tomorrow."
                   : canClaimMaster
-                  ? "All 3 shifts completed! Claim your reward!"
-                  : "Complete all 3 daily shifts to unlock +300 🪙"
+                    ? "All 3 shifts completed! Claim your reward!"
+                    : "Complete all 3 daily shifts to unlock +300 🪙"
               }
             </div>
           </div>
@@ -1202,8 +1422,8 @@ class OrbitalApp {
           canClaimMaster
             ? `<button class="btn-cartoon-primary" id="btn-claim-master-bonus" style="padding: 6px 14px; white-space: nowrap;">Claim +300 🪙</button>`
             : isMasterClaimed
-            ? `<span style="font-size: 11px; font-weight: 800; color: #4ade80;">CLAIMED ✓</span>`
-            : `<span class="badge-cost" style="opacity: 0.6; font-size: 11px;">+300 🪙</span>`
+              ? `<span style="font-size: 11px; font-weight: 800; color: #4ade80;">CLAIMED ✓</span>`
+              : `<span class="badge-cost" style="opacity: 0.6; font-size: 11px;">+300 🪙</span>`
         }
       </div>
     `;
@@ -1264,11 +1484,13 @@ class OrbitalApp {
       `;
       container.appendChild(card);
 
-      card.querySelector(".btn-play-daily-tier").addEventListener("click", () => {
-        const sector = MazeLevelBuilder.buildDailyShift(shift);
-        this.loadSector(sector);
-        this.showPage("game");
-      });
+      card
+        .querySelector(".btn-play-daily-tier")
+        .addEventListener("click", () => {
+          const sector = MazeLevelBuilder.buildDailyShift(shift);
+          this.loadSector(sector);
+          this.showPage("game");
+        });
     });
   }
 
@@ -1290,14 +1512,17 @@ class OrbitalApp {
         giftBtn.textContent = "Claim +100 🪙";
         giftBtn.disabled = false;
         if (giftTitle) giftTitle.textContent = "Janitor Care Package!";
-        if (giftDesc) giftDesc.textContent = "Claim your free daily +100 🪙 allowance.";
+        if (giftDesc)
+          giftDesc.textContent = "Claim your free daily +100 🪙 allowance.";
         if (giftIcon) giftIcon.textContent = "🎁";
       } else {
         giftBanner.classList.add("claimed");
         giftBtn.textContent = "Claimed Today ✨";
         giftBtn.disabled = true;
         if (giftTitle) giftTitle.textContent = "Allowance Claimed! ✨";
-        if (giftDesc) giftDesc.textContent = "Come back tomorrow for another +100 🪙 care package!";
+        if (giftDesc)
+          giftDesc.textContent =
+            "Come back tomorrow for another +100 🪙 care package!";
         if (giftIcon) giftIcon.textContent = "🎉";
       }
 
@@ -1434,17 +1659,46 @@ class OrbitalApp {
           this.physics.update(dt);
 
           // Check defeat / out-of-scrap condition
-          if (!this.isLevelCleared && !this.isLevelFailed && this.activeSector) {
+          if (
+            !this.isLevelCleared &&
+            !this.isLevelFailed &&
+            this.activeSector
+          ) {
             const hasDebrisInPlay = this.physics.debrisList.some(
               (d) =>
                 d.state === "IN_RING" ||
                 d.state === "FALLING" ||
                 d.state === "INGESTING",
             );
-            if (!hasDebrisInPlay && this.collectedMass < this.activeSector.quota) {
+            if (
+              !hasDebrisInPlay &&
+              this.collectedMass < this.activeSector.quota
+            ) {
               this.failureCheckTimer += dt;
               if (this.failureCheckTimer >= 1.2) {
-                this.handleLevelFailure();
+                // Level 1 Safety Net: auto-deploy backup pod if first-time player
+                if (
+                  this.activeSector.levelNumber === 1 &&
+                  !this.economy.profile.introSeen &&
+                  !this.usedBackupPod
+                ) {
+                  this.usedBackupPod = true;
+                  this.failureCheckTimer = 0;
+                  this.physics.spawnBackupScrap(8);
+                  this.audio.playBackupPodSound();
+                  this.triggerHaptic(50);
+                  this.showToast(
+                    "🚀 Auxiliary Pod Deployed! Launching extra scrap!",
+                  );
+                  if (
+                    this.tutorialPhase === "GATE" ||
+                    this.tutorialPhase === "SWIPE"
+                  ) {
+                    this.setTutorialPhase("FEED");
+                  }
+                } else {
+                  this.handleLevelFailure();
+                }
               }
             } else {
               this.failureCheckTimer = 0;
