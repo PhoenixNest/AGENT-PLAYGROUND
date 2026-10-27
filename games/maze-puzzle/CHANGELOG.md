@@ -9,6 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- **Onboarding Tutorial Visual Parity & Zero-Lag GPU Optimization (2026-10-27):**
+  - **Performance / Lag Fix:** Completely eliminated unbatched fullscreen GPU `ShadowBlur` Gaussian blur passes in [`GameRenderer.Tutorial.cs`](unity/maze-puzzle/Assets/Scripts/Render/Game/GameRenderer.Tutorial.cs), preserving `FastArc` / `FastShape` hardware batching in `Canvas2D` and restoring smooth 60+ FPS in Unity Play Mode and Device Simulator.
+  - **UI Alignment:** Realigned the onboarding HUD to match the Web prototype: bottom-docked the holographic comms card, added the glassmorphic mascot avatar with animated emoji faces (`😋`, `⚡`, `😍`) and pulsing broadcast indicator dot, 3-step progress pills (`1. SPIN`, `2. MULTIPLY`, `3. FEED`), `↻ SWIPE TO ROTATE` badge, `⚡ ×2 GATE` multiplier beacon reticle with pointing gesture, and animated cascading chevrons.
+  - **Screenshot Archive:** Captured and archived high-fidelity $1252 \times 1528$ reference screenshots (`14_tutorial_phase1_swipe.png`, `15_tutorial_phase2_gate.png`, `16_tutorial_phase3_feed.png`) under [`web/screenshots/`](web/screenshots/).
+  - **Testing:** Added `Tutorial_RenderTutorialHud_ExecutesAllPhasesCleanly` in [`IntroOnboardingTests.cs`](unity/maze-puzzle/Assets/Tests/EditMode/Render/IntroOnboardingTests.cs).
+
 Paths written as `tools/parity/...` in entries dated before 2026-10-08 are the location on that day. Those files now live under `games/maze-puzzle/tools/parity/...`. Entries that name `tools/parity/unity/*.ps1` or `canvas-conformance/run-unity.ps1` record the path used that day. Those Windows wrappers now live under `games/maze-puzzle/tools/parity/windows/`.
 
 - The overflow audit `hard` total counts an icon overlap once (`hard_overlap` stays its own column). Vietnamese and Uzbek no longer list Baloo 2 as a pending face. `zh-Hans`, `ko`, and `km` now store `meta.sourceHashes`. `ja` does not: `merge_table.py` would also insert `doNotTranslate`. Focused EditMode (`LocLanguageAuditTests|PseudoAudit_HasNoUnlistedHardViolations`): 17 passed, 0 failed. Full EditMode: 590 passed, 83 failed, 3 skipped, 676 total, exit 2. Results `/tmp/maze-i18n/loc-consistency/full.xml`, log `/tmp/maze-i18n/loc-consistency/full.log`. The 83 are the known set (`ReferenceComparisonTests` 73, `ReferenceGateTests` 9, `QuotaAndModalTests.GameAndPauseStills_MatchKnownHashes`). `ja` now stores `meta.sourceHashes` too (only that field was added; the translations are unchanged).

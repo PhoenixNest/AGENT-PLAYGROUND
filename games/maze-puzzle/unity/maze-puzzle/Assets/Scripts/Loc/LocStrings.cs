@@ -112,6 +112,11 @@ namespace OrbitalSalvage.Loc
             Def("fx.poof", "POOF! \U0001F4A8", "Floating word when trash explodes. Keep the dash symbol."),
             Def("fx.turbo.cw", "TURBO! \u23E9", "Floating word for a clockwise boost. Keep the fast-forward glyph."),
             Def("fx.turbo.ccw", "\u23EA TURBO!", "Floating word for a counter-clockwise boost. Keep the rewind glyph."),
+
+            Def("intro.step.rotate", "Swipe anywhere to spin the orbital ring!", "First-time player onboarding: step 1 swipe instructions."),
+            Def("intro.step.multiply", "Pass scrap through the \u00D72 Shredder to multiply mass!", "First-time player onboarding: step 2 multiply gate instructions."),
+            Def("intro.step.feed", "Dump scrap into my mouth to reach the {0} kg quota!", "First-time player onboarding: step 3 feed Nibbles instructions."),
+            Def("intro.safety.backup", "\U0001F680 Auxiliary Pod Deployed! Launching extra scrap!", "Level 1 safety net toast when new player runs out of scrap."),
         };
 
         static readonly Dictionary<string, LocStringDef> ByKey = Build();

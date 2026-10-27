@@ -1240,7 +1240,8 @@ namespace OrbitalSalvage.App
                 Text("loading-tip-text", _loadingTip);
                 WidthPercent("loading-bar-fill", _progress);
             }
-            if (HintHidden && HintAgeMs >= HintMs + HintFadeMs) Hide("gesture-hint");
+            bool isIntroEligible = ActiveSector != null && ActiveSector.LevelNumber == 1 && (Economy == null || !Economy.Profile.IntroSeen);
+            if (isIntroEligible || (HintHidden && HintAgeMs >= HintMs + HintFadeMs)) Hide("gesture-hint");
             Skin("home-diorama-ring", Equipped("ring"));
             Skin("home-diorama-nibbles", Equipped("singularity"));
             ApplyLanguageOverrides();

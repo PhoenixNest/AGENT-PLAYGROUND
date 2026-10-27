@@ -314,7 +314,7 @@ namespace OrbitalSalvage.Render
             BhWobble = 0.09;
         }
 
-        public void Render(PhysicsEngine physics, EconomyManager economy, double dt, RenderProgress progress)
+        public void Render(PhysicsEngine physics, EconomyManager economy, double dt, RenderProgress progress, TutorialPhase tutorialPhase = TutorialPhase.None)
         {
             CosmicTime += dt;
             UpdateNibblesFace(physics, dt, progress);
@@ -368,6 +368,8 @@ namespace OrbitalSalvage.Render
             SectionMs[6] = sw.Elapsed.TotalMilliseconds;
             TakeSec(ctx, ref secDraw, ref secEdge, 6);
             RenderVfx(ctx, dt);
+            if (tutorialPhase != TutorialPhase.None && tutorialPhase != TutorialPhase.Done)
+                RenderTutorialHud(ctx, physics, tutorialPhase, progress);
             SectionMs[7] = sw.Elapsed.TotalMilliseconds;
             TakeSec(ctx, ref secDraw, ref secEdge, 7);
             ctx.EndFrame();

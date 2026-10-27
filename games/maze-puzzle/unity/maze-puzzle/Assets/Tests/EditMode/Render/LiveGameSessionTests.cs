@@ -88,6 +88,7 @@ namespace OrbitalSalvage.Render.Tests
         [Test]
         public void DefeatFiresAfterEmptyFieldForOnePointTwoSeconds()
         {
+            _session.Economy.Profile.IntroSeen = true;
             for (int i = 0; i < _session.Physics.DebrisList.Count; i++)
                 _session.Physics.DebrisList[i].State = DebrisState.Removed;
             _session.FixedStep = true;

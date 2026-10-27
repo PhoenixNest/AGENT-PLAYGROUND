@@ -177,6 +177,7 @@ export class EconomyManager {
       },
       achievements: [],
       completedSectors: [],
+      introSeen: false,
       dailyShiftCompletedToday: false,
       lastDailyShiftDate: "",
       completedDailyTiers: [],
@@ -239,6 +240,11 @@ export class EconomyManager {
     this.profile = this.getDefaultProfile();
     this.saveProfile();
     return this.profile;
+  }
+
+  completeIntro() {
+    this.profile.introSeen = true;
+    this.saveProfile();
   }
 
   recordSectorCompleted(sectorId) {

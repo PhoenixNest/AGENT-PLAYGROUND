@@ -146,6 +146,13 @@ namespace OrbitalSalvage.Logic
             SaveProfile();
         }
 
+        public void CompleteIntro()
+        {
+            if (Profile == null) Profile = GetDefaultProfile();
+            Profile.IntroSeen = true;
+            SaveProfile();
+        }
+
         public void SaveProfile()
         {
             try

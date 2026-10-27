@@ -20,6 +20,15 @@ namespace OrbitalSalvage.Render
         public bool Failed;
     }
 
+    public enum TutorialPhase
+    {
+        None,
+        Swipe,
+        Gate,
+        Feed,
+        Done
+    }
+
     /// <summary>
     /// The gameplay half of <c>web/main.js</c>: sector load, the capped timestep, pointer and key
     /// input, swallow/spill mass, and the win and fail rules. Page navigation stays in the viewer.
@@ -60,6 +69,21 @@ namespace OrbitalSalvage.Render
         public bool HoldOutcome;
         bool pendingHoldRestart;
         public bool UsedBackupPod;
+        public TutorialPhase TutorialPhase { get; private set; } = TutorialPhase.None;
+        public Action<TutorialPhase> OnTutorialPhaseChanged;
+
+        public bool IsTutorialEligible()
+        {
+            return ActiveSector != null && ActiveSector.LevelNumber == 1 && (Economy == null || !Economy.Profile.IntroSeen);
+        }
+
+        public void SetTutorialPhase(TutorialPhase phase)
+        {
+            if (TutorialPhase == phase) return;
+            TutorialPhase = phase;
+            if (OnTutorialPhaseChanged != null) OnTutorialPhaseChanged(phase);
+        }
+
         public int PhysicsSteps;
         public int RenderFrames;
         public bool RenderEnabled = true;
@@ -245,6 +269,8 @@ namespace OrbitalSalvage.Render
             var bh = Physics.BlackHole;
             Physics.InitSector(sector, Physics.Center, new Vec2(bh.X, bh.Y));
             if (OnQuotaChanged != null) OnQuotaChanged(CollectedMass, Quota);
+            bool isTutEligible = sector != null && sector.LevelNumber == 1 && (Economy == null || !Economy.Profile.IntroSeen);
+            SetTutorialPhase(isTutEligible ? TutorialPhase.Swipe : TutorialPhase.None);
         }
 
         public void Restart()
@@ -346,8 +372,20 @@ namespace OrbitalSalvage.Render
                 }
                 else if (!any && CollectedMass < ActiveSector.Quota)
                 {
-                    FailureCheckTimer += step;
-                    if (FailureCheckTimer >= FailDelay) HandleDefeat();
+                    if (ActiveSector.LevelNumber == 1 && (Economy == null || !Economy.Profile.IntroSeen) && !UsedBackupPod)
+                    {
+                        UsedBackupPod = true;
+                        Physics.SpawnBackupScrap(8);
+                        FailureCheckTimer = 0;
+                        if (TutorialPhase != TutorialPhase.Done) SetTutorialPhase(TutorialPhase.Feed);
+                        Renderer.AddFloatingText(Physics.Center.X, Physics.Center.Y - 60, Loc.Tr("intro.safety.backup"), "#38bdf8");
+                        Renderer.AddBoostShockwave(Physics.Center.X, Physics.Center.Y, Physics.RingRadius * 0.8, "#38bdf8");
+                    }
+                    else
+                    {
+                        FailureCheckTimer += step;
+                        if (FailureCheckTimer >= FailDelay) HandleDefeat();
+                    }
                 }
                 else FailureCheckTimer = 0;
             }
@@ -363,7 +401,7 @@ namespace OrbitalSalvage.Render
             {
                 progress.CollectedMass = CollectedMass;
                 progress.Quota = ActiveSector != null ? ActiveSector.Quota : 30;
-                Renderer.Render(Physics, Economy, step, progress);
+                Renderer.Render(Physics, Economy, step, progress, TutorialPhase);
             }
             RenderFrames++;
             if (measure) PhasePresentTicks += Stopwatch.GetTimestamp() - t0;
@@ -398,6 +436,7 @@ namespace OrbitalSalvage.Render
         public void PointerMove(double clientX)
         {
             if (!_dragging) return;
+            if (TutorialPhase == TutorialPhase.Swipe) SetTutorialPhase(TutorialPhase.Gate);
             double delta = clientX - _lastPointerX;
             _lastPointerX = clientX;
             Physics.ApplyInputDrag(delta * 1.3);
@@ -415,6 +454,7 @@ namespace OrbitalSalvage.Render
             _lastPointerX = clientX;
             _lastPointerY = clientY;
             if (!_dragging) return;
+            if (TutorialPhase == TutorialPhase.Swipe) SetTutorialPhase(TutorialPhase.Gate);
             Physics.ApplyInputDrag(GrabPixels(previousX, previousY, clientX, clientY) * 1.3);
         }
 
@@ -442,8 +482,16 @@ namespace OrbitalSalvage.Render
 
         public void KeyDown(string key)
         {
-            if (key == "a" || key == "A" || key == "ArrowLeft") Physics.ApplyRcsBurst(-1);
-            else if (key == "d" || key == "D" || key == "ArrowRight" || key == " " || key == "Space") Physics.ApplyRcsBurst(1);
+            if (key == "a" || key == "A" || key == "ArrowLeft")
+            {
+                if (TutorialPhase == TutorialPhase.Swipe) SetTutorialPhase(TutorialPhase.Gate);
+                Physics.ApplyRcsBurst(-1);
+            }
+            else if (key == "d" || key == "D" || key == "ArrowRight" || key == " " || key == "Space")
+            {
+                if (TutorialPhase == TutorialPhase.Swipe) SetTutorialPhase(TutorialPhase.Gate);
+                Physics.ApplyRcsBurst(1);
+            }
             else if (key == "r" || key == "R") Restart();
         }
 
@@ -486,6 +534,8 @@ namespace OrbitalSalvage.Render
         {
             CollectedMass += d.Weight * 2;
             if (OnQuotaChanged != null) OnQuotaChanged(CollectedMass, Quota);
+            if (TutorialPhase == TutorialPhase.Feed && ActiveSector != null && CollectedMass >= ActiveSector.Quota * 0.4)
+                SetTutorialPhase(TutorialPhase.Done);
             Renderer.TriggerNibblesChew();
             int word = (int)JsMath.Floor(JsRandom.Global.NextDouble() * NomKeys.Length);
             Renderer.AddFloatingText(Physics.BlackHole.X, Physics.BlackHole.Y - 32, Loc.Tr(NomKeys[word]), "#fde047");
@@ -500,6 +550,7 @@ namespace OrbitalSalvage.Render
 
         void OnGate(GateRuntime gate, Debris debris)
         {
+            if (TutorialPhase == TutorialPhase.Gate) SetTutorialPhase(TutorialPhase.Feed);
             double rot = gate.IsInner && Physics.ConcentricRings ? Physics.InnerRingAngle - Physics.RingAngle : 0;
             double rMid = (gate.RMin + gate.RMax) * 0.5;
             double ang = gate.Angle + rot + Physics.RingAngle;
@@ -535,6 +586,11 @@ namespace OrbitalSalvage.Render
         {
             if (IsLevelCleared) return;
             IsLevelCleared = true;
+            if (ActiveSector != null && ActiveSector.LevelNumber == 1)
+            {
+                if (Economy != null) Economy.CompleteIntro();
+                SetTutorialPhase(TutorialPhase.Done);
+            }
             double reward = ActiveSector != null && ActiveSector.RewardCredits.HasValue ? ActiveSector.RewardCredits.Value : 0;
             double payout = EconomyManager.CampaignPayout(reward, CollectedMass, Quota);
             Economy.AddCredits(payout);
