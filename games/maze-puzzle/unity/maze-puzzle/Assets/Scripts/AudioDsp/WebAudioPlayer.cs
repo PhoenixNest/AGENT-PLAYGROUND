@@ -47,6 +47,9 @@ namespace OrbitalSalvage.AudioDsp
         SetThrusterActive,
         PlayDefeatSound,
         PlayBackupPodSound,
+        PlayCelebrationCannon,
+        PlayFireworkLaunch,
+        PlayFireworkBurst,
     }
 
     public struct PlayerCommand
@@ -243,6 +246,21 @@ namespace OrbitalSalvage.AudioDsp
             Send(PlayerCommandKind.PlayBackupPodSound);
         }
 
+        public void PlayCelebrationCannon()
+        {
+            Send(PlayerCommandKind.PlayCelebrationCannon);
+        }
+
+        public void PlayFireworkLaunch()
+        {
+            Send(PlayerCommandKind.PlayFireworkLaunch);
+        }
+
+        public void PlayFireworkBurst()
+        {
+            Send(PlayerCommandKind.PlayFireworkBurst);
+        }
+
         static void Execute(AudioEngineDsp e, ref PlayerCommand c)
         {
             switch (c.Kind)
@@ -306,6 +324,15 @@ namespace OrbitalSalvage.AudioDsp
                     break;
                 case PlayerCommandKind.PlayBackupPodSound:
                     e.PlayBackupPodSound();
+                    break;
+                case PlayerCommandKind.PlayCelebrationCannon:
+                    e.PlayCelebrationCannon();
+                    break;
+                case PlayerCommandKind.PlayFireworkLaunch:
+                    e.PlayFireworkLaunch();
+                    break;
+                case PlayerCommandKind.PlayFireworkBurst:
+                    e.PlayFireworkBurst();
                     break;
             }
         }

@@ -49,6 +49,10 @@ class OrbitalApp {
     this.economy = new EconomyManager();
     this.physics = new PhysicsEngine(this.audio);
     this.renderer = new GameRenderer(this.canvas);
+    this.renderer.onFireworkExploded = (x, y, color) => {
+      this.audio.playFireworkBurst();
+      this.triggerHaptic(30);
+    };
 
     // 50-Level Campaign Progression
     this.sectors = MazeLevelBuilder.getSectors();
@@ -761,6 +765,24 @@ class OrbitalApp {
         this.nextSector();
       });
 
+    // Tap backdrop/modal during victory to burst interactive celebration fireworks & streamers
+    const modalDebrief = document.getElementById("modal-debrief");
+    if (modalDebrief) {
+      modalDebrief.addEventListener("pointerdown", (e) => {
+        if (e.target.closest("button")) return;
+        const rect = this.canvas.getBoundingClientRect();
+        const tapX = (e.clientX - rect.left) * (this.canvas.width / rect.width);
+        const tapY =
+          (e.clientY - rect.top) * (this.canvas.height / rect.height);
+        if (Math.random() < 0.6) {
+          this.renderer.explodeFirework(tapX, tapY);
+        } else {
+          this.audio.playCelebrationCannon();
+          this.renderer.launchSingleCelebrationConfetti(tapX, tapY);
+        }
+      });
+    }
+
     // Defeat (Shift Incomplete) Buttons
     const modalDefeat = document.getElementById("modal-defeat");
     const btnDefeatRetry = document.getElementById("btn-defeat-retry");
@@ -1146,6 +1168,7 @@ class OrbitalApp {
   handleLevelVictory() {
     this.isLevelCleared = true;
     this.audio.playVictoryFanfare();
+    this.launchVictoryFireworks();
 
     const baseReward = this.activeSector.rewardCredits || 250;
     const surplus = Math.max(0, this.collectedMass - this.activeSector.quota);
@@ -1196,9 +1219,72 @@ class OrbitalApp {
     document.getElementById("debrief-credits-val").textContent =
       `+${totalPayout} 🪙`;
 
-    setTimeout(() => {
+    // Strict Sequence:
+    // (1) Firework shown
+    // (2) Wait for firework animation finished
+    // (3) Display level pass dialog
+    this.launchVictoryFireworks(() => {
       document.getElementById("modal-debrief").classList.add("active");
-    }, 600);
+    });
+  }
+
+  /* =========================================================
+     Victory Celebratory Fireworks & Streamers Sequence
+     Sequence:
+     (1) Celebratory streamers & fireworks are shown
+     (2) Wait for the animation to finish
+     (3) Display the level pass dialog
+     ========================================================= */
+  launchVictoryFireworks(onFinished) {
+    const cx = this.physics.center.x;
+    const cy = this.physics.center.y;
+    const bhY = this.physics.blackHole.y;
+    const canvasW = this.canvas.width / (this.renderer.dpr || 1);
+    const canvasH = this.canvas.height / (this.renderer.dpr || 1);
+
+    // 1. Grand Opening (t = 0ms): Twin Celebration Confetti Cannons from lower corners!
+    const cannonLeftX = 20;
+    const cannonRightX = canvasW - 20;
+    const cannonY = Math.min(canvasH - 50, bhY + 50);
+
+    this.audio.playCelebrationCannon();
+    this.renderer.launchCelebrationCannons(
+      cannonLeftX,
+      cannonY,
+      cannonRightX,
+      cannonY,
+      36,
+    );
+
+    // Wave 1: Immediate dual celebratory launch from black hole flanks
+    this.audio.playFireworkLaunch();
+    this.renderer.launchFirework(cx - 65, bhY, cy - 30, "#f472b6");
+    this.renderer.launchFirework(cx + 65, bhY, cy + 30, "#38bdf8");
+
+    // Wave 2: Staggered second volley (320ms later)
+    setTimeout(() => {
+      if (!this.isLevelCleared) return;
+      this.audio.playFireworkLaunch();
+      this.renderer.launchFirework(cx - 105, bhY + 15, cy - 75, "#fde047");
+      this.renderer.launchFirework(cx + 100, bhY + 15, cy - 40, "#4ade80");
+    }, 320);
+
+    // Wave 3: Grand finale apex rocket & side pop (680ms later)
+    setTimeout(() => {
+      if (!this.isLevelCleared) return;
+      this.audio.playFireworkLaunch();
+      this.renderer.launchFirework(cx, bhY, cy - 115, "#c084fc");
+      this.renderer.launchFirework(cx - 45, bhY + 10, cy + 55, "#fb923c");
+    }, 680);
+
+    // Sequence (2) & (3): Wait for streamers and fireworks to finish (~2400ms) before triggering onFinished callback
+    const totalAnimationMs = 2400;
+    setTimeout(() => {
+      if (!this.isLevelCleared) return;
+      if (typeof onFinished === "function") {
+        onFinished();
+      }
+    }, totalAnimationMs);
   }
 
   handleLevelFailure() {

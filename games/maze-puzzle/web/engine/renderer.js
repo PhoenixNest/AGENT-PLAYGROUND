@@ -12,7 +12,13 @@ if (
   typeof CanvasRenderingContext2D !== "undefined" &&
   !CanvasRenderingContext2D.prototype.roundRect
 ) {
-  CanvasRenderingContext2D.prototype.roundRect = function (x, y, w, h, radii = 0) {
+  CanvasRenderingContext2D.prototype.roundRect = function (
+    x,
+    y,
+    w,
+    h,
+    radii = 0,
+  ) {
     let r = radii;
     if (typeof r === "number") r = [r, r, r, r];
     else if (!Array.isArray(r)) r = [0, 0, 0, 0];
@@ -67,6 +73,13 @@ export class GameRenderer {
     // Comic Thruster Smoke Puffs & Sparks
     this.thrusterPuffs = [];
     this.sparkEmitTimer = 0;
+
+    // Cosmic Fireworks & Celebration Confetti System
+    this.fireworkRockets = [];
+    this.fireworkSparks = [];
+    this.celebrationConfetti = [];
+    this.streamers = this.celebrationConfetti; // Backward compatibility alias
+    this.onFireworkExploded = null;
   }
 
   resetNibblesScale() {
@@ -188,9 +201,280 @@ export class GameRenderer {
     }
   }
 
+  static get FIREWORK_COLORS() {
+    return [
+      "#f472b6", // Cotton Candy Pink
+      "#fde047", // Star Yellow
+      "#38bdf8", // Cyan Spark
+      "#4ade80", // Alien Emerald
+      "#c084fc", // Galaxy Violet
+      "#fb923c", // Tangerine Spark
+      "#ffffff", // Starlight White
+    ];
+  }
+
+  static get CELEBRATION_CONFETTI_COLORS() {
+    return [
+      "#facc15", // Metallic Gold
+      "#fef08a", // Champagne Shimmer
+      "#f472b6", // Rose Gold / Romantic Pink
+      "#fda4af", // Pastel Blush
+      "#ffffff", // Holographic Pearl / Silver
+      "#38bdf8", // Tiffany Sky Cyan
+      "#c084fc", // Electric Violet
+      "#4ade80", // Spring Emerald
+      "#fb923c", // Warm Coral
+    ];
+  }
+
+  /**
+   * Launch twin Celebration Confetti Cannons from lower-left and lower-right
+   * projecting dense fountains of tumbling metallic foil ribbons, stars, and sequins
+   * toward the center arena.
+   */
+  launchCelebrationCannons(leftX, leftY, rightX, rightY, countPerSide = 38) {
+    const colors = GameRenderer.CELEBRATION_CONFETTI_COLORS;
+
+    // 1. Muzzle Blast Rings & Flash at Cannon Mouths
+    this.addPopRing(leftX, leftY, 52, "#ffffff");
+    this.addPopRing(leftX, leftY, 32, "#facc15");
+    this.addPopRing(rightX, rightY, 52, "#ffffff");
+    this.addPopRing(rightX, rightY, 32, "#38bdf8");
+
+    // 2. Left Cannon (Conical ejection upward-inward at -63° ± 16°)
+    for (let i = 0; i < countPerSide; i++) {
+      const spread = (Math.random() - 0.5) * 0.35;
+      const angle = -Math.PI * 0.35 + spread;
+      const speed = 820 + Math.random() * 380;
+      const color = colors[i % colors.length];
+
+      // Particle type: ~60% Strip, ~20% Star, ~20% Sequin Disc
+      const randType = Math.random();
+      const type = randType < 0.6 ? "STRIP" : randType < 0.8 ? "STAR" : "DISC";
+      const w =
+        type === "STRIP"
+          ? Math.random() * 2.5 + 4.5
+          : Math.random() * 3.0 + 5.0;
+      const h = type === "STRIP" ? Math.random() * 9.0 + 14.0 : w;
+
+      this.celebrationConfetti.push({
+        x: leftX,
+        y: leftY,
+        vx: Math.cos(angle) * speed,
+        vy: Math.sin(angle) * speed,
+        type,
+        w,
+        h,
+        color,
+        rot: Math.random() * Math.PI * 2,
+        vRot: (Math.random() - 0.5) * 14,
+        pitch: Math.random() * Math.PI * 2,
+        vPitch: (Math.random() - 0.5) * 16,
+        drag: 0.965 + Math.random() * 0.012,
+        gravity: 105 + Math.random() * 45,
+        flutterFreq: 7 + Math.random() * 5,
+        flutterAmp: 30 + Math.random() * 25,
+        flutterPhase: Math.random() * Math.PI * 2,
+        life: 2.4 + Math.random() * 0.5,
+        maxLife: 2.9,
+      });
+    }
+
+    // 3. Right Cannon (Conical ejection upward-inward at -117° ± 16°)
+    for (let i = 0; i < countPerSide; i++) {
+      const spread = (Math.random() - 0.5) * 0.35;
+      const angle = -Math.PI * 0.65 + spread;
+      const speed = 820 + Math.random() * 380;
+      const color = colors[(i + 4) % colors.length];
+
+      const randType = Math.random();
+      const type = randType < 0.6 ? "STRIP" : randType < 0.8 ? "STAR" : "DISC";
+      const w =
+        type === "STRIP"
+          ? Math.random() * 2.5 + 4.5
+          : Math.random() * 3.0 + 5.0;
+      const h = type === "STRIP" ? Math.random() * 9.0 + 14.0 : w;
+
+      this.celebrationConfetti.push({
+        x: rightX,
+        y: rightY,
+        vx: Math.cos(angle) * speed,
+        vy: Math.sin(angle) * speed,
+        type,
+        w,
+        h,
+        color,
+        rot: Math.random() * Math.PI * 2,
+        vRot: (Math.random() - 0.5) * 14,
+        pitch: Math.random() * Math.PI * 2,
+        vPitch: (Math.random() - 0.5) * 16,
+        drag: 0.965 + Math.random() * 0.012,
+        gravity: 105 + Math.random() * 45,
+        flutterFreq: 7 + Math.random() * 5,
+        flutterAmp: 30 + Math.random() * 25,
+        flutterPhase: Math.random() * Math.PI * 2,
+        life: 2.4 + Math.random() * 0.5,
+        maxLife: 2.9,
+      });
+    }
+  }
+
+  // Alias for backward compatibility
+  launchStreamerVolley(leftX, leftY, rightX, rightY, countPerSide = 38) {
+    this.launchCelebrationCannons(leftX, leftY, rightX, rightY, countPerSide);
+  }
+
+  /**
+   * Launch a mini celebration confetti burst towards a target point (e.g. on user tap).
+   */
+  launchSingleCelebrationConfetti(targetX, targetY) {
+    const colors = GameRenderer.CELEBRATION_CONFETTI_COLORS;
+    const fromLeft = Math.random() < 0.5;
+    const startX = fromLeft ? 20 : this.width - 20;
+    const startY = this.height - 40;
+    const dx = targetX - startX;
+    const dy = targetY - startY;
+    const baseAngle = Math.atan2(dy, dx);
+    const dist = Math.hypot(dx, dy);
+
+    this.addPopRing(startX, startY, 34, "#ffffff");
+
+    // Mini spray of 10 confetti elements
+    for (let i = 0; i < 10; i++) {
+      const angle = baseAngle + (Math.random() - 0.5) * 0.35;
+      const speed =
+        Math.max(420, Math.min(800, dist * 1.6)) + (Math.random() - 0.5) * 120;
+      const color = colors[Math.floor(Math.random() * colors.length)];
+      const randType = Math.random();
+      const type = randType < 0.6 ? "STRIP" : randType < 0.8 ? "STAR" : "DISC";
+      const w =
+        type === "STRIP"
+          ? Math.random() * 2.2 + 4.0
+          : Math.random() * 2.5 + 4.5;
+      const h = type === "STRIP" ? Math.random() * 6.0 + 10.0 : w;
+
+      this.celebrationConfetti.push({
+        x: startX,
+        y: startY,
+        vx: Math.cos(angle) * speed,
+        vy: Math.sin(angle) * speed,
+        type,
+        w,
+        h,
+        color,
+        rot: Math.random() * Math.PI * 2,
+        vRot: (Math.random() - 0.5) * 14,
+        pitch: Math.random() * Math.PI * 2,
+        vPitch: (Math.random() - 0.5) * 16,
+        drag: 0.954,
+        gravity: 85,
+        flutterFreq: 8 + Math.random() * 5,
+        flutterAmp: 20 + Math.random() * 15,
+        flutterPhase: Math.random() * Math.PI * 2,
+        life: 1.9 + Math.random() * 0.4,
+        maxLife: 2.3,
+      });
+    }
+  }
+
+  // Alias for backward compatibility
+  launchSingleStreamer(targetX, targetY) {
+    this.launchSingleCelebrationConfetti(targetX, targetY);
+  }
+
+  /**
+   * Launch an ascending firework rocket with fizzing particle spark trail.
+   */
+  launchFirework(startX, startY, targetY, color = null) {
+    const palette = GameRenderer.FIREWORK_COLORS;
+    const burstColor =
+      color || palette[Math.floor(Math.random() * palette.length)];
+    const distY = Math.max(80, Math.abs(startY - targetY));
+    const speed = Math.sqrt(2 * 460 * distY);
+    this.fireworkRockets.push({
+      x: startX,
+      y: startY,
+      vx: (Math.random() - 0.5) * 60,
+      vy: -Math.max(260, Math.min(520, speed)),
+      targetY,
+      color: burstColor,
+      trail: [],
+      life: 1.2,
+    });
+  }
+
+  /**
+   * Explode a cosmic starburst firework (radial sparks + sparkling 4-point stars + shockwave ring).
+   */
+  explodeFirework(x, y, color = null, count = 24) {
+    const palette = GameRenderer.FIREWORK_COLORS;
+    const burstColor =
+      color || palette[Math.floor(Math.random() * palette.length)];
+
+    // 1. Dual Holographic Expanding Shockwaves
+    this.addPopRing(x, y, 75, burstColor);
+    this.addPopRing(x, y, 38, "#ffffff");
+
+    // 2. Radial Glowing Sparks & Sparkle Stars
+    for (let i = 0; i < count; i++) {
+      const angle = (i / count) * Math.PI * 2 + (Math.random() - 0.5) * 0.28;
+      const speed = Math.random() * 160 + 80;
+      const isStar = i % 4 === 0;
+      this.fireworkSparks.push({
+        x,
+        y,
+        prevX: x,
+        prevY: y,
+        vx: Math.cos(angle) * speed,
+        vy: Math.sin(angle) * speed,
+        gravity: isStar ? 50 : 85,
+        drag: 0.965,
+        color: Math.random() < 0.2 ? "#ffffff" : burstColor,
+        size: isStar ? Math.random() * 6 + 7 : Math.random() * 2.8 + 2.5,
+        life: Math.random() * 0.4 + (isStar ? 0.95 : 0.75),
+        maxLife: isStar ? 1.35 : 1.15,
+        rot: Math.random() * Math.PI * 2,
+        vRot: (Math.random() - 0.5) * 8,
+        twinkleRate: Math.random() * 14 + 10,
+        isStar,
+      });
+    }
+
+    if (this.onFireworkExploded) {
+      this.onFireworkExploded(x, y, burstColor);
+    }
+  }
+
+  drawSparkleStar(ctx, x, y, size) {
+    const rOuter = size;
+    const rInner = size * 0.28;
+    ctx.beginPath();
+    for (let i = 0; i < 8; i++) {
+      const r = i % 2 === 0 ? rOuter : rInner;
+      const ang = (i * Math.PI) / 4;
+      const px = x + Math.cos(ang) * r;
+      const py = y + Math.sin(ang) * r;
+      if (i === 0) ctx.moveTo(px, py);
+      else ctx.lineTo(px, py);
+    }
+    ctx.closePath();
+    ctx.fill();
+    ctx.strokeStyle = "#1e1b4b";
+    ctx.lineWidth = 1.6;
+    ctx.stroke();
+  }
+
   generateSingularityParticles(count) {
     const list = [];
-    const colors = ["#fde047", "#38bdf8", "#f472b6", "#c084fc", "#ffffff", "#4ade80", "#fbbf24"];
+    const colors = [
+      "#fde047",
+      "#38bdf8",
+      "#f472b6",
+      "#c084fc",
+      "#ffffff",
+      "#4ade80",
+      "#fbbf24",
+    ];
     for (let i = 0; i < count; i++) {
       list.push({
         rRatio: 1.05 + Math.random() * 2.0,
@@ -496,7 +780,10 @@ export class GameRenderer {
     const time = this.cosmicTime * 2.5;
 
     // Upward Gravitational Funnel & Physical Magnetic Containment Rails
-    const funnelTopY = Math.min(bh.y - 120, physics.center.y + physics.ringRadius - 15);
+    const funnelTopY = Math.min(
+      bh.y - 120,
+      physics.center.y + physics.ringRadius - 15,
+    );
     const funnelHeight = bh.y - funnelTopY;
     const topHalfW = 95;
     const bottomHalfW = 46;
@@ -554,7 +841,7 @@ export class GameRenderer {
 
     // 4. Animated downward magnetic chevrons towards Nibbles
     for (let b = 0; b < 4; b++) {
-      const offset = ((this.cosmicTime * 0.75 + b * 0.25) % 1.0);
+      const offset = (this.cosmicTime * 0.75 + b * 0.25) % 1.0;
       const bY = funnelTopY + offset * funnelHeight;
       const t = offset;
       const bW = (topHalfW * (1 - t) + bottomHalfW * t) * 1.6;
@@ -588,7 +875,14 @@ export class GameRenderer {
     ctx.translate(bh.x, bh.y);
 
     // A. Soft Pulsing Outer Glow
-    const haloGrad = ctx.createRadialGradient(0, 0, rHorizon * 0.7, 0, 0, haloRadius);
+    const haloGrad = ctx.createRadialGradient(
+      0,
+      0,
+      rHorizon * 0.7,
+      0,
+      0,
+      haloRadius,
+    );
     haloGrad.addColorStop(0, (skin.haloColor || "#818cf8") + "66");
     haloGrad.addColorStop(0.45, (skin.haloColor || "#818cf8") + "28");
     haloGrad.addColorStop(1, "rgba(0, 0, 0, 0)");
@@ -641,7 +935,8 @@ export class GameRenderer {
 
       const horizonDist = p.rRatio - 1.0;
       if (horizonDist < 0) continue;
-      const alpha = Math.min(1.0, horizonDist * 2.2) * (0.55 + Math.sin(p.twinkle) * 0.45);
+      const alpha =
+        Math.min(1.0, horizonDist * 2.2) * (0.55 + Math.sin(p.twinkle) * 0.45);
 
       ctx.save();
       ctx.globalAlpha = Math.max(0, Math.min(1, alpha));
@@ -665,7 +960,10 @@ export class GameRenderer {
       ctx.lineWidth = 1.3;
       ctx.beginPath();
       ctx.moveTo(0, 0);
-      ctx.lineTo(-Math.cos(tanAngle) * (p.size * 2.2), -Math.sin(tanAngle) * (p.size * 2.2));
+      ctx.lineTo(
+        -Math.cos(tanAngle) * (p.size * 2.2),
+        -Math.sin(tanAngle) * (p.size * 2.2),
+      );
       ctx.stroke();
 
       ctx.restore();
@@ -808,9 +1106,10 @@ export class GameRenderer {
     ctx.rotate(angle);
 
     for (const flap of physics.oneWayFlaps) {
-      const rot = (flap.isInner && physics.concentricRings)
-        ? (physics.innerRingAngle - physics.ringAngle)
-        : 0;
+      const rot =
+        flap.isInner && physics.concentricRings
+          ? physics.innerRingAngle - physics.ringAngle
+          : 0;
       const baseAngle = flap.angle + rot;
       const currentAngle = baseAngle + flap.swing * (flap.normalSign || 1);
       const isLocked = flap.swing <= 0.05;
@@ -894,9 +1193,10 @@ export class GameRenderer {
     ctx.rotate(angle);
 
     for (const pin of physics.deflectorPins) {
-      const rot = (pin.isInner && physics.concentricRings)
-        ? (physics.innerRingAngle - physics.ringAngle)
-        : 0;
+      const rot =
+        pin.isInner && physics.concentricRings
+          ? physics.innerRingAngle - physics.ringAngle
+          : 0;
       const finalAngle = pin.angle + rot;
       const px = Math.cos(finalAngle) * pin.r;
       const py = Math.sin(finalAngle) * pin.r;
@@ -1147,9 +1447,10 @@ export class GameRenderer {
     ctx.lineWidth = 7;
     ctx.lineCap = "round";
     for (const div of physics.dividers) {
-      const rot = (div.isInner && physics.concentricRings)
-        ? (physics.innerRingAngle - physics.ringAngle)
-        : 0;
+      const rot =
+        div.isInner && physics.concentricRings
+          ? physics.innerRingAngle - physics.ringAngle
+          : 0;
       const finalAngle = div.angle + rot;
 
       const dx1 = Math.cos(finalAngle) * div.rMin;
@@ -1192,15 +1493,33 @@ export class GameRenderer {
 
     // 1. Dynamic Curved Speed Streaks (Whoosh Ribbons) along outer & inner rims
     const streakTracks = [
-      { r: rOut + 14, color: "#38bdf8", width: 5.5, arc: 0.55 + intensity * 0.65, count: 3 },
-      { r: rOut + 8, color: "#fde047", width: 4.0, arc: 0.45 + intensity * 0.55, count: 4 },
-      { r: rIn - 8, color: "#f472b6", width: 3.5, arc: 0.40 + intensity * 0.50, count: 3 },
+      {
+        r: rOut + 14,
+        color: "#38bdf8",
+        width: 5.5,
+        arc: 0.55 + intensity * 0.65,
+        count: 3,
+      },
+      {
+        r: rOut + 8,
+        color: "#fde047",
+        width: 4.0,
+        arc: 0.45 + intensity * 0.55,
+        count: 4,
+      },
+      {
+        r: rIn - 8,
+        color: "#f472b6",
+        width: 3.5,
+        arc: 0.4 + intensity * 0.5,
+        count: 3,
+      },
     ];
 
     for (const track of streakTracks) {
       for (let i = 0; i < track.count; i++) {
         // Distribute arcs around the perimeter
-        const baseOffset = (Math.PI * 2 * i) / track.count + (angle * 0.35);
+        const baseOffset = (Math.PI * 2 * i) / track.count + angle * 0.35;
         const headAngle = baseOffset;
         const tailAngle = headAngle - track.arc * dir;
 
@@ -1232,11 +1551,18 @@ export class GameRenderer {
 
         // Comic trailing spark dots at tail
         for (let d = 1; d <= 2; d++) {
-          const dotAngle = dir > 0 ? tailAngle - d * 0.08 : tailAngle + d * 0.08;
+          const dotAngle =
+            dir > 0 ? tailAngle - d * 0.08 : tailAngle + d * 0.08;
           ctx.fillStyle = track.color;
           ctx.globalAlpha = 0.5 - d * 0.15;
           ctx.beginPath();
-          ctx.arc(Math.cos(dotAngle) * track.r, Math.sin(dotAngle) * track.r, track.width * 0.45, 0, Math.PI * 2);
+          ctx.arc(
+            Math.cos(dotAngle) * track.r,
+            Math.sin(dotAngle) * track.r,
+            track.width * 0.45,
+            0,
+            Math.PI * 2,
+          );
           ctx.fill();
         }
 
@@ -1735,9 +2061,10 @@ export class GameRenderer {
     ctx.rotate(angle);
 
     for (const gate of physics.gates) {
-      const rot = (gate.isInner && physics.concentricRings)
-        ? (physics.innerRingAngle - physics.ringAngle)
-        : 0;
+      const rot =
+        gate.isInner && physics.concentricRings
+          ? physics.innerRingAngle - physics.ringAngle
+          : 0;
       const gAngle = gate.angle + rot;
       const rMin = gate.rMin !== undefined ? gate.rMin : (gate.r || 120) - 17;
       const rMax = gate.rMax !== undefined ? gate.rMax : (gate.r || 120) + 17;
@@ -1866,6 +2193,188 @@ export class GameRenderer {
   }
 
   renderVfx(ctx, dt) {
+    // 0. Active Firework Rockets (Ascending with sparkling fizz trail)
+    for (let i = this.fireworkRockets.length - 1; i >= 0; i--) {
+      const r = this.fireworkRockets[i];
+      r.life -= dt;
+      r.vy += 180 * dt; // slight ascent deceleration
+      r.x += r.vx * dt;
+      r.y += r.vy * dt;
+
+      // Fizz trail sparks behind rocket
+      r.trail.push({
+        x: r.x + (Math.random() - 0.5) * 6,
+        y: r.y + 6,
+        alpha: 0.95,
+        size: Math.random() * 3.5 + 2.0,
+      });
+      if (r.trail.length > 12) r.trail.shift();
+
+      // Render fizzing trail
+      ctx.save();
+      for (let t = 0; t < r.trail.length; t++) {
+        const tp = r.trail[t];
+        tp.alpha -= dt * 2.8;
+        if (tp.alpha > 0) {
+          ctx.globalAlpha = Math.max(0, Math.min(1, tp.alpha));
+          ctx.fillStyle = t % 2 === 0 ? "#fde047" : r.color;
+          ctx.beginPath();
+          ctx.arc(tp.x, tp.y, tp.size, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
+      ctx.restore();
+
+      // Render rocket head
+      ctx.save();
+      ctx.fillStyle = r.color;
+      ctx.strokeStyle = "#1e1b4b";
+      ctx.lineWidth = 1.8;
+      ctx.beginPath();
+      ctx.arc(r.x, r.y, 5.5, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+
+      ctx.fillStyle = "#ffffff";
+      ctx.beginPath();
+      ctx.arc(r.x, r.y, 2.8, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+
+      // Detonate at apex or when reaching target height
+      if (r.y <= r.targetY || r.vy >= -40 || r.life <= 0) {
+        this.explodeFirework(r.x, r.y, r.color);
+        this.fireworkRockets.splice(i, 1);
+      }
+    }
+
+    // 0b. Active Firework Burst Sparks & Twinkling 4-Point Stars
+    const maxSparks = 180;
+    if (this.fireworkSparks.length > maxSparks) {
+      this.fireworkSparks.splice(0, this.fireworkSparks.length - maxSparks);
+    }
+    for (let i = this.fireworkSparks.length - 1; i >= 0; i--) {
+      const p = this.fireworkSparks[i];
+      p.life -= dt;
+      if (p.life <= 0) {
+        this.fireworkSparks.splice(i, 1);
+        continue;
+      }
+      p.prevX = p.x;
+      p.prevY = p.y;
+      p.vx *= p.drag;
+      p.vy = p.vy * p.drag + p.gravity * dt;
+      p.x += p.vx * dt;
+      p.y += p.vy * dt;
+      p.rot += p.vRot * dt;
+
+      const alphaProgress = Math.max(0, p.life / p.maxLife);
+      const twinkle = 0.8 + 0.2 * Math.sin(p.life * p.twinkleRate);
+      const finalAlpha = Math.max(0, Math.min(1, alphaProgress * twinkle));
+
+      ctx.save();
+      ctx.globalAlpha = finalAlpha;
+
+      if (p.isStar) {
+        ctx.fillStyle = p.color;
+        ctx.translate(p.x, p.y);
+        ctx.rotate(p.rot);
+        this.drawSparkleStar(ctx, 0, 0, p.size);
+      } else {
+        // Glowing spark with motion streak tail
+        ctx.strokeStyle = p.color;
+        ctx.lineWidth = p.size;
+        ctx.lineCap = "round";
+        ctx.beginPath();
+        ctx.moveTo(p.prevX, p.prevY);
+        ctx.lineTo(p.x, p.y);
+        ctx.stroke();
+
+        // White core bead with dark comic outline
+        ctx.fillStyle = "#ffffff";
+        ctx.strokeStyle = "#1e1b4b";
+        ctx.lineWidth = 1.0;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.size * 0.6, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+      }
+      ctx.restore();
+    }
+
+    // 0c. Active Celebration Confetti Cannon Particles (Foil Strips, Shimmer Stars, Metallic Sequins)
+    for (let i = this.celebrationConfetti.length - 1; i >= 0; i--) {
+      const p = this.celebrationConfetti[i];
+      p.life -= dt;
+      if (p.life <= 0) {
+        this.celebrationConfetti.splice(i, 1);
+        continue;
+      }
+
+      // Ballistic air-drag physics
+      p.vy += p.gravity * dt;
+      p.vx *= p.drag;
+      p.vy *= p.drag;
+
+      // Gentle aerodynamic fluttering drift
+      const flutterOffset =
+        Math.sin(p.life * p.flutterFreq + p.flutterPhase) * p.flutterAmp * dt;
+      p.x += p.vx * dt + flutterOffset;
+      p.y += p.vy * dt;
+
+      // 3D Tumbling rotations
+      p.rot += p.vRot * dt;
+      p.pitch += p.vPitch * dt;
+
+      const alpha = Math.min(1.0, p.life / 0.45);
+
+      ctx.save();
+      ctx.globalAlpha = Math.max(0, Math.min(1, alpha));
+      ctx.translate(p.x, p.y);
+      ctx.rotate(p.rot);
+
+      if (p.type === "STRIP") {
+        // Tumbling metallic foil strip (3D projection via cos(pitch))
+        const scaleY = Math.cos(p.pitch);
+        ctx.scale(1.0, scaleY);
+
+        ctx.fillStyle = p.color;
+        ctx.strokeStyle = "#1e1b4b";
+        ctx.lineWidth = 1.0;
+        ctx.beginPath();
+        ctx.rect(-p.w * 0.5, -p.h * 0.5, p.w, p.h);
+        ctx.fill();
+        ctx.stroke();
+
+        // Subtle specular highlight line down center
+        if (Math.abs(scaleY) > 0.4) {
+          ctx.strokeStyle = "rgba(255, 255, 255, 0.45)";
+          ctx.lineWidth = 1.0;
+          ctx.beginPath();
+          ctx.moveTo(0, -p.h * 0.4);
+          ctx.lineTo(0, p.h * 0.4);
+          ctx.stroke();
+        }
+      } else if (p.type === "STAR") {
+        // Shimmering 4-point gold/silver star
+        ctx.fillStyle = p.color;
+        this.drawSparkleStar(ctx, 0, 0, p.w);
+      } else if (p.type === "DISC") {
+        // Flipping circular foil sequin
+        const scaleY = Math.cos(p.pitch);
+        ctx.scale(1.0, scaleY);
+        ctx.fillStyle = p.color;
+        ctx.strokeStyle = "#1e1b4b";
+        ctx.lineWidth = 0.9;
+        ctx.beginPath();
+        ctx.arc(0, 0, p.w, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+      }
+
+      ctx.restore();
+    }
+
     // 1. Cartoon Confetti Particles
     for (let i = this.particles.length - 1; i >= 0; i--) {
       const p = this.particles[i];

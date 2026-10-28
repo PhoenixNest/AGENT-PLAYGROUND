@@ -377,6 +377,13 @@ namespace OrbitalSalvage.Viewer
             {
                 if (app != null && app.Audio != null) app.Audio.PlayBoosterPass();
             };
+            session.OnCelebrationCue += cue =>
+            {
+                if (app == null || app.Audio == null) return;
+                if (cue == "cannon") app.Audio.PlayCelebrationCannon();
+                else if (cue == "launch") app.Audio.PlayFireworkLaunch();
+                else if (cue == "burst") app.Audio.PlayFireworkBurst();
+            };
             app.BackupDeployed += () =>
             {
                 if (session != null) session.Physics.SpawnBackupScrap(8);
@@ -1353,6 +1360,9 @@ namespace OrbitalSalvage.Viewer
             public void PlayDefeatSound() { player.PlayDefeatSound(); }
             public void PlayBackupPodSound() { player.PlayBackupPodSound(); }
             public void PlayDebrisSwallowed() { player.PlayDebrisSwallowed(); }
+            public void PlayCelebrationCannon() { player.PlayCelebrationCannon(); }
+            public void PlayFireworkLaunch() { player.PlayFireworkLaunch(); }
+            public void PlayFireworkBurst() { player.PlayFireworkBurst(); }
         }
 
         sealed class BoundPlayfield : IFixedPlayfield, IFailureClock

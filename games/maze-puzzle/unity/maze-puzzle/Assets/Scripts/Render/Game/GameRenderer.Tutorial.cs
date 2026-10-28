@@ -34,7 +34,7 @@ namespace OrbitalSalvage.Render
                 case TutorialPhase.Feed:
                     RenderFeedGuide(ctx, physics);
                     double quota = progress != null ? progress.Quota : 20;
-                    DrawCommsCard(ctx, cardX, cardY, cardW, cardH, "😍", "HUNGRY VOID • FEED TIME", Loc.Tr("intro.step.feed", quota), "#4ade80", 2);
+                    DrawCommsCard(ctx, cardX, cardY, cardW, cardH, "😋", "HUNGRY VOID • FEED TIME", Loc.Tr("intro.step.feed", quota), "#4ade80", 2);
                     break;
             }
         }
@@ -212,7 +212,7 @@ namespace OrbitalSalvage.Render
             ctx.Font = "20px Fredoka, sans-serif";
             ctx.TextAlign = "center";
             ctx.TextBaseline = "middle";
-            ctx.FillText("👉", gx - pulseR - 14 + bounce, gy);
+            ctx.FillText("👆", gx, gy + pulseR + 18 - bounce);
             ctx.Restore();
         }
 

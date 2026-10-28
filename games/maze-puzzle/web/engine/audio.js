@@ -65,10 +65,16 @@ export class AudioEngine {
       this.sfxGain.gain.setValueAtTime(this.sfxVolume, this.ctx.currentTime);
 
       this.ambienceGain = this.ctx.createGain();
-      this.ambienceGain.gain.setValueAtTime(this.ambienceVolume, this.ctx.currentTime);
+      this.ambienceGain.gain.setValueAtTime(
+        this.ambienceVolume,
+        this.ctx.currentTime,
+      );
 
       this.masterGain = this.ctx.createGain();
-      this.masterGain.gain.setValueAtTime(this.isMuted ? 0 : 0.85, this.ctx.currentTime);
+      this.masterGain.gain.setValueAtTime(
+        this.isMuted ? 0 : 0.85,
+        this.ctx.currentTime,
+      );
 
       this.masterCompressor.connect(this.sfxGain);
       this.sfxGain.connect(this.masterGain);
@@ -232,7 +238,7 @@ export class AudioEngine {
     }
   }
 
-  playShredderPass(now = (this.ctx ? this.ctx.currentTime : 0), value) {
+  playShredderPass(now = this.ctx ? this.ctx.currentTime : 0, value) {
     if (!this.ctx || this.isMuted) return;
     now = now || this.ctx.currentTime;
     // Electric cartoon slicing "Zzzt-Boing!"
@@ -258,7 +264,7 @@ export class AudioEngine {
     osc.stop(now + 0.14);
   }
 
-  playCompactorPass(now = (this.ctx ? this.ctx.currentTime : 0), value) {
+  playCompactorPass(now = this.ctx ? this.ctx.currentTime : 0, value) {
     if (!this.ctx || this.isMuted) return;
     now = now || this.ctx.currentTime;
     // Deep magnetic resonant chime (Sine with gentle sub-bass sweep)
@@ -279,7 +285,7 @@ export class AudioEngine {
     osc.stop(now + 0.24);
   }
 
-  playSuperShredderPass(now = (this.ctx ? this.ctx.currentTime : 0), value) {
+  playSuperShredderPass(now = this.ctx ? this.ctx.currentTime : 0, value) {
     if (!this.ctx || this.isMuted) return;
     now = now || this.ctx.currentTime;
     // Dramatic power-up chord (Ascending dual sine oscillators)
@@ -305,7 +311,7 @@ export class AudioEngine {
   playBoosterPass(now) {
     if (!this.ctx || this.isMuted) return;
     this.ensureRunning();
-    const t = (isFinite(now) && now > 0) ? now : (this.ctx.currentTime || 0.001);
+    const t = isFinite(now) && now > 0 ? now : this.ctx.currentTime || 0.001;
     // Comic jet whistle whoosh
     const osc = this.ctx.createOscillator();
     const gain = this.ctx.createGain();
@@ -518,6 +524,117 @@ export class AudioEngine {
     if (isActive) {
       this.playSpinRatchet(1.2);
     }
+  }
+
+  /**
+   * Playful cosmic firework burst sound (crisp cartoon pop + cheerful sparkle shimmer).
+   */
+  playFireworkBurst() {
+    if (!this.ctx || this.isMuted) return;
+    this.ensureRunning();
+    const now = this.ctx.currentTime;
+
+    // 1. Snappy cartoon pop thump
+    const osc = this.ctx.createOscillator();
+    const gain = this.ctx.createGain();
+    osc.type = "sine";
+    osc.frequency.setValueAtTime(240 + Math.random() * 80, now);
+    osc.frequency.exponentialRampToValueAtTime(55, now + 0.12);
+
+    gain.gain.setValueAtTime(0.18, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.13);
+
+    osc.connect(gain);
+    gain.connect(this.masterCompressor);
+    osc.start(now);
+    osc.stop(now + 0.14);
+
+    // 2. Playful sparkle fizz / high shimmer
+    const sparkOsc = this.ctx.createOscillator();
+    const sparkGain = this.ctx.createGain();
+    sparkOsc.type = "triangle";
+    sparkOsc.frequency.setValueAtTime(1100 + Math.random() * 300, now);
+    sparkOsc.frequency.exponentialRampToValueAtTime(450, now + 0.18);
+
+    sparkGain.gain.setValueAtTime(0.08, now);
+    sparkGain.gain.exponentialRampToValueAtTime(0.001, now + 0.2);
+
+    sparkOsc.connect(sparkGain);
+    sparkGain.connect(this.masterCompressor);
+    sparkOsc.start(now);
+    sparkOsc.stop(now + 0.21);
+  }
+
+  /**
+   * Ascending whistle launch sound for firework rocket
+   */
+  playFireworkLaunch() {
+    if (!this.ctx || this.isMuted) return;
+    this.ensureRunning();
+    const now = this.ctx.currentTime;
+
+    const osc = this.ctx.createOscillator();
+    const gain = this.ctx.createGain();
+    osc.type = "sine";
+    osc.frequency.setValueAtTime(320 + Math.random() * 40, now);
+    osc.frequency.exponentialRampToValueAtTime(
+      850 + Math.random() * 100,
+      now + 0.25,
+    );
+
+    gain.gain.setValueAtTime(0, now);
+    gain.gain.linearRampToValueAtTime(0.09, now + 0.05);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.28);
+
+    osc.connect(gain);
+    gain.connect(this.masterCompressor);
+    osc.start(now);
+    osc.stop(now + 0.3);
+  }
+
+  /**
+   * Snappy cartoon air-cannon "THWUMP-POP!" sound for celebratory confetti cannons.
+   */
+  playCelebrationCannon() {
+    if (!this.ctx || this.isMuted) return;
+    this.ensureRunning();
+    const now = this.ctx.currentTime;
+
+    // 1. Punchy low air thud (220Hz dropping rapidly to 45Hz)
+    const osc = this.ctx.createOscillator();
+    const gain = this.ctx.createGain();
+    osc.type = "sine";
+    osc.frequency.setValueAtTime(220, now);
+    osc.frequency.exponentialRampToValueAtTime(45, now + 0.12);
+
+    gain.gain.setValueAtTime(0.24, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.14);
+
+    osc.connect(gain);
+    gain.connect(this.masterCompressor);
+    osc.start(now);
+    osc.stop(now + 0.15);
+
+    // 2. High fluttering whoosh (fast pitch chirp)
+    const chirpOsc = this.ctx.createOscillator();
+    const chirpGain = this.ctx.createGain();
+    chirpOsc.type = "triangle";
+    chirpOsc.frequency.setValueAtTime(700, now);
+    chirpOsc.frequency.exponentialRampToValueAtTime(1400, now + 0.08);
+    chirpOsc.frequency.exponentialRampToValueAtTime(300, now + 0.22);
+
+    chirpGain.gain.setValueAtTime(0.12, now);
+    chirpGain.gain.exponentialRampToValueAtTime(0.001, now + 0.24);
+
+    chirpOsc.connect(chirpGain);
+    chirpGain.connect(this.masterCompressor);
+    chirpOsc.start(now);
+    chirpOsc.stop(now + 0.25);
+  }
+
+  // Alias for backward compatibility
+  playStreamerCannon() {
+    this.playCelebrationCannon();
   }
 
   /**

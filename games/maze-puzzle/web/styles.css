@@ -2789,3 +2789,10 @@ input:checked + .slider-round:before {
     box-shadow: 0 0 22px rgba(250, 204, 21, 0.6);
   }
 }
+
+/* Victory debrief modal: softer blur to showcase cosmic fireworks */
+#modal-debrief.modal-overlay {
+  background: rgba(15, 12, 41, 0.45);
+  backdrop-filter: blur(2.5px);
+  -webkit-backdrop-filter: blur(2.5px);
+}

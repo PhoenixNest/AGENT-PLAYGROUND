@@ -132,6 +132,9 @@ namespace OrbitalSalvage.App
         void PlayDefeatSound();
         void PlayBackupPodSound();
         void PlayDebrisSwallowed();
+        void PlayCelebrationCannon();
+        void PlayFireworkLaunch();
+        void PlayFireworkBurst();
     }
 
     public sealed class SilentAudio : IAppAudio
@@ -155,6 +158,9 @@ namespace OrbitalSalvage.App
         public void PlayDefeatSound() { Cues.Add("defeat"); }
         public void PlayBackupPodSound() { Cues.Add("backup"); }
         public void PlayDebrisSwallowed() { Cues.Add("swallow"); }
+        public void PlayCelebrationCannon() { Cues.Add("celebration_cannon"); }
+        public void PlayFireworkLaunch() { Cues.Add("firework_launch"); }
+        public void PlayFireworkBurst() { Cues.Add("firework_burst"); }
     }
 
     public sealed class ElementOverride

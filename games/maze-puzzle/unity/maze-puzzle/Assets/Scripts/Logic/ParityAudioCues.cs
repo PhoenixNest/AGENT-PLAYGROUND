@@ -158,6 +158,24 @@ namespace OrbitalSalvage.Logic
             if (!Blocked()) Heard("hazard", 0, null);
         }
 
+        public void PlayCelebrationCannon()
+        {
+            Record("playCelebrationCannon", "");
+            if (!Blocked()) Heard("celebration_cannon", 0, null);
+        }
+
+        public void PlayFireworkLaunch()
+        {
+            Record("playFireworkLaunch", "");
+            if (!Blocked()) Heard("firework_launch", 0, null);
+        }
+
+        public void PlayFireworkBurst()
+        {
+            Record("playFireworkBurst", "");
+            if (!Blocked()) Heard("firework_burst", 0, null);
+        }
+
         public double[] CaptureState()
         {
             return new[]
