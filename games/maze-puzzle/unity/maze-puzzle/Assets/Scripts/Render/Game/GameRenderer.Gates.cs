@@ -408,6 +408,7 @@ namespace OrbitalSalvage.Render
 
         void RenderVfx(Canvas2D ctx, double dt)
         {
+            RenderCelebrationVfx(ctx, dt);
             for (int i = Particles.Count - 1; i >= 0; i--)
             {
                 var p = Particles[i];

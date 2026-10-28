@@ -141,6 +141,136 @@ namespace OrbitalSalvage.Viewer.Editor
             if (Application.isBatchMode) EditorApplication.Exit(0);
         }
 
+        /// <summary>
+        /// Captures the three tutorial onboarding screenshots in <c>games/maze-puzzle/unity/screenshots</c>
+        /// matching items 14, 15, and 16 in doc 09.
+        /// Batch: <c>-executeMethod OrbitalSalvage.Viewer.Editor.PagePreviewPainter.DumpTutorialScreenshotsBatch -docShotDir &lt;folder&gt;</c>.
+        /// </summary>
+        public static void DumpTutorialScreenshotsBatch()
+        {
+            string dir = null;
+            var args = Environment.GetCommandLineArgs();
+            for (int i = 0; i < args.Length - 1; i++)
+                if (args[i] == "-docShotDir") dir = args[i + 1];
+            if (string.IsNullOrEmpty(dir))
+            {
+                string project = Directory.GetParent(Application.dataPath).FullName;
+                dir = Path.GetFullPath(Path.Combine(project, "..", "screenshots"));
+            }
+            Directory.CreateDirectory(dir);
+
+            var phases = new[]
+            {
+                new { File = "14_unity_tutorial_phase1_swipe.png", Phase = TutorialPhase.Swipe },
+                new { File = "15_unity_tutorial_phase2_gate.png", Phase = TutorialPhase.Gate },
+                new { File = "16_unity_tutorial_phase3_feed.png", Phase = TutorialPhase.Feed }
+            };
+
+            for (int i = 0; i < phases.Length; i++)
+            {
+                OutlineFonts.Clear();
+                var session = RecordedFrameDriver.Create(1);
+                session.SetTutorialPhase(phases[i].Phase);
+                for (int f = 0; f < 25; f++)
+                {
+                    session.SetTutorialPhase(phases[i].Phase);
+                    session.Update(RecordedFrameDriver.FrameDt);
+                }
+
+                Texture2D tex = null;
+                try
+                {
+                    tex = Render("game_lvl01_t1000ms", "zero", true, 0, 0, chrome =>
+                    {
+                        chrome.ExternalPlayfield = session.Renderer.Target;
+                    }, out byte[] png);
+                    File.WriteAllBytes(Path.Combine(dir, phases[i].File), png);
+                }
+                finally
+                {
+                    if (tex != null) UnityEngine.Object.DestroyImmediate(tex);
+                    session.Renderer.Dispose();
+                }
+            }
+            Debug.Log("[TutorialShots] wrote 3 tutorial screenshots to " + dir);
+            if (Application.isBatchMode) EditorApplication.Exit(0);
+        }
+
+        /// <summary>
+        /// Captures celebration and victory screenshots in <c>games/maze-puzzle/unity/screenshots</c>
+        /// matching items 17, 18, and 21 in doc 09.
+        /// Batch: <c>-executeMethod OrbitalSalvage.Viewer.Editor.PagePreviewPainter.DumpCelebrationScreenshotsBatch -docShotDir &lt;folder&gt;</c>.
+        /// </summary>
+        public static void DumpCelebrationScreenshotsBatch()
+        {
+            string dir = null;
+            var args = Environment.GetCommandLineArgs();
+            for (int i = 0; i < args.Length - 1; i++)
+                if (args[i] == "-docShotDir") dir = args[i + 1];
+            if (string.IsNullOrEmpty(dir))
+            {
+                string project = Directory.GetParent(Application.dataPath).FullName;
+                dir = Path.GetFullPath(Path.Combine(project, "..", "screenshots"));
+            }
+            Directory.CreateDirectory(dir);
+
+            // 1. Fireworks celebration burst (Item 17)
+            {
+                OutlineFonts.Clear();
+                var session = RecordedFrameDriver.Create(1);
+                session.Renderer.ExplodeFirework(150, 260, "#38bdf8", 32);
+                session.Renderer.ExplodeFirework(280, 310, "#f43f5e", 28);
+                session.Renderer.ExplodeFirework(215, 175, "#fde047", 36);
+                for (int f = 0; f < 18; f++) session.Update(RecordedFrameDriver.FrameDt);
+                Texture2D tex = null;
+                try
+                {
+                    tex = Render("game_lvl01_t1000ms", "zero", true, 0, 0, chrome =>
+                    {
+                        chrome.ExternalPlayfield = session.Renderer.Target;
+                    }, out byte[] png);
+                    File.WriteAllBytes(Path.Combine(dir, "17_unity_firework_celebration_burst.png"), png);
+                }
+                finally
+                {
+                    if (tex != null) UnityEngine.Object.DestroyImmediate(tex);
+                    session.Renderer.Dispose();
+                }
+            }
+
+            // 2. Victory debrief modal (Item 18)
+            {
+                OutlineFonts.Clear();
+                WriteShot(dir, "18_unity_victory_debrief_after_fireworks.png", "modal_debrief_exact", "zero", null);
+            }
+
+            // 3. Celebration confetti cannon burst (Item 19)
+            {
+                OutlineFonts.Clear();
+                var session = RecordedFrameDriver.Create(1);
+                session.Renderer.LaunchCelebrationCannons(430 * 0.10, 932 * 0.88, 430 * 0.90, 932 * 0.88, 38);
+                session.Renderer.ExplodeFirework(215, 240, "#a855f7", 30);
+                for (int f = 0; f < 28; f++) session.Update(RecordedFrameDriver.FrameDt);
+                Texture2D tex = null;
+                try
+                {
+                    tex = Render("game_lvl01_t1000ms", "zero", true, 0, 0, chrome =>
+                    {
+                        chrome.ExternalPlayfield = session.Renderer.Target;
+                    }, out byte[] png);
+                    File.WriteAllBytes(Path.Combine(dir, "19_unity_celebration_confetti.png"), png);
+                }
+                finally
+                {
+                    if (tex != null) UnityEngine.Object.DestroyImmediate(tex);
+                    session.Renderer.Dispose();
+                }
+            }
+
+            Debug.Log("[CelebrationShots] wrote celebration screenshots to " + dir);
+            if (Application.isBatchMode) EditorApplication.Exit(0);
+        }
+
         static void MarkJapanese(HomeChrome chrome)
         {
             chrome.TextOverrides["settings-language-value"] = "日本語";

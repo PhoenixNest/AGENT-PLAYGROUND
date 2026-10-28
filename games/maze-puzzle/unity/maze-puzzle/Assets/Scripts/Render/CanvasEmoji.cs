@@ -151,7 +151,7 @@ namespace OrbitalSalvage.Render
             LoadIndex();
             string name = files.TryGetValue(grapheme, out var f) ? f.Substring(0, f.LastIndexOf('.')) : CodepointName(grapheme);
             var tex = Resources.Load<Texture2D>(TexturePrefix + name);
-            if (tex == null) { Debug.LogError("[CanvasEmoji] missing sprite for " + grapheme + " (" + name + ")"); return null; }
+            if (tex == null) { Debug.LogWarning("[CanvasEmoji] missing sprite for " + grapheme + " (" + name + ")"); return null; }
             img = new CanvasImage(tex);
             Images[grapheme] = img;
             return img;

@@ -754,5 +754,103 @@ namespace OrbitalSalvage.AudioDsp
                 t += note.Dur * 0.75;
             }
         }
+
+        public void PlayFireworkBurst()
+        {
+            if (ctx == null || IsMuted) return;
+            EnsureRunning();
+            double now = Now;
+
+            var osc = ctx.CreateOscillator();
+            var gain = ctx.CreateGain();
+            osc.Type = OscillatorType.Sine;
+            osc.Frequency.SetValueAtTime(240.0 + (rng != null ? rng.NextDouble() : 0.5) * 80.0, now);
+            osc.Frequency.ExponentialRampToValueAtTime(55.0, now + 0.12);
+
+            gain.Gain.SetValueAtTime(0.18, now);
+            gain.Gain.ExponentialRampToValueAtTime(0.001, now + 0.13);
+
+            osc.Connect(gain);
+            gain.Connect(masterCompressor);
+            osc.Start(now);
+            osc.Stop(now + 0.14);
+
+            var sparkOsc = ctx.CreateOscillator();
+            var sparkGain = ctx.CreateGain();
+            sparkOsc.Type = OscillatorType.Triangle;
+            sparkOsc.Frequency.SetValueAtTime(1100.0 + (rng != null ? rng.NextDouble() : 0.5) * 300.0, now);
+            sparkOsc.Frequency.ExponentialRampToValueAtTime(450.0, now + 0.18);
+
+            sparkGain.Gain.SetValueAtTime(0.08, now);
+            sparkGain.Gain.ExponentialRampToValueAtTime(0.001, now + 0.2);
+
+            sparkOsc.Connect(sparkGain);
+            sparkGain.Connect(masterCompressor);
+            sparkOsc.Start(now);
+            sparkOsc.Stop(now + 0.21);
+        }
+
+        public void PlayFireworkLaunch()
+        {
+            if (ctx == null || IsMuted) return;
+            EnsureRunning();
+            double now = Now;
+
+            var osc = ctx.CreateOscillator();
+            var gain = ctx.CreateGain();
+            osc.Type = OscillatorType.Sine;
+            osc.Frequency.SetValueAtTime(320.0 + (rng != null ? rng.NextDouble() : 0.5) * 40.0, now);
+            osc.Frequency.ExponentialRampToValueAtTime(850.0 + (rng != null ? rng.NextDouble() : 0.5) * 100.0, now + 0.25);
+
+            gain.Gain.SetValueAtTime(0.0, now);
+            gain.Gain.LinearRampToValueAtTime(0.09, now + 0.05);
+            gain.Gain.ExponentialRampToValueAtTime(0.001, now + 0.28);
+
+            osc.Connect(gain);
+            gain.Connect(masterCompressor);
+            osc.Start(now);
+            osc.Stop(now + 0.3);
+        }
+
+        public void PlayCelebrationCannon()
+        {
+            if (ctx == null || IsMuted) return;
+            EnsureRunning();
+            double now = Now;
+
+            var osc = ctx.CreateOscillator();
+            var gain = ctx.CreateGain();
+            osc.Type = OscillatorType.Sine;
+            osc.Frequency.SetValueAtTime(220.0, now);
+            osc.Frequency.ExponentialRampToValueAtTime(45.0, now + 0.12);
+
+            gain.Gain.SetValueAtTime(0.24, now);
+            gain.Gain.ExponentialRampToValueAtTime(0.001, now + 0.14);
+
+            osc.Connect(gain);
+            gain.Connect(masterCompressor);
+            osc.Start(now);
+            osc.Stop(now + 0.15);
+
+            var chirpOsc = ctx.CreateOscillator();
+            var chirpGain = ctx.CreateGain();
+            chirpOsc.Type = OscillatorType.Triangle;
+            chirpOsc.Frequency.SetValueAtTime(700.0, now);
+            chirpOsc.Frequency.ExponentialRampToValueAtTime(1400.0, now + 0.08);
+            chirpOsc.Frequency.ExponentialRampToValueAtTime(300.0, now + 0.22);
+
+            chirpGain.Gain.SetValueAtTime(0.12, now);
+            chirpGain.Gain.ExponentialRampToValueAtTime(0.001, now + 0.24);
+
+            chirpOsc.Connect(chirpGain);
+            chirpGain.Connect(masterCompressor);
+            chirpOsc.Start(now);
+            chirpOsc.Stop(now + 0.25);
+        }
+
+        public void PlayStreamerCannon()
+        {
+            PlayCelebrationCannon();
+        }
     }
 }

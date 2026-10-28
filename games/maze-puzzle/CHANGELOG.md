@@ -9,6 +9,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- **Celebration Confetti & Cosmic Starburst Fireworks Parity Implementation (2026-10-28):**
+  - **Visual & Kinetic Parity:** Implemented dual-system celebration effects in Unity matching the Web prototype:
+    - **Celebration Confetti Cannons:** Dual corner angled cannons (`-63° ± 16°` from lower-left, `-117° ± 16°` from lower-right) projecting metallic foil ribbons (with realistic 3D pitch/yaw tumbling, drag, and flutter), 4-point sparkle stars, and round sequins.
+    - **Cosmic Starburst Fireworks:** Multi-stage radial rockets exploding into 32+ high-speed spark beads with gravity drag, screen shake, and coordinated audio cues.
+    - **Interactive Tap Bursts:** Tapping the playfield during the victory celebration state triggers energetic confetti bursts from the tap position.
+  - **Strict Victory Sequencing:** Wired `AppController.cs` and `LiveGameSession.cs` to enforce the requested sequence: (1) Celebration Confetti & Fireworks animation (0–2400ms) -> (2) Wait 2.4s for the celebration to complete -> (3) Display Level Pass Debrief dialog (`#modal-debrief`). Golden playback flows (`ForceVictory`) retain standard 600ms pacing.
+  - **Zero-Allocation GPU Architecture:** Built `GameRenderer.Celebration.cs` with pre-allocated static particle pools (`CelebrationConfettiPiece[160]`, `CelebrationRocket[8]`, `CelebrationSpark[256]`) rendered via `Canvas2D` hardware batching without runtime heap allocation or full-screen blur passes.
+  - **Audio DSP Parity:** Extended `AudioEngineDsp.cs`, `WebAudioPlayer.cs`, `AppHost.cs`, and `ParityAudioCues.cs` with `PlayCelebrationCannon()`, `PlayFireworkLaunch()`, and `PlayFireworkBurst()` synthesis and deterministic logging.
+  - **Unit Testing & Verification:** Added 5 comprehensive EditMode unit tests in `CelebrationEffectTests.cs` (Pool Allocation, Kinematics, Fireworks Lifecycle, Victory Timeline Sequencer, Interactive Tap Bursts). All 16 targeted EditMode tests and 20 AppFlowTests/LiveGameSessionTests passed with zero errors.
+  - **Screenshot Comparison:** Batch-captured Unity reference stills `17_unity_firework_celebration_burst.png`, `18_unity_victory_debrief_after_fireworks.png`, and `19_unity_celebration_confetti.png` in `games/maze-puzzle/unity/screenshots/` and documented them in `09_VISUAL_PARITY_AND_SCREENSHOT_COMPARISON.md`.
+
 - **Onboarding Tutorial Visual Parity & Zero-Lag GPU Optimization (2026-10-27):**
   - **Performance / Lag Fix:** Completely eliminated unbatched fullscreen GPU `ShadowBlur` Gaussian blur passes in [`GameRenderer.Tutorial.cs`](unity/maze-puzzle/Assets/Scripts/Render/Game/GameRenderer.Tutorial.cs), preserving `FastArc` / `FastShape` hardware batching in `Canvas2D` and restoring smooth 60+ FPS in Unity Play Mode and Device Simulator.
   - **UI Alignment:** Realigned the onboarding HUD to match the Web prototype: bottom-docked the holographic comms card, added the glassmorphic mascot avatar with animated emoji faces (`😋`, `⚡`, `😍`) and pulsing broadcast indicator dot, 3-step progress pills (`1. SPIN`, `2. MULTIPLY`, `3. FEED`), `↻ SWIPE TO ROTATE` badge, `⚡ ×2 GATE` multiplier beacon reticle with pointing gesture, and animated cascading chevrons.

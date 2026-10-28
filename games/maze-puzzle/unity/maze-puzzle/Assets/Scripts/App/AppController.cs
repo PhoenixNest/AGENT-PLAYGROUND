@@ -21,6 +21,7 @@ namespace OrbitalSalvage.App
         public const double BootDoneDelayMs = 350;
         public const double ToastMs = 2500;
         public const double DebriefDelayMs = 600;
+        public const double CelebrationDebriefDelayMs = 2400;
         public const double DefeatDelayMs = 400;
         public const double HintMs = 3500;
         public const double HintFadeMs = 400;
@@ -712,7 +713,7 @@ namespace OrbitalSalvage.App
                 if (done == 3 && Economy.CanClaimDailyMasterBonus())
                     After(MasterToastDelayMs, () => ShowToast(Loc.Tr("toast.daily.all_clear")));
             }
-            After(DebriefDelayMs, () => { _modals.Add("modal-debrief"); Rebuild(); });
+            After(CelebrationDebriefDelayMs, () => { _modals.Add("modal-debrief"); Rebuild(); });
             _audio.PlayVictoryFanfare();
             Rebuild();
         }

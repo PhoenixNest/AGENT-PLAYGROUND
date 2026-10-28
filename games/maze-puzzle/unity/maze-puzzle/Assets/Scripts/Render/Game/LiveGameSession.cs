@@ -71,6 +71,10 @@ namespace OrbitalSalvage.Render
         public bool UsedBackupPod;
         public TutorialPhase TutorialPhase { get; private set; } = TutorialPhase.None;
         public Action<TutorialPhase> OnTutorialPhaseChanged;
+        public bool IsVictoryCelebrationPlaying { get; private set; }
+        public double VictoryCelebrationTimer { get; private set; }
+        public const double CelebrationTotalDuration = 2.4;
+        public Action<string> OnCelebrationCue;
 
         public bool IsTutorialEligible()
         {
@@ -157,6 +161,15 @@ namespace OrbitalSalvage.Render
             Physics.OnGatePassed = OnGate;
             Physics.OnDebrisExploded = OnExploded;
             Physics.OnBoostTriggered = OnBoost;
+            if (Renderer != null)
+            {
+                Renderer.OnFireworkExploded = (x, y, color) =>
+                {
+                    var parityCues = Physics.Audio as ParityAudioCues;
+                    if (parityCues != null) parityCues.PlayFireworkBurst();
+                    if (OnCelebrationCue != null) OnCelebrationCue("burst");
+                };
+            }
         }
 
         public static LiveGameSession CreatePlay(double cssW, double cssH, int sectorNumber)
@@ -269,6 +282,9 @@ namespace OrbitalSalvage.Render
             var bh = Physics.BlackHole;
             Physics.InitSector(sector, Physics.Center, new Vec2(bh.X, bh.Y));
             if (OnQuotaChanged != null) OnQuotaChanged(CollectedMass, Quota);
+            IsVictoryCelebrationPlaying = false;
+            VictoryCelebrationTimer = 0;
+            Renderer.ResetCelebrationVfx();
             bool isTutEligible = sector != null && sector.LevelNumber == 1 && (Economy == null || !Economy.Profile.IntroSeen);
             SetTutorialPhase(isTutEligible ? TutorialPhase.Swipe : TutorialPhase.None);
         }
@@ -389,6 +405,32 @@ namespace OrbitalSalvage.Render
                 }
                 else FailureCheckTimer = 0;
             }
+            if (IsVictoryCelebrationPlaying)
+            {
+                double prevT = VictoryCelebrationTimer;
+                VictoryCelebrationTimer += step;
+                double cx = Physics.Center.X;
+                double cy = Physics.Center.Y;
+                double bhY = Physics.BlackHole.Y;
+                if (prevT < 0.32 && VictoryCelebrationTimer >= 0.32)
+                {
+                    var parityCues = Physics.Audio as ParityAudioCues;
+                    if (parityCues != null) parityCues.PlayFireworkLaunch();
+                    if (OnCelebrationCue != null) OnCelebrationCue("launch");
+                    Renderer.LaunchFirework(cx - 105.0, bhY + 15.0, cy - 75.0, "#fde047");
+                    Renderer.LaunchFirework(cx + 100.0, bhY + 15.0, cy - 40.0, "#4ade80");
+                }
+                if (prevT < 0.68 && VictoryCelebrationTimer >= 0.68)
+                {
+                    var parityCues = Physics.Audio as ParityAudioCues;
+                    if (parityCues != null) parityCues.PlayFireworkLaunch();
+                    if (OnCelebrationCue != null) OnCelebrationCue("launch");
+                    Renderer.LaunchFirework(cx, bhY, cy - 115.0, "#c084fc");
+                    Renderer.LaunchFirework(cx - 45.0, bhY + 10.0, cy + 55.0, "#fb923c");
+                }
+                if (VictoryCelebrationTimer >= CelebrationTotalDuration)
+                    IsVictoryCelebrationPlaying = false;
+            }
             if (measure) PhaseSimTicks += Stopwatch.GetTimestamp() - t0;
         }
 
@@ -429,6 +471,22 @@ namespace OrbitalSalvage.Render
         /// </summary>
         public void PointerDown(double clientX, double clientY)
         {
+            if (IsLevelCleared)
+            {
+                Renderer.LaunchSingleCelebrationConfetti(clientX, clientY);
+                Renderer.ExplodeFirework(clientX, clientY, null, 16);
+                var parityCues = Physics.Audio as ParityAudioCues;
+                if (parityCues != null)
+                {
+                    parityCues.PlayCelebrationCannon();
+                    parityCues.PlayFireworkBurst();
+                }
+                if (OnCelebrationCue != null)
+                {
+                    OnCelebrationCue("cannon");
+                    OnCelebrationCue("burst");
+                }
+            }
             PointerDown(clientX, 0, _tapPageWidth);
             _lastPointerY = clientY;
         }
@@ -586,6 +644,7 @@ namespace OrbitalSalvage.Render
         {
             if (IsLevelCleared) return;
             IsLevelCleared = true;
+            LaunchVictoryCelebration();
             if (ActiveSector != null && ActiveSector.LevelNumber == 1)
             {
                 if (Economy != null) Economy.CompleteIntro();
@@ -600,6 +659,33 @@ namespace OrbitalSalvage.Render
             string tier = ActiveSector != null && !string.IsNullOrEmpty(ActiveSector.DailyTier) ? ActiveSector.DailyTier : "silver";
             RecentUnlocks = Economy.RecordContractComplete(daily, tier);
             if (OnVictory != null) OnVictory(MakeStats(payout));
+        }
+
+        
+        public void LaunchVictoryCelebration()
+        {
+            IsVictoryCelebrationPlaying = true;
+            VictoryCelebrationTimer = 0;
+
+            double cx = Physics.Center.X;
+            double cy = Physics.Center.Y;
+            double bhY = Physics.BlackHole.Y;
+            double canvasW = _tapPageWidth > 0 ? _tapPageWidth : 430.0;
+            double canvasH = 932.0;
+
+            double cannonLeftX = 20.0;
+            double cannonRightX = canvasW - 20.0;
+            double cannonY = JsMath.Min(canvasH - 50.0, bhY + 50.0);
+
+            var parityCues = Physics.Audio as ParityAudioCues;
+            if (parityCues != null) parityCues.PlayCelebrationCannon();
+            if (OnCelebrationCue != null) OnCelebrationCue("cannon");
+            Renderer.LaunchCelebrationCannons(cannonLeftX, cannonY, cannonRightX, cannonY, 36);
+
+            if (parityCues != null) parityCues.PlayFireworkLaunch();
+            if (OnCelebrationCue != null) OnCelebrationCue("launch");
+            Renderer.LaunchFirework(cx - 65.0, bhY, cy - 30.0, "#f472b6");
+            Renderer.LaunchFirework(cx + 65.0, bhY, cy + 30.0, "#38bdf8");
         }
 
         void HandleDefeat()
