@@ -36,7 +36,7 @@ namespace OrbitalSalvage.Parity
             "home-mission-world", "home-mission-goal", "home-mission-name", "btn-home-play", "btn-open-maps-page",
             "btn-open-daily-shift", "dock-daily-badge", "btn-open-shop-page", "shop-dock-badge", "btn-open-trophies-page",
             "page-game", "game-canvas", "btn-game-pause", "hud-quota-capsule", "hud-sector-code", "hud-quota-bar",
-            "hud-quota-text", "btn-game-restart", "gesture-hint", "page-maps", "btn-back-maps", "maps-credits-val",
+            "hud-quota-text", "btn-game-restart", "btn-game-skin", "wardrobe-sheet", "btn-wardrobe-close", "wardrobe-backdrop", "wardrobe-items-list", "wardrobe-tab-rings", "wardrobe-tab-singularities", "wardrobe-tab-skyboxes", "gesture-hint", "page-maps", "btn-back-maps", "maps-credits-val",
             "sectors-page-container", "page-daily", "btn-back-daily", "daily-credits-val", "daily-page-container",
             "page-shop", "btn-back-shop", "shop-credits-val", "daily-gift-banner", "gift-banner-icon",
             "gift-banner-title", "gift-banner-desc", "btn-claim-daily-gift", "store-page-container",
@@ -93,6 +93,14 @@ namespace OrbitalSalvage.Parity
             P("hud-quota-bar", Hud + "TopBar/UnifiedCapsule/ProgressBarTrack");
             T("hud-quota-text", Hud + "TopBar/UnifiedCapsule", "kg");
             P("btn-game-restart", Hud + "TopBar/Btn_Restart");
+            P("btn-game-skin", Hud + "TopBar/Btn_Skin");
+            P("wardrobe-sheet", "AppRoot/WardrobeSheet");
+            P("btn-wardrobe-close", "AppRoot/WardrobeSheet/Btn_Close");
+            P("wardrobe-backdrop", "AppRoot/WardrobeSheet/Backdrop");
+            P("wardrobe-items-list", "AppRoot/WardrobeSheet/ItemsList");
+            P("wardrobe-tab-rings", "AppRoot/WardrobeSheet/Tabs/Tab_Rings");
+            P("wardrobe-tab-singularities", "AppRoot/WardrobeSheet/Tabs/Tab_Singularities");
+            P("wardrobe-tab-skyboxes", "AppRoot/WardrobeSheet/Tabs/Tab_Skyboxes");
 
             P("page-maps", "AppRoot/Page_Maps");
             P("btn-back-maps", Maps + "HeaderBar/Btn_Back");

@@ -287,6 +287,9 @@ namespace OrbitalSalvage.Viewer
 
             // In-game pause opens #modal-pause. Restart stays on the game frame, so it is not wired.
             list.Add(ById("game_lvl01_t1000ms", "btn-game-pause", "modal_pause"));
+            list.Add(ById("game_lvl01_t1000ms", "btn-game-skin", "modal_wardrobe"));
+            list.Add(ById("modal_wardrobe", "btn-wardrobe-close", "game_lvl01_t1000ms"));
+            list.Add(ById("modal_wardrobe", "wardrobe-backdrop", "game_lvl01_t1000ms"));
 
             // Pause sheet: resume/close/restart return to the game frame; maps and home leave it.
             // Sound toggles mute and stays put.
@@ -454,7 +457,8 @@ namespace OrbitalSalvage.Viewer
             "btn-home-play", "btn-open-maps-page", "btn-open-shop-page", "btn-open-daily-shift",
             "btn-open-trophies-page", "btn-home-settings", "btn-open-settings-page", "btn-home-audio",
             "btn-toggle-audio", "btn-back-maps", "btn-back-daily", "btn-back-shop", "btn-back-achievements",
-            "btn-back-settings", "btn-game-to-home", "btn-game-restart", "btn-game-pause",
+            "btn-back-settings", "btn-game-to-home", "btn-game-restart", "btn-game-pause", "btn-game-skin",
+            "btn-wardrobe-close", "wardrobe-backdrop", "wardrobe-tab-rings", "wardrobe-tab-singularities", "wardrobe-tab-skyboxes",
             "btn-pause-resume", "btn-close-pause", "btn-pause-restart", "btn-pause-sound",
             "btn-pause-maps", "btn-pause-home", "btn-debrief-replay", "btn-debrief-next",
             "btn-defeat-retry", "btn-defeat-home", "btn-defeat-backup", "btn-claim-daily-gift",
@@ -467,7 +471,8 @@ namespace OrbitalSalvage.Viewer
 
         static readonly string[] InteractiveClasses =
         {
-            "tab-btn", "btn-buy-item", "btn-equip-item", "level-tile", "world-tab-btn", "btn-play-daily-tier"
+            "tab-btn", "btn-buy-item", "btn-equip-item", "level-tile", "world-tab-btn", "btn-play-daily-tier",
+            "wardrobe-tab-btn", "wardrobe-item-card"
         };
 
         /// <summary>Topmost interactive control under the point. The viewer dispatches this to <c>AppController</c>.</summary>
@@ -492,7 +497,7 @@ namespace OrbitalSalvage.Viewer
             if (top < 0) return false;
             for (int i = top; i >= 0; i = els[i].Parent)
             {
-                if (!string.IsNullOrEmpty(els[i].Id) && InteractiveIds.Contains(els[i].Id))
+                if (!string.IsNullOrEmpty(els[i].Id) && (InteractiveIds.Contains(els[i].Id) || els[i].Id.StartsWith("wardrobe-item-")))
                 {
                     hit.Id = els[i].Id;
                     hit.ClassIndex = -1;

@@ -155,7 +155,7 @@ export class EconomyManager {
 
   getDefaultProfile() {
     return {
-      version: 2,
+      version: 3,
       credits: 250, // Starting piggy bank coins
       careerDebris: 0,
       careerContracts: 0,
@@ -201,9 +201,12 @@ export class EconomyManager {
   }
 
   normalizeCategory(cat) {
-    if (cat === "ring" || cat === "rings") return { singular: "ring", plural: "rings" };
-    if (cat === "singularity" || cat === "singularities") return { singular: "singularity", plural: "singularities" };
-    if (cat === "skybox" || cat === "skyboxes") return { singular: "skybox", plural: "skyboxes" };
+    if (cat === "ring" || cat === "rings")
+      return { singular: "ring", plural: "rings" };
+    if (cat === "singularity" || cat === "singularities")
+      return { singular: "singularity", plural: "singularities" };
+    if (cat === "skybox" || cat === "skyboxes")
+      return { singular: "skybox", plural: "skyboxes" };
     return { singular: cat, plural: cat };
   }
 
@@ -228,7 +231,49 @@ export class EconomyManager {
             hapticsEnabled: true,
           };
         }
-        return { ...this.getDefaultProfile(), ...parsed };
+        const defaults = this.getDefaultProfile();
+        let shouldResave = false;
+
+        // Auto-heal / sanitize profile if version < 3:
+        // Cleanses accidentally auto-unlocked paid cosmetics from previous sessions
+        if (!parsed.version || parsed.version < 3) {
+          parsed.version = 3;
+          parsed.unlocked = {
+            rings: ["ring_donut"],
+            singularities: ["singularity_nibbles"],
+            skyboxes: ["skybox_cotton_candy"],
+          };
+          if (!parsed.equipped) {
+            parsed.equipped = { ...defaults.equipped };
+          } else {
+            parsed.equipped.ring = "ring_donut";
+            parsed.equipped.singularity = "singularity_nibbles";
+            parsed.equipped.skybox = "skybox_cotton_candy";
+          }
+          shouldResave = true;
+        }
+
+        const merged = { ...defaults, ...parsed };
+        if (!merged.unlocked) merged.unlocked = defaults.unlocked;
+        if (!merged.equipped) merged.equipped = defaults.equipped;
+
+        // Ensure equipped items are strictly valid unlocked items; fallback to starter if corrupted
+        ["ring", "singularity", "skybox"].forEach((cat) => {
+          const { singular, plural } = this.normalizeCategory(cat);
+          const unlockedList = merged.unlocked[plural] || [];
+          if (!unlockedList.includes(merged.equipped[singular])) {
+            merged.equipped[singular] = defaults.equipped[singular];
+            shouldResave = true;
+          }
+        });
+
+        if (shouldResave) {
+          try {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(merged));
+          } catch (e) {}
+        }
+
+        return merged;
       }
     } catch (e) {
       console.warn("Could not load save profile from localStorage", e);
@@ -302,12 +347,13 @@ export class EconomyManager {
 
   equipItem(category, itemId) {
     const { singular, plural } = this.normalizeCategory(category);
-    if (this.isUnlocked(plural, itemId)) {
-      this.profile.equipped[singular] = itemId;
-      this.saveProfile();
-      return true;
+    if (!this.isUnlocked(plural, itemId)) {
+      console.warn(`Cannot equip locked item: ${itemId} in ${plural}`);
+      return false;
     }
-    return false;
+    this.profile.equipped[singular] = itemId;
+    this.saveProfile();
+    return true;
   }
 
   recordDebrisSwallowed(count = 1) {
@@ -340,7 +386,8 @@ export class EconomyManager {
   canClaimDailyMasterBonus() {
     const today = new Date().toISOString().slice(0, 10);
     const shifts = this.getDailyShifts();
-    const allCompleted = shifts.length > 0 && shifts.every((s) => s.isCompleted);
+    const allCompleted =
+      shifts.length > 0 && shifts.every((s) => s.isCompleted);
     return allCompleted && this.profile.dailyMasterClaimedDate !== today;
   }
 

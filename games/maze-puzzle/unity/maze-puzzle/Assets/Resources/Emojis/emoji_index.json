@@ -283,5 +283,10 @@
     "file": "2b50.png",
     "folder": "Star",
     "style": "3D"
+  },
+  "🎨": {
+    "file": "1f3a8.png",
+    "folder": "Artist palette",
+    "style": "3D"
   }
 }

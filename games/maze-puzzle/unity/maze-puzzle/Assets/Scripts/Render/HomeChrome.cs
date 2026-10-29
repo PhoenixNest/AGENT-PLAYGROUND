@@ -36,6 +36,7 @@ namespace OrbitalSalvage.Render
                 case "settings_default":
                 case "game_lvl01_t1000ms":
                 case "modal_pause":
+                case "modal_wardrobe":
                 case "modal_debrief_exact":
                 case "modal_defeat_12_of_20":
                 case "loading_t0500":
@@ -51,11 +52,27 @@ namespace OrbitalSalvage.Render
         readonly StreamPlayer playfield;
         readonly List<Dictionary<string, object>> elements;
 
+        readonly List<Dictionary<string, object>> hitElementsCombined = new List<Dictionary<string, object>>();
+
         /// <summary>
         /// The painted elements, in document order. Unlike the captured file this includes edits made after loading,
         /// such as the shop cards that <see cref="StampShopCards"/> swaps in. Hit testing must read this list.
         /// </summary>
-        public IReadOnlyList<Dictionary<string, object>> Elements => elements;
+        public IReadOnlyList<Dictionary<string, object>> Elements
+        {
+            get
+            {
+                if (WardrobeOpen)
+                {
+                    SyncWardrobeHitElements();
+                    hitElementsCombined.Clear();
+                    hitElementsCombined.AddRange(elements);
+                    hitElementsCombined.AddRange(wardrobeHitElements);
+                    return hitElementsCombined;
+                }
+                return elements;
+            }
+        }
 
         /// <summary>True once <see cref="StampShopCards"/> replaced the cards, so the buttons moved away from the captured file.</summary>
         public bool ShopStamped { get; private set; }
@@ -1362,6 +1379,7 @@ namespace OrbitalSalvage.Render
                 }
                 if (frame != null && frame.PageOpacity < 0.999) canvas.GlobalAlpha = frame.PageOpacity;
                 PaintAll();
+                if (WardrobeOpen) PaintWardrobeSheet();
                 PaintToasts();
                 canvas.EndFrame();
             }
@@ -1449,8 +1467,8 @@ namespace OrbitalSalvage.Render
 
         void EnsurePaintFlags()
         {
-            if (isAppPage != null) return;
             int n = elements.Count;
+            if (isAppPage != null && isAppPage.Length >= n) return;
             isAppPage = new bool[n];
             isBeam = new bool[n];
             backdropKind = new byte[n];
@@ -1867,7 +1885,7 @@ namespace OrbitalSalvage.Render
             Array.Clear(skipBuf, 0, n);
             if (pageSkip == null || pageSkip.Length < n) pageSkip = new bool[n];
             Array.Clear(pageSkip, 0, n);
-            if (specHidden == null)
+            if (specHidden == null || specHidden.Length < n)
             {
                 specHidden = new bool[n];
                 isShine = new bool[n];

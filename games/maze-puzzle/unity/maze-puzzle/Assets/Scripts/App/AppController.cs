@@ -40,7 +40,7 @@ namespace OrbitalSalvage.App
 
         static readonly string[] ModalOrder =
         {
-            "modal-pause", "modal-privacy", "modal-language", "modal-reset-confirm", "modal-debrief", "modal-defeat"
+            "modal-pause", "modal-wardrobe", "modal-privacy", "modal-language", "modal-reset-confirm", "modal-debrief", "modal-defeat"
         };
 
         readonly IAppClock _clock;
@@ -154,6 +154,8 @@ namespace OrbitalSalvage.App
         public double CollectedMass { get; private set; }
         public double SpilledMass { get; private set; }
         public bool IsPaused { get; private set; }
+        public bool IsWardrobeOpen { get; private set; }
+        public string WardrobeTab { get; private set; } = "rings";
         public bool IsLevelCleared { get; private set; }
         public bool IsLevelFailed { get; private set; }
         public bool UsedBackupPod { get; private set; }
@@ -437,6 +439,22 @@ namespace OrbitalSalvage.App
                 case "btn-game-restart":
                     RestartSector();
                     break;
+                case "btn-game-skin":
+                    OpenWardrobeSheet();
+                    break;
+                case "btn-wardrobe-close":
+                case "wardrobe-backdrop":
+                    CloseWardrobeSheet();
+                    break;
+                case "wardrobe-tab-rings":
+                    SetWardrobeTab("rings");
+                    break;
+                case "wardrobe-tab-singularities":
+                    SetWardrobeTab("singularities");
+                    break;
+                case "wardrobe-tab-skyboxes":
+                    SetWardrobeTab("skyboxes");
+                    break;
                 case "btn-game-pause":
                     OpenPause();
                     break;
@@ -521,6 +539,11 @@ namespace OrbitalSalvage.App
                     SetHaptics(!Economy.Profile.Settings.HapticsEnabled);
                     break;
                 default:
+                    if (id != null && id.StartsWith("wardrobe-item-"))
+                    {
+                        SelectWardrobeItem(id.Substring("wardrobe-item-".Length));
+                        return;
+                    }
                     if (!TryLanguageButton(id)) return;
                     break;
             }
@@ -580,6 +603,19 @@ namespace OrbitalSalvage.App
                 RefreshHome();
                 ShowToast(Loc.Tr("toast.shop.equipped"));
                 Rebuild();
+            }
+            else if (token == "wardrobe-tab-btn")
+            {
+                string[] tabs = { "rings", "singularities", "skyboxes" };
+                if (index >= 0 && index < tabs.Length) SetWardrobeTab(tabs[index]);
+            }
+            else if (token == "wardrobe-item-card")
+            {
+                var items = EconomyCatalog.Category(WardrobeTab ?? "rings");
+                if (items != null && index >= 0 && index < items.Length)
+                {
+                    SelectWardrobeItem(items[index].Id);
+                }
             }
             else if (token == "world-tab-btn")
             {
@@ -986,6 +1022,69 @@ namespace OrbitalSalvage.App
             ResetSavedProgress();
         }
 
+        public void OpenWardrobeSheet()
+        {
+            IsWardrobeOpen = true;
+            IsPaused = true;
+            if (string.IsNullOrEmpty(WardrobeTab)) WardrobeTab = "rings";
+            _modals.Add("modal-wardrobe");
+            _audio.PlayPop();
+            Rebuild();
+        }
+
+        public void CloseWardrobeSheet()
+        {
+            IsWardrobeOpen = false;
+            IsPaused = false;
+            _modals.Remove("modal-wardrobe");
+            Rebuild();
+        }
+
+        public void SetWardrobeTab(string tab)
+        {
+            if (tab == "rings" || tab == "singularities" || tab == "skyboxes")
+            {
+                WardrobeTab = tab;
+                _audio.PlayPop();
+                Rebuild();
+            }
+        }
+
+        public void SelectWardrobeItem(string itemId)
+        {
+            string tab = WardrobeTab ?? "rings";
+            var items = EconomyCatalog.Category(tab);
+            if (items == null) return;
+            CosmeticItem targetItem = null;
+            for (int i = 0; i < items.Length; i++)
+            {
+                if (items[i].Id == itemId) { targetItem = items[i]; break; }
+            }
+            if (targetItem == null) return;
+
+            bool isUnlocked = Economy.IsUnlocked(tab, targetItem.Id);
+            if (!isUnlocked)
+            {
+                _audio.PlayPop();
+                ShowToast($"🔒 \"{targetItem.Name}\" is locked! Unlock in Toy Shop.");
+                return;
+            }
+
+            string singular = Economy.NormalizeCategory(tab).Singular;
+            string equipped = Economy.Profile.Equipped.Get(singular);
+            if (equipped != targetItem.Id)
+            {
+                bool success = Economy.EquipItem(tab, targetItem.Id);
+                if (success)
+                {
+                    _audio.PlayScrapAbsorb();
+                    ShowToast($"Equipped {targetItem.Name}! ✨");
+                    RefreshHome();
+                    Rebuild();
+                }
+            }
+        }
+
         void OpenPause()
         {
             IsPaused = true;
@@ -1011,6 +1110,8 @@ namespace OrbitalSalvage.App
             IsLevelCleared = false;
             IsLevelFailed = false;
             UsedBackupPod = false;
+            IsWardrobeOpen = false;
+            _modals.Remove("modal-wardrobe");
             _modals.Remove("modal-pause");
             _modals.Remove("modal-debrief");
             _modals.Remove("modal-defeat");
@@ -1310,6 +1411,7 @@ namespace OrbitalSalvage.App
                 if (_modals.Contains("modal-debrief")) modal = "debrief";
                 else if (_modals.Contains("modal-defeat")) modal = "defeat";
                 else if (_modals.Contains("modal-pause")) modal = "pause";
+                else if (_modals.Contains("modal-wardrobe")) modal = "wardrobe";
                 else if (_modals.Contains("modal-language")) modal = "language";
                 else if (_modals.Contains("modal-privacy")) modal = "privacy";
                 else if (_modals.Contains("modal-reset-confirm")) modal = "reset";

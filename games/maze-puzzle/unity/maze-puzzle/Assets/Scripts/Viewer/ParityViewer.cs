@@ -537,7 +537,8 @@ namespace OrbitalSalvage.Viewer
                 }
             }
             bool playing = app != null && app.CurrentPage == "game" && session != null && !app.ModalOpen("modal-pause")
-                && !app.ModalOpen("modal-debrief") && !app.ModalOpen("modal-defeat");
+                && !app.ModalOpen("modal-debrief") && !app.ModalOpen("modal-defeat") && !app.ModalOpen("modal-wardrobe")
+                && !app.IsWardrobeOpen;
             if (pointerInject.Count > 0)
             {
                 var injected = pointerInject.Dequeue();
@@ -657,6 +658,7 @@ namespace OrbitalSalvage.Viewer
             {
                 if (!string.IsNullOrEmpty(hit.Id)) app.Click(hit.Id);
                 else if (!string.IsNullOrEmpty(hit.ClassToken)) app.ClickClass(hit.ClassToken, hit.ClassIndex);
+                SyncApp();
             }
         }
 
@@ -688,7 +690,7 @@ namespace OrbitalSalvage.Viewer
         /// </summary>
         IReadOnlyList<Dictionary<string, object>> PaintedElements()
         {
-            return current != null && current.ShopStamped ? current.Elements : null;
+            return current != null && (current.ShopStamped || current.WardrobeOpen) ? current.Elements : null;
         }
 
         string Spec(string stateId)
@@ -907,15 +909,27 @@ namespace OrbitalSalvage.Viewer
             if (down)
             {
                 string spec = Spec(currentId);
-                if (app != null && ParityPages.TryHitControl(spec, cssX, cssY, out var hit))
+                var painted = PaintedElements();
+                if (app != null)
                 {
-                    if (!string.IsNullOrEmpty(hit.Id)) app.Click(hit.Id);
-                    else if (!string.IsNullOrEmpty(hit.ClassToken)) app.ClickClass(hit.ClassToken, hit.ClassIndex);
-                    return;
+                    bool hitControl = painted != null
+                        ? ParityPages.TryHitControl(painted, cssX, cssY, out var hit)
+                        : ParityPages.TryHitControl(spec, cssX, cssY, out hit);
+                    if (hitControl)
+                    {
+                        if (!string.IsNullOrEmpty(hit.Id)) app.Click(hit.Id);
+                        else if (!string.IsNullOrEmpty(hit.ClassToken)) app.ClickClass(hit.ClassToken, hit.ClassIndex);
+                        return;
+                    }
                 }
+                if (app != null && (app.IsPaused || app.IsWardrobeOpen || app.ModalOpen("modal-wardrobe"))) return;
                 DispatchPlayPointer(session, cssX, cssY, true, false, false);
             }
-            else if (held) DispatchPlayPointer(session, cssX, cssY, false, true, false);
+            else if (held)
+            {
+                if (app != null && (app.IsPaused || app.IsWardrobeOpen || app.ModalOpen("modal-wardrobe"))) return;
+                DispatchPlayPointer(session, cssX, cssY, false, true, false);
+            }
             if (up) session.PointerUp();
         }
 

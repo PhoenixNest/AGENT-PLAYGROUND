@@ -9,6 +9,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- **In-Game Quick Wardrobe ("Change Skin") Feature & Parity Implementation (2026-10-29):**
+  - **In-Game Quick Wardrobe Bottom Sheet:** Replaced HUD top-right restart button with Change Skin button (`🎨` / `#btn-game-skin`) with golden gradient border. Tapping opens a sleek glassmorphic bottom sheet docking at $y=540\text{--}932\text{pt}$ with drag handle, close button `✕`, 3 category tabs (*🍩 Rings*, *🕳️ Nibbles*, *🌌 Skies*), and 2-column cosmetic cards.
+  - **Live Preview & Equipping:** Tapping any unlocked skin equips it immediately, plays `PlayScrapAbsorb()`, emits an in-game toast (`Equipped <Item>! ✨`), and renders live preview on the active centrifuge ring, black hole, and cosmic skybox.
+  - **Strict Economy Guards:** Completely preserves locked cosmetic economy invariants. Locked items show `🔒 <Cost> 🪙 (Shop)` badge with dashed borders and reduced opacity. Tapping a locked skin strictly refuses equipping, triggers a warning toast (`🔒 "<Item>" is locked! Unlock in Toy Shop.`), and plays a negative chime.
+  - **Full Web & Unity Architectural Parity:**
+    - **Web:** Implemented `#btn-game-skin` in `index.html`, added `#wardrobe-sheet` component, wired modal lifecycle and tab navigation in `main.js`, and added CSS bottom sheet animations in `styles.css`.
+    - **Unity:** Implemented `HomeChrome.WardrobeSheet.cs` partial class, added `IsWardrobeOpen`, `WardrobeTab`, and hit bounds synchronization in `AppController.cs` and `ParityPages.cs`, rendered high-resolution 3D palette emoji `1f3a8.png` in `Resources/Emojis/3D/`, and updated Parity specs (`modal_wardrobe__iphone.json` / `modal_wardrobe__zero.json`).
+  - **Automated Testing:** Added 7 comprehensive EditMode unit tests in `QuickWardrobeTests.cs` (sheet opening, game pause/resume, tab switching, unlocked item equipping, locked item refusal with toast, and gameplay reset lifecycle). All 7 tests passed (0 failures).
+  - **Visual Verification & Screenshot Capture:** Captured reference screenshot `20_unity_quick_wardrobe_sheet.png` via `PagePreviewPainter.DumpWardrobeScreenshotBatch` and updated `09_VISUAL_PARITY_AND_SCREENSHOT_COMPARISON.md`.
+
 - **Celebration Confetti & Cosmic Starburst Fireworks Parity Implementation (2026-10-28):**
   - **Visual & Kinetic Parity:** Implemented dual-system celebration effects in Unity matching the Web prototype:
     - **Celebration Confetti Cannons:** Dual corner angled cannons (`-63° ± 16°` from lower-left, `-117° ± 16°` from lower-right) projecting metallic foil ribbons (with realistic 3D pitch/yaw tumbling, drag, and flutter), 4-point sparkle stars, and round sequins.

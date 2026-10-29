@@ -308,6 +308,53 @@ export class AudioEngine {
     });
   }
 
+  playPop() {
+    if (!this.ctx || this.isMuted) return;
+    this.ensureRunning();
+    const t = this.ctx.currentTime || 0.001;
+    const osc = this.ctx.createOscillator();
+    const gain = this.ctx.createGain();
+
+    osc.type = "sine";
+    osc.frequency.setValueAtTime(420, t);
+    osc.frequency.exponentialRampToValueAtTime(780, t + 0.06);
+
+    gain.gain.setValueAtTime(0.14, t);
+    gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.07);
+
+    osc.connect(gain);
+    gain.connect(this.masterCompressor);
+
+    osc.start(t);
+    osc.stop(t + 0.08);
+  }
+
+  playScrapAbsorb() {
+    if (!this.ctx || this.isMuted) return;
+    this.ensureRunning();
+    const t = this.ctx.currentTime || 0.001;
+
+    // Bright 2-tone harmonic chime
+    [523.25, 783.99].forEach((freq, idx) => {
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+      const delay = idx * 0.04;
+
+      osc.type = "triangle";
+      osc.frequency.setValueAtTime(freq, t + delay);
+      osc.frequency.exponentialRampToValueAtTime(freq * 1.5, t + delay + 0.12);
+
+      gain.gain.setValueAtTime(0.12, t + delay);
+      gain.gain.exponentialRampToValueAtTime(0.0001, t + delay + 0.15);
+
+      osc.connect(gain);
+      gain.connect(this.masterCompressor);
+
+      osc.start(t + delay);
+      osc.stop(t + delay + 0.16);
+    });
+  }
+
   playBoosterPass(now) {
     if (!this.ctx || this.isMuted) return;
     this.ensureRunning();
