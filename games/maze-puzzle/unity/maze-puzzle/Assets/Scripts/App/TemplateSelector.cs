@@ -69,6 +69,7 @@ namespace OrbitalSalvage.App
             if (modal == "debrief") return Debrief(q);
             if (modal == "defeat") return Defeat(q);
             if (modal == "pause") return "modal_pause";
+            if (modal == "wardrobe") return "modal_wardrobe";
             if (modal == "language") return "settings_modal_language";
             if (modal == "privacy") return "settings_modal_privacy";
             if (modal == "reset") return "settings_modal_reset_confirm";

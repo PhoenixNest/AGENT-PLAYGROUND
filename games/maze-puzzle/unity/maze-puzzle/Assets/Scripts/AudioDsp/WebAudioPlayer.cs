@@ -261,6 +261,11 @@ namespace OrbitalSalvage.AudioDsp
             Send(PlayerCommandKind.PlayFireworkBurst);
         }
 
+        public void PlayPop()
+        {
+            Send(PlayerCommandKind.PlayBoosterPass);
+        }
+
         static void Execute(AudioEngineDsp e, ref PlayerCommand c)
         {
             switch (c.Kind)

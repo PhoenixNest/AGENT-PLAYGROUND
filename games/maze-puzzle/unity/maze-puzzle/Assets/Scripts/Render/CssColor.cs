@@ -11,6 +11,9 @@ namespace OrbitalSalvage.Render
         public Rgba(float r, float g, float b, float a) { this.r = r; this.g = g; this.b = b; this.a = a; }
         public static readonly Rgba Transparent = new Rgba(0, 0, 0, 0);
         public static readonly Rgba Black = new Rgba(0, 0, 0, 1);
+        public static readonly Rgba White = new Rgba(1, 1, 1, 1);
+        public static readonly Rgba Green = new Rgba(0.29f, 0.87f, 0.49f, 1);
+        public static readonly Rgba Yellow = new Rgba(0.98f, 0.8f, 0.08f, 1);
     }
 
     public static class CssColor

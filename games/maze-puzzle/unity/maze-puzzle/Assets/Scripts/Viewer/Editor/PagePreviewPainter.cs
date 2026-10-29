@@ -271,6 +271,49 @@ namespace OrbitalSalvage.Viewer.Editor
             if (Application.isBatchMode) EditorApplication.Exit(0);
         }
 
+        /// <summary>
+        /// Captures the in-game quick wardrobe bottom sheet screenshot in <c>games/maze-puzzle/unity/screenshots</c>
+        /// matching item 20 in doc 09.
+        /// Batch: <c>-executeMethod OrbitalSalvage.Viewer.Editor.PagePreviewPainter.DumpWardrobeScreenshotBatch -docShotDir &lt;folder&gt;</c>.
+        /// </summary>
+        public static void DumpWardrobeScreenshotBatch()
+        {
+            string dir = null;
+            var args = Environment.GetCommandLineArgs();
+            for (int i = 0; i < args.Length - 1; i++)
+                if (args[i] == "-docShotDir") dir = args[i + 1];
+            if (string.IsNullOrEmpty(dir))
+            {
+                string project = Directory.GetParent(Application.dataPath).FullName;
+                dir = Path.GetFullPath(Path.Combine(project, "..", "screenshots"));
+            }
+            Directory.CreateDirectory(dir);
+
+            OutlineFonts.Clear();
+            var session = RecordedFrameDriver.Create(1);
+            for (int f = 0; f < 10; f++) session.Update(RecordedFrameDriver.FrameDt);
+            Texture2D tex = null;
+            try
+            {
+                tex = Render("game_lvl01_t1000ms", "zero", true, 0, 0, chrome =>
+                {
+                    chrome.ExternalPlayfield = session.Renderer.Target;
+                    chrome.WardrobeOpen = true;
+                    chrome.WardrobeTab = "rings";
+                    chrome.WardrobeEconomy = session.Economy;
+                }, out byte[] png);
+                File.WriteAllBytes(Path.Combine(dir, "20_unity_quick_wardrobe_sheet.png"), png);
+            }
+            finally
+            {
+                if (tex != null) UnityEngine.Object.DestroyImmediate(tex);
+                session.Renderer.Dispose();
+            }
+
+            Debug.Log("[WardrobeShots] wrote 20_unity_quick_wardrobe_sheet.png to " + dir);
+            if (Application.isBatchMode) EditorApplication.Exit(0);
+        }
+
         static void MarkJapanese(HomeChrome chrome)
         {
             chrome.TextOverrides["settings-language-value"] = "日本語";

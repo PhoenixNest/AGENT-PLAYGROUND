@@ -451,6 +451,7 @@ namespace OrbitalSalvage.Render
 
         public void PointerDown(double clientX, double canvasLeft, double canvasWidth)
         {
+            if (IsPaused) return;
             double now = NowMs();
             _dragging = true;
             _lastPointerX = clientX;
@@ -471,6 +472,7 @@ namespace OrbitalSalvage.Render
         /// </summary>
         public void PointerDown(double clientX, double clientY)
         {
+            if (IsPaused) return;
             if (IsLevelCleared)
             {
                 Renderer.LaunchSingleCelebrationConfetti(clientX, clientY);
@@ -493,7 +495,7 @@ namespace OrbitalSalvage.Render
 
         public void PointerMove(double clientX)
         {
-            if (!_dragging) return;
+            if (IsPaused || !_dragging) return;
             if (TutorialPhase == TutorialPhase.Swipe) SetTutorialPhase(TutorialPhase.Gate);
             double delta = clientX - _lastPointerX;
             _lastPointerX = clientX;
@@ -507,6 +509,7 @@ namespace OrbitalSalvage.Render
         /// </summary>
         public void PointerMove(double clientX, double clientY)
         {
+            if (IsPaused) return;
             double previousX = _lastPointerX;
             double previousY = _lastPointerY;
             _lastPointerX = clientX;
@@ -540,6 +543,7 @@ namespace OrbitalSalvage.Render
 
         public void KeyDown(string key)
         {
+            if (IsPaused) return;
             if (key == "a" || key == "A" || key == "ArrowLeft")
             {
                 if (TutorialPhase == TutorialPhase.Swipe) SetTutorialPhase(TutorialPhase.Gate);

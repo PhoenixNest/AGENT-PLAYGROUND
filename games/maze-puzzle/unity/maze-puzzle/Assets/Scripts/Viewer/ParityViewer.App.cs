@@ -46,6 +46,11 @@ namespace OrbitalSalvage.Viewer
         double?[] snapElemWidth = Array.Empty<double?>();
         double?[] snapElemPct = Array.Empty<double?>();
         bool?[] snapElemVis = Array.Empty<bool?>();
+        bool snapWardrobeOpen;
+        string snapWardrobeTab = "";
+        string snapEquippedRing = "";
+        string snapEquippedSing = "";
+        string snapEquippedSky = "";
         bool sessionWired;
         bool flowClockActive;
         double flowClockMs;
@@ -484,6 +489,9 @@ namespace OrbitalSalvage.Viewer
                     chrome.Toasts.Add(new HomeChrome.ToastPaint { Text = toast.Text, AgeMs = age });
                 }
             }
+            chrome.WardrobeOpen = (app.CurrentPage == "game" && (app.IsWardrobeOpen || app.ModalOpen("modal-wardrobe")));
+            chrome.WardrobeTab = app.WardrobeTab;
+            chrome.WardrobeEconomy = app.Economy;
             if (page == "settings"
                 || (templateId != null && templateId.IndexOf("settings_modal_language", StringComparison.Ordinal) >= 0)
                 || ModalOpen("modal-language"))
@@ -555,6 +563,17 @@ namespace OrbitalSalvage.Viewer
             if (snapTemplate != app.TemplateId || snapPage != app.CurrentPage || snapCredit != app.CreditText
                 || snapQuota != app.QuotaText || snapBar != app.LoadingBar || snapTip != app.LoadingTip)
                 return false;
+            bool wardrobeOpen = app.IsWardrobeOpen || app.ModalOpen("modal-wardrobe");
+            if (snapWardrobeOpen != wardrobeOpen) return false;
+            if (wardrobeOpen)
+            {
+                if (snapWardrobeTab != (app.WardrobeTab ?? "")) return false;
+                string eqRing = app.Economy != null && app.Economy.Profile != null ? app.Economy.Profile.Equipped.Get("ring") : "";
+                string eqSing = app.Economy != null && app.Economy.Profile != null ? app.Economy.Profile.Equipped.Get("singularity") : "";
+                string eqSky = app.Economy != null && app.Economy.Profile != null ? app.Economy.Profile.Equipped.Get("skybox") : "";
+                if (snapEquippedRing != eqRing || snapEquippedSing != eqSing || snapEquippedSky != eqSky)
+                    return false;
+            }
             var els = app.Model.Elements;
             if (els.Count != snapElemN) return false;
             int i = 0;
@@ -576,6 +595,11 @@ namespace OrbitalSalvage.Viewer
             snapQuota = app.QuotaText;
             snapBar = app.LoadingBar;
             snapTip = app.LoadingTip;
+            snapWardrobeOpen = app.IsWardrobeOpen || app.ModalOpen("modal-wardrobe");
+            snapWardrobeTab = app.WardrobeTab ?? "";
+            snapEquippedRing = app.Economy != null && app.Economy.Profile != null ? app.Economy.Profile.Equipped.Get("ring") : "";
+            snapEquippedSing = app.Economy != null && app.Economy.Profile != null ? app.Economy.Profile.Equipped.Get("singularity") : "";
+            snapEquippedSky = app.Economy != null && app.Economy.Profile != null ? app.Economy.Profile.Equipped.Get("skybox") : "";
             var els = app.Model.Elements;
             snapElemN = els.Count;
             if (snapElemKey.Length != snapElemN)
@@ -1363,6 +1387,8 @@ namespace OrbitalSalvage.Viewer
             public void PlayCelebrationCannon() { player.PlayCelebrationCannon(); }
             public void PlayFireworkLaunch() { player.PlayFireworkLaunch(); }
             public void PlayFireworkBurst() { player.PlayFireworkBurst(); }
+            public void PlayPop() { player.PlayPop(); }
+            public void PlayScrapAbsorb() { player.PlayDebrisSwallowed(); }
         }
 
         sealed class BoundPlayfield : IFixedPlayfield, IFailureClock

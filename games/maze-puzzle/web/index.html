@@ -11,7 +11,13 @@
       name="description"
       content="Swipe to spin the donut and feed Nibbles the hungry cartoon black hole in this pure gesture mobile puzzle!"
     />
-    <link rel="stylesheet" href="styles.css" />
+    <meta
+      http-equiv="Cache-Control"
+      content="no-cache, no-store, must-revalidate"
+    />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
+    <link rel="stylesheet" href="styles.css?v=20261028c" />
   </head>
   <body>
     <!-- Mobile Portrait Container Frame -->
@@ -213,12 +219,8 @@
             </div>
           </div>
 
-          <button
-            class="btn-hud-circle"
-            id="btn-game-restart"
-            title="Restart Level"
-          >
-            <span>🔄</span>
+          <button class="btn-hud-circle" id="btn-game-skin" title="Change Skin">
+            <span>🎨</span>
           </button>
         </header>
 
@@ -280,6 +282,55 @@
               </div>
             </div>
             <div class="tut-action-glow"></div>
+          </div>
+        </div>
+
+        <!-- In-Game Quick Wardrobe Bottom Sheet (Option A) -->
+        <div
+          id="wardrobe-sheet"
+          class="wardrobe-sheet hidden"
+          aria-hidden="true"
+        >
+          <div class="wardrobe-sheet-backdrop" id="wardrobe-backdrop"></div>
+          <div class="wardrobe-sheet-panel">
+            <div class="wardrobe-drag-handle"></div>
+            <div class="wardrobe-sheet-header">
+              <div class="wardrobe-header-title">
+                <span class="wardrobe-icon">🎨</span>
+                <span class="wardrobe-heading">QUICK WARDROBE</span>
+              </div>
+              <button
+                id="btn-wardrobe-close"
+                class="btn-wardrobe-close"
+                title="Close Wardrobe"
+              >
+                ✕
+              </button>
+            </div>
+
+            <!-- Category Tabs -->
+            <div class="wardrobe-tabs">
+              <button class="wardrobe-tab-btn active" data-tab="rings">
+                🍩 Rings
+              </button>
+              <button class="wardrobe-tab-btn" data-tab="singularities">
+                🕳️ Nibbles
+              </button>
+              <button class="wardrobe-tab-btn" data-tab="skyboxes">
+                🌌 Skies
+              </button>
+            </div>
+
+            <!-- Scrollable skin chips/cards container -->
+            <div class="wardrobe-items-container" id="wardrobe-items-list">
+              <!-- Dynamically populated via main.js -->
+            </div>
+
+            <div class="wardrobe-sheet-footer">
+              <span class="wardrobe-footer-hint"
+                >✨ Instant Live Preview — Tap any unlocked skin to wear!</span
+              >
+            </div>
           </div>
         </div>
       </div>
@@ -1072,6 +1123,6 @@
     </div>
 
     <!-- Application Script -->
-    <script type="module" src="main.js"></script>
+    <script type="module" src="main.js?v=20261028c"></script>
   </body>
 </html>

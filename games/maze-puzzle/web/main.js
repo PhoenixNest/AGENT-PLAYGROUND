@@ -4,15 +4,15 @@
  * dedicated Maps/Shop/Trophies pages, and active gameplay canvas.
  */
 
-import { AudioEngine } from "./engine/audio.js";
+import { AudioEngine } from "./engine/audio.js?v=20261028c";
 import {
   EconomyManager,
   COSMETIC_CATALOG,
   ACHIEVEMENTS,
-} from "./engine/economy.js";
-import { MazeLevelBuilder } from "./engine/maze.js";
-import { PhysicsEngine } from "./engine/physics.js";
-import { GameRenderer } from "./engine/renderer.js";
+} from "./engine/economy.js?v=20261028c";
+import { MazeLevelBuilder } from "./engine/maze.js?v=20261028c";
+import { PhysicsEngine } from "./engine/physics.js?v=20261028c";
+import { GameRenderer } from "./engine/renderer.js?v=20261028c";
 
 // The only web place that names the legal pages. Both are placeholders.
 // TODO: replace these with the real Privacy Policy and User Agreement URLs.
@@ -125,6 +125,10 @@ class OrbitalApp {
     });
 
     this.updateAllCreditDisplays();
+
+    if (pageId !== "game") {
+      this.closeWardrobeSheet();
+    }
 
     if (pageId === "home") {
       this.updateHomeView();
@@ -670,6 +674,40 @@ class OrbitalApp {
       });
     }
 
+    const btnSkin = document.getElementById("btn-game-skin");
+    if (btnSkin) {
+      btnSkin.addEventListener("click", () => {
+        this.openWardrobeSheet();
+      });
+    }
+
+    const btnWardrobeClose = document.getElementById("btn-wardrobe-close");
+    if (btnWardrobeClose) {
+      btnWardrobeClose.addEventListener("click", () => {
+        this.closeWardrobeSheet();
+      });
+    }
+
+    const wardrobeBackdrop = document.getElementById("wardrobe-backdrop");
+    if (wardrobeBackdrop) {
+      wardrobeBackdrop.addEventListener("click", () => {
+        this.closeWardrobeSheet();
+      });
+    }
+
+    const wardrobeTabBtns = document.querySelectorAll(".wardrobe-tab-btn");
+    wardrobeTabBtns.forEach((btn) => {
+      btn.addEventListener("click", () => {
+        wardrobeTabBtns.forEach((b) => b.classList.remove("active"));
+        btn.classList.add("active");
+        this.currentWardrobeTab = btn.dataset.tab;
+        this.renderWardrobeItems(this.currentWardrobeTab);
+        try {
+          this.audio.playPop();
+        } catch (e) {}
+      });
+    });
+
     // 5b. In-Game Pause Modal Handlers
     const pauseModal = document.getElementById("modal-pause");
     const openPause = () => {
@@ -1105,6 +1143,7 @@ class OrbitalApp {
      Gameplay Sector Management
      ========================================================= */
   loadSector(sectorConfig, showToastMsg = true) {
+    this.closeWardrobeSheet();
     this.activeSector = sectorConfig;
     this.collectedMass = 0;
     this.spilledMass = 0;
@@ -1727,6 +1766,143 @@ class OrbitalApp {
           <span class="badge-cost">+${ach.reward} 🪙 Prize</span>
         </div>
       `;
+      container.appendChild(card);
+    });
+  }
+
+  /* =========================================================
+     (6b) In-Game Quick Wardrobe Sheet (Option A)
+     ========================================================= */
+  openWardrobeSheet() {
+    this.isPaused = true;
+    if (!this.currentWardrobeTab) this.currentWardrobeTab = "rings";
+    const sheet = document.getElementById("wardrobe-sheet");
+    if (sheet) {
+      sheet.setAttribute("aria-hidden", "false");
+      this.renderWardrobeItems(this.currentWardrobeTab);
+      sheet.classList.remove("hidden");
+      requestAnimationFrame(() => {
+        sheet.classList.add("active");
+      });
+    }
+    try {
+      this.audio.playPop();
+    } catch (e) {}
+  }
+
+  closeWardrobeSheet() {
+    const sheet = document.getElementById("wardrobe-sheet");
+    if (sheet && sheet.classList.contains("active")) {
+      sheet.classList.remove("active");
+      sheet.setAttribute("aria-hidden", "true");
+      setTimeout(() => {
+        sheet.classList.add("hidden");
+      }, 280);
+    }
+    this.isPaused = false;
+  }
+
+  renderWardrobeItems(tab = "rings") {
+    const container = document.getElementById("wardrobe-items-list");
+    if (!container) return;
+    container.innerHTML = "";
+
+    // Sync tab buttons active state
+    const wardrobeTabBtns = document.querySelectorAll(".wardrobe-tab-btn");
+    wardrobeTabBtns.forEach((btn) => {
+      if (btn.dataset.tab === tab) {
+        btn.classList.add("active");
+      } else {
+        btn.classList.remove("active");
+      }
+    });
+
+    const items = COSMETIC_CATALOG[tab] || [];
+    let singularKey = "ring";
+    if (tab === "singularities") singularKey = "singularity";
+    else if (tab === "skyboxes") singularKey = "skybox";
+
+    const equippedId = this.economy.profile.equipped[singularKey];
+
+    items.forEach((item) => {
+      const isUnlocked = this.economy.isUnlocked(tab, item.id);
+      const isEquipped = equippedId === item.id;
+
+      const card = document.createElement("div");
+      card.className = `wardrobe-item-card ${isEquipped ? "equipped" : ""} ${!isUnlocked ? "locked" : "unlocked"}`;
+      card.setAttribute("data-id", item.id);
+      card.setAttribute("role", "button");
+      card.setAttribute("tabindex", "0");
+      card.setAttribute(
+        "aria-label",
+        `${item.name}: ${isEquipped ? "Equipped" : isUnlocked ? "Unlocked, tap to wear" : `Locked, ${item.cost} coins in Toy Shop`}`,
+      );
+
+      let swatchBg = "#ffffff";
+      let swatchEmoji = "✨";
+
+      if (tab === "rings") {
+        swatchBg = `linear-gradient(135deg, ${item.color || "#f472b6"}, ${item.accent || "#fde047"})`;
+        swatchEmoji = "🍩";
+      } else if (tab === "singularities") {
+        swatchBg = `radial-gradient(circle, ${item.coreColor || "#1e1b4b"}, ${item.haloColor || "#818cf8"})`;
+        swatchEmoji = "😋";
+      } else if (tab === "skyboxes") {
+        swatchBg = `linear-gradient(180deg, ${(item.bgGradient || ["#1e1b4b", "#4338ca"]).join(", ")})`;
+        swatchEmoji = "🌌";
+      }
+
+      card.innerHTML = `
+        <div class="wardrobe-item-swatch" style="background: ${swatchBg}">
+          <span>${!isUnlocked ? "🔒" : swatchEmoji}</span>
+        </div>
+        <div class="wardrobe-item-info">
+          <div class="wardrobe-item-name" title="${item.name}">${item.name}</div>
+          ${
+            isEquipped
+              ? `<span class="wardrobe-badge-equipped">✓ EQUIPPED ✨</span>`
+              : isUnlocked
+                ? `<span class="wardrobe-badge-wear">Tap to Wear</span>`
+                : `<span class="wardrobe-badge-locked">🔒 ${item.cost} 🪙 (Shop)</span>`
+          }
+        </div>
+      `;
+
+      const selectSkin = () => {
+        if (!isUnlocked) {
+          try {
+            this.audio.playPop();
+          } catch (e) {}
+          this.showToast(
+            `🔒 "${item.name}" is locked! Unlock it in the Toy Shop for ${item.cost} 🪙.`,
+          );
+          card.classList.remove("shake");
+          void card.offsetWidth;
+          card.classList.add("shake");
+          return;
+        }
+
+        if (this.economy.profile.equipped[singularKey] !== item.id) {
+          const success = this.economy.equipItem(tab, item.id);
+          if (success) {
+            try {
+              this.audio.playScrapAbsorb();
+            } catch (e) {}
+            this.showToast(`Equipped ${item.name}! ✨`);
+            this.renderWardrobeItems(tab);
+            this.updateHomeView();
+          }
+        }
+      };
+
+      card.addEventListener("click", selectSkin);
+      card.addEventListener("keydown", (e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          selectSkin();
+        }
+      });
+
       container.appendChild(card);
     });
   }
