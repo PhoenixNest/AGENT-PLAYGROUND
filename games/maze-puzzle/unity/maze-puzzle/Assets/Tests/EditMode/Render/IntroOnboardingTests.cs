@@ -61,11 +61,33 @@ namespace OrbitalSalvage.Render.Tests
             Assert.IsTrue(LocStrings.TryGet("intro.step.multiply", out mul));
             Assert.IsTrue(LocStrings.TryGet("intro.step.feed", out feed));
             Assert.IsTrue(LocStrings.TryGet("intro.safety.backup", out backup));
+            Assert.IsTrue(LocStrings.TryGet("intro.btn.skip", out var skip));
+            Assert.IsTrue(LocStrings.TryGet("intro.pip.spin", out var p1));
+            Assert.IsTrue(LocStrings.TryGet("intro.pip.multiply", out var p2));
+            Assert.IsTrue(LocStrings.TryGet("intro.pip.feed", out var p3));
+            Assert.IsTrue(LocStrings.TryGet("intro.header.radio_comms", out var h1));
+            Assert.IsTrue(LocStrings.TryGet("intro.header.energy_amp", out var h2));
+            Assert.IsTrue(LocStrings.TryGet("intro.header.hungry_void", out var h3));
+            Assert.IsTrue(LocStrings.TryGet("intro.prompt.continue", out var c1));
+            Assert.IsTrue(LocStrings.TryGet("intro.prompt.play", out var c2));
+            Assert.IsTrue(LocStrings.TryGet("intro.badge.rotate", out var b1));
+            Assert.IsTrue(LocStrings.TryGet("intro.badge.gate", out var b2));
 
             Assert.IsNotEmpty(rot);
             Assert.IsNotEmpty(mul);
             Assert.IsNotEmpty(feed);
             Assert.IsNotEmpty(backup);
+            Assert.IsNotEmpty(skip);
+            Assert.IsNotEmpty(p1);
+            Assert.IsNotEmpty(p2);
+            Assert.IsNotEmpty(p3);
+            Assert.IsNotEmpty(h1);
+            Assert.IsNotEmpty(h2);
+            Assert.IsNotEmpty(h3);
+            Assert.IsNotEmpty(c1);
+            Assert.IsNotEmpty(c2);
+            Assert.IsNotEmpty(b1);
+            Assert.IsNotEmpty(b2);
         }
 
         [Test]

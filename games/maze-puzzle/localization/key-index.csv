@@ -412,6 +412,17 @@ home.ring.kitty,str,,,,,,,14,true,false,,,Home diorama ring label. Keep the cat 
 hud.sector_code,str,,,,,,,5,false,true,,,In-game HUD sector chip. {0} is the level code passed through Loc.TrName. Keep the star.,1,
 hud.sound.muted,str,,,,,,,1,true,false,,,Muted speaker on the HUD and the pause sound button. Keep this emoji.,0,
 hud.sound.on,str,,,,,,,1,true,false,,,Speaker on the HUD and the pause sound button. Keep this emoji.,0,
+intro.badge.gate,str,,,,,,,10,true,false,,,Onboarding gate multiplier badge. Keep the bolt and multiply sign.,0,
+intro.badge.rotate,str,,,,,,,17,true,false,,,Onboarding rotating guide badge. Keep the rotating arrows emoji.,0,
+intro.btn.skip,str,,,,,,,6,false,false,,,Skip button during onboarding.,0,12
+intro.header.energy_amp,str,,,,,,,24,false,false,,,Onboarding step 2 comms card header.,0,
+intro.header.hungry_void,str,,,,,,,18,false,false,,,Onboarding step 3 comms card header.,0,
+intro.header.radio_comms,str,,,,,,,18,false,false,,,Onboarding step 1 comms card header.,0,
+intro.pip.feed,str,,,,,,,7,false,false,,,Onboarding step 3 progress pill.,0,12
+intro.pip.multiply,str,,,,,,,11,false,false,,,Onboarding step 2 progress pill.,0,14
+intro.pip.spin,str,,,,,,,7,false,false,,,Onboarding step 1 progress pill.,0,12
+intro.prompt.continue,str,,,,,,,26,false,false,,,Onboarding pulsing tap prompt for steps 1 and 2.,0,
+intro.prompt.play,str,,,,,,,25,true,false,,,Onboarding pulsing tap prompt for step 3. Keep the rocket.,0,
 intro.safety.backup,str,,,,,,,48,true,false,,,Level 1 safety net toast when new player runs out of scrap.,0,
 intro.step.feed,str,,,,,,,51,false,true,,,First-time player onboarding: step 3 feed Nibbles instructions.,1,
 intro.step.multiply,str,,,,,,,52,false,true,,,First-time player onboarding: step 2 multiply gate instructions.,0,

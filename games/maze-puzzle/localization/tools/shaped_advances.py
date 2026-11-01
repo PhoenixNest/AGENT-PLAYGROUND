@@ -32,9 +32,15 @@ def _face(lang: str):
     hmtx = font["hmtx"].metrics
     advances = {}
     for cp, gid in cmap.items():
-        if gid < 0 or gid >= len(order):
-            continue
-        advances[cp] = hmtx[order[gid]][0]
+        if isinstance(gid, int):
+            if gid < 0 or gid >= len(order):
+                continue
+            name = order[gid]
+        else:
+            name = gid
+        metric = hmtx.get(name)
+        if metric is not None:
+            advances[cp] = metric[0]
     _cache[lang] = (font["head"].unitsPerEm, advances)
     return _cache[lang]
 

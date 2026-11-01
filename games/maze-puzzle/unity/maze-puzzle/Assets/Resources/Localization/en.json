@@ -451,7 +451,18 @@
     "toast.trophy": "🏆 Trophy: {0} (+{1} 🪙)",
     "unit.kg": "{0} kg",
     "unit.plus_coins": "+{0} 🪙",
-    "unit.quota": "{0} / {1} kg"
+    "unit.quota": "{0} / {1} kg",
+    "intro.badge.gate": "⚡ ×2 GATE",
+    "intro.badge.rotate": "🔄 SWIPE TO ROTATE",
+    "intro.btn.skip": "SKIP ▸",
+    "intro.header.energy_amp": "ENERGY AMPLIFIER • 2/3",
+    "intro.header.hungry_void": "HUNGRY VOID • 3/3",
+    "intro.header.radio_comms": "RADIO COMMS • 1/3",
+    "intro.pip.feed": "3. FEED",
+    "intro.pip.multiply": "2. MULTIPLY",
+    "intro.pip.spin": "1. SPIN",
+    "intro.prompt.continue": "TAP ANYWHERE TO CONTINUE ▸",
+    "intro.prompt.play": "TAP ANYWHERE TO PLAY! 🚀 ▸"
   },
   "doNotTranslate": [
     ")",

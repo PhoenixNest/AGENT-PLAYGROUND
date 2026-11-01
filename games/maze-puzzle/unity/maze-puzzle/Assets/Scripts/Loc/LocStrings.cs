@@ -117,6 +117,17 @@ namespace OrbitalSalvage.Loc
             Def("intro.step.multiply", "Pass scrap through the \u00D72 Shredder to multiply mass!", "First-time player onboarding: step 2 multiply gate instructions."),
             Def("intro.step.feed", "Dump scrap into my mouth to reach the {0} kg quota!", "First-time player onboarding: step 3 feed Nibbles instructions."),
             Def("intro.safety.backup", "\U0001F680 Auxiliary Pod Deployed! Launching extra scrap!", "Level 1 safety net toast when new player runs out of scrap."),
+            Def("intro.btn.skip", "SKIP \u25B8", "Skip button during onboarding.", 12),
+            Def("intro.pip.spin", "1. SPIN", "Onboarding step 1 progress pill.", 12),
+            Def("intro.pip.multiply", "2. MULTIPLY", "Onboarding step 2 progress pill.", 14),
+            Def("intro.pip.feed", "3. FEED", "Onboarding step 3 progress pill.", 12),
+            Def("intro.header.radio_comms", "RADIO COMMS \u2022 1/3", "Onboarding step 1 comms card header."),
+            Def("intro.header.energy_amp", "ENERGY AMPLIFIER \u2022 2/3", "Onboarding step 2 comms card header."),
+            Def("intro.header.hungry_void", "HUNGRY VOID \u2022 3/3", "Onboarding step 3 comms card header."),
+            Def("intro.prompt.continue", "TAP ANYWHERE TO CONTINUE \u25B8", "Onboarding pulsing tap prompt for steps 1 and 2."),
+            Def("intro.prompt.play", "TAP ANYWHERE TO PLAY! \U0001F680 \u25B8", "Onboarding pulsing tap prompt for step 3. Keep the rocket."),
+            Def("intro.badge.rotate", "\U0001F504 SWIPE TO ROTATE", "Onboarding rotating guide badge. Keep the rotating arrows emoji."),
+            Def("intro.badge.gate", "\u26A1 \u00D72 GATE", "Onboarding gate multiplier badge. Keep the bolt and multiply sign."),
         };
 
         static readonly Dictionary<string, LocStringDef> ByKey = Build();
