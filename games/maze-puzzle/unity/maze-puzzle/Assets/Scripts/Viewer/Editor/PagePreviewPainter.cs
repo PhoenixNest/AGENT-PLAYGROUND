@@ -183,6 +183,12 @@ namespace OrbitalSalvage.Viewer.Editor
                     tex = Render("game_lvl01_t1000ms", "zero", true, 0, 0, chrome =>
                     {
                         chrome.ExternalPlayfield = session.Renderer.Target;
+                        if (phases[i].Phase != TutorialPhase.None && phases[i].Phase != TutorialPhase.Done)
+                        {
+                            chrome.HiddenIds.Add("btn-game-skin");
+                            chrome.OpacityOverrides["btn-game-pause"] = 0.26;
+                            chrome.OpacityOverrides["hud-quota-capsule"] = 0.26;
+                        }
                     }, out byte[] png);
                     File.WriteAllBytes(Path.Combine(dir, phases[i].File), png);
                 }

@@ -32,10 +32,14 @@ class OrbitalApp {
     this.frame = document.getElementById("mobile-frame");
     this.canvas = document.getElementById("game-canvas");
     this.tutOverlay = document.getElementById("tutorial-overlay");
+    this.tutSpotlightMask = document.getElementById("tut-spotlight-mask");
+    this.tutSkipBtn = document.getElementById("btn-tut-skip");
     this.tutCommsCard = document.getElementById("tut-comms-card");
     this.tutMascotFace = document.getElementById("tut-mascot-face");
     this.tutSenderTag = document.getElementById("tut-sender-tag");
     this.tutCommsText = document.getElementById("tut-comms-text");
+    this.tutTapPrompt = document.getElementById("tut-tap-prompt");
+    this.tutPromptText = document.getElementById("tut-prompt-text");
     this.tutOrbitGuide = document.getElementById("tut-orbit-guide");
     this.tutGateBeacon = document.getElementById("tut-gate-beacon");
     this.tutFeedGuide = document.getElementById("tut-feed-guide");
@@ -86,8 +90,16 @@ class OrbitalApp {
     this.applyAudioVolumesFromProfile();
     this.loadSector(this.sectors[0], false);
 
-    // Start Boot Sequence
-    this.startBootSequence();
+    // Start Boot Sequence or Quick Test Mode
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.has("tut_phase")) {
+      const phase = urlParams.get("tut_phase").toUpperCase();
+      this.showPage("game");
+      this.loadSector(this.sectors[0], false);
+      this.setTutorialPhase(phase);
+    } else {
+      this.startBootSequence();
+    }
 
     // Start Simulation Loop
     this.lastTime = performance.now();
@@ -406,15 +418,21 @@ class OrbitalApp {
 
     if (phase === "NONE" || phase === "DONE") {
       this.tutOverlay.classList.add("hidden");
+      this.isPaused = false;
       return;
     }
 
+    this.isPaused = true;
     this.tutOverlay.classList.remove("hidden");
 
     // Hide all guide sub-elements first
     if (this.tutOrbitGuide) this.tutOrbitGuide.classList.add("hidden");
     if (this.tutGateBeacon) this.tutGateBeacon.classList.add("hidden");
     if (this.tutFeedGuide) this.tutFeedGuide.classList.add("hidden");
+
+    if (this.tutSpotlightMask) {
+      this.tutSpotlightMask.className = "tut-spotlight-mask";
+    }
 
     if (this.tutCommsCard) {
       this.tutCommsCard.classList.remove(
@@ -437,39 +455,75 @@ class OrbitalApp {
     };
 
     if (phase === "SWIPE") {
+      if (this.tutSpotlightMask)
+        this.tutSpotlightMask.classList.add("phase-swipe");
       if (this.tutOrbitGuide) this.tutOrbitGuide.classList.remove("hidden");
       if (this.tutCommsCard) this.tutCommsCard.classList.add("tut-phase-swipe");
       if (this.tutMascotFace) this.tutMascotFace.textContent = "😋";
       if (this.tutSenderTag)
-        this.tutSenderTag.textContent = "RADIO COMMS • NIBBLES";
+        this.tutSenderTag.textContent = "RADIO COMMS • 1/3";
       if (this.tutCommsText) {
         this.tutCommsText.textContent =
-          "Swipe anywhere to spin the orbital ring!";
+          "Rotate the orbital ring to steer space debris through the maze.";
+      }
+      if (this.tutPromptText) {
+        this.tutPromptText.textContent = "Tap anywhere to continue";
       }
       updatePips(0);
     } else if (phase === "GATE") {
+      if (this.tutSpotlightMask)
+        this.tutSpotlightMask.classList.add("phase-gate");
       if (this.tutGateBeacon) this.tutGateBeacon.classList.remove("hidden");
       if (this.tutCommsCard) this.tutCommsCard.classList.add("tut-phase-gate");
       if (this.tutMascotFace) this.tutMascotFace.textContent = "⚡";
       if (this.tutSenderTag)
-        this.tutSenderTag.textContent = "ENERGY WARNING • MULTIPLIER";
+        this.tutSenderTag.textContent = "ENERGY AMPLIFIER • 2/3";
       if (this.tutCommsText) {
         this.tutCommsText.textContent =
-          "Pass scrap through the ×2 Shredder to multiply mass!";
+          "Pass scrap through shredder gates to multiply your mass!";
+      }
+      if (this.tutPromptText) {
+        this.tutPromptText.textContent = "Tap anywhere to continue";
       }
       updatePips(1);
     } else if (phase === "FEED") {
+      if (this.tutSpotlightMask)
+        this.tutSpotlightMask.classList.add("phase-feed");
       if (this.tutFeedGuide) this.tutFeedGuide.classList.remove("hidden");
       if (this.tutCommsCard) this.tutCommsCard.classList.add("tut-phase-feed");
       if (this.tutMascotFace) this.tutMascotFace.textContent = "😍";
       if (this.tutSenderTag)
-        this.tutSenderTag.textContent = "HUNGRY VOID • FEED TIME";
+        this.tutSenderTag.textContent = "HUNGRY VOID • 3/3";
       if (this.tutCommsText) {
         this.tutCommsText.textContent =
-          "Dump scrap into my mouth to reach the 20 kg quota!";
+          "Deliver multiplied scrap into Nibbles to reach the quota!";
+      }
+      if (this.tutPromptText) {
+        this.tutPromptText.textContent = "Tap anywhere to play! 🚀";
       }
       updatePips(2);
     }
+  }
+
+  advanceTutorial() {
+    this.audio.playPop();
+    if (this.tutorialPhase === "SWIPE") {
+      this.setTutorialPhase("GATE");
+    } else if (this.tutorialPhase === "GATE") {
+      this.setTutorialPhase("FEED");
+    } else if (this.tutorialPhase === "FEED") {
+      this.completeTutorial();
+    }
+  }
+
+  completeTutorial() {
+    if (this.audio.playScrapAbsorb) {
+      this.audio.playScrapAbsorb();
+    }
+    this.economy.profile.introSeen = true;
+    this.economy.saveProfile();
+    this.setTutorialPhase("DONE");
+    this.showToast("All systems GO! Rotate the ring! 🚀");
   }
 
   dismissGestureHint() {
@@ -522,6 +576,7 @@ class OrbitalApp {
 
     // 1. Full-Screen Tactile Touch & Pointer Swipe Rotation
     this.canvas.addEventListener("pointerdown", (e) => {
+      if (this.isPaused) return;
       this.audio.publicInit();
       this.dismissGestureHint();
       this.isDragging = true;
@@ -546,32 +601,75 @@ class OrbitalApp {
 
     window.addEventListener("pointermove", (e) => {
       if (!this.isDragging) return;
+      if (this.isPaused) return;
       const deltaX = e.clientX - this.lastPointerX;
       this.lastPointerX = e.clientX;
       this.physics.applyInputDrag(deltaX * 1.3);
-
-      if (this.tutorialPhase === "SWIPE" && Math.abs(deltaX) > 0.5) {
-        this.setTutorialPhase("GATE");
-      }
     });
 
     window.addEventListener("pointerup", () => {
       this.isDragging = false;
     });
 
+    // Tutorial Tap-To-Advance Overlay & Skip Button
+    if (this.tutOverlay) {
+      this.tutOverlay.addEventListener("click", (e) => {
+        if (
+          e.target &&
+          (e.target.id === "btn-tut-skip" || e.target.closest("#btn-tut-skip"))
+        ) {
+          e.stopPropagation();
+          this.completeTutorial();
+          return;
+        }
+
+        if (
+          this.tutorialPhase === "SWIPE" ||
+          this.tutorialPhase === "GATE" ||
+          this.tutorialPhase === "FEED"
+        ) {
+          this.advanceTutorial();
+        }
+      });
+    }
+
+    if (this.tutSkipBtn) {
+      this.tutSkipBtn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        this.completeTutorial();
+      });
+    }
+
     // 2. Keyboard Hotkeys (Convenient for PC Testing)
     window.addEventListener("keydown", (e) => {
       this.audio.publicInit();
       this.dismissGestureHint();
+
+      // In tutorial walkthrough mode, Space/Enter advances step, Escape skips
+      if (
+        this.tutorialPhase === "SWIPE" ||
+        this.tutorialPhase === "GATE" ||
+        this.tutorialPhase === "FEED"
+      ) {
+        if (e.key === " " || e.code === "Space" || e.key === "Enter") {
+          e.preventDefault();
+          this.advanceTutorial();
+          return;
+        }
+        if (e.key === "Escape") {
+          e.preventDefault();
+          this.completeTutorial();
+          return;
+        }
+        return;
+      }
+
       if (e.key === "a" || e.key === "A" || e.key === "ArrowLeft") {
         this.physics.applyRcsBurst(-1);
-        if (this.tutorialPhase === "SWIPE") this.setTutorialPhase("GATE");
       } else if (e.key === "d" || e.key === "D" || e.key === "ArrowRight") {
         this.physics.applyRcsBurst(1);
-        if (this.tutorialPhase === "SWIPE") this.setTutorialPhase("GATE");
       } else if (e.key === " " || e.code === "Space") {
         this.physics.applyRcsBurst(1);
-        if (this.tutorialPhase === "SWIPE") this.setTutorialPhase("GATE");
       } else if (e.key === "r" || e.key === "R") {
         this.restartSector();
       } else if (e.key === "Escape") {
@@ -884,13 +982,6 @@ class OrbitalApp {
         this.showToast(`🏆 Trophy: ${ach.title} (+${ach.reward} 🪙)`);
       });
 
-      if (this.tutorialPhase === "FEED") {
-        const quota = (this.activeSector && this.activeSector.quota) || 20;
-        if (this.collectedMass >= quota * 0.4) {
-          this.setTutorialPhase("DONE");
-        }
-      }
-
       if (
         !this.isLevelCleared &&
         this.collectedMass >= this.activeSector.quota
@@ -900,10 +991,6 @@ class OrbitalApp {
     };
 
     this.physics.onGatePassed = (gate) => {
-      if (this.tutorialPhase === "GATE" || this.tutorialPhase === "SWIPE") {
-        this.setTutorialPhase("FEED");
-      }
-
       const rot =
         gate.isInner && this.physics.concentricRings
           ? this.physics.innerRingAngle - this.physics.ringAngle
@@ -1952,12 +2039,6 @@ class OrbitalApp {
                   this.showToast(
                     "🚀 Auxiliary Pod Deployed! Launching extra scrap!",
                   );
-                  if (
-                    this.tutorialPhase === "GATE" ||
-                    this.tutorialPhase === "SWIPE"
-                  ) {
-                    this.setTutorialPhase("FEED");
-                  }
                 } else {
                   this.handleLevelFailure();
                 }

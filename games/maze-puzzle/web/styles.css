@@ -258,16 +258,123 @@ html {
   left: 0;
   width: 100%;
   height: 100%;
-  pointer-events: none;
+  pointer-events: auto;
+  cursor: pointer;
   z-index: 30;
   overflow: hidden;
   opacity: 1;
   transition: opacity 0.35s ease;
+  user-select: none;
+  -webkit-user-select: none;
 }
 
 .tutorial-overlay.hidden {
   opacity: 0;
   pointer-events: none;
+}
+
+/* Skip Tutorial Action Button */
+.btn-tut-skip {
+  position: absolute;
+  top: calc(env(safe-area-inset-top, 0px) + 14px);
+  right: 14px;
+  z-index: 50;
+  background: rgba(15, 23, 42, 0.78);
+  border: 1.5px solid rgba(255, 255, 255, 0.35);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  color: rgba(255, 255, 255, 0.9);
+  font-family: var(--font-bubble, 'Fredoka', sans-serif);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.8px;
+  padding: 6px 14px;
+  border-radius: 999px;
+  cursor: pointer;
+  pointer-events: auto;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.45);
+  transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.btn-tut-skip:hover {
+  background: rgba(30, 41, 59, 0.95);
+  border-color: rgba(255, 255, 255, 0.7);
+  color: #ffffff;
+  transform: scale(1.05);
+}
+
+.btn-tut-skip:active {
+  transform: scale(0.95);
+}
+
+/* ---------------------------------------------------------
+   Cosmic Spotlight Focus Mask & Dynamic Shroud
+   --------------------------------------------------------- */
+.tut-spotlight-mask {
+  position: absolute;
+  top: 38%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 334px;
+  height: 334px;
+  border-radius: 50%;
+  box-shadow:
+    0 0 0 9999px rgba(10, 15, 30, 0.74),
+    0 0 32px rgba(250, 204, 21, 0.45),
+    inset 0 0 24px rgba(250, 204, 21, 0.2);
+  border: 2px solid rgba(250, 204, 21, 0.75);
+  pointer-events: none;
+  transition:
+    top 0.45s cubic-bezier(0.4, 0, 0.2, 1),
+    left 0.45s cubic-bezier(0.4, 0, 0.2, 1),
+    width 0.45s cubic-bezier(0.4, 0, 0.2, 1),
+    height 0.45s cubic-bezier(0.4, 0, 0.2, 1),
+    border-radius 0.45s cubic-bezier(0.4, 0, 0.2, 1),
+    border-color 0.35s ease,
+    box-shadow 0.35s ease;
+  z-index: 1;
+}
+
+/* Step 1: SWIPE - Concentrated circular spotlight on the rotating track */
+.tut-spotlight-mask.phase-swipe {
+  top: 38%;
+  left: 50%;
+  width: 334px;
+  height: 334px;
+  border-radius: 50%;
+  border-color: rgba(250, 204, 21, 0.85);
+  box-shadow:
+    0 0 0 9999px rgba(10, 15, 30, 0.74),
+    0 0 36px rgba(250, 204, 21, 0.5),
+    inset 0 0 24px rgba(250, 204, 21, 0.22);
+}
+
+/* Step 2: GATE - Energetic Cyan Spotlight on track & upper multiplier gate */
+.tut-spotlight-mask.phase-gate {
+  top: 38%;
+  left: 50%;
+  width: 340px;
+  height: 340px;
+  border-radius: 50%;
+  border-color: rgba(56, 189, 248, 0.85);
+  box-shadow:
+    0 0 0 9999px rgba(10, 15, 30, 0.74),
+    0 0 40px rgba(56, 189, 248, 0.55),
+    inset 0 0 24px rgba(56, 189, 248, 0.22);
+}
+
+/* Step 3: FEED - Elongated Stadium Spotlight tracking chute down to Black Hole */
+.tut-spotlight-mask.phase-feed {
+  top: 61%;
+  left: 50%;
+  width: 300px;
+  height: 380px;
+  border-radius: 120px;
+  border-color: rgba(74, 222, 128, 0.85);
+  box-shadow:
+    0 0 0 9999px rgba(10, 15, 30, 0.74),
+    0 0 40px rgba(74, 222, 128, 0.55),
+    inset 0 0 24px rgba(74, 222, 128, 0.22);
 }
 
 /* ---------------------------------------------------------
@@ -284,6 +391,7 @@ html {
   display: flex;
   align-items: center;
   justify-content: center;
+  z-index: 5;
   transition:
     opacity 0.35s ease,
     transform 0.35s ease;
@@ -420,6 +528,7 @@ html {
   display: flex;
   align-items: center;
   justify-content: center;
+  z-index: 5;
   transition:
     opacity 0.35s ease,
     transform 0.35s ease;
@@ -498,6 +607,7 @@ html {
   flex-direction: column;
   align-items: center;
   pointer-events: none;
+  z-index: 5;
   transition:
     opacity 0.35s ease,
     transform 0.35s ease;
@@ -579,7 +689,8 @@ html {
    --------------------------------------------------------- */
 .tut-comms-card {
   position: absolute;
-  bottom: 22px;
+  top: calc(38% + 180px);
+  bottom: auto;
   left: 50%;
   transform: translateX(-50%);
   width: calc(100% - 24px);
@@ -601,10 +712,29 @@ html {
     0 12px 36px rgba(0, 0, 0, 0.65),
     0 0 24px rgba(250, 204, 21, 0.35);
   transition:
+    top 0.4s cubic-bezier(0.34, 1.25, 0.64, 1),
+    bottom 0.4s cubic-bezier(0.34, 1.25, 0.64, 1),
     border-color 0.3s ease,
     box-shadow 0.3s ease,
     transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
   animation: commsFloat 3.6s ease-in-out infinite alternate;
+  z-index: 10;
+}
+
+/* Directional focus arrow pointing towards active spotlight area */
+.tut-comms-card::before {
+  content: "";
+  position: absolute;
+  top: -9px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0;
+  height: 0;
+  border-left: 9px solid transparent;
+  border-right: 9px solid transparent;
+  border-bottom: 9px solid var(--yellow-main);
+  opacity: 0;
+  transition: opacity 0.3s ease, border-bottom-color 0.3s ease;
 }
 
 @keyframes commsFloat {
@@ -617,17 +747,31 @@ html {
 }
 
 .tut-comms-card.tut-phase-swipe {
+  top: calc(38% + 180px);
+  bottom: auto;
   border-color: var(--yellow-main);
   box-shadow:
     0 12px 36px rgba(0, 0, 0, 0.65),
     0 0 28px rgba(250, 204, 21, 0.4);
 }
 
+.tut-comms-card.tut-phase-swipe::before {
+  opacity: 1;
+  border-bottom-color: var(--yellow-main);
+}
+
 .tut-comms-card.tut-phase-gate {
+  top: calc(38% + 180px);
+  bottom: auto;
   border-color: #38bdf8;
   box-shadow:
     0 12px 36px rgba(0, 0, 0, 0.65),
     0 0 28px rgba(56, 189, 248, 0.5);
+}
+
+.tut-comms-card.tut-phase-gate::before {
+  opacity: 1;
+  border-bottom-color: #38bdf8;
 }
 
 .tut-comms-card.tut-phase-gate .tut-sender-tag {
@@ -635,10 +779,16 @@ html {
 }
 
 .tut-comms-card.tut-phase-feed {
+  top: auto;
+  bottom: 22px;
   border-color: #4ade80;
   box-shadow:
     0 12px 36px rgba(0, 0, 0, 0.65),
     0 0 28px rgba(74, 222, 128, 0.45);
+}
+
+.tut-comms-card.tut-phase-feed::before {
+  opacity: 0;
 }
 
 .tut-comms-card.tut-phase-feed .tut-sender-tag {
@@ -749,6 +899,18 @@ html {
   transform: scale(1.05);
 }
 
+.tut-phase-gate .step-pip.active {
+  background: #38bdf8;
+  color: #0f172a;
+  box-shadow: 0 0 10px rgba(56, 189, 248, 0.6);
+}
+
+.tut-phase-feed .step-pip.active {
+  background: #4ade80;
+  color: #0f172a;
+  box-shadow: 0 0 10px rgba(74, 222, 128, 0.6);
+}
+
 .step-pip.done {
   background: #22c55e;
   color: #ffffff;
@@ -762,6 +924,58 @@ html {
   color: #ffffff;
   letter-spacing: 0.2px;
   text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
+}
+
+.tut-tap-prompt {
+  margin-top: 5px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-family: var(--font-bubble, 'Fredoka', sans-serif);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  color: var(--yellow-main);
+  animation: promptPulse 1.4s ease-in-out infinite alternate;
+}
+
+.tut-tap-prompt .tap-hint-arrow {
+  display: inline-block;
+  font-size: 12px;
+  animation: promptArrowBounce 1s ease-in-out infinite alternate;
+}
+
+.tut-comms-card.tut-phase-swipe .tut-tap-prompt {
+  color: var(--yellow-main);
+}
+
+.tut-comms-card.tut-phase-gate .tut-tap-prompt {
+  color: #38bdf8;
+}
+
+.tut-comms-card.tut-phase-feed .tut-tap-prompt {
+  color: #4ade80;
+}
+
+@keyframes promptPulse {
+  0% {
+    opacity: 0.7;
+    transform: translateY(0);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(-1.5px);
+  }
+}
+
+@keyframes promptArrowBounce {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(3px);
+  }
 }
 
 /* =========================================================

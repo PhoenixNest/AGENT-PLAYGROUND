@@ -83,9 +83,48 @@ namespace OrbitalSalvage.Render
 
         public void SetTutorialPhase(TutorialPhase phase)
         {
-            if (TutorialPhase == phase) return;
             TutorialPhase = phase;
+            if (phase == TutorialPhase.Swipe || phase == TutorialPhase.Gate || phase == TutorialPhase.Feed)
+            {
+                IsPaused = true;
+            }
+            else if (phase == TutorialPhase.None || phase == TutorialPhase.Done)
+            {
+                IsPaused = false;
+            }
             if (OnTutorialPhaseChanged != null) OnTutorialPhaseChanged(phase);
+        }
+
+        public void AdvanceTutorial()
+        {
+            var parityCues = Physics != null ? Physics.Audio as ParityAudioCues : null;
+            if (parityCues != null) parityCues.PlayBumperBounce();
+
+            if (TutorialPhase == TutorialPhase.Swipe)
+            {
+                SetTutorialPhase(TutorialPhase.Gate);
+            }
+            else if (TutorialPhase == TutorialPhase.Gate)
+            {
+                SetTutorialPhase(TutorialPhase.Feed);
+            }
+            else if (TutorialPhase == TutorialPhase.Feed)
+            {
+                CompleteTutorial();
+            }
+        }
+
+        public void CompleteTutorial()
+        {
+            if (Economy != null)
+            {
+                Economy.Profile.IntroSeen = true;
+                Economy.SaveProfile();
+            }
+            SetTutorialPhase(TutorialPhase.Done);
+            IsPaused = false;
+            var parityCues = Physics != null ? Physics.Audio as ParityAudioCues : null;
+            if (parityCues != null) parityCues.PlayDebrisSwallowed();
         }
 
         public int PhysicsSteps;
@@ -393,7 +432,6 @@ namespace OrbitalSalvage.Render
                         UsedBackupPod = true;
                         Physics.SpawnBackupScrap(8);
                         FailureCheckTimer = 0;
-                        if (TutorialPhase != TutorialPhase.Done) SetTutorialPhase(TutorialPhase.Feed);
                         Renderer.AddFloatingText(Physics.Center.X, Physics.Center.Y - 60, Loc.Tr("intro.safety.backup"), "#38bdf8");
                         Renderer.AddBoostShockwave(Physics.Center.X, Physics.Center.Y, Physics.RingRadius * 0.8, "#38bdf8");
                     }
@@ -451,6 +489,12 @@ namespace OrbitalSalvage.Render
 
         public void PointerDown(double clientX, double canvasLeft, double canvasWidth)
         {
+            _tapPageWidth = canvasWidth;
+            if (TutorialPhase == TutorialPhase.Swipe || TutorialPhase == TutorialPhase.Gate || TutorialPhase == TutorialPhase.Feed)
+            {
+                AdvanceTutorial();
+                return;
+            }
             if (IsPaused) return;
             double now = NowMs();
             _dragging = true;
@@ -472,6 +516,18 @@ namespace OrbitalSalvage.Render
         /// </summary>
         public void PointerDown(double clientX, double clientY)
         {
+            if (TutorialPhase == TutorialPhase.Swipe || TutorialPhase == TutorialPhase.Gate || TutorialPhase == TutorialPhase.Feed)
+            {
+                double pageW = _tapPageWidth > 0 ? _tapPageWidth : (Renderer != null ? Renderer.Width : 430);
+                if (clientX >= pageW - 90 && clientX <= pageW - 8 && clientY >= 10 && clientY <= 50)
+                {
+                    CompleteTutorial();
+                    return;
+                }
+                AdvanceTutorial();
+                return;
+            }
+
             if (IsPaused) return;
             if (IsLevelCleared)
             {
@@ -496,7 +552,6 @@ namespace OrbitalSalvage.Render
         public void PointerMove(double clientX)
         {
             if (IsPaused || !_dragging) return;
-            if (TutorialPhase == TutorialPhase.Swipe) SetTutorialPhase(TutorialPhase.Gate);
             double delta = clientX - _lastPointerX;
             _lastPointerX = clientX;
             Physics.ApplyInputDrag(delta * 1.3);
@@ -515,7 +570,6 @@ namespace OrbitalSalvage.Render
             _lastPointerX = clientX;
             _lastPointerY = clientY;
             if (!_dragging) return;
-            if (TutorialPhase == TutorialPhase.Swipe) SetTutorialPhase(TutorialPhase.Gate);
             Physics.ApplyInputDrag(GrabPixels(previousX, previousY, clientX, clientY) * 1.3);
         }
 
@@ -543,15 +597,28 @@ namespace OrbitalSalvage.Render
 
         public void KeyDown(string key)
         {
+            if (TutorialPhase == TutorialPhase.Swipe || TutorialPhase == TutorialPhase.Gate || TutorialPhase == TutorialPhase.Feed)
+            {
+                if (key == " " || key == "Space" || key == "Enter")
+                {
+                    AdvanceTutorial();
+                    return;
+                }
+                if (key == "Escape")
+                {
+                    CompleteTutorial();
+                    return;
+                }
+                return;
+            }
+
             if (IsPaused) return;
             if (key == "a" || key == "A" || key == "ArrowLeft")
             {
-                if (TutorialPhase == TutorialPhase.Swipe) SetTutorialPhase(TutorialPhase.Gate);
                 Physics.ApplyRcsBurst(-1);
             }
             else if (key == "d" || key == "D" || key == "ArrowRight" || key == " " || key == "Space")
             {
-                if (TutorialPhase == TutorialPhase.Swipe) SetTutorialPhase(TutorialPhase.Gate);
                 Physics.ApplyRcsBurst(1);
             }
             else if (key == "r" || key == "R") Restart();
@@ -596,8 +663,6 @@ namespace OrbitalSalvage.Render
         {
             CollectedMass += d.Weight * 2;
             if (OnQuotaChanged != null) OnQuotaChanged(CollectedMass, Quota);
-            if (TutorialPhase == TutorialPhase.Feed && ActiveSector != null && CollectedMass >= ActiveSector.Quota * 0.4)
-                SetTutorialPhase(TutorialPhase.Done);
             Renderer.TriggerNibblesChew();
             int word = (int)JsMath.Floor(JsRandom.Global.NextDouble() * NomKeys.Length);
             Renderer.AddFloatingText(Physics.BlackHole.X, Physics.BlackHole.Y - 32, Loc.Tr(NomKeys[word]), "#fde047");
@@ -612,7 +677,6 @@ namespace OrbitalSalvage.Render
 
         void OnGate(GateRuntime gate, Debris debris)
         {
-            if (TutorialPhase == TutorialPhase.Gate) SetTutorialPhase(TutorialPhase.Feed);
             double rot = gate.IsInner && Physics.ConcentricRings ? Physics.InnerRingAngle - Physics.RingAngle : 0;
             double rMid = (gate.RMin + gate.RMax) * 0.5;
             double ang = gate.Angle + rot + Physics.RingAngle;

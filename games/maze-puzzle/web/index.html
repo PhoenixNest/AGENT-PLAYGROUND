@@ -231,6 +231,14 @@
           role="status"
           aria-live="polite"
         >
+          <!-- Dynamic Cosmic Spotlight Focus Mask & Shroud -->
+          <div id="tut-spotlight-mask" class="tut-spotlight-mask phase-swipe"></div>
+
+          <!-- Skip Tutorial Action Button -->
+          <button id="btn-tut-skip" class="btn-tut-skip" type="button" aria-label="Skip Tutorial">
+            SKIP ▸
+          </button>
+
           <!-- Step 1: Orbit Swipe Arc Visualizer -->
           <div id="tut-orbit-guide" class="tut-orbit-guide">
             <div class="tut-orbit-ring"></div>
@@ -279,6 +287,10 @@
               </div>
               <div class="tut-comms-text" id="tut-comms-text">
                 Swipe anywhere to spin the orbital ring!
+              </div>
+              <div class="tut-tap-prompt" id="tut-tap-prompt">
+                <span id="tut-prompt-text">Tap anywhere to continue</span>
+                <span class="tap-hint-arrow">▸</span>
               </div>
             </div>
             <div class="tut-action-glow"></div>

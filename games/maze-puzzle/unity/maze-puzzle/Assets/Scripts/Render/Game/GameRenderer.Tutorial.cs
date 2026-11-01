@@ -13,30 +13,172 @@ namespace OrbitalSalvage.Render
         {
             if (ctx == null || physics == null || phase == TutorialPhase.None || phase == TutorialPhase.Done) return;
 
-            // Dimensions matching web prototype: docked at bottom with breathing space
-            double cardW = JsMath.Min(380, Width > 40 ? Width - 24 : 350);
-            double cardH = 68;
-            double cardX = physics.Center.X - cardW * 0.5;
-            double cardY = Height > 100 ? Height - cardH - 22 : physics.BlackHole.Y + 45;
+            double cx = physics.Center.X;
+            double cy = physics.Center.Y;
 
+            // 1. Dynamic Cosmic Spotlight Focus Mask & Shroud
+            RenderSpotlightMask(ctx, physics, phase);
+
+            // 2. Skip Tutorial Action Button in top-right
+            RenderSkipButton(ctx);
+
+            // 3. Visual Guide Animations (continue looping while paused)
             switch (phase)
             {
                 case TutorialPhase.Swipe:
                     RenderSwipeGuide(ctx, physics);
-                    DrawCommsCard(ctx, cardX, cardY, cardW, cardH, "😋", "RADIO COMMS • NIBBLES", Loc.Tr("intro.step.rotate"), "#facc15", 0);
                     break;
-
                 case TutorialPhase.Gate:
                     RenderGateBeacon(ctx, physics);
-                    DrawCommsCard(ctx, cardX, cardY, cardW, cardH, "⚡", "ENERGY WARNING • MULTIPLIER", Loc.Tr("intro.step.multiply"), "#38bdf8", 1);
                     break;
-
                 case TutorialPhase.Feed:
                     RenderFeedGuide(ctx, physics);
-                    double quota = progress != null ? progress.Quota : 20;
-                    DrawCommsCard(ctx, cardX, cardY, cardW, cardH, "😋", "HUNGRY VOID • FEED TIME", Loc.Tr("intro.step.feed", quota), "#4ade80", 2);
                     break;
             }
+
+            // 4. Floating Contextual Dialogue Card & Tap Prompt
+            double cardW = JsMath.Min(380, Width > 40 ? Width - 24 : 350);
+            double cardH = 72;
+            double cardX = cx - cardW * 0.5;
+            double cardY;
+
+            if (phase == TutorialPhase.Feed)
+            {
+                // Docked near the bottom for Step 3 (Feed)
+                cardY = Height > 100 ? Height - cardH - 22 : physics.BlackHole.Y + 45;
+                double quota = progress != null ? progress.Quota : 20;
+                DrawCommsCard(ctx, cardX, cardY, cardW, cardH, "😍", "HUNGRY VOID • 3/3", Loc.Tr("intro.step.feed", quota), "TAP ANYWHERE TO PLAY! \U0001F680 \u25B8", "#4ade80", 2, false);
+            }
+            else if (phase == TutorialPhase.Gate)
+            {
+                // Positioned directly below the ring track for Step 2 (Gate)
+                cardY = cy + physics.RingRadius + 18;
+                DrawCommsCard(ctx, cardX, cardY, cardW, cardH, "⚡", "ENERGY AMPLIFIER • 2/3", Loc.Tr("intro.step.multiply"), "TAP ANYWHERE TO CONTINUE \u25B8", "#38bdf8", 1, true);
+            }
+            else // Swipe
+            {
+                // Positioned directly below the ring track for Step 1 (Swipe)
+                cardY = cy + physics.RingRadius + 18;
+                DrawCommsCard(ctx, cardX, cardY, cardW, cardH, "😋", "RADIO COMMS • 1/3", Loc.Tr("intro.step.rotate"), "TAP ANYWHERE TO CONTINUE \u25B8", "#facc15", 0, true);
+            }
+        }
+
+        void RenderSpotlightMask(Canvas2D ctx, PhysicsEngine physics, TutorialPhase phase)
+        {
+            double cx = physics.Center.X;
+            double cy = physics.Center.Y;
+
+            // Cosmic Dimming Shroud with EvenOdd Cutout
+            ctx.Save();
+            ctx.FillStyle = "#0a0f1e";
+            GameDraw.Alpha(ctx, 0.74);
+            ctx.BeginPath();
+            ctx.Rect(0, 0, Width, Height);
+
+            if (phase == TutorialPhase.Feed)
+            {
+                double capW = 300;
+                double capH = 380;
+                double capX = cx - capW * 0.5;
+                double capY = Height * 0.61 - capH * 0.5;
+                AppendRoundedRect(ctx, capX, capY, capW, capH, 120);
+            }
+            else
+            {
+                double rHole = phase == TutorialPhase.Gate ? 170 : 167;
+                ctx.MoveTo(cx + rHole, cy);
+                ctx.Arc(cx, cy, rHole, 0, JsMath.PI * 2);
+                ctx.ClosePath();
+            }
+            ctx.Fill("evenodd");
+            ctx.Restore();
+
+            // Glowing Rim around the spotlight cutout
+            string rimColor = phase == TutorialPhase.Feed ? "#4ade80" : phase == TutorialPhase.Gate ? "#38bdf8" : "#facc15";
+            if (phase == TutorialPhase.Feed)
+            {
+                double capW = 300;
+                double capH = 380;
+                double capX = cx - capW * 0.5;
+                double capY = Height * 0.61 - capH * 0.5;
+
+                // Outer soft halo
+                ctx.Save();
+                ctx.StrokeStyle = rimColor;
+                GameDraw.Alpha(ctx, 0.22);
+                ctx.LineWidth = 8;
+                DrawRoundedRect(ctx, capX, capY, capW, capH, 120);
+                ctx.Stroke();
+                ctx.Restore();
+
+                // Core border
+                ctx.Save();
+                ctx.StrokeStyle = rimColor;
+                GameDraw.Alpha(ctx, 0.85);
+                ctx.LineWidth = 2.2;
+                DrawRoundedRect(ctx, capX, capY, capW, capH, 120);
+                ctx.Stroke();
+                ctx.Restore();
+            }
+            else
+            {
+                double rHole = phase == TutorialPhase.Gate ? 170 : 167;
+
+                // Outer soft halo
+                ctx.Save();
+                ctx.StrokeStyle = rimColor;
+                GameDraw.Alpha(ctx, 0.25);
+                ctx.LineWidth = 8;
+                ctx.BeginPath();
+                ctx.Arc(cx, cy, rHole, 0, JsMath.PI * 2);
+                ctx.Stroke();
+                ctx.Restore();
+
+                // Core border
+                ctx.Save();
+                ctx.StrokeStyle = rimColor;
+                GameDraw.Alpha(ctx, 0.85);
+                ctx.LineWidth = 2.2;
+                ctx.BeginPath();
+                ctx.Arc(cx, cy, rHole, 0, JsMath.PI * 2);
+                ctx.Stroke();
+                ctx.Restore();
+            }
+        }
+
+        void RenderSkipButton(Canvas2D ctx)
+        {
+            double btnW = 68;
+            double btnH = 26;
+            double btnX = Width - btnW - 14;
+            double btnY = 14;
+
+            // Background capsule
+            ctx.Save();
+            ctx.FillStyle = "#0f172a";
+            GameDraw.Alpha(ctx, 0.82);
+            DrawRoundedRect(ctx, btnX, btnY, btnW, btnH, 13);
+            ctx.Fill();
+            ctx.Restore();
+
+            // Border
+            ctx.Save();
+            ctx.StrokeStyle = "#ffffff";
+            GameDraw.Alpha(ctx, 0.35);
+            ctx.LineWidth = 1.5;
+            DrawRoundedRect(ctx, btnX, btnY, btnW, btnH, 13);
+            ctx.Stroke();
+            ctx.Restore();
+
+            // Text
+            ctx.Save();
+            ctx.Font = "bold 10px Fredoka, sans-serif";
+            ctx.FillStyle = "#ffffff";
+            GameDraw.Alpha(ctx, 0.95);
+            ctx.TextAlign = "center";
+            ctx.TextBaseline = "middle";
+            ctx.FillText("SKIP \u25B8", btnX + btnW * 0.5, btnY + btnH * 0.5);
+            ctx.Restore();
         }
 
         void RenderSwipeGuide(Canvas2D ctx, PhysicsEngine physics)
@@ -73,7 +215,7 @@ namespace OrbitalSalvage.Render
             ctx.FillStyle = "#facc15";
             ctx.TextAlign = "center";
             ctx.TextBaseline = "middle";
-            ctx.FillText("↻ SWIPE TO ROTATE", cx, badgeY + badgeH * 0.5);
+            ctx.FillText("🔄 SWIPE TO ROTATE", cx, badgeY + badgeH * 0.5);
             ctx.Restore();
 
             // 2. Multi-layer neon orbit sweep track (Zero ShadowBlur, hardware-batched)
@@ -274,12 +416,27 @@ namespace OrbitalSalvage.Render
             ctx.Restore();
         }
 
-        void DrawCommsCard(Canvas2D ctx, double x, double y, double w, double h, string avatarFace, string senderTag, string prompt, string accentColor, int activePipIndex)
+        void DrawCommsCard(Canvas2D ctx, double x, double y, double w, double h, string avatarFace, string senderTag, string message, string tapPrompt, string accentColor, int activePipIndex, bool hasTopArrow)
         {
+            // 0. Directional arrow indicator pointing up towards the active ring
+            if (hasTopArrow)
+            {
+                double arrowX = x + w * 0.5;
+                ctx.Save();
+                ctx.FillStyle = accentColor;
+                ctx.BeginPath();
+                ctx.MoveTo(arrowX - 8, y);
+                ctx.LineTo(arrowX, y - 8);
+                ctx.LineTo(arrowX + 8, y);
+                ctx.ClosePath();
+                ctx.Fill();
+                ctx.Restore();
+            }
+
             // 1. Acrylic Hologram Card Outer Glow & Background
             ctx.Save();
             ctx.StrokeStyle = accentColor;
-            GameDraw.Alpha(ctx, 0.24);
+            GameDraw.Alpha(ctx, 0.28);
             ctx.LineWidth = 6;
             DrawRoundedRect(ctx, x - 1, y - 1, w + 2, h + 2, 20);
             ctx.Stroke();
@@ -297,7 +454,7 @@ namespace OrbitalSalvage.Render
             // 2. Glassmorphic Mascot Avatar Container (Left)
             double avatarSize = 48;
             double avatarX = x + 10;
-            double avatarY = y + (h - avatarSize) * 0.5;
+            double avatarY = y + 12;
 
             ctx.Save();
             ctx.FillStyle = "#ffffff";
@@ -343,10 +500,10 @@ namespace OrbitalSalvage.Render
 
             // 3. Comms Header Row: Sender Tag + 3 Step Pills
             double bodyX = avatarX + avatarSize + 12;
-            double headerY = y + 16;
+            double headerY = y + 15;
 
             ctx.Save();
-            ctx.Font = "bold 9px Fredoka, sans-serif";
+            ctx.Font = "bold 9.5px Fredoka, sans-serif";
             ctx.FillStyle = accentColor;
             ctx.TextAlign = "left";
             ctx.TextBaseline = "middle";
@@ -365,6 +522,7 @@ namespace OrbitalSalvage.Render
             {
                 double px = pipsStartX + i * (pipW + pipSpacing);
                 double py = headerY - pipH * 0.5;
+                bool isDone = (i < activePipIndex);
                 bool isActive = (i == activePipIndex);
 
                 ctx.Save();
@@ -376,6 +534,18 @@ namespace OrbitalSalvage.Render
 
                     ctx.Font = "bold 8px Fredoka, sans-serif";
                     ctx.FillStyle = "#0f172a";
+                    ctx.TextAlign = "center";
+                    ctx.TextBaseline = "middle";
+                    ctx.FillText(pipLabels[i], px + pipW * 0.5, py + pipH * 0.5);
+                }
+                else if (isDone)
+                {
+                    ctx.FillStyle = "#22c55e";
+                    DrawRoundedRect(ctx, px, py, pipW, pipH, 5);
+                    ctx.Fill();
+
+                    ctx.Font = "bold 8px Fredoka, sans-serif";
+                    ctx.FillStyle = "#ffffff";
                     ctx.TextAlign = "center";
                     ctx.TextBaseline = "middle";
                     ctx.FillText(pipLabels[i], px + pipW * 0.5, py + pipH * 0.5);
@@ -397,19 +567,29 @@ namespace OrbitalSalvage.Render
                 ctx.Restore();
             }
 
-            // 4. Comms Body Prompt Text
+            // 4. Comms Body Message Text
             ctx.Save();
             ctx.Font = "bold 11px Fredoka, sans-serif";
             ctx.FillStyle = "#ffffff";
             ctx.TextAlign = "left";
-            ctx.TextBaseline = "bottom";
-            ctx.FillText(prompt, bodyX, y + h - 14);
+            ctx.TextBaseline = "middle";
+            ctx.FillText(message, bodyX, y + 35);
+            ctx.Restore();
+
+            // 5. Pulsing Tap-To-Advance Action Prompt
+            double promptAlpha = 0.7 + JsMath.Sin(CosmicTime * 4.5) * 0.3;
+            ctx.Save();
+            ctx.Font = "bold 9.5px Fredoka, sans-serif";
+            ctx.FillStyle = accentColor;
+            GameDraw.Alpha(ctx, promptAlpha);
+            ctx.TextAlign = "left";
+            ctx.TextBaseline = "middle";
+            ctx.FillText(tapPrompt, bodyX, y + 55);
             ctx.Restore();
         }
 
-        static void DrawRoundedRect(Canvas2D ctx, double x, double y, double w, double h, double r)
+        static void AppendRoundedRect(Canvas2D ctx, double x, double y, double w, double h, double r)
         {
-            ctx.BeginPath();
             ctx.MoveTo(x + r, y);
             ctx.LineTo(x + w - r, y);
             ctx.Arc(x + w - r, y + r, r, -JsMath.PI * 0.5, 0);
@@ -420,6 +600,12 @@ namespace OrbitalSalvage.Render
             ctx.LineTo(x, y + r);
             ctx.Arc(x + r, y + r, r, JsMath.PI, JsMath.PI * 1.5);
             ctx.ClosePath();
+        }
+
+        static void DrawRoundedRect(Canvas2D ctx, double x, double y, double w, double h, double r)
+        {
+            ctx.BeginPath();
+            AppendRoundedRect(ctx, x, y, w, h, r);
         }
     }
 }
