@@ -47,19 +47,19 @@ namespace OrbitalSalvage.Render
                 // Docked near the bottom for Step 3 (Feed)
                 cardY = Height > 100 ? Height - cardH - 22 : physics.BlackHole.Y + 45;
                 double quota = progress != null ? progress.Quota : 20;
-                DrawCommsCard(ctx, cardX, cardY, cardW, cardH, "😍", "HUNGRY VOID • 3/3", Loc.Tr("intro.step.feed", quota), "TAP ANYWHERE TO PLAY! \U0001F680 \u25B8", "#4ade80", 2, false);
+                DrawCommsCard(ctx, cardX, cardY, cardW, cardH, "😍", Loc.Tr("intro.header.hungry_void"), Loc.Tr("intro.step.feed", quota), Loc.Tr("intro.prompt.play"), "#4ade80", 2, false);
             }
             else if (phase == TutorialPhase.Gate)
             {
                 // Positioned directly below the ring track for Step 2 (Gate)
                 cardY = cy + physics.RingRadius + 18;
-                DrawCommsCard(ctx, cardX, cardY, cardW, cardH, "⚡", "ENERGY AMPLIFIER • 2/3", Loc.Tr("intro.step.multiply"), "TAP ANYWHERE TO CONTINUE \u25B8", "#38bdf8", 1, true);
+                DrawCommsCard(ctx, cardX, cardY, cardW, cardH, "⚡", Loc.Tr("intro.header.energy_amp"), Loc.Tr("intro.step.multiply"), Loc.Tr("intro.prompt.continue"), "#38bdf8", 1, true);
             }
             else // Swipe
             {
                 // Positioned directly below the ring track for Step 1 (Swipe)
                 cardY = cy + physics.RingRadius + 18;
-                DrawCommsCard(ctx, cardX, cardY, cardW, cardH, "😋", "RADIO COMMS • 1/3", Loc.Tr("intro.step.rotate"), "TAP ANYWHERE TO CONTINUE \u25B8", "#facc15", 0, true);
+                DrawCommsCard(ctx, cardX, cardY, cardW, cardH, "😋", Loc.Tr("intro.header.radio_comms"), Loc.Tr("intro.step.rotate"), Loc.Tr("intro.prompt.continue"), "#facc15", 0, true);
             }
         }
 
@@ -177,7 +177,7 @@ namespace OrbitalSalvage.Render
             GameDraw.Alpha(ctx, 0.95);
             ctx.TextAlign = "center";
             ctx.TextBaseline = "middle";
-            ctx.FillText("SKIP \u25B8", btnX + btnW * 0.5, btnY + btnH * 0.5);
+            ctx.FillText(Loc.Tr("intro.btn.skip"), btnX + btnW * 0.5, btnY + btnH * 0.5);
             ctx.Restore();
         }
 
@@ -215,7 +215,7 @@ namespace OrbitalSalvage.Render
             ctx.FillStyle = "#facc15";
             ctx.TextAlign = "center";
             ctx.TextBaseline = "middle";
-            ctx.FillText("🔄 SWIPE TO ROTATE", cx, badgeY + badgeH * 0.5);
+            ctx.FillText(Loc.Tr("intro.badge.rotate"), cx, badgeY + badgeH * 0.5);
             ctx.Restore();
 
             // 2. Multi-layer neon orbit sweep track (Zero ShadowBlur, hardware-batched)
@@ -345,7 +345,7 @@ namespace OrbitalSalvage.Render
             ctx.FillStyle = "#0f172a";
             ctx.TextAlign = "center";
             ctx.TextBaseline = "middle";
-            ctx.FillText("⚡ ×2 GATE", gx, badgeY + badgeH * 0.5);
+            ctx.FillText(Loc.Tr("intro.badge.gate"), gx, badgeY + badgeH * 0.5);
             ctx.Restore();
 
             // 3. Pointing Hand Gesture: "👉"
@@ -511,7 +511,7 @@ namespace OrbitalSalvage.Render
             ctx.Restore();
 
             // 3 Step Progress Pills: "1. SPIN", "2. MULTIPLY", "3. FEED"
-            string[] pipLabels = { "1. SPIN", "2. MULTIPLY", "3. FEED" };
+            string[] pipLabels = { Loc.Tr("intro.pip.spin"), Loc.Tr("intro.pip.multiply"), Loc.Tr("intro.pip.feed") };
             double pipW = 44;
             double pipH = 14;
             double pipSpacing = 4;

@@ -447,7 +447,22 @@
         "toast.trophy": "1eb88b8eb9cc6de9f8af4c2703f25a1cc9558d87611cb39009214f382a5672a7",
         "unit.kg": "e27c41664dfc54ab9a510a23d95ac16aa317a3be63384aeb832a414882ef5edf",
         "unit.plus_coins": "f62ff83287be1f97d91cbd694c8bd11cba56ef72dbf783fc56c70d21962394dc",
-        "unit.quota": "66dcccda04e3337ea8ed9ffb00fb0a3cc378db9cf799bf1b96f2a432c3c54df3"
+        "unit.quota": "66dcccda04e3337ea8ed9ffb00fb0a3cc378db9cf799bf1b96f2a432c3c54df3",
+        "intro.safety.backup": "0a4b6e575cfa5af5e9283e05202b3864d412465758a4855962b794326539dac2",
+        "intro.step.feed": "a4b9faa41049782f60715be7c6a06009f18e6c95b925d9efb985d04936925c1d",
+        "intro.step.multiply": "5645fa7739ca04f0406eccdf0758e16c3af6b9da54c0214ab053505a5b5ac451",
+        "intro.step.rotate": "961dba09a282a34460a8fb75f8abfe45950c148c81a7046b8081de7270b9fc4f",
+        "intro.badge.gate": "be7173d8f8d03ee9c7257815843a2a188cb08a31e3d6bfc81c3a02706b3fdf48",
+        "intro.badge.rotate": "f2e7e21cd1d68fb81948a98057eea368b2297010741af22d11f6dac266525938",
+        "intro.btn.skip": "bda308714056bda48c495a6de9536066f395a996f72d001eb7e62a1b8c95b763",
+        "intro.header.energy_amp": "98f47c554fcdaa2a2b4f48c381c8c13dcd467b938c1146f2c50805bbb80162a6",
+        "intro.header.hungry_void": "8b5818f03fb8c9355619991a64e17029674be7d3642952412fd8ae93e48bde3e",
+        "intro.header.radio_comms": "255ebbb78b028b3249a4be1dfb36f88b77d199d8cd8c3da30bd9f6552fe78696",
+        "intro.pip.feed": "8e69e03a0cb402f44bfaa18ff2d69b27c77af5b9b9b4f58cf3dea19db2859330",
+        "intro.pip.multiply": "bf47666132fcb22628d188bee08fd57d422239addc8886bfbbe185f88b825b5d",
+        "intro.pip.spin": "66112027a4ed9b52f17f8e407688dae4d564ea1f8cad50c415930d4850084e20",
+        "intro.prompt.continue": "e5557ba583e5fa7797307e94f240e5329c415cf1741d9ebce720050f52afdf7f",
+        "intro.prompt.play": "cad6d9ff7b2b0b24f37019ec2bafd569d51fb31777e4112b402ee3f8f029df10"
       }
     }
   },
@@ -893,7 +908,22 @@
     "toast.trophy": "🏆 Kubok: {0} (+{1} 🪙)",
     "unit.kg": "{0} kg",
     "unit.plus_coins": "+{0} 🪙",
-    "unit.quota": "{0} / {1} kg"
+    "unit.quota": "{0} / {1} kg",
+    "intro.badge.gate": "⚡ ×2 DARVOZA",
+    "intro.badge.rotate": "🔄 SURIB AYLANTIR",
+    "intro.btn.skip": "OʻTKAZISH ▸",
+    "intro.header.energy_amp": "KUCHAYTIRGICH • 2/3",
+    "intro.header.hungry_void": "OCH BOʻSHLIQ • 3/3",
+    "intro.header.radio_comms": "ALOQA • 1/3",
+    "intro.pip.feed": "3. BOQISH",
+    "intro.pip.multiply": "2. KOʻPAYTIR",
+    "intro.pip.spin": "1. AYLANTIR",
+    "intro.prompt.continue": "DAVOM ETISH UCHUN BOSING ▸",
+    "intro.prompt.play": "OʻYNASH UCHUN BOSING! 🚀 ▸",
+    "intro.safety.backup": "🚀 Yordamchi kapsula ishga tushdi! Qoʻshimcha chiqindi!",
+    "intro.step.feed": "{0} kg meʼyoriga yetish uchun ogʻzimga chiqindi tashlang!",
+    "intro.step.multiply": "Massani koʻpaytirish uchun chiqindini ×2 maydalagichdan oʻtkazing!",
+    "intro.step.rotate": "Orbita halqasini aylantirish uchun istalgan joyga suring!"
   },
   "doNotTranslate": [
     ")",
