@@ -91,39 +91,62 @@ namespace OrbitalSalvage.Render.Tests
         }
 
         [Test]
-        public void Tutorial_AdvancesPhasesOnEvents()
+        public void Tutorial_AdvancesSequentiallyOnTapAndPausesSimulation()
         {
             var sectors = MazeLevelBuilder.GetSectors();
             _session.LoadSector(sectors[0]);
             Assert.AreEqual(TutorialPhase.Swipe, _session.TutorialPhase);
+            Assert.IsTrue(_session.IsPaused, "Simulation should be paused during Step 1 (Swipe)");
 
-            // Drag ring advances Swipe -> Gate
-            _session.PointerDown(100, 100);
-            _session.PointerMove(150, 100);
-            _session.PointerUp();
+            // Tap 1 advances Swipe -> Gate
+            _session.PointerDown(200, 200);
             Assert.AreEqual(TutorialPhase.Gate, _session.TutorialPhase);
+            Assert.IsTrue(_session.IsPaused, "Simulation should remain paused during Step 2 (Gate)");
 
-            // Gate passed advances Gate -> Feed
-            var gate = new GateRuntime { Id = 1, Type = "MULTIPLY", Value = 2, RMin = 100, RMax = 150 };
-            var debris = new Debris { Id = 1, Weight = 1, Mass = 1 };
-            _session.Physics.OnGatePassed(gate, debris);
+            // Tap 2 advances Gate -> Feed
+            _session.PointerDown(200, 200);
             Assert.AreEqual(TutorialPhase.Feed, _session.TutorialPhase);
+            Assert.IsTrue(_session.IsPaused, "Simulation should remain paused during Step 3 (Feed)");
 
-            // Swallow debris past 40% quota advances Feed -> Done
-            _session.CollectedMass = _session.Quota * 0.5;
-            _session.Physics.OnDebrisSwallowed(debris);
+            // Tap 3 finishes Feed -> Done, resumes simulation, and marks IntroSeen
+            _session.PointerDown(200, 200);
             Assert.AreEqual(TutorialPhase.Done, _session.TutorialPhase);
+            Assert.IsFalse(_session.IsPaused, "Simulation should resume after tutorial completes");
+            Assert.IsTrue(_economy.Profile.IntroSeen, "Profile introSeen should be marked true");
         }
 
         [Test]
-        public void KeyDown_AdvancesSwipeToGate()
+        public void Tutorial_SkipButton_ImmediatelyDismissesAndResumes()
+        {
+            var sectors = MazeLevelBuilder.GetSectors();
+            _session.LoadSector(sectors[0]);
+            Assert.AreEqual(TutorialPhase.Swipe, _session.TutorialPhase);
+            Assert.IsTrue(_session.IsPaused);
+
+            // Tap on Skip button (top-right: pageW - 40, y = 25)
+            _session.PointerDown(430 - 40, 25);
+            Assert.AreEqual(TutorialPhase.Done, _session.TutorialPhase);
+            Assert.IsFalse(_session.IsPaused, "Simulation should unpause on skip");
+            Assert.IsTrue(_economy.Profile.IntroSeen, "Profile introSeen should be marked true on skip");
+        }
+
+        [Test]
+        public void KeyDown_SpaceOrEnterAdvancesTutorial_EscapeSkips()
         {
             var sectors = MazeLevelBuilder.GetSectors();
             _session.LoadSector(sectors[0]);
             Assert.AreEqual(TutorialPhase.Swipe, _session.TutorialPhase);
 
-            _session.KeyDown("ArrowRight");
+            _session.KeyDown("Space");
             Assert.AreEqual(TutorialPhase.Gate, _session.TutorialPhase);
+
+            _session.KeyDown("Enter");
+            Assert.AreEqual(TutorialPhase.Feed, _session.TutorialPhase);
+
+            _session.KeyDown("Escape");
+            Assert.AreEqual(TutorialPhase.Done, _session.TutorialPhase);
+            Assert.IsFalse(_session.IsPaused);
+            Assert.IsTrue(_economy.Profile.IntroSeen);
         }
 
         [Test]
@@ -137,12 +160,14 @@ namespace OrbitalSalvage.Render.Tests
             _session.Physics.DebrisList.Clear();
             _session.CollectedMass = 0;
 
+            // Complete tutorial so gameplay simulation runs
+            _session.SetTutorialPhase(TutorialPhase.Done);
+
             // Update simulation step
             _session.Update(0.016);
 
             Assert.IsTrue(_session.UsedBackupPod, "Backup pod should have automatically deployed");
             Assert.AreEqual(8, _session.Physics.DebrisList.Count, "Backup pod should have spawned 8 pieces of scrap");
-            Assert.AreEqual(TutorialPhase.Feed, _session.TutorialPhase, "Phase should be Feed after backup deployment");
             Assert.IsFalse(_session.IsLevelFailed, "Level should not have failed");
         }
 

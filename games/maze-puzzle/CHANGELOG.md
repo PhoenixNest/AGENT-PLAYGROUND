@@ -9,6 +9,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- **New Player Tutorial Spotlight Overlay & Sequential Tap Walkthrough (2026-11-01):**
+  - **Sequential Tap-to-Advance Walkthrough:** Replaced action-based progress triggers with a clean 3-step walkthrough (Step 1: Spin Track 🔄 -> Step 2: Multiply Gate ⚡ -> Step 3: Feed Nibbles 😍). Players advance through each step by tapping anywhere on the screen or pressing Space/Enter.
+  - **Dynamic Spotlight Mask & HUD Shroud:** Applied a dark cosmic shroud (#0a0f1e with ~74% opacity) and glowing neon cutouts focusing user attention directly on relevant game elements (orbital ring in Steps 1 & 2, gravity funnel and Nibbles in Step 3). Contextual comms card repositions directly beneath the active ring with an indicator arrow for Steps 1 & 2, and docks at the bottom for Step 3.
+  - **Strict Gameplay Simulation Pause:** The game physics simulation is strictly paused (isPaused = true) throughout all tutorial overlay steps, keeping debris frozen while animated guide cues and neon reticles pulse. Physics simulation immediately resumes upon completing the 3rd step or tapping Skip.
+  - **Skip Tutorial Action Button:** Added an acrylic SKIP ▸ button in the top-right corner, allowing returning players to bypass onboarding instantly.
+  - **Fluent 3D Heart-Eyes Emoji (1f60d.png):** Added Microsoft Fluent 3D 1f60d.png sprite to Assets/Resources/Emojis/3D/ and tools/parity/assets/emoji/, configured uncompressed RGBA32 texture settings, registered in emoji_index.json, and updated EmojiImportTests.cs to assert all 59 emoji sprites. Fixed font glyph box in Step 1 badge using 🔄.
+  - **Testing & Verification:** Automated end-to-end tests in test_tutorial_tap.mjs and test_tutorial_skip.mjs passed. Unity batchmode compiled with 0 errors/warnings and captured reference screenshots 14_unity_tutorial_phase1_swipe.png, 15_unity_tutorial_phase2_gate.png, and 16_unity_tutorial_phase3_feed.png.
+
 - **In-Game Quick Wardrobe ("Change Skin") Feature & Parity Implementation (2026-10-29):**
   - **In-Game Quick Wardrobe Bottom Sheet:** Replaced HUD top-right restart button with Change Skin button (`🎨` / `#btn-game-skin`) with golden gradient border. Tapping opens a sleek glassmorphic bottom sheet docking at $y=540\text{--}932\text{pt}$ with drag handle, close button `✕`, 3 category tabs (*🍩 Rings*, *🕳️ Nibbles*, *🌌 Skies*), and 2-column cosmetic cards.
   - **Live Preview & Equipping:** Tapping any unlocked skin equips it immediately, plays `PlayScrapAbsorb()`, emits an in-game toast (`Equipped <Item>! ✨`), and renders live preview on the active centrifuge ring, black hole, and cosmic skybox.

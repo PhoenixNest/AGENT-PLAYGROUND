@@ -19,11 +19,11 @@ namespace OrbitalSalvage.Render.Tests
         }
 
         [Test]
-        public void All57EmojiArePresent()
+        public void AllEmojiArePresent()
         {
             int n = 0;
             foreach (var _ in EmojiPaths()) n++;
-            Assert.AreEqual(57, n);
+            Assert.AreEqual(59, n);
         }
 
         [Test]

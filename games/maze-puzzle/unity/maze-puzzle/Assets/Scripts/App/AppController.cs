@@ -1343,7 +1343,17 @@ namespace OrbitalSalvage.App
                 WidthPercent("loading-bar-fill", _progress);
             }
             bool isIntroEligible = ActiveSector != null && ActiveSector.LevelNumber == 1 && (Economy == null || !Economy.Profile.IntroSeen);
-            if (isIntroEligible || (HintHidden && HintAgeMs >= HintMs + HintFadeMs)) Hide("gesture-hint");
+            if (isIntroEligible)
+            {
+                Hide("gesture-hint");
+                Hide("btn-game-skin");
+                Opacity("btn-game-pause", 0.26);
+                Opacity("hud-quota-capsule", 0.26);
+            }
+            else if (HintHidden && HintAgeMs >= HintMs + HintFadeMs)
+            {
+                Hide("gesture-hint");
+            }
             Skin("home-diorama-ring", Equipped("ring"));
             Skin("home-diorama-nibbles", Equipped("singularity"));
             ApplyLanguageOverrides();
@@ -1541,6 +1551,13 @@ namespace OrbitalSalvage.App
             ElementOverride o;
             if (!_elements.TryGetValue(id, out o)) { o = new ElementOverride(); _elements[id] = o; }
             o.Visible = false;
+        }
+
+        void Opacity(string id, double val)
+        {
+            ElementOverride o;
+            if (!_elements.TryGetValue(id, out o)) { o = new ElementOverride(); _elements[id] = o; }
+            o.Opacity = val;
         }
 
         void WidthPercent(string id, double pct)

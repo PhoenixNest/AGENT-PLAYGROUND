@@ -908,6 +908,11 @@ namespace OrbitalSalvage.Viewer
             }
             if (down)
             {
+                if (session != null && (session.TutorialPhase == TutorialPhase.Swipe || session.TutorialPhase == TutorialPhase.Gate || session.TutorialPhase == TutorialPhase.Feed))
+                {
+                    DispatchPlayPointer(session, cssX, cssY, true, false, false);
+                    return;
+                }
                 string spec = Spec(currentId);
                 var painted = PaintedElements();
                 if (app != null)
@@ -927,6 +932,7 @@ namespace OrbitalSalvage.Viewer
             }
             else if (held)
             {
+                if (session != null && (session.TutorialPhase == TutorialPhase.Swipe || session.TutorialPhase == TutorialPhase.Gate || session.TutorialPhase == TutorialPhase.Feed)) return;
                 if (app != null && (app.IsPaused || app.IsWardrobeOpen || app.ModalOpen("modal-wardrobe"))) return;
                 DispatchPlayPointer(session, cssX, cssY, false, true, false);
             }
@@ -943,7 +949,8 @@ namespace OrbitalSalvage.Viewer
             // Pause freezes via the controller. Debrief and defeat keep the web clock running, but the
             // stills are one frozen canvas; hold that frame while a modal covers the playfield.
             bool modal = currentId != null && currentId.StartsWith("modal_", StringComparison.Ordinal);
-            session.IsPaused = (app != null && app.IsPaused) || modal;
+            bool tutActive = session.TutorialPhase == TutorialPhase.Swipe || session.TutorialPhase == TutorialPhase.Gate || session.TutorialPhase == TutorialPhase.Feed;
+            session.IsPaused = (app != null && app.IsPaused) || modal || tutActive;
             session.Accumulate = true;
             if (perfOn)
             {
