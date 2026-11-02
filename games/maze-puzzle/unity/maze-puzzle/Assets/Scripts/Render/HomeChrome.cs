@@ -188,6 +188,8 @@ namespace OrbitalSalvage.Render
             public string[] Lines;
             public double[] Widths;
             public double FontPx, Letter, LinePitch;
+            public bool PairSet;
+            public double PairLeadX, PairTextOffset;
             public string DrawFont;
             public TextFit.Anchor Anchor;
             public TextFit.Action Action;
@@ -2780,6 +2782,8 @@ namespace OrbitalSalvage.Render
             {
                 // The run rect's top is the first em box, the same origin a single line uses.
                 double baseline = r[1] + (lines.Length > 1 ? i * lineH : 0) + canvas.FontAscent();
+                // Captured English baseline (browser-placed). Translated ring labels are checked against it.
+                if (RecordRuns && textId == "home-diorama-ring-label") NoteRun(textId + "#metrics", "", baseline, canvas.FontAscent(), canvas.FontDescent(), r[3]);
                 CssBox.DrawText(canvas, lines[i], r[0], baseline, color, shadows, alpha);
                 if (RecordRuns) NoteRun(textId, lines[i], r[0], r[1] + (lines.Length > 1 ? i * lineH : 0), canvas.MeasureText(lines[i]), lines.Length > 1 ? lineH : r[3]);
                 DrawnRuns++;
@@ -2822,6 +2826,15 @@ namespace OrbitalSalvage.Render
             var er = Rect(e);
             if (src == null || er == null) return;
             double runX = src[0], specY = src[1], runW = src[2], runH = src[3];
+            // Inside a moving subtree the canvas already carries the element's matrix, so text is placed in the
+            // element's own space (the animated run rect), not at the rect that was captured after the transform.
+            // The layout below is planned on the captured rect. Carry it over by the offset between the two.
+            double motionDx = 0, motionDy = 0;
+            if (frame != null && frame.Tree[k] && frame.Runs[k] != null && ri < frame.Runs[k].Length && frame.Runs[k][ri] != null)
+            {
+                motionDx = frame.Runs[k][ri][0] - src[0];
+                motionDy = frame.Runs[k][ri][1] - src[1];
+            }
             if (frame != null && Math.Abs(frame.ExtraY[k]) > 1e-6) specY += frame.ExtraY[k];
             if (reflowY != null && k < reflowY.Length) specY += reflowY[k];
             double incoming = runCount > 1 ? StackShift(runs, k, ri) : 0;
@@ -2846,18 +2859,39 @@ namespace OrbitalSalvage.Render
             double left = er[0] + lay.LeftOff;
             double right = er[0] + lay.RightOff;
             double moveX = er[0] - lay.SpecElX;
+            // The ring pill centres its emoji and text as one pair on the width that is painted here.
+            bool ringPair = lay.PairSet && lay.IconIndex >= 0 && lay.Lines.Length == 1 && lay.Widths != null && lay.Widths.Length == 1 && lay.Widths[0] > 0;
+            double pairLeftNow = 0;
+            if (ringPair)
+            {
+                double pairWNow = lay.PairTextOffset + lay.Widths[0];
+                pairLeftNow = er[0] + (er[2] - pairWNow) * 0.5;
+                SetIconShift(lay.IconIndex, pairLeftNow - lay.PairLeadX);
+            }
             for (int i = 0; i < lay.Lines.Length; i++)
             {
                 double tw = lay.Widths != null && i < lay.Widths.Length ? lay.Widths[i] : 0;
-                double x = lay.Lines.Length == 1 && (lay.IconIndex >= 0 || lay.KeepX)
+                double x = ringPair
+                    ? pairLeftNow + lay.PairTextOffset
+                    : lay.Lines.Length == 1 && (lay.IconIndex >= 0 || lay.KeepX)
                     ? lay.SingleX + moveX
                     : TextFit.PlaceX(lay.Anchor, er[0], er[2], tw, left, right);
-                double top = runY + i * lay.LinePitch;
+                x += motionDx;
+                double top = runY + i * lay.LinePitch + motionDy;
                 double baseline = top + canvas.FontAscent();
+                // The ring pill is one line in a captured box. A browser centres the em box in the line box (half-leading),
+                // so the baseline moves down by half of the box left over after ascent and descent.
+                if (ringPair)
+                {
+                    double asc = canvas.FontAscent(), desc = canvas.FontDescent();
+                    baseline = top + (runH - (asc + desc)) * 0.5 + asc;
+                    if (RecordRuns) NoteRun(textId + "#metrics", "", baseline, asc, desc, runH);
+                }
                 canvas.PreparedLine = lay.Shaped != null && i < lay.Shaped.Length ? lay.Shaped[i] : null;
                 CssBox.DrawText(canvas, lay.Lines[i], x, baseline, color, shadows, alpha);
                 canvas.PreparedLine = null;
                 if (RecordRuns) NoteRun(textId, lay.Lines[i], x, top, tw, lay.Lines.Length > 1 ? lay.LinePitch : runH);
+                if (RecordRuns && ringPair && i == 0) NoteRun(textId + "#pair", "", pairLeftNow + motionDx, top, lay.PairTextOffset + tw, runH);
                 DrawnRuns++;
             }
             canvas.Restore();
@@ -2878,6 +2912,7 @@ namespace OrbitalSalvage.Render
                 ElX = er[0], ElY = er[1], ElW = er[2], ElH = er[3],
                 CenteredBlock = false,
                 IsButton = S(e, "t") == "button",
+                CenterLeadingPair = S(e, "id") == "home-diorama-ring-label",
                 ButtonLike = buttonLike,
                 FontPx = fontPx,
                 LetterSpacing = LocTextStyle.LetterSpacing(runLang, ls),
@@ -2926,6 +2961,9 @@ namespace OrbitalSalvage.Render
                 LeftOff = plan.Left - er[0],
                 RightOff = plan.Right - er[0],
                 IconShift = plan.IconShift,
+                PairSet = plan.PairSet,
+                PairLeadX = plan.PairLeadX,
+                PairTextOffset = plan.PairTextOffset,
                 IconIndex = plan.IconIndex,
                 SpecElX = er[0],
                 SingleX = plan.X,
@@ -3002,12 +3040,14 @@ namespace OrbitalSalvage.Render
                 lay.Lines = new[] { TextFit.Ellipsize(display, plan.Available, measureLine) };
             }
             else lay.Lines = new[] { display };
+            // Shaped lines are drawn from their marks, so the shaped width is the drawn width. Keep it for the ring pair.
+            double[] shapedWidths = input.CenterLeadingPair && lay.Shaped != null ? lay.Widths : null;
             lay.Widths = new double[lay.Lines.Length];
             for (int i = 0; i < lay.Lines.Length; i++)
             {
                 canvas.Font = lay.DrawFont;
                 canvas.LetterSpacing = lay.Letter;
-                lay.Widths[i] = canvas.MeasureText(lay.Lines[i]);
+                lay.Widths[i] = shapedWidths != null && lay.Lines.Length == 1 && shapedWidths.Length == 1 ? shapedWidths[0] : canvas.MeasureText(lay.Lines[i]);
             }
             if (lay.Lines.Length == 1 && plan.IconIndex < 0 && !plan.KeepX)
                 lay.SingleX = TextFit.PlaceX(plan.Anchor, er[0], er[2], lay.Widths[0], plan.Left, plan.Right);

@@ -71,6 +71,11 @@ namespace OrbitalSalvage.Render
             public double ElX, ElY, ElW, ElH;
             public bool CenteredBlock;
             public bool IsButton;
+            /// <summary>
+            /// A leading icon and its text are one pair. The pair is centred in the element, the same as a button
+            /// with an icon. Set for the Home ring pill, whose box is a captured English width.
+            /// </summary>
+            public bool CenterLeadingPair;
             /// <summary>Id or class looks like a button, even when the tag is not <c>button</c>.</summary>
             public bool ButtonLike;
             public double FontPx;
@@ -106,6 +111,10 @@ namespace OrbitalSalvage.Render
             public double LinePitch;
             public double X;
             public double IconShift;
+            /// <summary>True when the leading icon and the text were centred as one pair (the painter centres it on the width it draws).</summary>
+            public bool PairSet;
+            /// <summary>Icon left edge before the pair was centred, and the icon-to-text distance (icon width plus gap).</summary>
+            public double PairLeadX, PairTextOffset;
             public int IconIndex;
             public bool SoftShrink;
             public bool KeepX;
@@ -288,7 +297,7 @@ namespace OrbitalSalvage.Render
 
         static void PlaceSingle(Input input, ref Layout plan, double textW, bool leading, int leadIndex, double leadX, double leadW)
         {
-            if (plan.Anchor == Anchor.Center && input.IsButton && leading)
+            if ((input.CenterLeadingPair || (plan.Anchor == Anchor.Center && input.IsButton)) && leading)
             {
                 double rawGap = input.RunX - (leadX + leadW);
                 if (rawGap < 0) rawGap = 0;
@@ -304,6 +313,9 @@ namespace OrbitalSalvage.Render
                         plan.IconShift = pairLeft - leadX;
                         plan.IconIndex = leadIndex;
                         plan.X = pairLeft + leadW + gap;
+                        plan.PairSet = true;
+                        plan.PairLeadX = leadX;
+                        plan.PairTextOffset = leadW + gap;
                         return;
                     }
                 }
