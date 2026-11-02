@@ -194,6 +194,14 @@ namespace OrbitalSalvage.Render
             return RoundHalfUp(primary.ascender * spec.px / primary.unitsPerEm);
         }
 
+        /// <summary>Rounded hhea descent in CSS px of the current font, the same face as <see cref="FontAscent"/>.</summary>
+        public double FontDescent()
+        {
+            var spec = ParseFont(state.font);
+            var primary = AscentFace(spec.family, spec.weight);
+            return RoundHalfUp(-primary.descender * spec.px / primary.unitsPerEm);
+        }
+
         /// <summary>
         /// The captured line box was measured with Fredoka or Nunito. A CJK primary has a
         /// different em box, so the baseline stays on the Latin face and the ideograph
