@@ -1,13 +1,17 @@
 {
-	"mcpServers": {
-		"blender-mcp": {
-			"command": "uv",
-			"args": [
-				"--directory",
-				"mcp-servers\\blender_mcp\\mcp",
-				"run",
-				"blender-mcp"
-			]
-		}
-	}
+  "mcpServers": {
+    "blender-mcp": {
+      "command": "uv",
+      "args": [
+        "--directory",
+        "mcp-servers\\blender_mcp\\mcp",
+        "run",
+        "blender-mcp"
+      ]
+    },
+    "unity": {
+      "command": "unity",
+      "args": ["mcp"]
+    }
+  }
 }
