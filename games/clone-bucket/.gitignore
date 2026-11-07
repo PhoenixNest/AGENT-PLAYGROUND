@@ -1,0 +1,4 @@
+# Reference media / level capture screenshots
+/refer-levels/
+# Recovered original binaries (never commit; keep an off-machine backup)
+/sources/

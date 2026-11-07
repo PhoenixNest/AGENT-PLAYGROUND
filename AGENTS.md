@@ -42,3 +42,15 @@ All 2D and 3D assets added to the project must adhere to:
 
 - **Unity Plugin & MCP**: Located at [`.agents/plugins/unity-mcp/`](file:///.agents/plugins/unity-mcp/README.md), providing 32 curated skills (`unity-cli`, `optimize-web`, `ui-uitk`, etc.) and native stdio MCP server support (`unity mcp`).
 - **Blender MCP**: Configured in `mcp-servers/blender_mcp/` and registered in [`.mcp.json`](file:///.mcp.json) for procedural modeling and asset generation.
+
+---
+
+## 5. Project Exception: `games/clone-bucket` (Multi Maze 3D rebuild)
+
+This project rebuilds our own shipped title from a recovered build, so some workspace defaults do not apply:
+
+- **Source of truth**: `games/clone-bucket/docs/` and `tools/recovery/FINDINGS.md`. The recovered Unity project lives at `tools/export/MultiMaze3D_4.1.0.0/` (git-ignored; regenerate it from the APKs with `tools/recovery/scripts/run-export.ps1 -ExportName <new-folder>`).
+- **Section 2 does not apply**: reuse the recovered meshes, prefabs and materials instead of ProBuilder greybox → Blender. Use Blender MCP only for new or replacement assets.
+- **Section 3 QA**: recovered assets are exempt from the LOD-chain and texel-density rules (they are intentionally low-poly, e.g. the 28-triangle ball). New assets follow Section 3.
+- **Original binaries**: never modify, move or commit `games/clone-bucket/sources/` (read-only APKs). Verify copies against `tools/recovery/SHA256SUMS-apk-4.1.0.0.txt`.
+- **Secrets**: do not copy API keys, ad unit IDs or app IDs from the recovered build into docs, code comments or commits.
