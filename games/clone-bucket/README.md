@@ -116,3 +116,14 @@ Read in order. Each file marks facts `[Recovered]`, `[Inferred]`, or `[Unknown]`
 1. Close gates G0–G1.
 2. Play-test on-screen levels 1–50 on the device side by side with the recovered build (rotation feel, boss levels, multi-chunk levels).
 3. Decide the product questions listed in `tools/recovery/recovered/INTEGRATION_NOTES.md` ("Product questions").
+
+## Editor menu
+
+Tools > Clone Bucket in the Unity editor:
+
+- Tools > Clone Bucket > Play From Loading Scene: when ticked (default), Play always starts from the Loading scene.
+- Tools > Clone Bucket > Export Xcode Project for iOS Simulator: exports an Xcode project built with the iOS Simulator SDK to `games/clone-bucket/output/clone-bucket-ios-emulator/`.
+- Tools > Clone Bucket > Export Xcode Project for iOS Device: exports an Xcode project built with the iOS device SDK to `games/clone-bucket/output/clone-bucket/`.
+- Both exports need the iOS Build Support module for the project's Unity version (install it in Unity Hub). The first export switches the active platform to iOS. Each export replaces the previous project in its folder. The SDK choice is set only for the export; the project's iOS setting is put back afterwards. Open `Unity-iPhone.xcodeproj` in the exported folder with Xcode on a Mac; a device build also needs a signing team set in Xcode.
+- `games/clone-bucket/output/` is git-ignored.
+- Tools > Clone Bucket > Clear Cached Data: after a confirmation, deletes all PlayerPrefs for the project (current level, gems, scores, selected skin, sound and haptics settings), the contents of `Application.persistentDataPath` and `Application.temporaryCachePath`, and the asset bundle cache, so the next Play starts like a fresh install. It is disabled in Play mode. It does not touch the Library folder or editor preferences.

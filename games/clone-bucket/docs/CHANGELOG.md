@@ -1,5 +1,9 @@
 # Changelog — superseded pre-recovery claims
 
+## 2026-11-09 — Editor menu
+
+Editor menu, same day: Tools > Clone Bucket now has Export Xcode Project for iOS Simulator (to `output/clone-bucket-ios-emulator`), Export Xcode Project for iOS Device (to `output/clone-bucket`) and Clear Cached Data (PlayerPrefs, persistent data, temporary cache and asset bundle cache); `games/clone-bucket/output/` is git-ignored; the exports need the iOS Build Support module, which is not installed for Unity 6000.4.0f1 on the development machine yet.
+
 ## 2026-11-08 — 1.0.0: renamed to clone-bucket
 
 Renamed to clone-bucket (`io.dev.clone-bucket`), version reset to 1.0.0. The project targets iOS, desktop and WebGL. It has no ads, in-app purchases, attribution SDKs or Android support.

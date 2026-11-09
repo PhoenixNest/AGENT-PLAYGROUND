@@ -2,3 +2,5 @@
 /refer-levels/
 # Recovered original binaries (never commit; keep an off-machine backup)
 /sources/
+# Exported Xcode projects
+/output/
