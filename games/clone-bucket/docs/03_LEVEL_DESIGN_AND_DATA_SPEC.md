@@ -1,7 +1,7 @@
 # 03. Level Data & Dataset Specification
 
-**Scope:** level table schema, dataset plumbing, level-to-prefab mapping, the live playable order, lock and boss data, and the on-screen level list for Multi Maze 3D 4.1.0.0.
-**Source of truth:** the recovered build (v4.1.0.0, Android package `com.AlexandrJanashvili.MultiMaze3D`). This is an internal rebuild of our own title after source loss. Engine for the target is pending decision (see README §5). The original engine was Unity 2022.3.62f2, built-in render pipeline.
+**Scope:** level table schema, dataset plumbing, level-to-prefab mapping, the live playable order, lock and boss data, and the on-screen level list for clone-bucket (recovered from the v4.1.0.0 build of our earlier title).
+**Source of truth:** the recovered build (v4.1.0.0, the Android APK of our earlier title). This is an internal rebuild after source loss. The original engine was Unity 2022.3.62f2, built-in render pipeline. The rebuild targets Unity 6 with the built-in render pipeline (Route C, `08_IMPLEMENTATION_PLAN.md`). The level table and prefabs are reused unchanged.
 
 **Tags:** `[Recovered]` = read from the recovered build, path given. `[Inferred]` = deduced from recovered data, not confirmed by code. `[Unknown]` = not recoverable from what we have.
 
@@ -11,16 +11,16 @@
 
 ## 1. Dataset plumbing
 
-| Item | Value | Tag |
-|---|---|---|
-| Bundled table | `TextAsset/LevelsData.txt` (107 data rows + header, 20 columns) | [Recovered] |
-| Dataset config | `MonoBehaviour/DataSetConfig_Levels.asset`: `id` = `LevelsData`, `_dataAsset` = `TextAsset/LevelsData.txt`, `_separatorType` = 0 (`Csv`), `remoteFileName` = `LevelsData.csv`, `remoteFeatureName` = `LevelFunnel` | [Recovered] |
-| Serialized keys | 19 entries in `_serializedKeys` (the CSV header minus `UniqueRowIndex`) | [Recovered] |
-| Database config | `MonoBehaviour/DatabaseConfig.asset`: `mainDataSetId` = `LevelData`, `allDataSets` = [DataSetConfig_Levels, DataSetConfig_IAPs, DataSetConfig_Camera] | [Recovered] |
-| Levels lookup key | `LevelsController` const `DataSetId` = `"LevelsData"` | [Recovered] |
-| Mismatch | `mainDataSetId` = `LevelData` does not equal the levels dataset id `LevelsData`. Effect on runtime lookup not confirmed. | [Unknown] |
-| Remote override | `DatabaseController.TryOverrideDataSetsWithRemoteFiles()` exists. Its body is a stub, so whether a remote `LevelsData.csv` replaces the bundled file, and when, is not confirmed. | [Recovered] name, [Unknown] behaviour |
-| Remote A/B flags | `ABTestVariables` private bools `isMixedLevels`, `withBossLevels`, `bossLevelEveryFive`. Not serialized; values come from remote config. | [Recovered] name, [Unknown] values |
+| Item              | Value                                                                                                                                                                                                              | Tag                                   |
+| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------- |
+| Bundled table     | `TextAsset/LevelsData.txt` (107 data rows + header, 20 columns)                                                                                                                                                    | [Recovered]                           |
+| Dataset config    | `MonoBehaviour/DataSetConfig_Levels.asset`: `id` = `LevelsData`, `_dataAsset` = `TextAsset/LevelsData.txt`, `_separatorType` = 0 (`Csv`), `remoteFileName` = `LevelsData.csv`, `remoteFeatureName` = `LevelFunnel` | [Recovered]                           |
+| Serialized keys   | 19 entries in `_serializedKeys` (the CSV header minus `UniqueRowIndex`)                                                                                                                                            | [Recovered]                           |
+| Database config   | `MonoBehaviour/DatabaseConfig.asset`: `mainDataSetId` = `LevelData`, `allDataSets` = [DataSetConfig_Levels, DataSetConfig_Camera]                                                                                  | [Recovered]                           |
+| Levels lookup key | `LevelsController` const `DataSetId` = `"LevelsData"`                                                                                                                                                              | [Recovered]                           |
+| Mismatch          | `mainDataSetId` = `LevelData` does not equal the levels dataset id `LevelsData`. Effect on runtime lookup not confirmed.                                                                                           | [Unknown]                             |
+| Remote override   | `DatabaseController.TryOverrideDataSetsWithRemoteFiles()` exists. Its body is a stub, so whether a remote `LevelsData.csv` replaces the bundled file, and when, is not confirmed.                                  | [Recovered] name, [Unknown] behaviour |
+| Remote A/B flags  | `ABTestVariables` private bools `isMixedLevels`, `withBossLevels`, `bossLevelEveryFive`. Not serialized; values come from remote config.                                                                           | [Recovered] name, [Unknown] values    |
 
 **Fallback rule (proposed for our rebuild):** ship the 107-row bundled table; accept a remote table of the same schema if the publisher supplies one. Remote values per cohort are not known to us (see README, open items).
 
@@ -30,22 +30,22 @@
 
 Header line, verbatim: `UniqueRowIndex,Level Index,Mini Level Index,Level Name,Level Type,Level Difficulty,Is Looping,Is Boss Level,Start Ball Amount,Target Ball Amount,Perfect Ball Amount,Gate Types,Gate Values,ColorSchemeBalls,ColorSchemeMazeWalls,ColorSchemeMazeBackground,ColorSchemeStageBackground,ColorSchemeBucket,ColorSchemeBucketGuides,ColorSchemeBucketStand` [Recovered]
 
-| # | Column | Observed values | Meaning | Tag |
-|---|---|---|---|---|
-| 1 | UniqueRowIndex | 1–107, unique | Row id; equals row number | [Recovered] |
-| 2 | Level Index | equal to UniqueRowIndex in every row | Index key. Read by `LevelsController` (const `LevelIndex`). Does not equal the on-screen number (see §4). | [Recovered] values, [Inferred] meaning |
-| 3 | Mini Level Index | always `1` | Index of a mini-level inside a level. Always 1 here. | [Recovered] values, [Unknown] meaning |
-| 4 | Level Name | prefab name; `BossLevel1` appears twice (rows 14 and 99, identical data) | Prefab under `Resources/prefabs/minilevels/` | [Recovered] |
-| 5 | Level Type | always `Prefab` | `LevelType` enum: `Prefab = 0`, `Json = 1` | [Recovered] |
-| 6 | Level Difficulty | always `0` | Unused in this table | [Recovered] values, [Unknown] meaning |
-| 7 | Is Looping | `TRUE` for 100 rows; `FALSE` for rows 1–6 and 33 | Maps to `LevelData.isLooping`. Runtime behaviour is not recovered. | [Recovered] values, [Inferred] meaning |
-| 8 | Is Boss Level | `TRUE` for rows 14, 27, 42, 60, 74, 99 | Boss flag; boss prefabs use moving gates (§7) | [Recovered] |
-| 9 | Start Ball Amount | `5` (102 rows), `10` (rows 1–2), `7` (row 46), `20` (row 81), `100` (row 83) | Balls spawned into the maze at level start (at `LevelsConfig.ballSpawnPositions`) | [Recovered] values, [Inferred] meaning |
-| 10 | Target Ball Amount | 10 to 1600 | Balls required to complete the level (the `Target` key) | [Recovered] values, [Inferred] meaning |
-| 11 | Perfect Ball Amount | 1.2× to 50× target; always greater than target | Second threshold, likely for the top star. Star logic not recovered. | [Recovered] values, [Inferred] meaning |
-| 12 | Gate Types | `;`-separated, parallel to column 13; values `Multiply`, `Subtract`, `Divide` | `GateType` enum: `Multiply = 0`, `Subtract = 1`, `Divide = 2`. No `Add`. | [Recovered] |
-| 13 | Gate Values | `;`-separated integers; 2 to 11 gates per row; 24 distinct values from 2 to 150 | Operand for the gate in column 12 at the same index | [Recovered] |
-| 14–20 | ColorSchemeBalls, ColorSchemeMazeWalls, ColorSchemeMazeBackground, ColorSchemeStageBackground, ColorSchemeBucket, ColorSchemeBucketGuides, ColorSchemeBucketStand | all `Grey` in all 107 rows | Colour scheme name. Five schemes exist as assets: `ColorSchemeConfig_Black`, `_Blue`, `_Blue2`, `_Grey`, `_Orange`. | [Recovered] values, [Inferred] meaning |
+| #     | Column                                                                                                                                                            | Observed values                                                                 | Meaning                                                                                                             | Tag                                    |
+| ----- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- | -------------------------------------- |
+| 1     | UniqueRowIndex                                                                                                                                                    | 1–107, unique                                                                   | Row id; equals row number                                                                                           | [Recovered]                            |
+| 2     | Level Index                                                                                                                                                       | equal to UniqueRowIndex in every row                                            | Index key. Read by `LevelsController` (const `LevelIndex`). Does not equal the on-screen number (see §4).           | [Recovered] values, [Inferred] meaning |
+| 3     | Mini Level Index                                                                                                                                                  | always `1`                                                                      | Index of a mini-level inside a level. Always 1 here.                                                                | [Recovered] values, [Unknown] meaning  |
+| 4     | Level Name                                                                                                                                                        | prefab name; `BossLevel1` appears twice (rows 14 and 99, identical data)        | Prefab under `Resources/prefabs/minilevels/`                                                                        | [Recovered]                            |
+| 5     | Level Type                                                                                                                                                        | always `Prefab`                                                                 | `LevelType` enum: `Prefab = 0`, `Json = 1`                                                                          | [Recovered]                            |
+| 6     | Level Difficulty                                                                                                                                                  | always `0`                                                                      | Unused in this table                                                                                                | [Recovered] values, [Unknown] meaning  |
+| 7     | Is Looping                                                                                                                                                        | `TRUE` for 100 rows; `FALSE` for rows 1–6 and 33                                | Maps to `LevelData.isLooping`. Runtime behaviour is not recovered.                                                  | [Recovered] values, [Inferred] meaning |
+| 8     | Is Boss Level                                                                                                                                                     | `TRUE` for rows 14, 27, 42, 60, 74, 99                                          | Boss flag; boss prefabs use moving gates (§7)                                                                       | [Recovered]                            |
+| 9     | Start Ball Amount                                                                                                                                                 | `5` (102 rows), `10` (rows 1–2), `7` (row 46), `20` (row 81), `100` (row 83)    | Balls spawned into the maze at level start (at `LevelsConfig.ballSpawnPositions`)                                   | [Recovered] values, [Inferred] meaning |
+| 10    | Target Ball Amount                                                                                                                                                | 10 to 1600                                                                      | Balls required to complete the level (the `Target` key)                                                             | [Recovered] values, [Inferred] meaning |
+| 11    | Perfect Ball Amount                                                                                                                                               | 1.2× to 50× target; always greater than target                                  | Second threshold, likely for the top star. Star logic not recovered.                                                | [Recovered] values, [Inferred] meaning |
+| 12    | Gate Types                                                                                                                                                        | `;`-separated, parallel to column 13; values `Multiply`, `Subtract`, `Divide`   | `GateType` enum: `Multiply = 0`, `Subtract = 1`, `Divide = 2`. No `Add`.                                            | [Recovered]                            |
+| 13    | Gate Values                                                                                                                                                       | `;`-separated integers; 2 to 11 gates per row; 24 distinct values from 2 to 150 | Operand for the gate in column 12 at the same index                                                                 | [Recovered]                            |
+| 14–20 | ColorSchemeBalls, ColorSchemeMazeWalls, ColorSchemeMazeBackground, ColorSchemeStageBackground, ColorSchemeBucket, ColorSchemeBucketGuides, ColorSchemeBucketStand | all `Grey` in all 107 rows                                                      | Colour scheme name. Five schemes exist as assets: `ColorSchemeConfig_Black`, `_Blue`, `_Blue2`, `_Grey`, `_Orange`. | [Recovered] values, [Inferred] meaning |
 
 ---
 
@@ -105,58 +105,58 @@ No difficulty tiers are stored: `Level Difficulty` is 0 in every row [Recovered]
 
 Columns: on-screen number (live position), CSV row, name, start balls, target, perfect, gates in CSV order (`×` multiply, `−` subtract, `÷` divide), lock cost (`Chain.UnlockNumber`, `–` = none), notes. Loop = `Is Looping`. Boss = `Is Boss Level`.
 
-| On-screen | CSV row | Name | Start | Target | Perfect | Gates | Lock | Notes |
-|---:|---:|---|---:|---:|---:|---|---:|---|
-| 1 | 1 | StartLevel1 | 10 | 60 | 110 | ×11 ×6 | – | |
-| 2 | 2 | StartLevel2 | 10 | 40 | 60 | ×4 ×6 | – | |
-| 3 | 3 | StartLevel3 | 5 | 120 | 240 | ×4 ×3 ×6 ×4 | – | |
-| 4 | 4 | StartLevel4 | 5 | 180 | 300 | ×4 ×3 ×3 ×3 ×3 ×7 | – | |
-| 5 | 6 | StartLevel5 | 5 | 660 | 900 | −15 ×4 ×3 ×4 ×11 ×5 | – | |
-| 6 | 7 | Level1 | 5 | 420 | 1200 | −50 ×4 ×3 ×6 ×4 ×7 | – | Loop |
-| 7 | 9 | Level2 | 5 | 330 | 1300 | ×6 ×4 ×6 ×11 | 100 | Loop |
-| 8 | 10 | Level3 | 5 | 600 | 960 | −20 ×4 ×3 ×8 ×15 ×3 −20 | 40 | Loop |
-| 9 | 11 | Level5 | 5 | 500 | 1000 | ÷2 ×7 ×9 ×3 ×11 −70 ×6 | 30 | Loop |
-| 10 | 13 | Level4 | 5 | 600 | 900 | ×4 ×6 ×5 ×6 | 30 | Loop |
-| 11 | 14 | BossLevel1 | 5 | 600 | 900 | ×4 ×3 ×6 ×3 | 100 | Loop, boss |
-| 12 | 15 | Level11 | 5 | 800 | 1080 | −40 ÷2 ×10 ×4 ×8 ×3 ×6 | – | Loop |
-| 13 | 16 | Level14 | 5 | 360 | 1400 | −50 ÷2 ×6 ×5 ×9 ×3 ×9 | – | Loop |
-| 14 | 17 | Level13 | 5 | 540 | 900 | ×4 ×3 ×3 ×5 ×3 | 80 | Loop |
-| 15 | 18 | Level12 | 5 | 900 | 1080 | ×6 ×3 ×3 ×5 ×6 ×4 | – | Loop |
-| 16 | 20 | Level16 | 5 | 600 | 840 | ×11 ×11 ×7 ×6 ×4 | – | Loop |
-| 17 | 22 | Level21 | 5 | 500 | 900 | −15 ×4 ×5 ×6 ×11 | – | Loop |
-| 18 | 23 | Level22 | 5 | 360 | 650 | ×4 ×8 ×6 ×3 ×3 | 80 | Loop |
-| 19 | 24 | Level26 | 5 | 380 | 700 | ÷2 −70 ×9 ×3 ×11 ×3 ×11 ÷2 | – | Loop |
-| 20 | 25 | Level24 | 5 | 1400 | 2000 | ×9 ×5 ×10 ×4 ×8 | 40 | Loop |
-| 21 | 26 | Level25 | 5 | 500 | 1200 | ×3 ×3 ×3 ×3 ×3 | – | Loop |
-| 22 | 27 | BossLevel2 | 5 | 800 | 1200 | ×4 ×3 ×7 ×5 ×3 | 100 | Loop, boss |
-| 23 | 28 | Level6 | 5 | 1600 | 2300 | ×5 ×7 ×6 ×11 | – | Loop |
-| 24 | 29 | Level7 | 5 | 500 | 1100 | ÷2 ×9 ×4 ×12 | – | Loop |
-| 25 | 30 | Level8 | 5 | 300 | 850 | ×4 ×5 ×9 ×5 ×3 | – | Loop |
-| 26 | 31 | Level9 | 5 | 750 | 1400 | −60 ×4 ×8 ×9 ×13 ×6 | – | Loop |
-| 27 | 32 | Level10 | 5 | 1500 | 2000 | ×5 ×3 ×3 ×7 ×9 | 100 | Loop |
-| 28 | 36 | Level15 | 5 | 950 | 2200 | ×4 ×3 ×3 ×6 ×16 ×3 | 100 | Loop |
-| 29 | 37 | Level17 | 5 | 800 | 1100 | ÷2 −5 ×5 ×3 ×4 ×6 ×11 ×4 −5 −5 −5 | – | Loop |
-| 30 | 38 | Level18 | 5 | 660 | 1300 | ÷2 −20 ×3 ×4 ×8 ×11 ×6 ×4 | – | Loop |
-| 31 | 40 | Level19 | 5 | 1400 | 2880 | ×3 ×3 ×4 ×9 ×4 ×3 | 120 | Loop |
-| 32 | 41 | Level20 | 5 | 450 | 780 | ×4 ×3 ×5 ×8 ×13 | – | Loop |
-| 33 | 42 | BossLevel3 | 5 | 800 | 1200 | ×4 ×3 ×7 ×3 ×4 ×4 | 100 | Loop, boss |
-| 34 | 44 | Level23 | 5 | 750 | 1200 | ×6 ×5 ×11 ×3 ×4 ×3 ×4 ×5 | – | Loop |
-| 35 | 47 | Level27 | 5 | 400 | 600 | ×3 ×5 ×4 ×5 ×6 | 30 | Loop |
-| 36 | 49 | Level28 | 5 | 1000 | 1500 | ÷2 ×9 ×5 ×3 ×4 | – | Loop |
-| 37 | 50 | Level29 | 5 | 500 | 900 | ×16 ×7 ×3 ×4 ×3 ×5 | – | Loop |
-| 38 | 51 | Level30 | 5 | 300 | 420 | ÷2 ×11 ×11 ×16 | – | Loop |
-| 39 | 52 | Level31 | 5 | 420 | 1200 | ×7 ×4 ×6 ×3 ×4 −50 | – | Loop |
-| 40 | 53 | Level32 | 5 | 330 | 1300 | ×11 ×6 ×4 ×6 | 100 | Loop |
-| 41 | 54 | Level33 | 5 | 600 | 960 | −20 ×3 ×15 ×8 ×3 ×4 −20 | 40 | Loop |
-| 42 | 58 | Level34 | 5 | 600 | 900 | ×6 ×5 ×6 ×4 | 30 | Loop |
-| 43 | 59 | Level35 | 5 | 500 | 1000 | ×6 −70 ×11 ×3 ×9 ×7 ÷2 | 30 | Loop |
-| 44 | 60 | BossLevel4 | 5 | 600 | 1100 | ×4 ×4 ×3 ×7 ×4 | 100 | Loop, boss |
-| 45 | 61 | Level41 | 5 | 800 | 1080 | ×6 ×3 ×8 ×4 ×10 ÷2 −40 | – | Loop |
-| 46 | 62 | Level42 | 5 | 900 | 1080 | ×4 ×6 ×5 ×3 ×3 ×6 | – | Loop |
-| 47 | 63 | Level43 | 5 | 540 | 900 | ×3 ×5 ×3 ×3 ×4 | 80 | Loop |
-| 48 | 64 | Level44 | 5 | 360 | 1400 | ×9 ×3 ×9 ×5 ×6 ÷2 −50 | – | Loop |
-| 49 | 65 | Level45 | 5 | 950 | 2200 | ×3 ×16 ×6 ×3 ×3 ×4 | 100 | Loop |
-| 50 | 66 | Level51 | 5 | 500 | 900 | ×11 ×6 ×5 ×4 −15 | – | Loop |
+| On-screen | CSV row | Name        | Start | Target | Perfect | Gates                             | Lock | Notes      |
+| --------: | ------: | ----------- | ----: | -----: | ------: | --------------------------------- | ---: | ---------- |
+|         1 |       1 | StartLevel1 |    10 |     60 |     110 | ×11 ×6                            |    – |            |
+|         2 |       2 | StartLevel2 |    10 |     40 |      60 | ×4 ×6                             |    – |            |
+|         3 |       3 | StartLevel3 |     5 |    120 |     240 | ×4 ×3 ×6 ×4                       |    – |            |
+|         4 |       4 | StartLevel4 |     5 |    180 |     300 | ×4 ×3 ×3 ×3 ×3 ×7                 |    – |            |
+|         5 |       6 | StartLevel5 |     5 |    660 |     900 | −15 ×4 ×3 ×4 ×11 ×5               |    – |            |
+|         6 |       7 | Level1      |     5 |    420 |    1200 | −50 ×4 ×3 ×6 ×4 ×7                |    – | Loop       |
+|         7 |       9 | Level2      |     5 |    330 |    1300 | ×6 ×4 ×6 ×11                      |  100 | Loop       |
+|         8 |      10 | Level3      |     5 |    600 |     960 | −20 ×4 ×3 ×8 ×15 ×3 −20           |   40 | Loop       |
+|         9 |      11 | Level5      |     5 |    500 |    1000 | ÷2 ×7 ×9 ×3 ×11 −70 ×6            |   30 | Loop       |
+|        10 |      13 | Level4      |     5 |    600 |     900 | ×4 ×6 ×5 ×6                       |   30 | Loop       |
+|        11 |      14 | BossLevel1  |     5 |    600 |     900 | ×4 ×3 ×6 ×3                       |  100 | Loop, boss |
+|        12 |      15 | Level11     |     5 |    800 |    1080 | −40 ÷2 ×10 ×4 ×8 ×3 ×6            |    – | Loop       |
+|        13 |      16 | Level14     |     5 |    360 |    1400 | −50 ÷2 ×6 ×5 ×9 ×3 ×9             |    – | Loop       |
+|        14 |      17 | Level13     |     5 |    540 |     900 | ×4 ×3 ×3 ×5 ×3                    |   80 | Loop       |
+|        15 |      18 | Level12     |     5 |    900 |    1080 | ×6 ×3 ×3 ×5 ×6 ×4                 |    – | Loop       |
+|        16 |      20 | Level16     |     5 |    600 |     840 | ×11 ×11 ×7 ×6 ×4                  |    – | Loop       |
+|        17 |      22 | Level21     |     5 |    500 |     900 | −15 ×4 ×5 ×6 ×11                  |    – | Loop       |
+|        18 |      23 | Level22     |     5 |    360 |     650 | ×4 ×8 ×6 ×3 ×3                    |   80 | Loop       |
+|        19 |      24 | Level26     |     5 |    380 |     700 | ÷2 −70 ×9 ×3 ×11 ×3 ×11 ÷2        |    – | Loop       |
+|        20 |      25 | Level24     |     5 |   1400 |    2000 | ×9 ×5 ×10 ×4 ×8                   |   40 | Loop       |
+|        21 |      26 | Level25     |     5 |    500 |    1200 | ×3 ×3 ×3 ×3 ×3                    |    – | Loop       |
+|        22 |      27 | BossLevel2  |     5 |    800 |    1200 | ×4 ×3 ×7 ×5 ×3                    |  100 | Loop, boss |
+|        23 |      28 | Level6      |     5 |   1600 |    2300 | ×5 ×7 ×6 ×11                      |    – | Loop       |
+|        24 |      29 | Level7      |     5 |    500 |    1100 | ÷2 ×9 ×4 ×12                      |    – | Loop       |
+|        25 |      30 | Level8      |     5 |    300 |     850 | ×4 ×5 ×9 ×5 ×3                    |    – | Loop       |
+|        26 |      31 | Level9      |     5 |    750 |    1400 | −60 ×4 ×8 ×9 ×13 ×6               |    – | Loop       |
+|        27 |      32 | Level10     |     5 |   1500 |    2000 | ×5 ×3 ×3 ×7 ×9                    |  100 | Loop       |
+|        28 |      36 | Level15     |     5 |    950 |    2200 | ×4 ×3 ×3 ×6 ×16 ×3                |  100 | Loop       |
+|        29 |      37 | Level17     |     5 |    800 |    1100 | ÷2 −5 ×5 ×3 ×4 ×6 ×11 ×4 −5 −5 −5 |    – | Loop       |
+|        30 |      38 | Level18     |     5 |    660 |    1300 | ÷2 −20 ×3 ×4 ×8 ×11 ×6 ×4         |    – | Loop       |
+|        31 |      40 | Level19     |     5 |   1400 |    2880 | ×3 ×3 ×4 ×9 ×4 ×3                 |  120 | Loop       |
+|        32 |      41 | Level20     |     5 |    450 |     780 | ×4 ×3 ×5 ×8 ×13                   |    – | Loop       |
+|        33 |      42 | BossLevel3  |     5 |    800 |    1200 | ×4 ×3 ×7 ×3 ×4 ×4                 |  100 | Loop, boss |
+|        34 |      44 | Level23     |     5 |    750 |    1200 | ×6 ×5 ×11 ×3 ×4 ×3 ×4 ×5          |    – | Loop       |
+|        35 |      47 | Level27     |     5 |    400 |     600 | ×3 ×5 ×4 ×5 ×6                    |   30 | Loop       |
+|        36 |      49 | Level28     |     5 |   1000 |    1500 | ÷2 ×9 ×5 ×3 ×4                    |    – | Loop       |
+|        37 |      50 | Level29     |     5 |    500 |     900 | ×16 ×7 ×3 ×4 ×3 ×5                |    – | Loop       |
+|        38 |      51 | Level30     |     5 |    300 |     420 | ÷2 ×11 ×11 ×16                    |    – | Loop       |
+|        39 |      52 | Level31     |     5 |    420 |    1200 | ×7 ×4 ×6 ×3 ×4 −50                |    – | Loop       |
+|        40 |      53 | Level32     |     5 |    330 |    1300 | ×11 ×6 ×4 ×6                      |  100 | Loop       |
+|        41 |      54 | Level33     |     5 |    600 |     960 | −20 ×3 ×15 ×8 ×3 ×4 −20           |   40 | Loop       |
+|        42 |      58 | Level34     |     5 |    600 |     900 | ×6 ×5 ×6 ×4                       |   30 | Loop       |
+|        43 |      59 | Level35     |     5 |    500 |    1000 | ×6 −70 ×11 ×3 ×9 ×7 ÷2            |   30 | Loop       |
+|        44 |      60 | BossLevel4  |     5 |    600 |    1100 | ×4 ×4 ×3 ×7 ×4                    |  100 | Loop, boss |
+|        45 |      61 | Level41     |     5 |    800 |    1080 | ×6 ×3 ×8 ×4 ×10 ÷2 −40            |    – | Loop       |
+|        46 |      62 | Level42     |     5 |    900 |    1080 | ×4 ×6 ×5 ×3 ×3 ×6                 |    – | Loop       |
+|        47 |      63 | Level43     |     5 |    540 |     900 | ×3 ×5 ×3 ×3 ×4                    |   80 | Loop       |
+|        48 |      64 | Level44     |     5 |    360 |    1400 | ×9 ×3 ×9 ×5 ×6 ÷2 −50             |    – | Loop       |
+|        49 |      65 | Level45     |     5 |    950 |    2200 | ×3 ×16 ×6 ×3 ×3 ×4                |  100 | Loop       |
+|        50 |      66 | Level51     |     5 |    500 |     900 | ×11 ×6 ×5 ×4 −15                  |    – | Loop       |
 
 **Lock positions beyond 50:** 51 (`Level52`) 80; 53 (`Level54`) 40; 60 (`Level40`) 100; 64 (`Level49`) 120; 68 (`Level57`) 30. [Recovered]
 
@@ -170,19 +170,18 @@ Full live list (71 rows) is generated from `TextAsset/LevelsData.txt` by the rul
 
 `MonoBehaviour/LevelsConfig.asset` (class `Levels.LevelsConfig : ScriptableObject`). [Recovered]
 
-| Field | Value |
-|---|---|
-| jsonBaseLevelPrefab | `GameObject/LevelGenerative.prefab` |
-| prefab | `GameObject/LevelView.prefab` |
-| cameraLocalPosition | (0, −0.4, −16.93) |
-| cameraLocalRotation | (3, 0, 0) |
-| ballSpawnPositions | 20 Vector3 entries; first (0, 0, 0), last (0.27, 0.49, 0) |
-| distanceBetweenMiniLevels | (18, 0, 0) |
-| startBallAmountMultiplierOnContinue | 0.6 |
-| ballGoalPercentTarget | 0.25 |
-| ballGoalPercentPerfect | 0.75 |
+| Field                     | Value                                                     |
+| ------------------------- | --------------------------------------------------------- |
+| jsonBaseLevelPrefab       | `GameObject/LevelGenerative.prefab`                       |
+| prefab                    | `GameObject/LevelView.prefab`                             |
+| cameraLocalPosition       | (0, −0.4, −16.93)                                         |
+| cameraLocalRotation       | (3, 0, 0)                                                 |
+| ballSpawnPositions        | 20 Vector3 entries; first (0, 0, 0), last (0.27, 0.49, 0) |
+| distanceBetweenMiniLevels | (18, 0, 0)                                                |
+| ballGoalPercentTarget     | 0.25                                                      |
+| ballGoalPercentPerfect    | 0.75                                                      |
 
-`LevelsController` also has constants `Ball Goal Percent Target` / `Ball Goal Percent Perfect`, and methods `SetDynamicBallGoals(name, maxPossibleBalls)` and `FloorToMultipleOf25`. The CSV has no such columns and the method bodies are stubs, so whether these percentages set the target and perfect amounts at runtime is [Unknown].
+`LevelsController` also has constants `Ball Goal Percent Target` / `Ball Goal Percent Perfect`, and methods `SetDynamicBallGoals(name, maxPossibleBalls)` and `FloorToMultipleOf25`. The CSV has no such columns and the method bodies are stubs, so whether these percentages set the target and perfect amounts at runtime is [Unknown]. The rebuild has no `SetDynamicBallGoals`: the table's Target and Perfect are the goals (doc 09 D2).
 
 ---
 
@@ -199,11 +198,11 @@ Full live list (71 rows) is generated from `TextAsset/LevelsData.txt` by the rul
 
 `MonoBehaviour/MazePathGeneratorConfig.asset` (class `MazePathGeneratorConfig`): [Recovered]
 
-| Gate | Prefab | Spawn chance | Count (min–max) | Value (min, max, step) |
-|---|---|---:|---|---|
-| subGate | `GameObject/SubGate.prefab` | 0.2 | 1–2 | 10, 50, 10 |
-| divideGate | `GameObject/DivideGate.prefab` | 0.1 | 1–2 | 1, 1, 1 |
-| multiplicator | `GameObject/Multiplicator.prefab` | 0.7 | 1–5 | 2, 8, 1 |
+| Gate          | Prefab                            | Spawn chance | Count (min–max) | Value (min, max, step) |
+| ------------- | --------------------------------- | -----------: | --------------- | ---------------------- |
+| subGate       | `GameObject/SubGate.prefab`       |          0.2 | 1–2             | 10, 50, 10             |
+| divideGate    | `GameObject/DivideGate.prefab`    |          0.1 | 1–2             | 1, 1, 1                |
+| multiplicator | `GameObject/Multiplicator.prefab` |          0.7 | 1–5             | 2, 8, 1                |
 
 - Also: `dynamicWallsPrefabs` (8 refs), `rotatorPrefabs` (2 refs).
 - The generator is wired to `MiniLevelView.mazeJsonGenerator` and used with `LevelType.Json`. All 107 CSV rows are `Prefab`, so these settings are not used by the shipped levels. [Recovered] wiring, [Inferred] unused

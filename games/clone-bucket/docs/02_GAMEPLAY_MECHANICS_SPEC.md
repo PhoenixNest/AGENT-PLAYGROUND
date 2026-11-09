@@ -1,6 +1,6 @@
-# 02. Gameplay Mechanics Specification (Multi Maze 3D v4.1.0.0)
+# 02. Gameplay Mechanics Specification (clone-bucket)
 
-Status: draft rewrite. Internal rebuild of our own title, Multi Maze 3D 4.1.0.0. The recovered build is the source of truth.
+Status: draft rewrite. Internal rebuild of clone-bucket 1.0.0, based on the recovered v4.1.0.0 build of our earlier title. The recovered build is the source of truth.
 
 Tags: **[Recovered]** (read from the export, path given), **[Inferred]** (deduced, reasoning given), **[Unknown]** (logic not recoverable; design and tune in PlayMode).
 
@@ -14,19 +14,19 @@ Export root: `tools/export/MultiMaze3D_4.1.0.0/ExportedProject/`. Paths below ar
 
 `RotateController` on every level prefab (115 prefabs under `Resources/prefabs/minilevels/`) [Recovered]:
 
-| Field | Value |
-|---|---|
-| Multiplier | 3.5 (all 115) |
-| Damping | 16 (all 115) |
-| ScaleByTime | 0 |
-| Space | 0 (World) |
-| Axis | (0, 0, 1) |
-| Targets | empty on 102 prefabs; a list of 2–4 rotators on the 13 `BossLevel1`–`13` prefabs |
-| Target | one maze rotator on the 102 non-boss prefabs (`MazeRotator_OpenDown` / `OpenUp`; fileID not resolved, [Inferred]); unset on the 13 boss prefabs |
+| Field       | Value                                                                                                                                           |
+| ----------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| Multiplier  | 3.5 (all 115)                                                                                                                                   |
+| Damping     | 16 (all 115)                                                                                                                                    |
+| ScaleByTime | 0                                                                                                                                               |
+| Space       | 0 (World)                                                                                                                                       |
+| Axis        | (0, 0, 1)                                                                                                                                       |
+| Targets     | empty on 102 prefabs; a list of 2–4 rotators on the 13 `BossLevel1`–`13` prefabs                                                                |
+| Target      | one maze rotator on the 102 non-boss prefabs (`MazeRotator_OpenDown` / `OpenUp`; fileID not resolved, [Inferred]); unset on the 13 boss prefabs |
 
 ### 1.2 Conflicting controller values
 
-`GameManager` in `Scenes/Main.unity` also holds `ControllerMultiplier = 3` and `ControllerDamping = 20` [Recovered]. Which pair governs live play is **unresolved** (Open Questions, item 1). Do not hard-code either pair until resolved.
+`GameManager` in `Scenes/Main.unity` also holds `ControllerMultiplier = 3` and `ControllerDamping = 20` [Recovered]. These are the live pair. `RotateController.Start` copies them over the prefab values on every level (decompile `RotateController_Start`, `decomp-named.c` line 4000), so the prefab values 3.5 and 16 do not govern play. Closed (Open Questions, item 1).
 
 ### 1.3 Rotator body
 
@@ -34,7 +34,7 @@ The rotator prefabs have **no Rigidbody** and about 40 `MeshCollider`s each [Rec
 
 ### 1.4 Input mapping
 
-Swipe-to-angular-velocity mapping, touch tracking and smoothing: **[Unknown]**. Camera follow is in section 6.
+Drag to angle is linear: the finger's drag (`LeanFinger.GetDeltaDegrees`) × `Multiplier`, scaled by the finger's distance from the target (decompile `RotateController_RotateAB`). The rotation is applied at once, and then eased by `LeanHelper.GetDampenFactor(Damping, dt)` (decompile `RotateController_UpdateRotation`; `docs/09_RUNTIME_CONTRACTS.md` §1.3). Touch tracking is in the Lean Touch shim (`docs/09_RUNTIME_CONTRACTS.md` §2.7). Camera follow is in section 6.
 
 ---
 
@@ -56,22 +56,22 @@ Swipe-to-angular-velocity mapping, touch tracking and smoothing: **[Unknown]**. 
 
 ### 2.4 Value tiers
 
-| Field | Android | iOS |
-|---|---|---|
-| `useBallValueTiers` | 1 | 1 |
-| `valuePerTier` | [1, 2, 3, 999] | [1, 2, 3] |
-| `totalBallsForNextTier` | [300, 450, 650, 775] | [450, 650, 775] |
+| Field                   | Android (recovered)  | iOS (recovered)  |
+| ----------------------- | -------------------- | ---------------- |
+| `useBallValueTiers`     | 1                    | 1                |
+| `valuePerTier`          | [1, 2, 3, 999]       | [1, 2, 3]        |
+| `totalBallsForNextTier` | [300, 450, 650, 775] | [450, 650, 775]  |
 | `chancesToOverrideTier` | [0.6, 0.5, 0.2, 0.1] | [0.5, 0.5, 0.35] |
 
 [Recovered]. [Inferred]: large counts are represented by higher-value balls, not more physics bodies. How `chancesToOverrideTier` is applied: **[Unknown]**.
 
 ### 2.5 Layer escalation
 
-| Field | Android | iOS |
-|---|---|---|
-| `useBallLayers` | 1 | 0 |
-| `ballLayers` | [9, 10, 11] | [9, 10] |
-| `minimumBallsForLayers` | [200, 400, 600] | [300, 600] |
+| Field                   | Android (recovered) | iOS (recovered) |
+| ----------------------- | ------------------- | --------------- |
+| `useBallLayers`         | 1                   | 0               |
+| `ballLayers`            | [9, 10, 11]         | [9, 10]         |
+| `minimumBallsForLayers` | [200, 400, 600]     | [300, 600]      |
 
 [Recovered]. Layers `Ball` (9), `Ball_1` (10), `Ball_2` (11). [Inferred]: as the count crosses each threshold, balls move to the next layer. Per the provisional matrix (doc 04, section 2.6), layers 9, 10 and 11 do not collide with each other. Verify in PlayMode.
 
@@ -93,21 +93,21 @@ Swipe-to-angular-velocity mapping, touch tracking and smoothing: **[Unknown]**. 
 
 `TextAsset/LevelsData.txt` (107 rows; live override `LevelsData.csv`) [Recovered]:
 
-| Type | Gate slots | Values seen |
-|---|---|---|
-| Multiply | 478 | 2 (3), 3 (141), 4 (100), 5 (51), 6 (66), 7 (18), 8 (14), 9 (26), 10 (5), 11 (38), 12 (2), 13 (5), 15 (2), 16 (6), 20 (1) |
-| Subtract | 55 | 5, 10, 15, 20, 25, 30, 40, 50, 60, 70, 90, 100, 150 |
-| Divide | 34 | 2 only |
+| Type     | Gate slots | Values seen                                                                                                              |
+| -------- | ---------- | ------------------------------------------------------------------------------------------------------------------------ |
+| Multiply | 478        | 2 (3), 3 (141), 4 (100), 5 (51), 6 (66), 7 (18), 8 (14), 9 (26), 10 (5), 11 (38), 12 (2), 13 (5), 15 (2), 16 (6), 20 (1) |
+| Subtract | 55         | 5, 10, 15, 20, 25, 30, 40, 50, 60, 70, 90, 100, 150                                                                      |
+| Divide   | 34         | 2 only                                                                                                                   |
 
 Gate values come from the table at runtime. Labels inside prefabs are stale placeholders [Recovered: `Multiplicator.Text` references].
 
 ### 3.3 Behaviour
 
-| Gate | Status |
-|---|---|
-| Multiply | Count scaling: **[Unknown]** logic; the name suggests multiplying ball count. |
+| Gate     | Status                                                                                                         |
+| -------- | -------------------------------------------------------------------------------------------------------------- |
+| Multiply | Count scaling: **[Unknown]** logic; the name suggests multiplying ball count.                                  |
 | Subtract | Consumes balls until `startValue` runs out: **[Unknown]** logic; only `startValue` and counters are recovered. |
-| Divide | About one ball passes per value: **[Unknown]**. The old "alternating counter" is not recoverable. |
+| Divide   | About one ball passes per value: **[Unknown]**. The old "alternating counter" is not recoverable.              |
 
 ### 3.4 Re-trigger guard
 
@@ -121,11 +121,11 @@ Gate values come from the table at runtime. Labels inside prefabs are stale plac
 
 `MazePathGeneratorConfig` [Recovered]. Used only by `LevelType.Json`; current table rows are `Prefab`.
 
-| Gate | Spawn chance | Count | Values |
-|---|---|---|---|
-| sub | 0.2 | 1 to 2 | 10 to 50, step 10 |
-| divide | 0.1 | 1 to 2 | 1 |
-| multiplicator | 0.7 | 1 to 5 | 2 to 8, step 1 |
+| Gate          | Spawn chance | Count  | Values            |
+| ------------- | ------------ | ------ | ----------------- |
+| sub           | 0.2          | 1 to 2 | 10 to 50, step 10 |
+| divide        | 0.1          | 1 to 2 | 1                 |
+| multiplicator | 0.7          | 1 to 5 | 2 to 8, step 1    |
 
 ---
 
@@ -155,7 +155,7 @@ Base transform from `LevelsConfig`: local position (0, -0.4, -16.93), pitch 3 de
 
 ---
 
-## 7. Levels, Goals and Continue
+## 7. Levels and goals
 
 ### 7.1 Level table
 
@@ -164,12 +164,11 @@ Base transform from `LevelsConfig`: local position (0, -0.4, -16.93), pitch 3 de
 - Targets up to 1600; perfect up to 2880 on the live list (`Level19`, `Level49`) and 5000 in the full table (`Level_Onboarding1_2.8`, not live) [Recovered].
 - Boss rows: 6, covering `BossLevel1` to `BossLevel5` (`BossLevel1` appears twice) [Recovered].
 
-### 7.2 Goal percentages and continue
+### 7.2 Goal percentages
 
-`LevelsConfig` [Recovered]: `ballGoalPercentTarget` 0.25, `ballGoalPercentPerfect` 0.75, `startBallAmountMultiplierOnContinue` 0.6.
+`LevelsConfig` [Recovered]: `ballGoalPercentTarget` 0.25, `ballGoalPercentPerfect` 0.75.
 
 - How the percentages relate to the table's Target and Perfect columns: **[Unknown]**.
-- Continue rule (start count times 0.6): recovered as a field; confirm in PlayMode.
 
 ### 7.3 Win, fail and rewards
 
@@ -179,7 +178,7 @@ Victory and defeat conditions, settle time, timeouts, and coin or gem rewards: *
 
 ## 8. Open Design Questions
 
-1. Which controller pair is live: `RotateController` (3.5 / 16) or `GameManager` (3 / 20)?
+1. Closed. `GameManager` (3 / 20) governs live play, because `RotateController.Start` copies it over the prefab values (3.5 / 16) on all 115 levels, as in the original (decompile `RotateController_Start`).
 2. Swipe-to-angular-velocity mapping and smoothing: design fresh, or match a feel target measured in PlayMode.
 3. Does ball friction need a kinematic maze body, given no Rigidbody on the rotators?
 4. Multiply, subtract and divide gate behaviour, including ordering.
@@ -192,4 +191,4 @@ Victory and defeat conditions, settle time, timeouts, and coin or gem rewards: *
 11. Lock feeding and break rules.
 12. Bucket fill, overflow and shake behaviour.
 13. Which A/B cohort applies to level order (`ABTestVariables` is remote).
-14. Ball counts above 1000 and the live pool cap, once the engine is chosen (README §5).
+14. Ball counts above 1000 and the live pool cap: measure on the test device during parity QA (`08_IMPLEMENTATION_PLAN.md`).

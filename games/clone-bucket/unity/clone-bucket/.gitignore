@@ -1,0 +1,38 @@
+# Unity-generated folders (rebuilt by the editor; never commit)
+/[Ll]ibrary/
+/[Tt]emp/
+/[Oo]bj/
+/[Ll]ogs/
+/[Uu]ser[Ss]ettings/
+/[Mm]emoryCaptures/
+/[Rr]ecordings/
+
+# Build output
+/[Bb]uild/
+/[Bb]uilds/
+*.apk
+*.aab
+*.symbols.zip
+
+# IDE-generated project files
+.vs/
+.vscode/
+.idea/
+*.csproj
+*.sln
+*.suo
+*.user
+*.pidb
+*.pdb
+*.mdb
+*.opendb
+*.VC.db
+
+# Misc
+*.unitypackage
+crashlytics-buildid.txt
+sysinfo.txt
+
+# Keystores and signing secrets stay out of git
+*.keystore
+*.jks

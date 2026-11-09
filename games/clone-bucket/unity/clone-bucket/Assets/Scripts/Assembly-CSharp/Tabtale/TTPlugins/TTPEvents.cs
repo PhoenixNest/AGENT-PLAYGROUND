@@ -1,0 +1,59 @@
+namespace Tabtale.TTPlugins
+{
+	public class TTPEvents
+	{
+		public const string TRANSACTION = "transaction";
+
+		public const string TUTORIAL_STEP = "tutorialStep";
+
+		public const string LOADING_TIME = "loadingTime";
+
+		public const string GAME_POPUP = "gamePopup";
+
+		public const string SAVE_STATE = "saveState";
+
+		public const string SAVE_STATE_ERROR = "saveStateError";
+
+		public const string FORCE_UPDATE_RESPONSE = "forceUpdateResponse";
+
+		public const string FORCE_UPDATE_POPUP = "forceUpdatePopup";
+
+		public const string GAME_SESSION_STARTED = "gameSessionStarted";
+
+		public const string VIRTUAL_CURRENCY_TRANSACTION = "virtualCurrencyTransaction";
+
+		public const string VIRTUAL_CURRENCY_DELTA = "virtualCurrencyDelta";
+
+		public const string MAIN_SCREEN = "mainScreen";
+
+		public const string EXCLUDE_FROM_AB_TEST = "excludeFromABTest";
+
+		public const string LEVEL_UP = "levelUp";
+
+		public const string MISSION_STARTED = "missionStarted";
+
+		public const string MISSION_COMPLETED = "missionCompleted";
+
+		public const string MISSION_ABANDONED = "missionAbandoned";
+
+		public const string MISSION_FAILED = "missionFailed";
+
+		public const string MINI_LEVEL_STARTED = "miniLevelStarted";
+
+		public const string MINI_LEVEL_COMPLETED = "miniLevelCompleted";
+
+		public const string MINI_LEVEL_FAILED = "miniLevelFailed";
+
+		public const string SHOP_ENTERED = "shopEntered";
+
+		public const string BLENDED_OBJECT_ON_SCREEN = "blendedObjectOnScreen";
+
+		public const string BLENDED_OBJECT_OFF_SCREEN = "blendedObjectOffScreen";
+
+		public const string RATE_US_BUTTON = "rateUsButton";
+
+		public const string RATE_US_POPUP = "rateUsPopup";
+
+		public const string ATT_DID_SHOW = "aTTDidShow";
+	}
+}

@@ -1,0 +1,29 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e40ac51e3c09a5e785e724d34c2da100, type: 3}
+  m_Name: ColorSchemeConfig_Blue2
+  m_EditorClassIdentifier:
+  id: Blue
+  ballsMaterials: []
+  mazeWallsMaterials:
+  - {fileID: 2100000, guid: 1397ac0289b37ed469a2faf300d17098, type: 2}
+  mazeBackgroundMaterials:
+  - {fileID: 2100000, guid: 3d3004eb0a06e8d4583b958d0ee92a7b, type: 2}
+  stageBackgroundMaterials:
+  - {fileID: 2100000, guid: ce0b46973ea0a38458ad865271c432c4, type: 2}
+  bucketMaterials:
+  - {fileID: 2100000, guid: 7ec23cc91193b3d4e92ab67ff1e237e0, type: 2}
+  bucketGuidesMaterials:
+  - {fileID: 2100000, guid: d402dc1738644f24fbb533d01366c6a2, type: 2}
+  bucketStandMaterials:
+  - {fileID: 2100000, guid: dfab377f7bf82c2459dce16daf870d7f, type: 2}
+  useSkyboxForAmbientLight: 1

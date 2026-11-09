@@ -1,0 +1,33 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f85401e194b57a76e995cad8c5ffbb14, type: 3}
+  m_Name: BallsConfig
+  m_EditorClassIdentifier:
+  prefab: {fileID: 114099118695303065, guid: 5551ad03f443e1146bc7bafde78c6bd1, type: 2}
+  inMazeMaxSpeed: 10
+  outMazeMaxSpeed: 40
+  smallScale: {x: 0.17, y: 0.17, z: 0.17}
+  mediumScale: {x: 0.19, y: 0.19, z: 0.19}
+  bigScale: {x: 0.22, y: 0.22, z: 0.22}
+  initialPoolAmount: 200
+  ignoreMultiplicatorCapacity: 10
+  useBallLayers: 1
+  ballLayers: 090000000a0000000b000000
+  minimumBallsForLayers: c80000009001000058020000
+  useBallValueTiers: 1
+  valuePerTier: 010000000200000003000000e7030000
+  totalBallsForNextTier: 2c010000c20100008a02000007030000
+  chancesToOverrideTier:
+  - 0.6
+  - 0.5
+  - 0.2
+  - 0.1

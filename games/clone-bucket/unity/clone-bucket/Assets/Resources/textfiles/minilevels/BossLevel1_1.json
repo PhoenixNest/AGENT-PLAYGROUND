@@ -1,0 +1,92 @@
+{
+  "shapeId": "Vertical",
+  "ballsStarting": 5,
+  "ballsGoal": 180,
+  "endPosition": -25.13,
+  "wallsRings": [],
+  "wallsRadials": [],
+  "dynamicWalls": [
+    {
+      "id": "Left_Long",
+      "positionX": 0.0,
+      "positionY": -3.59,
+      "positionZ": 0.0
+    },
+    {
+      "id": "Right_LongTip",
+      "positionX": 0.0,
+      "positionY": -8.75,
+      "positionZ": 0.0
+    },
+    {
+      "id": "Left_Medium",
+      "positionX": 0.0,
+      "positionY": -20.0,
+      "positionZ": 0.0
+    }
+  ],
+  "rotators": [
+    {
+      "id": "OpenUp",
+      "positionX": 0.0,
+      "positionY": 0.0,
+      "positionZ": 0.0
+    },
+    {
+      "id": "OpenDown",
+      "positionX": -1.84,
+      "positionY": -14.13,
+      "positionZ": 0.0
+    }
+  ],
+  "gates": [
+    {
+      "positionX": 0.0,
+      "positionY": -3.23,
+      "rotationX": 0.0,
+      "rotationY": 0.0,
+      "rotationZ": 0.0,
+      "type": "Multiply",
+      "value": 3,
+      "isMovable": false,
+      "moveTime": 0.0,
+      "size": 3.0
+    },
+    {
+      "positionX": 2.01,
+      "positionY": -22.44,
+      "rotationX": 0.0,
+      "rotationY": 0.0,
+      "rotationZ": 0.0,
+      "type": "Multiply",
+      "value": 2,
+      "isMovable": false,
+      "moveTime": 0.0,
+      "size": 3.2
+    },
+    {
+      "positionX": 2.9,
+      "positionY": -6.59,
+      "rotationX": 0.0,
+      "rotationY": 0.0,
+      "rotationZ": 0.0,
+      "type": "Multiply",
+      "value": 5,
+      "isMovable": false,
+      "moveTime": 0.0,
+      "size": 1.5
+    },
+    {
+      "positionX": 1.93,
+      "positionY": -17.82,
+      "rotationX": 0.0,
+      "rotationY": 0.0,
+      "rotationZ": 0.0,
+      "type": "Multiply",
+      "value": 2,
+      "isMovable": true,
+      "moveTime": 3.0,
+      "size": 2.5
+    }
+  ]
+}

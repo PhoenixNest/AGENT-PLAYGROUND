@@ -1,0 +1,59 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!78 &1
+TagManager:
+  serializedVersion: 2
+  tags:
+  - Obstacle
+  - Multiplicator
+  - DeadTrigger
+  - Ball
+  - MazeSpace
+  - DestroyTrigger
+  - CupInTrigger
+  - BucketTrigger
+  - BucketFillTrigger
+  - BucketDestroyTrigger
+  - BucketShakeTrigger
+  - SubGate
+  - DivideGate
+  - ChainTrigger
+  - BannersBackground
+  - FinishSpace
+  layers:
+  - Default
+  - TransparentFX
+  - Ignore Raycast
+  - 
+  - Water
+  - UI
+  - 
+  - 
+  - ChainSegment
+  - Ball
+  - Ball_1
+  - Ball_2
+  - Ball_3
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  m_SortingLayers:
+  - name: Default
+    uniqueID: 0
+    locked: 0

@@ -1,0 +1,85 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fa743e4038b8ee8114afd31bbd51684a, type: 3}
+  m_Name: ShopConfig_2
+  m_EditorClassIdentifier:
+  price: 500
+  totalSkinCount: 7
+  balls:
+  - Name: Ball1
+    materials:
+    - {fileID: 2100000, guid: 6e059d623c42c0040bdc94017793c678, type: 2}
+    - {fileID: 2100000, guid: 4ccdc3cb2400d4544909c2ccc6fc2ce4, type: 2}
+    - {fileID: 2100000, guid: 1f9edff79e02a834888a5e8e41092c85, type: 2}
+    icon: {fileID: 21300000, guid: 85e2db9a1e3a812429b746adfd7064cc, type: 2}
+    mazeIcon: {fileID: 21300000, guid: 17da69369783b514aa407919e0682622, type: 2}
+  - Name: Ball2
+    materials:
+    - {fileID: 2100000, guid: 3649208e07daec14abce78e00f17235e, type: 2}
+    - {fileID: 2100000, guid: 021210ec243fb5c45b780977b632df22, type: 2}
+    - {fileID: 2100000, guid: db148ca94d55d554988c5efa4e9ab45c, type: 2}
+    - {fileID: 2100000, guid: 6aa64122b698c1e49b7c3f65d876b1fe, type: 2}
+    - {fileID: 2100000, guid: 38040c59bea0bad479fbe0fc21612ced, type: 2}
+    - {fileID: 2100000, guid: f22a72354f6e8c149b691f5c4f4d77f6, type: 2}
+    icon: {fileID: 21300000, guid: 4157dd0441d6b7146a1a853d1920e187, type: 2}
+    mazeIcon: {fileID: 21300000, guid: c9f1be58cecc73f49b0dcc5711ad11ef, type: 2}
+  - Name: Ball3
+    materials:
+    - {fileID: 2100000, guid: e9fa62eaf64fbb54196627216fda28a9, type: 2}
+    - {fileID: 2100000, guid: b870171bbc93a514891912c29229b4d3, type: 2}
+    - {fileID: 2100000, guid: 4b3c3c1042685924f8a8c4b674ff2818, type: 2}
+    - {fileID: 2100000, guid: a7a98466b21df0d49a082abc01280ad9, type: 2}
+    - {fileID: 2100000, guid: 6948ed8938c9f2142aed0dbfb1f430c0, type: 2}
+    - {fileID: 2100000, guid: 8bb211d5aac56a54c90d1936e92d7261, type: 2}
+    icon: {fileID: 21300000, guid: 4f9e4666828e3304b9e5b47e1c3feff8, type: 2}
+    mazeIcon: {fileID: 21300000, guid: ad3fe87e8d802dd4ea7e9fb613a6a1e8, type: 2}
+  - Name: Ball4
+    materials:
+    - {fileID: 2100000, guid: 80cd62c9caf38e74b9e7d6b8586171cf, type: 2}
+    - {fileID: 2100000, guid: f87a3652e775fa14f8f66810888b2eff, type: 2}
+    - {fileID: 2100000, guid: 0a475c2ea53345b4cb8a56c81443fccd, type: 2}
+    - {fileID: 2100000, guid: 85d62b45a167e134aaa40e941a91de64, type: 2}
+    - {fileID: 2100000, guid: 40998d7054a8ba74a809a7c1a2973c5a, type: 2}
+    - {fileID: 2100000, guid: 77c56c27e1b4f144591794b28deb5a69, type: 2}
+    icon: {fileID: 21300000, guid: 411bfae5a95812d4ab5be4f5c7365674, type: 2}
+    mazeIcon: {fileID: 21300000, guid: 39c83d1e563084f4b82c0032bbb1fe06, type: 2}
+  - Name: Ball5
+    materials:
+    - {fileID: 2100000, guid: 458571e30cc7e8f4c92330b38a39377c, type: 2}
+    - {fileID: 2100000, guid: 830a0e2632788be49bc8e867980fe8f8, type: 2}
+    - {fileID: 2100000, guid: 61ba7e448667a58489c691cb02c04036, type: 2}
+    - {fileID: 2100000, guid: 0428418707edf084c9c4b406f3f96115, type: 2}
+    - {fileID: 2100000, guid: d22ba8c2f738dcf46bec0fc3d4103d33, type: 2}
+    - {fileID: 2100000, guid: 77ac1db44521f184f8bd542ea32931c7, type: 2}
+    icon: {fileID: 21300000, guid: c65035ed9f64afa499035779e4b23b3b, type: 2}
+    mazeIcon: {fileID: 21300000, guid: 8e7280a4c252e534a835c0a428e08f3c, type: 2}
+  - Name: Ball6
+    materials:
+    - {fileID: 2100000, guid: e35f55a5ddf2e2846937231a5f0bb82c, type: 2}
+    - {fileID: 2100000, guid: a7eccdb403322034eac02dc976508a2a, type: 2}
+    - {fileID: 2100000, guid: 4d64f668898b7b0409d0576b176f1ca7, type: 2}
+    - {fileID: 2100000, guid: 46c04ec6c3c352441abae9a573067914, type: 2}
+    - {fileID: 2100000, guid: 9e490a0d31c9d27428abfbe4a73de681, type: 2}
+    - {fileID: 2100000, guid: dd031d48b067a9447aa7158419367d7f, type: 2}
+    icon: {fileID: 21300000, guid: 7a61c5d4fe010e74f8a1f8f175412dc1, type: 2}
+    mazeIcon: {fileID: 21300000, guid: 2407b3d6bc2c95e4c93e585047297b08, type: 2}
+  - Name: Ball7
+    materials:
+    - {fileID: 2100000, guid: c7ed1ad0a58873f449698cc42d92feb9, type: 2}
+    - {fileID: 2100000, guid: 0c775d3ed50b51d4ab51c83c3f3335f2, type: 2}
+    - {fileID: 2100000, guid: bb3a2ee946b94294399c7fbd4753d74f, type: 2}
+    - {fileID: 2100000, guid: f454e3e05262c1e4c8bd90d9382a5ede, type: 2}
+    - {fileID: 2100000, guid: 5335f719a04ea794ea272359c6426f07, type: 2}
+    - {fileID: 2100000, guid: f337f748ab2eef1488b8eec63323c719, type: 2}
+    - {fileID: 2100000, guid: 6948ed8938c9f2142aed0dbfb1f430c0, type: 2}
+    icon: {fileID: 21300000, guid: b639b99dcddebf6428cb8aca3b1259ce, type: 2}
+    mazeIcon: {fileID: 21300000, guid: f5c5c386249fbb8498c256cb15ff5db0, type: 2}

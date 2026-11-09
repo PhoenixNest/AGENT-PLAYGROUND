@@ -1,10 +1,10 @@
 # 05. UML Diagrams and Schematics
 
-Diagrams model the **recovered** classes of Multi Maze 3D v4.1.0.0 (Unity 2022.3.62f2, built-in RP). Class and field names are real. Method bodies are not recoverable, so behaviour in sequence diagrams is tagged.
+Diagrams model the **recovered** classes of the v4.1.0.0 build of our earlier title (Unity 2022.3.62f2, built-in RP). Class and field names are real. Method bodies are not recoverable, so behaviour in sequence diagrams is tagged.
 
 Tags: **[Recovered]** (from script or asset), **[Inferred]** (from names or structure), **[Unknown]** (logic to be designed or tuned).
 
-Rebuild target: pending engine decision (2022.3 built-in vs Unity 6 URP/built-in) — see README §5.
+Rebuild target: Route C, Unity 6 with the built-in render pipeline (`08_IMPLEMENTATION_PLAN.md`). The recovered classes are kept, so these diagrams describe the rebuild's structure directly.
 
 ---
 
@@ -19,13 +19,11 @@ classDiagram
     class LevelsController {
         <<MonoBehaviour>>
         -LevelsConfig _config
-        -IAdsService _adsService
         +Spawn(int playerProgressIndex)$ void
         +OnFillBucket(bool filledBefore, int amount)$ void
         +HandleMissionFail()$ void
         +StartNextChunk()$ void
         +UpdateStars(int perfect, int target)$ void
-        +SetDynamicBallGoals(string miniLevelName, int maxPossibleBalls)$ void
         +TotalFillCount int$
         +FilledStarCount int$
         +Completed bool$
@@ -37,7 +35,6 @@ classDiagram
         +LevelView prefab
         +Vector3[] ballSpawnPositions
         +Vector3 distanceBetweenMiniLevels
-        +float startBallAmountMultiplierOnContinue
         +float ballGoalPercentTarget
         +float ballGoalPercentPerfect
     }
@@ -100,7 +97,7 @@ classDiagram
 
     class BallsController {
         <<MonoBehaviour>>
-        -BallsConfig _androidConfig
+        -BallsConfig _defaultConfig
         -BallsConfig _iosConfig
         -Dictionary _ignoredMultiplicatorsByBalls
         -Dictionary _dataByBalls
@@ -144,7 +141,7 @@ classDiagram
     LevelsController ..> MiniLevelData : per mini-level
     MiniLevelData --> LevelType
     LevelsController ..> BallsController : spawns start balls
-    BallsController --> BallsConfig : Android / iOS
+    BallsController --> BallsConfig : default / iOS
     BallsController --> BallData : per ball
     BallsController --> BallView : tracks
     BallsPool --> BallsConfig
@@ -154,6 +151,7 @@ classDiagram
 ```
 
 Notes:
+
 - `BallsPool` is a **static** class (not a `MonoBehaviour`), backed by `UnityEngine.Pool.ObjectPool<BallView>`.
 - `BallsController.Get` / `Release` edges are [Inferred]: `BallsPool` exposes them, the caller is not confirmed.
 - `BallSize` is linked to `BallData` as [Inferred]. The field `BallData` does not show a size field.
@@ -315,6 +313,7 @@ classDiagram
 ```
 
 Notes:
+
 - `GateBase` is abstract and has no tag of its own. The tags `Multiplicator`, `SubGate`, `DivideGate` are set on the prefabs and checked by `BallsController`.
 - `MazeGateTypeConfig` is a generator config (spawn chance and count ranges). Its link to `GateBase` is [Inferred].
 - `Chain` and `ChainSegment` link is [Inferred] from names only.
@@ -347,7 +346,7 @@ sequenceDiagram
     BP-->>BC: BallView
 
     loop Play
-        RC->>RC: drag -> Multiplier 3.5, Damping 16 [Recovered values]
+        RC->>RC: drag -> Multiplier and Damping (live 3 / 20, copied at Start) [Recovered]
         Note over BC,GC: ball enters gate trigger (tag Multiplicator / SubGate / DivideGate)
         BC->>GC: GetMultiplicator / GetSubGate / GetDivideGate [Recovered signatures]
         GC-->>BC: gate
@@ -362,7 +361,7 @@ sequenceDiagram
     LC->>GM: CompleteLevel() or HandleMissionFail() [Recovered methods, trigger Inferred]
 
     alt Completed
-        GM->>GM: DelayedNextLevel(withCoinsRV) [Recovered signature]
+        GM->>GM: DelayedNextLevel() [Recovered signature]
         GM->>GM: NextLevel() [Recovered]
     else Failed
         GM->>GM: OpenFailWindow() [Recovered]
