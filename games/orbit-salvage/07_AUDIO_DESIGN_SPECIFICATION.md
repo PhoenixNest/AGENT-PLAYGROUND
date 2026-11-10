@@ -8,11 +8,11 @@
 **Status:** Approved & Implemented in Engine (`v1.4.0`)  
 **Companion Documents:**
 
-- [`03_GAME_DESIGN_DOCUMENT.md`](./games/orbit-salvage/03_GAME_DESIGN_DOCUMENT.md) — Master Game Design Document
-- [`04_TECHNICAL_ARCHITECTURE.md`](./games/orbit-salvage/04_TECHNICAL_ARCHITECTURE.md) — Core Technical Architecture
-- [`05_GAME_UI_UX_DESIGN_SPECIFICATION.md`](./games/orbit-salvage/05_GAME_UI_UX_DESIGN_SPECIFICATION.md) — UI/UX Design System
-- [`06_GAMEPLAY_SYSTEMS_AND_LEVEL_DESIGN.md`](./games/orbit-salvage/06_GAMEPLAY_SYSTEMS_AND_LEVEL_DESIGN.md) — Gameplay Systems & Level Design
-- [`CHANGELOG.md`](./games/orbit-salvage/CHANGELOG.md) — Semantic Version History
+- [`03_GAME_DESIGN_DOCUMENT.md`](./03_GAME_DESIGN_DOCUMENT.md) — Master Game Design Document
+- [`04_TECHNICAL_ARCHITECTURE.md`](./04_TECHNICAL_ARCHITECTURE.md) — Core Technical Architecture
+- [`05_GAME_UI_UX_DESIGN_SPECIFICATION.md`](./05_GAME_UI_UX_DESIGN_SPECIFICATION.md) — UI/UX Design System
+- [`06_GAMEPLAY_SYSTEMS_AND_LEVEL_DESIGN.md`](./06_GAMEPLAY_SYSTEMS_AND_LEVEL_DESIGN.md) — Gameplay Systems & Level Design
+- [`CHANGELOG.md`](./CHANGELOG.md) — Semantic Version History
 
 ---
 
@@ -32,7 +32,7 @@ Rather than harsh, industrial sci-fi alarms, 8-bit chiptune bleeps, or synthesiz
 
 ### 1.2 Zero-Asset Zero-Latency Architecture
 
-Unlike traditional mobile web games that download megabytes of MP3/OGG files over HTTP (introducing network latency, decoding stalls, and mobile autoplay blockers), _Orbital Salvage_ utilizes a **100% Procedural Web Audio API DSP Synthesis Engine** (`AudioEngine` in [`web/engine/audio.js`](./games/orbit-salvage/web/engine/audio.js)):
+Unlike traditional mobile web games that download megabytes of MP3/OGG files over HTTP (introducing network latency, decoding stalls, and mobile autoplay blockers), _Orbital Salvage_ utilizes a **100% Procedural Web Audio API DSP Synthesis Engine** (`AudioEngine` in [`web/engine/audio.js`](./web/engine/audio.js)):
 
 - **Zero Asset Footprint:** 0 KB audio files downloaded over the network.
 - **Instantaneous Latency:** Under 5ms trigger-to-sound latency via hardware-accelerated DSP nodes.
