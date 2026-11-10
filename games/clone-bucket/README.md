@@ -122,7 +122,7 @@ Read in order. Each file marks facts `[Recovered]`, `[Inferred]`, or `[Unknown]`
 Tools > Clone Bucket in the Unity editor:
 
 - Tools > Clone Bucket > Play From Loading Scene: when ticked (default), Play always starts from the Loading scene.
-- Tools > Clone Bucket > Export Xcode Project for iOS Simulator: exports an Xcode project built with the iOS Simulator SDK to `games/clone-bucket/output/clone-bucket-ios-emulator/`.
+- Tools > Clone Bucket > Export Xcode Project for iOS Simulator: exports an Xcode project built with the iOS Simulator SDK for ARM64 (Apple Silicon simulators) to `games/clone-bucket/output/clone-bucket-ios-emulator/`, and restores the previous setting afterwards.
 - Tools > Clone Bucket > Export Xcode Project for iOS Device: exports an Xcode project built with the iOS device SDK to `games/clone-bucket/output/clone-bucket/`.
 - Both exports need the iOS Build Support module for the project's Unity version (install it in Unity Hub). The first export switches the active platform to iOS. Each export replaces the previous project in its folder. The SDK choice is set only for the export; the project's iOS setting is put back afterwards. Open `Unity-iPhone.xcodeproj` in the exported folder with Xcode on a Mac; a device build also needs a signing team set in Xcode.
 - `games/clone-bucket/output/` is git-ignored.

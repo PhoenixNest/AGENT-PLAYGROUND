@@ -85,4 +85,76 @@ public class WP18_ProjectMenuTests
 		Assert.DoesNotThrow(() => CloneBucketMenu.DeleteContents(null));
 		Assert.DoesNotThrow(() => CloneBucketMenu.DeleteContents(""));
 	}
+
+	[Test]
+	public void SimulatorExportBuildsForArm64()
+	{
+		iOSSdkVersion previousSdk = PlayerSettings.iOS.sdkVersion;
+		AppleMobileArchitectureSimulator previousArchitecture = PlayerSettings.iOS.simulatorSdkArchitecture;
+		try
+		{
+			PlayerSettings.iOS.simulatorSdkArchitecture = AppleMobileArchitectureSimulator.X86_64;
+			CloneBucketMenu.SavedIosExportSettings saved = CloneBucketMenu.ApplyIosExportSettings(iOSSdkVersion.SimulatorSDK);
+			try
+			{
+				Assert.AreEqual(AppleMobileArchitectureSimulator.ARM64, CloneBucketMenu.SimulatorExportArchitecture);
+				Assert.AreEqual(iOSSdkVersion.SimulatorSDK, PlayerSettings.iOS.sdkVersion);
+				Assert.AreEqual(CloneBucketMenu.SimulatorExportArchitecture, PlayerSettings.iOS.simulatorSdkArchitecture);
+			}
+			finally
+			{
+				CloneBucketMenu.RestoreIosExportSettings(saved);
+			}
+		}
+		finally
+		{
+			PlayerSettings.iOS.sdkVersion = previousSdk;
+			PlayerSettings.iOS.simulatorSdkArchitecture = previousArchitecture;
+		}
+	}
+
+	[Test]
+	public void SimulatorExportRestoresTheSimulatorArchitecture()
+	{
+		iOSSdkVersion previousSdk = PlayerSettings.iOS.sdkVersion;
+		AppleMobileArchitectureSimulator previousArchitecture = PlayerSettings.iOS.simulatorSdkArchitecture;
+		try
+		{
+			PlayerSettings.iOS.sdkVersion = iOSSdkVersion.DeviceSDK;
+			PlayerSettings.iOS.simulatorSdkArchitecture = AppleMobileArchitectureSimulator.Universal;
+			CloneBucketMenu.SavedIosExportSettings saved = CloneBucketMenu.ApplyIosExportSettings(iOSSdkVersion.SimulatorSDK);
+			Assert.AreEqual(AppleMobileArchitectureSimulator.ARM64, PlayerSettings.iOS.simulatorSdkArchitecture);
+			CloneBucketMenu.RestoreIosExportSettings(saved);
+			Assert.AreEqual(AppleMobileArchitectureSimulator.Universal, PlayerSettings.iOS.simulatorSdkArchitecture);
+			Assert.AreEqual(iOSSdkVersion.DeviceSDK, PlayerSettings.iOS.sdkVersion);
+		}
+		finally
+		{
+			PlayerSettings.iOS.sdkVersion = previousSdk;
+			PlayerSettings.iOS.simulatorSdkArchitecture = previousArchitecture;
+		}
+	}
+
+	[Test]
+	public void DeviceExportLeavesTheSimulatorArchitectureAlone()
+	{
+		iOSSdkVersion previousSdk = PlayerSettings.iOS.sdkVersion;
+		AppleMobileArchitectureSimulator previousArchitecture = PlayerSettings.iOS.simulatorSdkArchitecture;
+		try
+		{
+			PlayerSettings.iOS.simulatorSdkArchitecture = AppleMobileArchitectureSimulator.Universal;
+			CloneBucketMenu.SavedIosExportSettings saved = CloneBucketMenu.ApplyIosExportSettings(iOSSdkVersion.DeviceSDK);
+			Assert.AreEqual(AppleMobileArchitectureSimulator.Universal, PlayerSettings.iOS.simulatorSdkArchitecture);
+			Assert.AreEqual(iOSSdkVersion.DeviceSDK, PlayerSettings.iOS.sdkVersion);
+			PlayerSettings.iOS.simulatorSdkArchitecture = AppleMobileArchitectureSimulator.X86_64;
+			CloneBucketMenu.RestoreIosExportSettings(saved);
+			Assert.AreEqual(AppleMobileArchitectureSimulator.X86_64, PlayerSettings.iOS.simulatorSdkArchitecture);
+			Assert.AreEqual(previousSdk, PlayerSettings.iOS.sdkVersion);
+		}
+		finally
+		{
+			PlayerSettings.iOS.sdkVersion = previousSdk;
+			PlayerSettings.iOS.simulatorSdkArchitecture = previousArchitecture;
+		}
+	}
 }

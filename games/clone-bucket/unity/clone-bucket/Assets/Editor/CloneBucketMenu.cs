@@ -13,6 +13,7 @@ internal static class CloneBucketMenu
 	internal const string ClearCacheMenuPath = MenuRoot + "Clear Cached Data";
 	internal const string SimulatorProjectName = "clone-bucket-ios-emulator";
 	internal const string DeviceProjectName = "clone-bucket";
+	internal const AppleMobileArchitectureSimulator SimulatorExportArchitecture = AppleMobileArchitectureSimulator.ARM64;
 
 	internal static string OutputFolder
 	{
@@ -99,6 +100,41 @@ internal static class CloneBucketMenu
 		}
 	}
 
+	internal struct SavedIosExportSettings
+	{
+		internal iOSSdkVersion SdkVersion;
+		internal bool RestoreSimulatorArchitecture;
+		internal AppleMobileArchitectureSimulator SimulatorArchitecture;
+	}
+
+	internal static SavedIosExportSettings ApplyIosExportSettings(iOSSdkVersion sdkVersion)
+	{
+		SavedIosExportSettings saved = new SavedIosExportSettings();
+		saved.SdkVersion = PlayerSettings.iOS.sdkVersion;
+		saved.RestoreSimulatorArchitecture = sdkVersion == iOSSdkVersion.SimulatorSDK;
+		if (saved.RestoreSimulatorArchitecture)
+		{
+			saved.SimulatorArchitecture = PlayerSettings.iOS.simulatorSdkArchitecture;
+		}
+
+		PlayerSettings.iOS.sdkVersion = sdkVersion;
+		if (saved.RestoreSimulatorArchitecture)
+		{
+			PlayerSettings.iOS.simulatorSdkArchitecture = SimulatorExportArchitecture;
+		}
+
+		return saved;
+	}
+
+	internal static void RestoreIosExportSettings(SavedIosExportSettings saved)
+	{
+		PlayerSettings.iOS.sdkVersion = saved.SdkVersion;
+		if (saved.RestoreSimulatorArchitecture)
+		{
+			PlayerSettings.iOS.simulatorSdkArchitecture = saved.SimulatorArchitecture;
+		}
+	}
+
 	private static void ExportXcodeProject(iOSSdkVersion sdkVersion, string projectName)
 	{
 		if (!BuildPipeline.IsBuildTargetSupported(BuildTargetGroup.iOS, BuildTarget.iOS))
@@ -120,8 +156,7 @@ internal static class CloneBucketMenu
 
 		string path = XcodeProjectPath(projectName);
 		Directory.CreateDirectory(OutputFolder);
-		iOSSdkVersion previousSdkVersion = PlayerSettings.iOS.sdkVersion;
-		PlayerSettings.iOS.sdkVersion = sdkVersion;
+		SavedIosExportSettings saved = ApplyIosExportSettings(sdkVersion);
 		BuildReport report;
 		try
 		{
@@ -136,7 +171,7 @@ internal static class CloneBucketMenu
 		}
 		finally
 		{
-			PlayerSettings.iOS.sdkVersion = previousSdkVersion;
+			RestoreIosExportSettings(saved);
 		}
 
 		if (report.summary.result == BuildResult.Succeeded)

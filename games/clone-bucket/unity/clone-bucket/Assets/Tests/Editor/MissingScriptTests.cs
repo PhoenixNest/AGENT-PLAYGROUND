@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using NUnit.Framework;
+using TMPro;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
@@ -83,6 +84,65 @@ public class MissingScriptTests
 		{
 			var message = new StringBuilder();
 			message.AppendFormat("{0} missing-script offender(s). Listing up to {1}:", offenders.Count, MaxListed);
+			for (int i = 0; i < offenders.Count && i < MaxListed; i++)
+			{
+				message.AppendLine();
+				message.Append("  ").Append(offenders[i]);
+			}
+			Assert.Fail(message.ToString());
+		}
+	}
+
+	[Test]
+	public void EveryFontAssetHasItsAtlasTexture()
+	{
+		var offenders = new List<string>();
+		string[] guids = AssetDatabase.FindAssets("t:TMP_FontAsset");
+		foreach (string guid in guids)
+		{
+			string path = AssetDatabase.GUIDToAssetPath(guid);
+			TMP_FontAsset fontAsset = AssetDatabase.LoadAssetAtPath<TMP_FontAsset>(path);
+			if (fontAsset == null)
+			{
+				offenders.Add(path + " | could not be loaded");
+				continue;
+			}
+			Texture2D[] atlases = fontAsset.atlasTextures;
+			if (atlases == null || atlases.Length == 0)
+			{
+				offenders.Add(path + " | " + fontAsset.name + " | atlasTextures is empty");
+				continue;
+			}
+			for (int i = 0; i < atlases.Length; i++)
+			{
+				if (atlases[i] == null)
+				{
+					offenders.Add(path + " | " + fontAsset.name + " | atlasTextures[" + i + "] is null");
+				}
+			}
+			Texture2D atlas = fontAsset.atlasTexture;
+			Material material = fontAsset.material;
+			if (material == null)
+			{
+				offenders.Add(path + " | " + fontAsset.name + " | material is null");
+				continue;
+			}
+			if (material.mainTexture == null)
+			{
+				offenders.Add(path + " | " + fontAsset.name + " | material main texture is null");
+			}
+			else if (atlas != null && material.mainTexture != atlas)
+			{
+				offenders.Add(path + " | " + fontAsset.name + " | material main texture is not the atlas");
+			}
+		}
+
+		Debug.Log(string.Format("MissingScriptTests checked {0} font assets. Offenders: {1}", guids.Length, offenders.Count));
+
+		if (offenders.Count > 0)
+		{
+			var message = new StringBuilder();
+			message.AppendFormat("{0} font asset(s) missing an atlas. Listing up to {1}:", offenders.Count, MaxListed);
 			for (int i = 0; i < offenders.Count && i < MaxListed; i++)
 			{
 				message.AppendLine();

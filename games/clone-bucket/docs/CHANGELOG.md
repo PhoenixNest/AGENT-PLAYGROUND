@@ -1,5 +1,13 @@
 # Changelog — superseded pre-recovery claims
 
+## 2026-11-10 — LiberationSans fallback atlas rebuilt
+
+LiberationSans dynamic fallback, same day: the font asset was rebuilt with an embedded atlas and material because its recovered atlas texture was missing. That removes the TMP MissingReferenceException during player builds. The unused material was removed.
+
+## 2026-11-10 — Simulator export builds for ARM64
+
+Simulator export, same day: Tools > Clone Bucket > Export Xcode Project for iOS Simulator now builds for ARM64 (Apple Silicon simulators) and restores the previous simulator architecture afterwards, together with the iOS SDK. The device export does not change the simulator architecture. The saved project setting stays x86_64; only the simulator export overrides it for the build.
+
 ## 2026-11-09 — Editor menu
 
 Editor menu, same day: Tools > Clone Bucket now has Export Xcode Project for iOS Simulator (to `output/clone-bucket-ios-emulator`), Export Xcode Project for iOS Device (to `output/clone-bucket`) and Clear Cached Data (PlayerPrefs, persistent data, temporary cache and asset bundle cache); `games/clone-bucket/output/` is git-ignored; the exports need the iOS Build Support module, which is not installed for Unity 6000.4.0f1 on the development machine yet.
