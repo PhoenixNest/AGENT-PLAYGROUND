@@ -49,7 +49,7 @@ param(
 
     [int]$TimeoutMinutes = 40,
 
-    [string]$LogDir = '<local-temp>\unity-logs',
+    [string]$LogDir = ([IO.Path]::GetFullPath([IO.Path]::Combine($PSScriptRoot, '..', '..', 'output', 'unity-logs'))),
 
     [string]$EditorPath = 'C:\Program Files\Unity\Hub\Editor\6000.4.0f1\Editor\Unity.exe'
 )

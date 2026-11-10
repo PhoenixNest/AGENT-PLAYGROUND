@@ -47,7 +47,10 @@ public class WP17_LevelSweepPlayTests
 
 	private const int MouseIndex = -2;
 
-	private const string DefaultReportDirectory = @"<local-temp>\sweep";
+	private static string DefaultReportDirectory
+	{
+		get { return Path.GetFullPath(Path.Combine(Application.dataPath, "..", "..", "..", "output", "diagnostics", "sweep")); }
+	}
 
 	private const string ReportFileName = "level-sweep.md";
 

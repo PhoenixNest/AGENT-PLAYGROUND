@@ -46,7 +46,7 @@ The test checks only that each script reference resolves to a script GUID. It do
 
 ## Material audit
 
-`Assets/Editor/Diagnostics/MaterialAudit.cs` writes one row per material to `tmp/p2/materials.csv` (179 materials). Result:
+`Assets/Editor/Diagnostics/MaterialAudit.cs` writes one row per material to `games/clone-bucket/output/diagnostics/materials.csv` (179 materials). Result:
 
 - Unresolved shader references (missing GUID): 0. Nothing was repointed.
 - Unity error shader: 0 materials.

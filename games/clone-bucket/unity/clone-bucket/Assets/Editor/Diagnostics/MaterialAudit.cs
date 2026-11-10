@@ -8,7 +8,10 @@ using UnityEngine;
 
 public static class MaterialAudit
 {
-	public const string CsvPath = @"<local-temp>\p2\materials.csv";
+	public static string CsvPath
+	{
+		get { return Path.Combine(CloneBucketMenu.OutputFolder, "diagnostics", "materials.csv"); }
+	}
 
 	private static readonly Regex ShaderRef = new Regex(
 		@"m_Shader:\s*\{fileID:\s*(-?\d+),\s*guid:\s*([0-9a-f]{32})", RegexOptions.Compiled);

@@ -1,5 +1,9 @@
 # Changelog — superseded pre-recovery claims
 
+## 2026-11-10 — Diagnostics, test reports and batch logs
+
+Diagnostics, test reports and batch logs, same day: diagnostics, test reports and batch logs now default to folders under the git-ignored `games/clone-bucket/output/` instead of a machine-specific path.
+
 ## 2026-11-10 — LiberationSans fallback atlas rebuilt
 
 LiberationSans dynamic fallback, same day: the font asset was rebuilt with an embedded atlas and material because its recovered atlas texture was missing. That removes the TMP MissingReferenceException during player builds. The unused material was removed.

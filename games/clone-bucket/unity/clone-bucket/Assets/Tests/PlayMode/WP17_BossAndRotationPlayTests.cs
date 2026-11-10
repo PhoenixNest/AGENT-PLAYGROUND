@@ -33,7 +33,10 @@ public class WP17_BossAndRotationPlayTests
 
 	private const int BossLevel = 11;
 
-	private const string ReportPath = @"<local-temp>\boss-rot.txt";
+	private static string ReportPath
+	{
+		get { return Path.GetFullPath(Path.Combine(Application.dataPath, "..", "..", "..", "output", "diagnostics", "boss-rot.txt")); }
+	}
 
 	private const BindingFlags AnyMember = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static
 		| BindingFlags.Instance | BindingFlags.FlattenHierarchy;
@@ -144,6 +147,7 @@ public class WP17_BossAndRotationPlayTests
 		}
 
 		string report = string.Join(Environment.NewLine, lines);
+		Directory.CreateDirectory(Path.GetDirectoryName(ReportPath));
 		File.WriteAllText(ReportPath, report + Environment.NewLine);
 
 		float normalTargetSign = Mathf.Sign(normalMeasured[0]);
