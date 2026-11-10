@@ -7,13 +7,13 @@ alwaysApply: true
 
 Complement the AGENT-GLOBAL-BASE knowledge-base mount by treating AGENT-GLOBAL-BASE’s Claude Code configuration as the **tooling layer** for this playground. Cursor does not auto-load Claude Code’s `.claude/` hooks/settings; **read and apply them manually** via tools.
 
-**Root:** `../AGENT-GLOBAL-BASE`  
-**Tooling root:** `<AGENT-GLOBAL-BASE>/.claude/`  
-**Operating layer:** `<AGENT-GLOBAL-BASE>/CLAUDE.md` (global Claude guardrails — shell, gates, Prettier)
+**Root:** `../AGENT-GLOBAL-BASE` (resolve from the workspace root; same mount as the knowledge-base rule)  
+**Tooling root:** `../AGENT-GLOBAL-BASE/.claude/`  
+**Operating layer:** `../AGENT-GLOBAL-BASE/CLAUDE.md` (global Claude guardrails — shell, gates, Prettier)
 
 ## Bootstrap (with knowledge mount)
 
-1. After `AGENT-GLOBAL-BASE/AGENTS.md`, skim `AGENT-GLOBAL-BASE/CLAUDE.md` §1 (guardrails) and §3 (config map).
+1. After `AGENT-GLOBAL-BASE/AGENTS.md`, skim `AGENT-GLOBAL-BASE/CLAUDE.md` §1 (Critical Guardrails) and §3 (Claude Code Configuration).
 2. Load always-relevant rules from `AGENT-GLOBAL-BASE/.claude/rules/`:
    - `workspace-conventions.md`
    - `asgf-framework.md`
@@ -24,14 +24,14 @@ Complement the AGENT-GLOBAL-BASE knowledge-base mount by treating AGENT-GLOBAL-B
 
 | Asset                    | Path                                                 | How to use here                                                                     |
 | ------------------------ | ---------------------------------------------------- | ----------------------------------------------------------------------------------- |
-| Rules (27)               | `.claude/rules/*.md`                                 | Read before domain work; treat as project law                                       |
+| Rules (28)               | `.claude/rules/*.md`                                 | Read before domain work; treat as project law                                       |
 | Skills (21)              | `.claude/skills/<domain>/SKILL.md` (+ `references/`) | Open the matching skill when the task fits; follow its protocol                     |
 | Subagents (4)            | `.claude/agents/*.md`                                | Use as Task/subagent briefs — copy role + constraints into the prompt               |
-| Hooks (15 pairs)         | `.claude/hooks/*.{ps1,sh}`                           | Prefer `.ps1` on Windows; run or honor intent when the equivalent lifecycle applies |
+| Hooks                    | `.claude/hooks/*.py`                                 | Run `.py` with `uv run` on Windows, macOS, and Linux; honor intent when the equivalent lifecycle applies |
 | Settings / MCP allowlist | `.claude/settings.json`                              | Source of truth for hook chain + MCP permission names                               |
-| MCP manifest             | `AGENT-GLOBAL-BASE/.mcp.json`                        | `workspace-knowledge`, `agent-memory` under `core-component-00/mcp-servers/`        |
+| MCP manifest             | `.mcp.json.example`                                  | Template; copy to local `.mcp.json`. Defines `workspace-knowledge`, `agent-memory`  |
 | Slash command            | `.claude/commands/rag-sync.md`                       | Follow when user asks to sync/rebuild RAG index                                     |
-| Scripts                  | `.claude/scripts/`                                   | `init.py`, `audit_config.py`, OS detection notes                                    |
+| Scripts                  | `.claude/scripts/`                                   | `init.py`, `audit_config.py`, `os-detection-spec.md`                                |
 
 ### Subagents → when to invoke
 
@@ -54,14 +54,14 @@ AGENT-GLOBAL-BASE hooks resolve via git root → `$root/.claude/hooks/…` and *
 | -------------- | -------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------- |
 | Prompt intake  | quality-gate, optimizer, pipeline-context, context-budget, RAG freshness, rate-limiter reset | Refuse gate/severity bypass; inject pipeline context; watch context size  |
 | Pre write/edit | prompt-write-guard, prompt-gate-enforcer                                                     | Don’t write when a quality gate is pending                                |
-| Pre shell      | rate-limiter, branch/commit guards, shell-syntax, line-encoding                              | PowerShell-first; no force-push main; valid branch/commit patterns        |
+| Pre shell      | rate-limiter, branch/commit guards, shell-syntax, line-encoding                              | PowerShell on Windows; the platform shell on macOS/Linux; no force-push main; valid branch/commit patterns |
 | Post write     | rag-index-sync                                                                               | Note stale RAG when AGENT-GLOBAL-BASE docs change; offer `/rag-sync` flow |
 | Post shell     | harness-error-boundary                                                                       | Surface command failures; don’t silently continue past hard errors        |
 
-To **execute** a hook script against AGENT-GLOBAL-BASE state (when useful):
+To **execute** a hook script against AGENT-GLOBAL-BASE state (when useful), run this from the workspace root. The same `.py` invocation applies on Windows, macOS, and Linux:
 
-```powershell
-pwsh -ExecutionPolicy Bypass -File "../AGENT-GLOBAL-BASE\.claude\hooks\<name>.ps1"
+```text
+uv run ../AGENT-GLOBAL-BASE/.claude/hooks/<name>.py
 ```
 
 (Many hooks expect Claude Code JSON on stdin — if invocation fails without that payload, apply the rule text instead of forcing a run.)
@@ -70,7 +70,7 @@ pwsh -ExecutionPolicy Bypass -File "../AGENT-GLOBAL-BASE\.claude\hooks\<name>.ps
 
 - Prefer AGENT-GLOBAL-BASE MCP servers (`workspace-knowledge`, `agent-memory`) when available in the session for retrieval/memory.
 - If MCP is unavailable, fall back to Read/Grep under the AGENT-GLOBAL-BASE mount paths.
-- Do not invent alternate MCP server layouts; use `AGENT-GLOBAL-BASE/.mcp.json` and `core-component-00/mcp-servers/`.
+- Do not invent alternate MCP server layouts. The checked-in manifest is `.mcp.json.example`, a template to copy to `.mcp.json` locally (`.mcp.json` is not in this checkout). It defines `workspace-knowledge` and `agent-memory`, both under `core-component-00/platform/model-context-protocol-servers/`.
 
 ## Write boundaries
 
